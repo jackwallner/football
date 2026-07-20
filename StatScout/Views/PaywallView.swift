@@ -61,13 +61,13 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .yearCompare:
             return "Compare any player's percentile rankings across any two seasons. See what changed, what held, and where they're headed."
         case .playerComparison:
-            return "Stack any two players head-to-head across every Statcast metric: xwOBA, Barrel%, Sprint Speed, and more."
+            return "Stack any two players head-to-head across every NFL metric: EPA, CPOE, YAC, RYOE, and more."
         case .onboarding:
-            return "Recent form, head-to-head matchups, and every season back to 2020. The full Statcast picture on every player."
+            return "Recent form, head-to-head matchups, and every season back to 2020. The full NFL Next Gen picture on every player."
         case .activation:
-            return "Recent form, head-to-head matchups, and every season back to 2020. The full Statcast picture on every player."
+            return "Recent form, head-to-head matchups, and every season back to 2020. The full NFL Next Gen picture on every player."
         case .upgrade:
-            return "Recent form, head-to-head matchups, and every season back to 2020. The full Statcast picture on every player."
+            return "Recent form, head-to-head matchups, and every season back to 2020. The full NFL Next Gen picture on every player."
         case .pastSeasonsLoad:
             return "Load historical data to explore past seasons, year-over-year trends, and more."
         case .teamView:
@@ -75,9 +75,9 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .winback:
             return "Your StatScout+ access has lapsed. Pick it back up to get recent form, head-to-head matchups, and every past season."
         case .playerScouting:
-            return "Last 7 / 15 / 30 day form, head-to-head matchups, every roster. The full picture, not just season totals."
+            return "Last 1 / 3 / 5 game form, head-to-head matchups, every roster. The full picture, not just season totals."
         case .recentForm:
-            return "Every player's last 7 / 15 / 30 day form. Catch hot streaks and slumps before the season totals catch up."
+            return "Every player's last 1 / 3 / 5 game form. Catch hot streaks and slumps before the season totals catch up."
         }
     }
 
@@ -99,7 +99,7 @@ enum PaywallTrigger: Identifiable, Hashable {
     }
 
     private static let proFeatures: [(icon: String, title: String)] = [
-        ("flame.fill", "Catch hot streaks: last 7 / 15 / 30 day form"),
+        ("flame.fill", "Catch hot streaks: last 1 / 3 / 5 game form"),
         ("person.2.fill", "Head-to-head: any two players, every metric"),
         ("shield.lefthalf.filled", "Every player on every roster, not just qualifiers"),
         ("calendar.badge.clock", "Every season back to 2020 + year-over-year trends")
@@ -283,7 +283,7 @@ struct PaywallView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // Reassurance + real credibility — Statcast/Savant is the source of truth
+    // Reassurance + real credibility — public NFL Next Gen Stats are the source of truth
     // for these percentiles, which is the actual moat. No fabricated ratings
     // or user counts.
     private var trustRow: some View {
@@ -291,7 +291,7 @@ struct PaywallView: View {
             HStack(spacing: 5) {
                 Image(systemName: "bolt.fill")
                     .font(.system(size: 11, weight: .semibold))
-                Text("Statcast-grade data")
+                Text("Next Gen-grade data")
                     .font(SavantType.smallBold)
                     .tracking(0.2)
             }
@@ -499,7 +499,7 @@ struct PaywallView: View {
 }
 
 /// Faint percentile-bar motif behind the hero — ties the paywall to the
-/// app's Statcast leaderboard visual language without competing with the copy.
+/// app's advanced-stats leaderboard visual language without competing with the copy.
 private struct PaywallBarBackdrop: View {
     private let percentiles: [Int] = [94, 81, 67, 52, 38, 88, 73, 60, 45, 83, 70]
 

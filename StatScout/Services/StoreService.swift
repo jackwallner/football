@@ -20,7 +20,7 @@ enum StatScoutSeason {
     /// truth for the current/historical split — the API filters, the two-tier
     /// cache partition, and the free-tier gate all read this, so the yearly
     /// rollover is a one-line change.
-    static let current = 2026
+    static let current = 2025
     /// The only season available without Pro. Everything older is gated.
     static let free = current
 }

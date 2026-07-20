@@ -1,5 +1,5 @@
 import XCTest
-@testable import Baseball_Savvy_StatScout
+@testable import Gridiron_StatScout
 
 final class YearComparisonTests: XCTestCase {
     func testPlayerHistorySortedBySeason() {
@@ -27,10 +27,10 @@ final class YearComparisonTests: XCTestCase {
 
     func testPercentileChangeCalculation() {
         let p1 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [
-            Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 85, category: .hitting)
+            Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 85, category: .passing)
         ], standardStats: [], games: [])
         let p2 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2024, metrics: [
-            Metric(id: "m1", label: "xwOBA", value: ".380", percentile: 75, category: .hitting)
+            Metric(id: "m1", label: "xwOBA", value: ".380", percentile: 75, category: .passing)
         ], standardStats: [], games: [])
 
         let change = p1.overallPercentile - p2.overallPercentile
@@ -39,12 +39,12 @@ final class YearComparisonTests: XCTestCase {
 
     func testMetricComparisonLogic() {
         let metrics1 = [
-            Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 85, category: .hitting),
-            Metric(id: "m2", label: "xSLG", value: ".500", percentile: 70, category: .hitting)
+            Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 85, category: .passing),
+            Metric(id: "m2", label: "xSLG", value: ".500", percentile: 70, category: .passing)
         ]
         let metrics2 = [
-            Metric(id: "m1", label: "xwOBA", value: ".380", percentile: 75, category: .hitting),
-            Metric(id: "m2", label: "xSLG", value: ".520", percentile: 80, category: .hitting)
+            Metric(id: "m1", label: "xwOBA", value: ".380", percentile: 75, category: .passing),
+            Metric(id: "m2", label: "xSLG", value: ".520", percentile: 80, category: .passing)
         ]
 
         let dict1 = Dictionary(grouping: metrics1) { $0.label }
@@ -66,10 +66,10 @@ final class YearComparisonTests: XCTestCase {
     func testNoOverlappingMetricsReturnsEmptyComparison() {
         // Test the new functionality: when two years have no overlapping metrics
         let metrics2025 = [
-            Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 85, category: .hitting)
+            Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 85, category: .passing)
         ]
         let metrics2024 = [
-            Metric(id: "m2", label: "xSLG", value: ".520", percentile: 80, category: .hitting)
+            Metric(id: "m2", label: "xSLG", value: ".520", percentile: 80, category: .passing)
         ]
 
         let dict1 = Dictionary(grouping: metrics2025) { $0.label }
@@ -92,12 +92,12 @@ final class YearComparisonTests: XCTestCase {
     func testPartialOverlappingMetrics() {
         // Test when some metrics overlap but not all
         let metrics2025 = [
-            Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 85, category: .hitting),
-            Metric(id: "m2", label: "xSLG", value: ".500", percentile: 70, category: .hitting)
+            Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 85, category: .passing),
+            Metric(id: "m2", label: "xSLG", value: ".500", percentile: 70, category: .passing)
         ]
         let metrics2024 = [
-            Metric(id: "m1", label: "xwOBA", value: ".380", percentile: 75, category: .hitting),
-            Metric(id: "m3", label: "xBA", value: ".300", percentile: 60, category: .hitting)
+            Metric(id: "m1", label: "xwOBA", value: ".380", percentile: 75, category: .passing),
+            Metric(id: "m3", label: "xBA", value: ".300", percentile: 60, category: .passing)
         ]
 
         let dict1 = Dictionary(grouping: metrics2025) { $0.label }

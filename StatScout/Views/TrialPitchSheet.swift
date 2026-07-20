@@ -30,10 +30,10 @@ struct TrialPitchSheet: View {
             return [
                 Benefit(icon: "flame.fill",
                         title: "Recent form",
-                        detail: "Last 7 / 15 / 30 day splits on any player or team. Season vs. recent on one screen."),
+                        detail: "Last 1 / 3 / 5 game splits on any player or team. Season vs. recent on one screen."),
                 Benefit(icon: "person.2.fill",
                         title: "Head-to-head matchups",
-                        detail: "Stack any two players across every Statcast percentile: xwOBA, Barrel%, Sprint Speed, and more."),
+                        detail: "Stack any two players across every NFL percentile: EPA, CPOE, YAC, RYOE, and more."),
                 Benefit(icon: "arrow.left.arrow.right.circle.fill",
                         title: "Year-over-year trends",
                         detail: "Compare any two seasons and see which metrics moved, not just this year's snapshot."),
@@ -54,13 +54,13 @@ struct TrialPitchSheet: View {
                         detail: "Compare a player's percentile rankings across any two seasons."),
                 Benefit(icon: "person.2.fill",
                         title: "Head-to-head matchups",
-                        detail: "Stack any two players across every Statcast metric.")
+                        detail: "Stack any two players across every NFL metric.")
             ]
         case .playerComparison, .teamView, .winback:
             return [
                 Benefit(icon: "person.2.fill",
                         title: "Head-to-head matchups",
-                        detail: "Stack any two players across every Statcast metric."),
+                        detail: "Stack any two players across every NFL metric."),
                 Benefit(icon: "shield.lefthalf.filled",
                         title: "Full team scouting",
                         detail: "See every player on every roster, not just qualified starters."),

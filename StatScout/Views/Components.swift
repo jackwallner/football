@@ -253,7 +253,7 @@ struct CategoryFilter: View {
     var body: some View {
         let categoryTabs = MetricCategory.allCases.map { $0.rawValue }
         let tabs = showAllOption ? ["All"] + categoryTabs : categoryTabs
-        let selectedTab = selectedCategory?.rawValue ?? (showAllOption ? "All" : MetricCategory.hitting.rawValue)
+        let selectedTab = selectedCategory?.rawValue ?? (showAllOption ? "All" : MetricCategory.passing.rawValue)
 
         SavantTabs(
             tabs: tabs,
@@ -478,8 +478,8 @@ struct LeaderboardTableRow: View {
     private var displayMetric: Metric? {
         guard let label = metricLabel else { return nil }
         // When no category is active (the all-categories leaderboard) fall back
-        // to matching on label alone so we still surface the player's xwOBA
-        // entry regardless of whether it lives under hitting or pitching.
+        // to matching on label alone so we still surface the player's headline
+        // entry regardless of which category it lives under.
         if let category = metricCategory {
             return player.metrics.first { $0.label == label && $0.category == category }
         }

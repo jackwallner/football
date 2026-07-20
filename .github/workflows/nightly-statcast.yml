@@ -1,4 +1,4 @@
-name: Nightly Statcast Refresh
+name: Nightly NFL Refresh
 
 on:
   schedule:
@@ -32,12 +32,12 @@ jobs:
       - name: Run tests
         run: PYTHONPATH=backend python -m pytest backend/tests
 
-      - name: Run ingestion (with actual values)
+      - name: Run NFL snapshot ingestion
         shell: bash
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          STATCAST_SEASON: ${{ vars.STATCAST_SEASON || '2026' }}
+          STATCAST_SEASON: ${{ vars.STATCAST_SEASON || '2025' }}
         run: |
           set -o pipefail
           python backend/ingest.py 2>&1 | tee ingestion.log
@@ -47,6 +47,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STATCAST_SEASON: ${{ vars.STATCAST_SEASON || '2025' }}
         run: |
           set -o pipefail
           python backend/ingest_game_logs.py 2>&1 | tee game_logs_ingestion.log
@@ -71,6 +72,6 @@ jobs:
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: 'Nightly Statcast ingestion failed',
-              body: ':warning: Nightly Statcast ingestion failed — check [run logs](https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ')'
+              title: 'Nightly NFL ingestion failed',
+              body: ':warning: Nightly NFL ingestion failed, check [run logs](https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ')'
             })

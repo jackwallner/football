@@ -27,3 +27,9 @@ video_frames/
 
 # Claude Code runtime
 .claude/scheduled_tasks.lock
+
+# Python venv
+backend/.venv/
+
+# Fastlane metadata backups (inherited baseball cruft)
+fastlane/metadata.bak.*/

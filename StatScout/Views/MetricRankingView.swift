@@ -110,7 +110,7 @@ struct MetricRankingView: View {
 #if DEBUG
 #Preview {
     NavigationStack {
-        MetricRankingView(metricLabel: "xwOBA", metricCategory: .hitting, players: SampleData.players, season: 2026)
+        MetricRankingView(metricLabel: "Pass Yds", metricCategory: .passing, players: SampleData.players, season: 2025)
     }
 }
 #endif

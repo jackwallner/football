@@ -1,5 +1,5 @@
 import XCTest
-@testable import Baseball_Savvy_StatScout
+@testable import Gridiron_StatScout
 
 @MainActor
 final class YearComparisonFeatureTests: XCTestCase {
@@ -57,15 +57,15 @@ final class YearComparisonFeatureTests: XCTestCase {
     func testMetricComparisonDisplay() {
         // Create two seasons with different metrics
         let metrics2025 = [
-            Metric(id: "m1", label: "xwOBA", value: ".420", percentile: 92, category: .hitting),
-            Metric(id: "m2", label: "xSLG", value: ".550", percentile: 88, category: .hitting),
-            Metric(id: "m3", label: "K%", value: "22%", percentile: 45, category: .hitting)
+            Metric(id: "m1", label: "xwOBA", value: ".420", percentile: 92, category: .passing),
+            Metric(id: "m2", label: "xSLG", value: ".550", percentile: 88, category: .passing),
+            Metric(id: "m3", label: "K%", value: "22%", percentile: 45, category: .passing)
         ]
 
         let metrics2024 = [
-            Metric(id: "m1", label: "xwOBA", value: ".380", percentile: 78, category: .hitting),
-            Metric(id: "m2", label: "xSLG", value: ".480", percentile: 72, category: .hitting),
-            Metric(id: "m3", label: "K%", value: "25%", percentile: 35, category: .hitting)
+            Metric(id: "m1", label: "xwOBA", value: ".380", percentile: 78, category: .passing),
+            Metric(id: "m2", label: "xSLG", value: ".480", percentile: 72, category: .passing),
+            Metric(id: "m3", label: "K%", value: "25%", percentile: 35, category: .passing)
         ]
 
         let player2025 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: metrics2025, standardStats: [], games: [])
@@ -101,12 +101,12 @@ final class YearComparisonFeatureTests: XCTestCase {
 
     func testOverallPercentileChangeCalculation() {
         let metrics2025 = [
-            Metric(id: "m1", label: "A", value: "1", percentile: 80, category: .hitting),
-            Metric(id: "m2", label: "B", value: "2", percentile: 90, category: .hitting)
+            Metric(id: "m1", label: "A", value: "1", percentile: 80, category: .passing),
+            Metric(id: "m2", label: "B", value: "2", percentile: 90, category: .passing)
         ]
         let metrics2024 = [
-            Metric(id: "m1", label: "A", value: "1", percentile: 70, category: .hitting),
-            Metric(id: "m2", label: "B", value: "2", percentile: 60, category: .hitting)
+            Metric(id: "m1", label: "A", value: "1", percentile: 70, category: .passing),
+            Metric(id: "m2", label: "B", value: "2", percentile: 60, category: .passing)
         ]
 
         let player2025 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: metrics2025, standardStats: [], games: [])

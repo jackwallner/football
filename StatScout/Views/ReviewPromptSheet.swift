@@ -100,7 +100,7 @@ struct ReviewPromptSheet: View {
                 Circle()
                     .fill(SavantPalette.savantRed)
                     .frame(width: 64, height: 64)
-                Image(systemName: "baseball.fill")
+                Image(systemName: "football.fill")
                     .font(.system(size: 28, weight: .bold))
                     .foregroundStyle(.white)
             }
@@ -142,7 +142,7 @@ struct ReviewPromptSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 8)
 
-            Text("An honest App Store review takes seconds and helps more fans find a clean Statcast percentile scout.")
+            Text("An honest App Store review takes seconds and helps more fans find a clean NFL advanced-stats scout.")
                 .font(SavantType.small)
                 .foregroundStyle(SavantPalette.inkTertiary)
                 .multilineTextAlignment(.center)

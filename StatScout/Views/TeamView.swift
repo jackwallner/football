@@ -10,8 +10,8 @@ struct TeamView: View {
     @State private var selectedTab: TeamTab = .percentiles
     @State private var searchText = ""
     @State private var isSearching = false
-    // Default to Hitting so the roster always shows a meaningful sort metric.
-    @State private var selectedCategory: MetricCategory? = .hitting
+    // Default to Passing so the roster always shows a meaningful sort metric.
+    @State private var selectedCategory: MetricCategory? = .passing
     @State private var sortDescending = true
     @State private var lastDefaultedSortKey: String? = nil
     @State private var showingTrial = false
@@ -40,13 +40,13 @@ struct TeamView: View {
     }
 
     private var sortLabel: String {
-        if selectedCategory == nil { return "xwOBA" }
+        if selectedCategory == nil { return "Overall" }
         return sortMetric?.label ?? "Top Category"
     }
 
     private var rowDisplayMetric: (label: String?, category: MetricCategory?) {
         if let m = sortMetric { return (m.label, m.category) }
-        if selectedCategory == nil { return ("xwOBA", nil) }
+        if selectedCategory == nil { return ("Pass Yds", .passing) }
         return (nil, nil)
     }
 
@@ -59,7 +59,7 @@ struct TeamView: View {
 
     private func fallbackPercentile(_ player: Player) -> Int {
         if let category = selectedCategory, let p = player.percentile(for: category) { return p }
-        return player.metrics.first(where: { $0.label == "xwOBA" })?.percentile ?? 0
+        return player.overallPercentile
     }
 
     private var filteredPlayers: [Player] {
@@ -359,11 +359,7 @@ struct TeamView: View {
         .accessibilityHint("Switch to another team")
     }
 
-    private static let allTeamAbbrs: [String] = [
-        "ARI", "ATL", "BAL", "BOS", "CHC", "CWS", "CIN", "CLE", "COL", "DET",
-        "HOU", "KC", "LAA", "LAD", "MIA", "MIL", "MIN", "NYM", "NYY", "OAK",
-        "PHI", "PIT", "SD", "SEA", "SF", "STL", "TB", "TEX", "TOR", "WSH"
-    ]
+    private static let allTeamAbbrs: [String] = nflTeamAbbreviations
 
     private var allTeams: [String] {
         Self.allTeamAbbrs.sorted { teamFullName($0).localizedCompare(teamFullName($1)) == .orderedAscending }
@@ -412,10 +408,10 @@ struct TeamView: View {
 
     private func priorityMetrics(for category: MetricCategory) -> [String] {
         switch category {
-        case .hitting: return ["xwOBA", "xSLG", "xBA"]
-        case .pitching: return ["xwOBA", "K%", "Barrel%", "Whiff%", "Chase%"]
-        case .fielding: return ["Range (OAA)", "Arm Strength", "Arm Value"]
-        case .running: return ["Sprint Speed"]
+        case .passing: return ["Pass Yds", "Pass TD", "Rating", "EPA/Play"]
+        case .rushing: return ["Rush Yds", "Rush TD", "Y/C", "Rush EPA"]
+        case .receiving: return ["Rec Yds", "Rec", "Rec TD", "YAC"]
+        case .defense: return ["Tackles", "Sacks", "INT"]
         }
     }
 }
@@ -424,9 +420,9 @@ struct TeamView: View {
 #Preview {
     NavigationStack {
         TeamView(
-            team: "NYY",
-            players: SampleData.players.filter { $0.team == "NYY" },
-            season: 2026
+            team: "KC",
+            players: SampleData.players.filter { $0.team == "KC" },
+            season: 2025
         )
     }
 }

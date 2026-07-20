@@ -1,24 +1,24 @@
 import XCTest
-@testable import Baseball_Savvy_StatScout
+@testable import Gridiron_StatScout
 
 final class DashboardViewModelTests: XCTestCase {
     @MainActor
     func testAllMetricsKeyCollision() async throws {
         let players: [Player] = [
             Player(
-                playerId: 1, name: "A", team: "NYY", position: "DH", handedness: "L/R", imageURL: nil,
-                updatedAt: Date(), season: 2026,
+                playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", imageURL: nil,
+                updatedAt: Date(), season: 2025, playerType: "qb",
                 metrics: [
-                    Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 90, category: .hitting)
+                    Metric(id: "m1", label: "TD", value: "26", percentile: 90, category: .passing)
                 ],
                 standardStats: [],
                 games: []
             ),
             Player(
-                playerId: 2, name: "B", team: "NYY", position: "SP", handedness: "R/R", imageURL: nil,
-                updatedAt: Date(), season: 2026,
+                playerId: 2, name: "B", team: "PHI", position: "RB", handedness: "", imageURL: nil,
+                updatedAt: Date(), season: 2025, playerType: "rb",
                 metrics: [
-                    Metric(id: "m2", label: "xwOBA", value: ".350", percentile: 85, category: .pitching)
+                    Metric(id: "m2", label: "TD", value: "13", percentile: 85, category: .rushing)
                 ],
                 standardStats: [],
                 games: []
@@ -53,9 +53,9 @@ final class DashboardViewModelTests: XCTestCase {
     @MainActor
     func testTeamFullNameReturnsCorrectFullName() {
         // Test the teamFullName helper function directly
-        XCTAssertEqual(teamFullName("NYY"), "New York Yankees")
-        XCTAssertEqual(teamFullName("BOS"), "Boston Red Sox")
-        XCTAssertEqual(teamFullName("LAD"), "Los Angeles Dodgers")
+        XCTAssertEqual(teamFullName("KC"), "Kansas City Chiefs")
+        XCTAssertEqual(teamFullName("SF"), "San Francisco 49ers")
+        XCTAssertEqual(teamFullName("PHI"), "Philadelphia Eagles")
         XCTAssertEqual(teamFullName("Unknown"), "Unknown")
     }
 
@@ -63,46 +63,46 @@ final class DashboardViewModelTests: XCTestCase {
     func testPlayersForTeamMatchesAliases() async {
         let players = [
             Player(
-                playerId: 1, name: "A", team: "New York Yankees", position: "RF", handedness: "R/R", imageURL: nil,
-                updatedAt: Date(), season: 2026,
+                playerId: 1, name: "A", team: "Kansas City Chiefs", position: "QB", handedness: "", imageURL: nil,
+                updatedAt: Date(), season: 2025,
                 metrics: [],
                 standardStats: [],
                 games: []
             ),
             Player(
-                playerId: 2, name: "B", team: "CHW", position: "1B", handedness: "L/R", imageURL: nil,
-                updatedAt: Date(), season: 2026,
+                playerId: 2, name: "B", team: "OAK", position: "WR", handedness: "", imageURL: nil,
+                updatedAt: Date(), season: 2025,
                 metrics: [],
                 standardStats: [],
                 games: []
             )
         ]
         let vm = DashboardViewModel(provider: MockProvider(players: players))
-        vm.selectedSeason = 2026
+        vm.selectedSeason = 2025
         await vm.load()
 
-        XCTAssertEqual(vm.players(forTeam: "NYY").map { $0.playerId }, [1])
-        XCTAssertEqual(vm.players(forTeam: "CWS").map { $0.playerId }, [2])
+        XCTAssertEqual(vm.players(forTeam: "KC").map { $0.playerId }, [1])
+        XCTAssertEqual(vm.players(forTeam: "LV").map { $0.playerId }, [2])
     }
 
     @MainActor
     func testTeamCountsPopulatedAfterLoad() async {
         let players = [
-            Player(playerId: 1, name: "A", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2026, metrics: [], standardStats: [], games: []),
-            Player(playerId: 2, name: "B", team: "NYY", position: "1B", handedness: "L/R", imageURL: nil, updatedAt: Date(), season: 2026, metrics: [], standardStats: [], games: []),
-            Player(playerId: 3, name: "C", team: "BOS", position: "SS", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2026, metrics: [], standardStats: [], games: [])
+            Player(playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
+            Player(playerId: 2, name: "B", team: "KC", position: "RB", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
+            Player(playerId: 3, name: "C", team: "SF", position: "WR", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: [])
         ]
         let vm = DashboardViewModel(provider: MockProvider(players: players))
-        vm.selectedSeason = 2026
+        vm.selectedSeason = 2025
         await vm.load()
-        XCTAssertEqual(vm.teamCounts["NYY"], 2)
-        XCTAssertEqual(vm.teamCounts["BOS"], 1)
+        XCTAssertEqual(vm.teamCounts["KC"], 2)
+        XCTAssertEqual(vm.teamCounts["SF"], 1)
     }
 
     @MainActor
     func testCacheHydratesPlayersBeforeFetch() async {
         let cached = [
-            Player(playerId: 99, name: "Cached", team: "NYY", position: "DH", handedness: "L/R", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+            Player(playerId: 99, name: "Cached", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
         ]
         let cache = InMemoryPlayerCache(seed: cached)
         let vm = DashboardViewModel(provider: MockProvider(error: URLError(.notConnectedToInternet)), cache: cache)
@@ -112,66 +112,65 @@ final class DashboardViewModelTests: XCTestCase {
 
     @MainActor
     func testSortLabelReflectsCategory() async {
-        // Players with xwOBA hitting metric
-        let hitters = [
-            Player(playerId: 1, name: "A", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "batter", source: "baseball_savant",
-                   metrics: [Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 90, category: .hitting)], standardStats: [], games: [])
+        // Passers with a Pass Yds metric
+        let passers = [
+            Player(playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "qb", source: "nflreadpy",
+                   metrics: [Metric(id: "m1", label: "Pass Yds", value: "4,000", percentile: 90, category: .passing)], standardStats: [], games: [])
         ]
 
-        let vm = DashboardViewModel(provider: MockProvider(players: hitters))
+        let vm = DashboardViewModel(provider: MockProvider(players: passers))
         await vm.load()
         _ = vm.leaderboard  // Trigger computation of sort metric
 
-        // Default category is hitting, should find xwOBA in data
-        XCTAssertEqual(vm.sortLabel, "xwOBA")
+        // Default category is passing, should find Pass Yds in data
+        XCTAssertEqual(vm.sortLabel, "Pass Yds")
 
-        // Test with pitchers that have Barrel%
-        let pitchers = [
-            Player(playerId: 2, name: "B", team: "NYY", position: "SP", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "pitcher", source: "baseball_savant",
-                   metrics: [Metric(id: "m1", label: "Barrel%", value: "5%", percentile: 85, category: .pitching)], standardStats: [], games: [])
+        // Test with rushers
+        let rushers = [
+            Player(playerId: 2, name: "B", team: "PHI", position: "RB", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "rb", source: "nflreadpy",
+                   metrics: [Metric(id: "m1", label: "Rush Yds", value: "1,500", percentile: 85, category: .rushing)], standardStats: [], games: [])
         ]
-        let vmPitching = DashboardViewModel(provider: MockProvider(players: pitchers))
-        await vmPitching.load()
-        vmPitching.selectedCategory = .pitching
-        _ = vmPitching.leaderboard  // Trigger computation
-        XCTAssertEqual(vmPitching.sortLabel, "Barrel%")
+        let vmRushing = DashboardViewModel(provider: MockProvider(players: rushers))
+        await vmRushing.load()
+        vmRushing.selectedCategory = .rushing
+        _ = vmRushing.leaderboard  // Trigger computation
+        XCTAssertEqual(vmRushing.sortLabel, "Rush Yds")
 
         // Test empty data falls back to "Top Category"
         let vmEmpty = DashboardViewModel(provider: MockProvider(players: []))
         await vmEmpty.load()
-        vmEmpty.selectedCategory = .hitting
+        vmEmpty.selectedCategory = .passing
         _ = vmEmpty.leaderboard  // Trigger computation
         XCTAssertEqual(vmEmpty.sortLabel, "Top Category")
 
-        // Test nil category shows xwOBA
-        let vmNil = DashboardViewModel(provider: MockProvider(players: hitters))
+        // Test nil category shows the default label
+        let vmNil = DashboardViewModel(provider: MockProvider(players: passers))
         await vmNil.load()
         vmNil.selectedCategory = nil
         _ = vmNil.leaderboard
-        XCTAssertEqual(vmNil.sortLabel, "xwOBA")
+        XCTAssertEqual(vmNil.sortLabel, "Pass Yds")
     }
 
     @MainActor
-    func testPitchingSortUsesAvailableMetrics() async {
-        // Pitcher with Barrel% but no xERA (common early in season)
-        let pitcher = Player(
-            playerId: 1, name: "Test Pitcher", team: "NYY", position: "SP",
-            handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "pitcher", source: "baseball_savant",
+    func testRushingSortUsesAvailableMetrics() async {
+        let back = Player(
+            playerId: 1, name: "Test RB", team: "PHI", position: "RB",
+            handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "rb", source: "nflreadpy",
             metrics: [
-                Metric(id: "m1", label: "Barrel%", value: "5.2%", percentile: 85, category: .pitching),
-                Metric(id: "m2", label: "Whiff%", value: "28%", percentile: 70, category: .pitching)
+                Metric(id: "m1", label: "Rush Yds", value: "1,500", percentile: 85, category: .rushing),
+                Metric(id: "m2", label: "Y/C", value: "5.2", percentile: 70, category: .rushing)
             ],
             standardStats: [],
             games: []
         )
 
-        let vm = DashboardViewModel(provider: MockProvider(players: [pitcher]))
+        let vm = DashboardViewModel(provider: MockProvider(players: [back]))
         await vm.load()
-        vm.selectedCategory = .pitching
+        vm.selectedCategory = .rushing
 
-        // Should find the pitcher in filtered list
+        // Should find the back in filtered list
         XCTAssertEqual(vm.filteredPlayers.count, 1)
-        // Should sort by Barrel% since that's the first available priority metric
+        // Should sort by Rush Yds since that's the first available priority metric
         XCTAssertEqual(vm.leaderboard.first?.playerId, 1)
     }
 
@@ -265,7 +264,7 @@ struct MockProvider: StatcastProviding, @unchecked Sendable {
 
     func fetchHistoricalPlayers() async throws -> [Player] {
         if let error { throw error }
-        return (players ?? []).filter { ($0.season ?? 0) < 2026 }
+        return (players ?? []).filter { ($0.season ?? 0) < 2025 }
     }
 
     func fetchCurrentPlayers() async throws -> [Player] {

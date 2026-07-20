@@ -10,7 +10,7 @@ final class DashboardViewModel {
     var players: [Player] = []
     var playerHistories: [Int: [Player]] = [:]
     var searchText = ""
-    var selectedCategory: MetricCategory? = .hitting {
+    var selectedCategory: MetricCategory? = .passing {
         didSet {
             if oldValue != selectedCategory { applyDefaultSortDirection() }
         }
@@ -30,7 +30,7 @@ final class DashboardViewModel {
 
     // Label shown in the sort button - reflects actual metric being used
     var sortLabel: String {
-        guard selectedCategory != nil else { return "xwOBA" }
+        guard selectedCategory != nil else { return "Pass Yds" }
         return currentSortMetric ?? "Top Category"
     }
 
@@ -214,83 +214,53 @@ final class DashboardViewModel {
 
     enum QualifierLevel: String, CaseIterable, Identifiable {
         case all = "All"
-        case any = "Min Sample"
+        case any = "Played"
         case qualified = "Qualified"
 
         var id: String { rawValue }
 
-        var minPA: Int {
+        var minGames: Int {
             switch self {
             case .all: return 0
-            case .any: return 10
-            case .qualified: return 50
-            }
-        }
-
-        var minIP: Double {
-            switch self {
-            case .all: return 0
-            case .any: return 5
-            case .qualified: return 20
+            case .any: return 1
+            case .qualified: return 4
             }
         }
 
         /// Short caption explaining the active threshold. Shown next to the picker
-        /// so "All" and "Min Sample" don't look like synonyms.
+        /// so "All" and "Played" don't look like synonyms.
         var description: String {
             switch self {
             case .all: return "No minimum"
-            case .any: return "10+ PA / 5+ IP"
-            case .qualified: return "Savant qualifier"
+            case .any: return "1+ game"
+            case .qualified: return "Next Gen qualifier"
             }
         }
     }
 
     var qualifierLevel: QualifierLevel = .qualified
 
-    var minPlateAppearances: Int { qualifierLevel.minPA }
-    var minInningsPitched: Double { qualifierLevel.minIP }
-
     func isQualified(_ player: Player, for category: MetricCategory?) -> Bool {
         switch qualifierLevel {
         case .all:
             return true
         case .qualified:
-            // Savant only assigns percentiles to players who meet its qualification thresholds,
-            // so "has a percentile in this category" is the authoritative signal.
+            // The pipeline only assigns percentiles to players who meet the
+            // per-category qualification thresholds, so "has a percentile in this
+            // category" is the authoritative signal.
             if let category {
                 return player.metrics.contains { $0.category == category }
             }
             return !player.metrics.isEmpty
         case .any:
-            let stats = player.standardStats ?? []
-            switch category {
-            case .pitching:
-                return ipValue(in: stats) >= minInningsPitched
-            case .hitting, .running, .none:
-                if player.playerType == "pitcher" {
-                    return ipValue(in: stats) >= minInningsPitched
-                }
-                return paValue(in: stats) >= minPlateAppearances
-            case .fielding:
-                return paValue(in: stats) >= minPlateAppearances
-                    || ipValue(in: stats) >= minInningsPitched
-            }
+            return gamesValue(in: player.standardStats ?? []) >= qualifierLevel.minGames
         }
     }
 
-    private func paValue(in stats: [StandardStat]) -> Int {
-        guard let stat = stats.first(where: { Self.paLabels.contains($0.label.uppercased()) }) else { return 0 }
+    private func gamesValue(in stats: [StandardStat]) -> Int {
+        guard let stat = stats.first(where: { $0.label.uppercased() == "G" }) else { return 0 }
         return Int(stat.value.filter { $0.isNumber }) ?? 0
     }
-
-    private func ipValue(in stats: [StandardStat]) -> Double {
-        guard let stat = stats.first(where: { Self.ipLabels.contains($0.label.uppercased()) }) else { return 0 }
-        return Double(stat.value.trimmingCharacters(in: .whitespaces)) ?? 0
-    }
-
-    private static let paLabels: Set<String> = ["PA", "AB"]
-    private static let ipLabels: Set<String> = ["IP"]
 
     // Sort by the raw stat value, not the percentile — percentile-sorting
     // produced ties (two players at 95) and made the "PCTL" header look
@@ -301,8 +271,8 @@ final class DashboardViewModel {
         let sortLabel = currentSortMetric
         guard let category = selectedCategory, let label = sortLabel else {
             return filteredPlayers.sorted { p1, p2 in
-                let v1 = Self.rawNumeric(p1.metrics.first(where: { $0.label == "xwOBA" })?.value ?? "") ?? -.infinity
-                let v2 = Self.rawNumeric(p2.metrics.first(where: { $0.label == "xwOBA" })?.value ?? "") ?? -.infinity
+                let v1 = Double(p1.overallPercentile)
+                let v2 = Double(p2.overallPercentile)
                 return sortDescending ? v1 > v2 : v1 < v2
             }
         }
@@ -329,6 +299,8 @@ final class DashboardViewModel {
     /// Handles ".345", "8.2%", "98.5 mph", "28.5 ft/s", "25.3°", "-1.2".
     static func rawNumeric(_ value: String) -> Double? {
         var s = value.trimmingCharacters(in: .whitespaces)
+        // Strip thousands separators — NFL yardage ships as "3,322".
+        s = s.replacingOccurrences(of: ",", with: "")
         if s.hasPrefix(".") { s = "0" + s }
         if s.hasPrefix("-.") { s = "-0" + s.dropFirst() }
         let scanner = Scanner(string: s)
@@ -342,12 +314,11 @@ final class DashboardViewModel {
     /// Hitter xwOBA / Barrel% high = good; pitcher xwOBA / Barrel% low = good.
     static func lowerIsBetter(label: String, category: MetricCategory) -> Bool {
         switch category {
-        case .pitching:
-            return ["xwOBA", "xBA", "xSLG", "xERA", "ERA", "WHIP", "BB%",
-                    "Barrel%", "HardHit%", "EV", "LA", "GB%", "FB%"].contains(label)
-        case .hitting:
-            return ["K%"].contains(label)
-        case .fielding, .running:
+        case .passing:
+            return ["INT%", "Sack%", "Time to Throw"].contains(label)
+        case .rushing:
+            return ["Fumble%"].contains(label)
+        case .receiving, .defense:
             return false
         }
     }
@@ -379,7 +350,7 @@ final class DashboardViewModel {
     // Get the sort score for a player using a specific metric label
     private func playerSortScore(player: Player, metricLabel: String?) -> Int {
         guard let category = selectedCategory else {
-            return player.metrics.first(where: { $0.label == "xwOBA" })?.percentile ?? 0
+            return player.overallPercentile
         }
         guard let label = metricLabel else {
             return player.percentile(for: category) ?? 0
@@ -392,20 +363,17 @@ final class DashboardViewModel {
         return player.percentile(for: category) ?? 0
     }
 
-    // Baseball Savant priority metrics for each category
+    // Priority sort metrics for each category — headline counting stats first.
     private func priorityMetrics(for category: MetricCategory) -> [String] {
         switch category {
-        case .hitting:
-            return ["xwOBA", "xSLG", "xBA"]
-        case .pitching:
-            // xwOBA against parallels the hitter xwOBA — it folds in K/BB and contact quality,
-            // so it's the right primary rank. xERA has a 25 PA minimum, so it stays out.
-            return ["xwOBA", "K%", "Barrel%", "Whiff%", "Chase%"]
-        case .fielding:
-            // Backend uses "Range (OAA)" as the label
-            return ["Range (OAA)", "Arm Strength", "Arm Value"]
-        case .running:
-            return ["Sprint Speed"]
+        case .passing:
+            return ["Pass Yds", "Pass TD", "Rating", "EPA/Play"]
+        case .rushing:
+            return ["Rush Yds", "Rush TD", "Y/C", "Rush EPA"]
+        case .receiving:
+            return ["Rec Yds", "Rec", "Rec TD", "YAC"]
+        case .defense:
+            return ["Tackles", "Sacks", "INT"]
         }
     }
 
@@ -415,24 +383,15 @@ final class DashboardViewModel {
     // each player's xwOBA value instead of a percentile fallback.
     var currentSortMetricForDisplay: (label: String?, category: MetricCategory?) {
         if let label = currentSortMetric { return (label, selectedCategory) }
-        return ("xwOBA", nil)
+        return ("Pass Yds", .passing)
     }
 
     func players(forTeam team: String) -> [Player] {
-        // Sort by raw xwOBA value to match the leaderboard convention.
-        // Pitchers (where lower xwOBA is better) sort to the bottom, then by
-        // ascending xwOBA — gives a sane "best hitters first, best pitchers
-        // last" team roster ordering.
+        // Sort the roster by overall percentile so the standout players surface
+        // first regardless of position group.
         let normalized = normalizedTeamAbbreviation(team)
         return seasonPlayers.filter { normalizedTeamAbbreviation($0.team) == normalized }
-            .sorted { p0, p1 in
-                let isPitcher0 = p0.playerType?.lowercased() == "pitcher"
-                let isPitcher1 = p1.playerType?.lowercased() == "pitcher"
-                if isPitcher0 != isPitcher1 { return !isPitcher0 }
-                let v0 = Self.rawNumeric(p0.metrics.first(where: { $0.label == "xwOBA" })?.value ?? "") ?? -.infinity
-                let v1 = Self.rawNumeric(p1.metrics.first(where: { $0.label == "xwOBA" })?.value ?? "") ?? -.infinity
-                return isPitcher0 ? v0 < v1 : v0 > v1
-            }
+            .sorted { $0.overallPercentile > $1.overallPercentile }
     }
 
     func teamScore(_ abbr: String) -> Double {
@@ -632,7 +591,8 @@ final class DashboardViewModel {
         for player in uniquePlayers {
             let abbr = normalizedTeamAbbreviation(player.team)
             teams.insert(abbr)
-            if let score = player.metrics.first(where: { $0.label == "xwOBA" })?.percentile {
+            let score = player.overallPercentile
+            if score > 0 {
                 var entry = teamScoresAccum[abbr] ?? (0, 0)
                 entry.sum += score
                 entry.count += 1

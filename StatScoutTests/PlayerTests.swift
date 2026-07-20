@@ -1,45 +1,47 @@
 import XCTest
-@testable import Baseball_Savvy_StatScout
+@testable import Gridiron_StatScout
 
 final class PlayerTests: XCTestCase {
     func testOverallPercentileDoubleAverage() {
         let metrics = [
-            Metric(id: "m1", label: "A", value: "1", percentile: 75, category: .hitting),
-            Metric(id: "m2", label: "B", value: "2", percentile: 76, category: .hitting),
-            Metric(id: "m3", label: "C", value: "3", percentile: 77, category: .hitting)
+            Metric(id: "m1", label: "A", value: "1", percentile: 75, category: .passing),
+            Metric(id: "m2", label: "B", value: "2", percentile: 76, category: .passing),
+            Metric(id: "m3", label: "C", value: "3", percentile: 77, category: .passing)
         ]
         let player = Player(
-            playerId: 1, name: "Test", team: "NYY", position: "RF",
-            handedness: "R/R", imageURL: nil,
+            playerId: 1, name: "Test", team: "KC", position: "QB",
+            handedness: "", imageURL: nil,
             updatedAt: Date(), metrics: metrics, standardStats: [], games: []
         )
         XCTAssertEqual(player.overallPercentile, 76) // 75.9 rounded
     }
 
     func testShareSummaryIncludesTopSignal() {
-        let metric = Metric(id: "m1", label: "xwOBA", value: ".463", percentile: 100, category: .hitting)
+        let metric = Metric(id: "m1", label: "Pass Yds", value: "4,918", percentile: 100, category: .passing)
         let player = Player(
-            playerId: 1, name: "Aaron Judge", team: "NYY", position: "RF",
-            handedness: "R/R", imageURL: nil,
+            playerId: 1, name: "Patrick Mahomes", team: "KC", position: "QB",
+            handedness: "", imageURL: nil,
             updatedAt: Date(), metrics: [metric], standardStats: [], games: []
         )
         let summary = player.shareSummary
-        XCTAssertTrue(summary.contains("Aaron Judge"))
-        XCTAssertTrue(summary.contains("xwOBA"))
+        XCTAssertTrue(summary.contains("Patrick Mahomes"))
+        XCTAssertTrue(summary.contains("Pass Yds"))
         XCTAssertTrue(summary.contains("100th"))
     }
 
-    func testTwoWayOverallUsesBestCategoryAverage() {
+    func testMultiCategoryOverallUsesBestCategoryAverage() {
+        // A rushing QB carries both Passing and Rushing metrics — the headline
+        // number should reflect the best category, not a blended average.
         let metrics = [
-            Metric(id: "h1", label: "xwOBA", value: ".400", percentile: 95, category: .hitting),
-            Metric(id: "h2", label: "Barrel%", value: "12", percentile: 95, category: .hitting),
-            Metric(id: "p1", label: "xwOBA", value: ".320", percentile: 30, category: .pitching),
-            Metric(id: "p2", label: "K%", value: "22", percentile: 30, category: .pitching)
+            Metric(id: "p1", label: "Pass Yds", value: "4,000", percentile: 95, category: .passing),
+            Metric(id: "p2", label: "Rating", value: "105", percentile: 95, category: .passing),
+            Metric(id: "r1", label: "Rush Yds", value: "500", percentile: 30, category: .rushing),
+            Metric(id: "r2", label: "Rush TD", value: "5", percentile: 30, category: .rushing)
         ]
         let player = Player(
-            playerId: 1, name: "Two Way", team: "LAA", position: "Two-way",
-            handedness: "L/R", imageURL: nil,
-            updatedAt: Date(), playerType: "two_way",
+            playerId: 1, name: "Dual Threat", team: "BUF", position: "QB",
+            handedness: "", imageURL: nil,
+            updatedAt: Date(), playerType: "qb",
             metrics: metrics, standardStats: [], games: []
         )
         XCTAssertEqual(player.overallPercentile, 95)
@@ -50,14 +52,14 @@ final class PlayerTests: XCTestCase {
         {
             "id": 1,
             "name": "Test",
-            "team": "NYY",
-            "position": "RF",
-            "handedness": "R/R",
+            "team": "KC",
+            "position": "QB",
+            "handedness": "",
             "image_url": null,
             "updated_at": "2026-04-28T12:00:00Z",
-            "season": 2026,
-            "player_type": "batter",
-            "source": "baseball_savant",
+            "season": 2025,
+            "player_type": "qb",
+            "source": "nflreadpy",
             "metrics": [],
             "standard_stats": [],
             "games": []
@@ -65,54 +67,57 @@ final class PlayerTests: XCTestCase {
         """.data(using: .utf8)!
         let decoder = JSONDecoder.statScout
         let player = try decoder.decode(Player.self, from: json)
-        XCTAssertEqual(player.season, 2026)
-        XCTAssertEqual(player.playerType, "batter")
-        XCTAssertEqual(player.source, "baseball_savant")
+        XCTAssertEqual(player.season, 2025)
+        XCTAssertEqual(player.playerType, "qb")
+        XCTAssertEqual(player.source, "nflreadpy")
     }
 
     func testInitialsHandleSuffixes() {
-        let witt = Player(playerId: 1, name: "Bobby Witt Jr.", team: "KC", position: "SS", handedness: "R/R", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(witt.initials, "BW")
+        let witt = Player(playerId: 1, name: "Michael Pittman Jr.", team: "IND", position: "WR", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        XCTAssertEqual(witt.initials, "MP")
 
-        let harris = Player(playerId: 2, name: "Michael Harris II", team: "ATL", position: "CF", handedness: "L/R", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(harris.initials, "MH")
+        let harris = Player(playerId: 2, name: "Odell Beckham Jr.", team: "MIA", position: "WR", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        XCTAssertEqual(harris.initials, "OB")
 
-        let mcCullers = Player(playerId: 3, name: "Lance McCullers Jr.", team: "HOU", position: "P", handedness: "R/R", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(mcCullers.initials, "LM")
+        let third = Player(playerId: 3, name: "Robert Griffin III", team: "WAS", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        XCTAssertEqual(third.initials, "RG")
     }
 
     func testInitialsStandardNames() {
-        let judge = Player(playerId: 1, name: "Aaron Judge", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(judge.initials, "AJ")
+        let mahomes = Player(playerId: 1, name: "Patrick Mahomes", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        XCTAssertEqual(mahomes.initials, "PM")
 
-        let ohtani = Player(playerId: 2, name: "Shohei Ohtani", team: "LAD", position: "DH", handedness: "L/R", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(ohtani.initials, "SO")
+        let chase = Player(playerId: 2, name: "Ja'Marr Chase", team: "CIN", position: "WR", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        XCTAssertEqual(chase.initials, "JC")
 
-        let single = Player(playerId: 3, name: "Madonna", team: "NYY", position: "P", handedness: "R/R", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(single.initials, "M")
+        let single = Player(playerId: 3, name: "Cher", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        XCTAssertEqual(single.initials, "C")
     }
 
     func testWeeklyDeltaSumsRecentGamesOnly() {
         let now = Date()
         let player = Player(
-            playerId: 1, name: "Test", team: "NYY", position: "RF",
-            handedness: "R/R", imageURL: nil,
+            playerId: 1, name: "Test", team: "KC", position: "QB",
+            handedness: "", imageURL: nil,
             updatedAt: now, metrics: [], standardStats: [],
             games: [
-                GameTrend(id: "recent-up", date: now.addingTimeInterval(-24 * 3600), opponent: "BOS", summary: "", percentileDelta: 5, keyMetric: "xwOBA"),
-                GameTrend(id: "recent-down", date: now.addingTimeInterval(-2 * 24 * 3600), opponent: "TOR", summary: "", percentileDelta: -2, keyMetric: "Barrel%"),
-                GameTrend(id: "old", date: now.addingTimeInterval(-8 * 24 * 3600), opponent: "TB", summary: "", percentileDelta: 20, keyMetric: "Hard-Hit%")
+                GameTrend(id: "recent-up", date: now.addingTimeInterval(-24 * 3600), opponent: "BUF", summary: "", percentileDelta: 5, keyMetric: "Pass Yds"),
+                GameTrend(id: "recent-down", date: now.addingTimeInterval(-2 * 24 * 3600), opponent: "DEN", summary: "", percentileDelta: -2, keyMetric: "EPA/Play"),
+                GameTrend(id: "old", date: now.addingTimeInterval(-8 * 24 * 3600), opponent: "LV", summary: "", percentileDelta: 20, keyMetric: "Rating")
             ]
         )
 
         XCTAssertEqual(player.weeklyDelta, 3)
     }
 
-    func testStandardStatsDoubleParsingHandlesLeadingDot() {
-        // Defensive: verify cleaning logic works for both ".312" and "0.312" formats
-        let dotValue = ".312"
-        let cleaned = dotValue.hasPrefix(".") ? "0" + dotValue : dotValue
-        XCTAssertEqual(Double(cleaned)!, 0.312, accuracy: 0.001)
-        XCTAssertEqual(Double("0.312")!, 0.312, accuracy: 0.001)
+    @MainActor
+    func testRawNumericStripsThousandsSeparators() {
+        XCTAssertEqual(DashboardViewModel.rawNumeric("4,918")!, 4918, accuracy: 0.001)
+        XCTAssertEqual(DashboardViewModel.rawNumeric("68.3%")!, 68.3, accuracy: 0.001)
+    }
+
+    func testDisplayPositionFallsBackToPlayerType() {
+        let tbd = Player(playerId: 1, name: "Test", team: "KC", position: "TBD", handedness: "", imageURL: nil, updatedAt: Date(), playerType: "def", metrics: [], standardStats: [], games: [])
+        XCTAssertEqual(tbd.displayPosition, "DEF")
     }
 }
