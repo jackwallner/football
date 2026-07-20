@@ -5,9 +5,9 @@ Baseball Savvy StatScout codebase. Same architecture: nightly Python ingest → 
 SwiftUI iOS app reading `player_snapshots` + `player_game_logs` via PostgREST.
 
 ## Supabase
-- URL: `https://ucoveqbyfuxqvpysmixu.supabase.co` (shared project "Sports"; the `briefings`/
-  `source_*` tables in it belong to another app, DO NOT TOUCH).
-- Creds file: `~/.football_credentials` (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY).
+- URL: `https://qwkmpwnhrejsuplcwxrb.supabase.co` (dedicated "Football" project, separate
+  Supabase account — apply schema via `psql` with `SUPABASE_DB_PASSWORD`, not the CLI token).
+- Creds file: `~/.football_credentials` (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_PASSWORD).
 - Tables (already created):
   - `player_snapshots` — same shape as baseball (id bigint, season int, PK (id, season);
     name, team, position, handedness, image_url, player_type, source, metrics jsonb,
