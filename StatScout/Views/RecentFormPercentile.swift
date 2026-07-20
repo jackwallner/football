@@ -36,32 +36,26 @@ struct LeaguePercentileCurve {
     private func clamp(_ p: Double) -> Int { max(1, min(100, Int(p.rounded()))) }
 }
 
-/// A set of per-metric curves for one player population (batters or pitchers),
-/// keyed by the season metric label ("xwOBA", "Barrel%", …).
+/// A set of per-metric curves for one player population, keyed by the season
+/// metric label ("Pass Yds", "Rush Yds", …).
 struct LeaguePercentileCurves {
     private let byLabel: [String: LeaguePercentileCurve]
 
     func curve(for label: String) -> LeaguePercentileCurve? { byLabel[label] }
 
-    /// Build curves from the league pool filtered to one player type. Only
-    /// players whose metric has both a parseable raw value and a percentile
-    /// contribute points — blank-value metrics simply don't anchor the curve,
-    /// which is fine as long as enough players do.
+    /// Build curves from the league pool filtered to the players who appear in
+    /// any of the supplied categories. Only metrics with both a parseable raw
+    /// value and a percentile contribute points.
     @MainActor
-    init(players: [Player], playerType: String, labels: [String]) {
-        // Two-way players anchor both pools (they hit and pitch), mirroring
-        // Player.matchesPlayerType so curve populations match the leaderboards.
-        let pool = players.filter {
-            let type = $0.playerType?.lowercased()
-            return playerType == "pitcher"
-                ? (type == "pitcher" || type == "two_way")
-                : (type != "pitcher")
+    init(players: [Player], categories: [MetricCategory], labels: [String]) {
+        let pool = players.filter { player in
+            categories.contains { player.matchesPlayerType(for: $0) }
         }
         var result: [String: LeaguePercentileCurve] = [:]
         for label in labels {
             var pts: [(Double, Double)] = []
             for player in pool {
-                guard let m = player.metrics.first(where: { $0.label == label }),
+                guard let m = player.metrics.first(where: { $0.label == label && categories.contains($0.category) }),
                       let v = DashboardViewModel.rawNumeric(m.value) else { continue }
                 pts.append((v, Double(m.percentile)))
             }

@@ -353,13 +353,13 @@ struct OnboardingCards: View {
 
     private let pages: [OnboardingPage] = [
         OnboardingPage(
-            icon: "baseball.fill",
+            icon: "football.fill",
             title: "Your Pocket\nScout",
-            description: "Baseball percentile rankings built for a fast mobile view. Every qualified player, every metric, always up to date.",
+            description: "NFL percentile rankings built for a fast mobile view. Every qualified player, every metric, always up to date.",
             bullets: [
                 BulletItem(text: "Every qualified player ranked", icon: "checkmark.circle.fill", color: SavantPalette.savantRed),
-                BulletItem(text: "xwOBA, Barrel%, Sprint Speed, and more", icon: "checkmark.circle.fill", color: SavantPalette.savantRed),
-                BulletItem(text: "Updated daily — fresh data, always", icon: "checkmark.circle.fill", color: SavantPalette.savantRed)
+                BulletItem(text: "EPA, CPOE, YAC, RYOE, and more", icon: "checkmark.circle.fill", color: SavantPalette.savantRed),
+                BulletItem(text: "Updated nightly — fresh data, always", icon: "checkmark.circle.fill", color: SavantPalette.savantRed)
             ]
         ),
         OnboardingPage(
@@ -377,7 +377,7 @@ struct OnboardingCards: View {
             title: "Go Deeper\nwith StatScout+",
             description: "Recent form, every roster player, head-to-head matchups, and seasons back to 2020 — the full scouting toolkit.",
             bullets: [
-                BulletItem(text: "Last 7 / 15 / 30 day form on any player or team", icon: "flame.fill", color: SavantPalette.savantRed),
+                BulletItem(text: "Last 1 / 3 / 5 game form on any player or team", icon: "flame.fill", color: SavantPalette.savantRed),
                 BulletItem(text: "Head-to-head comparisons across every metric", icon: "person.2.fill", color: SavantPalette.savantRed),
                 BulletItem(text: "Year-over-year trends and every past season", icon: "calendar.badge.clock", color: SavantPalette.savantRed)
             ]

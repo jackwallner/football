@@ -1,40 +1,51 @@
 import SwiftUI
 
 enum StandardStatCategory: String, CaseIterable {
-    case hitting = "Hitting"
-    case pitching = "Pitching"
+    case passing = "Passing"
+    case rushing = "Rushing"
+    case receiving = "Receiving"
+    case defense = "Defense"
+
+    var metricCategory: MetricCategory {
+        switch self {
+        case .passing: return .passing
+        case .rushing: return .rushing
+        case .receiving: return .receiving
+        case .defense: return .defense
+        }
+    }
 }
 
 struct StandardStatsLeadersView: View {
     @EnvironmentObject private var store: StoreService
     let players: [Player]
-    @State private var selectedCategory: StandardStatCategory = .hitting
-    @State private var selectedStat: String = "AVG"
+    @State private var selectedCategory: StandardStatCategory = .passing
+    @State private var selectedStat: String = "Pass Yds"
     @State private var sortDescending = true
 
     /// Stats where lower is the better outcome — sort defaults to ascending so the
-    /// leader (lowest ERA, fewest losses, etc.) sits at the top.
-    private static let lowerIsBetter: Set<String> = ["ERA", "WHIP", "BB/9", "L"]
+    /// leader sits at the top.
+    private static let lowerIsBetter: Set<String> = ["INT"]
 
-    // SO is contextual: pitcher strikeouts (good) vs batter strikeouts (bad).
-    // The pitching tab keeps SO as "more is better"; the hitting tab flips it.
     private func defaultDescending(for stat: String) -> Bool {
-        if stat == "SO" {
-            return selectedCategory == .pitching
-        }
-        return !Self.lowerIsBetter.contains(stat)
+        !Self.lowerIsBetter.contains(stat)
     }
 
-    // Available stats per category
+    // Available (numeric) stats per category — labels match the backend
+    // standard_stats jsonb exactly.
     var availableStats: [String] {
         switch selectedCategory {
-        case .hitting:
-            return ["AVG", "HR", "RBI", "OBP", "SLG", "OPS", "H", "R", "2B", "3B", "SB", "BB", "SO"]
-        case .pitching:
-            return ["ERA", "WHIP", "W", "L", "SV", "SO", "IP", "K/9", "BB/9", "QS"]
+        case .passing:
+            return ["Pass Yds", "Pass TD", "INT", "G"]
+        case .rushing:
+            return ["Rush Yds", "Rush TD", "Car", "G"]
+        case .receiving:
+            return ["Rec Yds", "Rec TD", "G"]
+        case .defense:
+            return ["Tackles", "Sacks", "Def INT", "G"]
         }
     }
-    
+
     // Filter players who have the selected stat
     var filteredPlayers: [Player] {
         players.filter { player in
@@ -45,25 +56,15 @@ struct StandardStatsLeadersView: View {
     }
 
     private func matchesPlayerType(player: Player) -> Bool {
-        // Pitchers carry batter-shaped standardStats (HR allowed, etc.) and a few
-        // position players have appeared in mop-up pitching, so a permissive `!=`
-        // filter leaks both directions. Whitelist by role, AND require a Savant
-        // percentile in the matching category — that's Savant's qualification
-        // signal. Without it the AVG board fills with 1-metric, sub-sample
-        // players (e.g. .366 on 42 AB whose only metric is Sprint Speed) ranked
-        // above real regulars. `qualifiedSeasonPlayers` can't catch this: ingest
-        // already prunes metric-less rows, so that gate passes everyone.
-        let type = player.playerType?.lowercased()
-        switch selectedCategory {
-        case .hitting:
-            return type != "pitcher"
-                && player.metrics.contains { $0.category == .hitting }
-        case .pitching:
-            return (type == "pitcher" || type == "two_way")
-                && player.metrics.contains { $0.category == .pitching }
+        // Require a percentile in the matching category — that's the pipeline's
+        // qualification signal — so the board shows genuine contributors rather
+        // than anyone who happens to carry a shared standard-stat label.
+        if selectedCategory == .defense {
+            return player.playerType?.lowercased() == "def"
         }
+        return player.metrics.contains { $0.category == selectedCategory.metricCategory }
     }
-    
+
     // Sort players by the selected stat value
     var sortedPlayers: [Player] {
         filteredPlayers.sorted { p1, p2 in
@@ -72,15 +73,14 @@ struct StandardStatsLeadersView: View {
             return sortDescending ? v1 > v2 : v1 < v2
         }
     }
-    
+
     // Get numeric value for sorting
     private func statValue(for player: Player) -> Double {
         guard let stats = player.standardStats,
               let stat = stats.first(where: { $0.label == selectedStat }) else {
             return 0
         }
-        let cleaned = stat.value.hasPrefix(".") ? "0" + stat.value : stat.value
-        return Double(cleaned) ?? 0
+        return DashboardViewModel.rawNumeric(stat.value) ?? 0
     }
     
     // Get formatted stat value for display

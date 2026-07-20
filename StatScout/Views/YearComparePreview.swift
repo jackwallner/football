@@ -117,12 +117,12 @@ struct YearComparePreview: View {
 
     private var mockCategoryCard: some View {
         VStack(spacing: 0) {
-            mockHeader("HITTING")
+            mockHeader("PASSING")
 
-            mockRow(label: "xwOBA", priorPct: 68, recentPct: 82, delta: 14, priorVal: ".345", recentVal: ".412")
-            mockRow(label: "Barrel%", priorPct: 55, recentPct: 79, delta: 24, priorVal: "8.2%", recentVal: "14.1%")
-            mockRow(label: "HardHit%", priorPct: 72, recentPct: 76, delta: 4, priorVal: "42.5%", recentVal: "45.8%")
-            mockRow(label: "Sprint Speed", priorPct: 81, recentPct: 78, delta: -3, priorVal: "28.5 ft/s", recentVal: "28.1 ft/s")
+            mockRow(label: "Pass Yds", priorPct: 68, recentPct: 82, delta: 14, priorVal: "3,650", recentVal: "4,180")
+            mockRow(label: "Pass TD", priorPct: 55, recentPct: 79, delta: 24, priorVal: "24", recentVal: "34")
+            mockRow(label: "Rating", priorPct: 72, recentPct: 76, delta: 4, priorVal: "94.5", recentVal: "98.1")
+            mockRow(label: "EPA/Play", priorPct: 81, recentPct: 78, delta: -3, priorVal: "0.18", recentVal: "0.15")
         }
         .background(SavantPalette.surface)
         .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))

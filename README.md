@@ -1,6 +1,6 @@
-# StatScout
+# Gridiron StatScout
 
-StatScout is a native SwiftUI iOS app for fans and media to view mobile-friendly player percentile pages from a nightly refreshed advanced-metrics data feed.
+Gridiron StatScout is a native SwiftUI iOS app for NFL fans and media to view mobile-friendly player percentile pages (passing / rushing / receiving / defense) from a nightly refreshed advanced-metrics data feed. Unaffiliated with the NFL.
 
 ## Stack
 
@@ -8,7 +8,7 @@ StatScout is a native SwiftUI iOS app for fans and media to view mobile-friendly
 - **Project generation:** XcodeGen
 - **Database/API:** Supabase Postgres + generated REST API
 - **Nightly refresh:** GitHub Actions scheduled Python job
-- **Ingestion:** Python + `pybaseball` percentile rankings
+- **Ingestion:** Python + `nflreadpy` (nflverse) within-category percentile rankings
 
 ## Project layout
 

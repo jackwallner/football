@@ -36,7 +36,7 @@ struct AboutView: View {
         VStack(spacing: 0) {
             SavantSectionBar(title: "STATSCOUT")
             HStack(spacing: 12) {
-                Image(systemName: "baseball.fill")
+                Image(systemName: "football.fill")
                     .font(.title2)
                     .foregroundStyle(SavantPalette.savantRed)
                 VStack(alignment: .leading, spacing: 4) {
@@ -127,7 +127,7 @@ struct AboutView: View {
             row(
                 icon: "moon.stars.fill",
                 title: "Nightly Refresh",
-                subtitle: "Refreshed each night using publicly available pitch-tracking data."
+                subtitle: "Refreshed each night using publicly available NFL play-by-play and Next Gen Stats data."
             )
             Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline)
             row(
@@ -235,7 +235,7 @@ struct AboutView: View {
     private var disclaimerCard: some View {
         VStack(spacing: 0) {
             SavantSectionBar(title: "DISCLAIMER")
-            Text("Not affiliated with, endorsed by, or sponsored by Major League Baseball, MLB Advanced Media, MLBPA, or any team. Team names and abbreviations are used for identification only. All trademarks are property of their respective owners.")
+            Text("Not affiliated with, endorsed by, or sponsored by the National Football League, its teams, or the NFLPA. Team names and abbreviations are used for identification only. All trademarks are property of their respective owners.")
                 .font(SavantType.small)
                 .foregroundStyle(SavantPalette.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)

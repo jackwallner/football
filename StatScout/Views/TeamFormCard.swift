@@ -25,21 +25,27 @@ struct TeamRankingsCard: View {
     let fetchTeamGameLogs: ((String, Int, Date) async throws -> [PlayerGameLog])?
     let onUpgradeTap: () -> Void
 
-    @State private var side: Side = .batting
+    @State private var side: Side = .offense
     @State private var mode: Mode = .season
-    @State private var windowDays: Int = 15
+    @State private var windowGames: Int = 3
     @State private var logs: [PlayerGameLog] = []
     @State private var loading = false
     @State private var loadError: String?
-    @State private var batterCurves: LeaguePercentileCurves?
-    @State private var pitcherCurves: LeaguePercentileCurves?
+    @State private var offenseCurves: LeaguePercentileCurves?
+    @State private var defenseCurves: LeaguePercentileCurves?
 
     enum Side: String, CaseIterable, Identifiable {
-        case batting, pitching
+        case offense, defense
         var id: String { rawValue }
-        var label: String { self == .batting ? "Hitting" : "Pitching" }
-        var playerType: String { self == .batting ? "batter" : "pitcher" }
-        var category: MetricCategory { self == .batting ? .hitting : .pitching }
+        var label: String { self == .offense ? "Offense" : "Defense" }
+        /// Metric categories this side aggregates.
+        var categories: [MetricCategory] {
+            self == .offense ? [.passing, .rushing, .receiving] : [.defense]
+        }
+        /// True when a game-log row (player_type ∈ qb/rb/wr/te/def) belongs to this side.
+        func includes(playerType: String) -> Bool {
+            self == .defense ? playerType.lowercased() == "def" : playerType.lowercased() != "def"
+        }
     }
 
     enum Mode: String, CaseIterable, Identifiable {
@@ -47,12 +53,12 @@ struct TeamRankingsCard: View {
         var id: String { rawValue }
     }
 
-    /// Smallest team-window PA we'll treat as trustworthy — below this we flag
-    /// the window as a small sample (rainouts, all-star break, late call-ups).
-    private let smallSamplePAThreshold = 80
+    /// Smallest team-window play count we'll treat as trustworthy — below this we
+    /// flag the window as a small sample.
+    private let smallSamplePlaysThreshold = 40
 
     private var curves: LeaguePercentileCurves? {
-        side == .pitching ? pitcherCurves : batterCurves
+        side == .defense ? defenseCurves : offenseCurves
     }
 
     var body: some View {
@@ -161,22 +167,22 @@ struct TeamRankingsCard: View {
 
     private var windowPicker: some View {
         HStack(spacing: 6) {
-            ForEach(RecentFormWindow.windows, id: \.days) { w in
+            ForEach(RecentFormWindow.windows, id: \.span) { w in
                 Button {
-                    windowDays = w.days
+                    windowGames = w.span
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(w.label)
                         .font(SavantType.smallBold)
-                        .foregroundStyle(windowDays == w.days ? .white : SavantPalette.inkSecondary)
+                        .foregroundStyle(windowGames == w.span ? .white : SavantPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(windowDays == w.days ? SavantPalette.savantRed : SavantPalette.surface)
+                        .background(windowGames == w.span ? SavantPalette.savantRed : SavantPalette.surface)
                         .clipShape(Capsule())
                         .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(w.label) days")
+                .accessibilityLabel("\(w.label) games")
             }
         }
         .padding(.horizontal, SavantGeo.padInline)
@@ -192,7 +198,7 @@ struct TeamRankingsCard: View {
         if rows.isEmpty {
             emptyAggregate
         } else {
-            SavantSubSectionBar(title: side.category.rawValue.uppercased())
+            SavantSubSectionBar(title: side.label.uppercased())
 
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
@@ -215,66 +221,64 @@ struct TeamRankingsCard: View {
         }
     }
 
-    /// One bar per roster metric — PA/IP-weighted mean placed on the league curve.
+    /// One bar per roster metric — roster mean placed on the league curve. Each
+    /// bar keeps its own metric category (Passing / Rushing / Receiving) so the
+    /// leaderboard link routes correctly.
     private func aggregateSeasonRows() -> [Metric] {
-        // matchesPlayerType keeps two-way players in both pools (Ohtani hits AND pitches).
-        let pool = players.filter { $0.matchesPlayerType(for: side.category) }
+        let cats = side.categories
+        let pool = players.filter { p in cats.contains { p.matchesPlayerType(for: $0) } }
         guard !pool.isEmpty, let curves else { return [] }
 
-        let present = Set(pool.flatMap { p in
-            p.metrics.filter { $0.category == side.category }.map(\.label)
-        })
-        let ordered = side.category.metricPriorityOrder.filter { present.contains($0) }
-        let labels = ordered + present.subtracting(side.category.metricPriorityOrder).sorted()
-
-        return labels.compactMap { label -> Metric? in
-            var weightedSum = 0.0
-            var weightTotal = 0.0
-            for player in pool {
-                guard let m = player.metrics.first(where: { $0.label == label && $0.category == side.category }),
-                      let v = DashboardViewModel.rawNumeric(m.value) else { continue }
-                let w = workload(player) ?? 1.0
-                weightedSum += v * w
-                weightTotal += w
+        // Ordered (label, category) pairs present on the roster.
+        var pairs: [(label: String, category: MetricCategory)] = []
+        var seen = Set<String>()
+        for cat in cats {
+            let present = Set(pool.flatMap { p in p.metrics.filter { $0.category == cat }.map(\.label) })
+            for label in cat.metricPriorityOrder where present.contains(label) {
+                if seen.insert(label).inserted { pairs.append((label, cat)) }
             }
-            guard weightTotal > 0 else { return nil }
-            let avg = weightedSum / weightTotal
-            guard let pct = curves.curve(for: label)?.percentile(for: avg) else { return nil }
+        }
+
+        return pairs.compactMap { pair -> Metric? in
+            var sum = 0.0
+            var count = 0.0
+            for player in pool {
+                guard let m = player.metrics.first(where: { $0.label == pair.label && $0.category == pair.category }),
+                      let v = DashboardViewModel.rawNumeric(m.value) else { continue }
+                sum += v
+                count += 1
+            }
+            guard count > 0 else { return nil }
+            let avg = sum / count
+            guard let pct = curves.curve(for: pair.label)?.percentile(for: avg) else { return nil }
             return Metric(
-                id: "teamavg-\(label)",
-                label: label,
-                value: formattedValue(avg, label: label),
+                id: "teamavg-\(pair.label)",
+                label: pair.label,
+                value: formattedValue(avg, label: pair.label),
                 percentile: pct,
-                category: side.category
+                category: pair.category
             )
         }
     }
 
-    /// Workload for weighting — PA for batters, IP for pitchers, read from the
-    /// standard-stats block. nil falls back to equal weighting.
-    private func workload(_ player: Player) -> Double? {
-        let key = side == .pitching ? "IP" : "PA"
-        guard let raw = player.standardStats?.first(where: { $0.label == key })?.value else { return nil }
-        return DashboardViewModel.rawNumeric(raw)
-    }
-
     private func formattedValue(_ v: Double, label: String) -> String {
-        if label == "xwOBA" { return String(format: "%.3f", v) }
-        if label == "EV"     { return String(format: "%.1f mph", v) }
         if label.hasSuffix("%") { return String(format: "%.1f%%", v) }
-        return String(format: "%.2f", v)
+        if abs(v) >= 100 { return String(format: "%.0f", v) }
+        return String(format: "%.1f", v)
     }
 
     // MARK: - Recent
 
     private var sideLogs: [PlayerGameLog] {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -windowDays, to: .now) ?? .now
-        return logs.filter { $0.playerType == side.playerType && $0.gameDate >= cutoff }
+        let onSide = logs.filter { side.includes(playerType: $0.playerType) }
+        // Most-recent N game dates across the roster define the window.
+        let recentDates = Set(onSide.map(\.gameDate).sorted(by: >).prefix(windowGames))
+        return onSide.filter { recentDates.contains($0.gameDate) }
     }
 
     private var recentWindow: RecentFormWindow? {
         guard !sideLogs.isEmpty else { return nil }
-        return RecentFormWindow.build(label: "Last \(windowDays)", days: windowDays, logs: sideLogs)
+        return RecentFormWindow.build(label: "Last \(windowGames)", span: windowGames, logs: sideLogs)
     }
 
     @ViewBuilder
@@ -302,29 +306,29 @@ struct TeamRankingsCard: View {
     /// and no real team data is shown, so the blur can't be read through to leak
     /// the actual recent numbers.
     private var recentTeaser: some View {
-        let sample: [Metric] = side == .batting
+        let sample: [Metric] = side == .offense
             ? [
-                Metric(id: "tt_xwoba",   label: "xwOBA",     value: "0.342",    percentile: 84, category: .hitting),
-                Metric(id: "tt_barrel",  label: "Barrel%",   value: "9.8%",     percentile: 77, category: .hitting),
-                Metric(id: "tt_hardhit", label: "Hard-Hit%", value: "43.5%",    percentile: 71, category: .hitting),
-                Metric(id: "tt_ev",      label: "EV",        value: "90.1 mph", percentile: 66, category: .hitting),
+                Metric(id: "tt_passyd", label: "Pass Yds", value: "3,980", percentile: 84, category: .passing),
+                Metric(id: "tt_rushyd", label: "Rush Yds", value: "1,720", percentile: 77, category: .rushing),
+                Metric(id: "tt_recyd",  label: "Rec Yds",  value: "3,910", percentile: 71, category: .receiving),
+                Metric(id: "tt_yac",    label: "YAC",      value: "5.4",   percentile: 66, category: .receiving),
             ]
             : [
-                Metric(id: "tt_xwoba", label: "xwOBA",     value: "0.298", percentile: 81, category: .pitching),
-                Metric(id: "tt_k",     label: "K%",        value: "25.1%", percentile: 76, category: .pitching),
-                Metric(id: "tt_bb",    label: "BB%",       value: "7.2%",  percentile: 70, category: .pitching),
-                Metric(id: "tt_hh",    label: "Hard-Hit%", value: "36.4%", percentile: 73, category: .pitching),
+                Metric(id: "tt_tackles", label: "Tackles", value: "78",  percentile: 81, category: .defense),
+                Metric(id: "tt_sacks",   label: "Sacks",   value: "11",  percentile: 76, category: .defense),
+                Metric(id: "tt_int",     label: "INT",     value: "4",   percentile: 70, category: .defense),
+                Metric(id: "tt_pd",      label: "PD",      value: "9",   percentile: 73, category: .defense),
             ]
         return VStack(spacing: 0) {
             HStack(spacing: 12) {
                 summaryStat(label: "G", value: "14")
-                summaryStat(label: side == .pitching ? "BF" : "PA", value: "521")
-                if side == .batting { summaryStat(label: "BBE", value: "318") }
+                summaryStat(label: "Plays", value: "521")
+                if side == .offense { summaryStat(label: "Touches", value: "318") }
                 Spacer(minLength: 0)
             }
             .padding(SavantGeo.padInline)
 
-            SavantSubSectionBar(title: side.category.rawValue.uppercased())
+            SavantSubSectionBar(title: side.label.uppercased())
             VStack(spacing: 0) {
                 ForEach(Array(sample.enumerated()), id: \.element.id) { index, metric in
                     MetricBar(metric: metric)
@@ -362,7 +366,7 @@ struct TeamRankingsCard: View {
             recentSummaryRow(w)
             let rows = recentDisplayRows(window: w)
             if !rows.isEmpty {
-                SavantSubSectionBar(title: side.category.rawValue.uppercased())
+                SavantSubSectionBar(title: side.label.uppercased())
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
                         MetricBar(metric: metric)
@@ -381,7 +385,7 @@ struct TeamRankingsCard: View {
                 Image(systemName: "calendar.badge.exclamationmark")
                     .font(.system(size: 22))
                     .foregroundStyle(SavantPalette.inkTertiary)
-                Text("No \(side.label.lowercased()) data in the last \(windowDays) days")
+                Text("No \(side.label.lowercased()) data in the last \(windowGames) games")
                     .font(SavantType.small)
                     .foregroundStyle(SavantPalette.inkSecondary)
             }
@@ -393,12 +397,12 @@ struct TeamRankingsCard: View {
     private func recentSummaryRow(_ w: RecentFormWindow) -> some View {
         HStack(spacing: 12) {
             summaryStat(label: "G", value: "\(w.games)")
-            summaryStat(label: side == .pitching ? "BF" : "PA", value: "\(w.plateAppearances)")
-            if side == .batting {
-                summaryStat(label: "BBE", value: "\(w.battedBallEvents)")
+            summaryStat(label: "Plays", value: "\(w.plays)")
+            if side == .offense {
+                summaryStat(label: "Touches", value: "\(w.touches)")
             }
             Spacer(minLength: 0)
-            if w.plateAppearances < smallSamplePAThreshold {
+            if w.plays < smallSamplePlaysThreshold {
                 Text("SMALL SAMPLE")
                     .font(SavantType.micro)
                     .tracking(0.4)
@@ -424,37 +428,36 @@ struct TeamRankingsCard: View {
         }
     }
 
-    /// Maps a recent game-log metric onto the matching season aggregate label.
-    /// Keyed by `seasonLabel` so a recent value can overlay the season bar it
-    /// corresponds to (pitchers' recent EV maps onto "Avg EV Against", etc.).
+    /// Maps a recent game-log metric key onto the matching season aggregate label
+    /// so a recent value can overlay the season bar it corresponds to.
     private var recentSpecs: [(key: String, seasonLabel: String, format: String)] {
-        side == .pitching
+        side == .defense
             ? [
-                ("opp_xwoba",       "xwOBA",          "%.3f"),
-                ("k_pct",           "K%",             "%.1f%%"),
-                ("bb_pct",          "BB%",            "%.1f%%"),
-                ("opp_hardhit_pct", "Hard-Hit%",      "%.1f%%"),
-                ("opp_barrel_pct",  "Barrel%",        "%.1f%%"),
-                ("opp_ev_avg",      "Avg EV Against", "%.1f mph"),
+                ("tackles",           "Tackles", "%.0f"),
+                ("def_sacks",         "Sacks",   "%.1f"),
+                ("def_interceptions", "INT",     "%.0f"),
             ]
             : [
-                ("xwoba",       "xwOBA",     "%.3f"),
-                ("barrel_pct",  "Barrel%",   "%.1f%%"),
-                ("hardhit_pct", "Hard-Hit%", "%.1f%%"),
-                ("ev_avg",      "EV",        "%.1f mph"),
-                ("ev_max",      "Max EV",    "%.1f mph"),
-                ("k_pct",       "K%",        "%.1f%%"),
-                ("bb_pct",      "BB%",       "%.1f%%"),
+                ("passing_yards",   "Pass Yds", "%.0f"),
+                ("passing_tds",     "Pass TD",  "%.0f"),
+                ("rushing_yards",   "Rush Yds", "%.0f"),
+                ("rushing_tds",     "Rush TD",  "%.0f"),
+                ("receiving_yards", "Rec Yds",  "%.0f"),
+                ("receptions",      "Rec",      "%.0f"),
             ]
+    }
+
+    /// The metric category a season label belongs to.
+    private func category(forLabel label: String) -> MetricCategory {
+        for cat in side.categories where cat.metricPriorityOrder.contains(label) {
+            return cat
+        }
+        return side.categories.first ?? .passing
     }
 
     /// Recent mode mirrors the season list: every season aggregate bar is shown.
     /// Metrics with game-log data in the window render the recent value (re-placed
-    /// on the league curve); the rest fall back to their season aggregate bar — so
-    /// a team's Recent view shows the same full slate of stats as its Season view,
-    /// not just the handful the per-game feed carries. Recent specs the season
-    /// aggregate omits (Savant sometimes drops e.g. Hard-Hit%) are injected as
-    /// stubs so their recent bar still appears.
+    /// on the league curve); the rest fall back to their season aggregate bar.
     private func recentDisplayRows(window w: RecentFormWindow) -> [Metric] {
         let seasonRows = aggregateSeasonRows()
         let existing = Set(seasonRows.map(\.label))
@@ -466,7 +469,7 @@ struct TeamRankingsCard: View {
                 label: spec.seasonLabel,
                 value: "",
                 percentile: 0,
-                category: side.category
+                category: category(forLabel: spec.seasonLabel)
             )
         }
         return (seasonRows + stubs).map { recentMetric(forSeasonLabel: $0.label, window: w) ?? $0 }
@@ -483,7 +486,7 @@ struct TeamRankingsCard: View {
             label: label,
             value: String(format: spec.format, v),
             percentile: pct,
-            category: side.category
+            category: category(forLabel: label)
         )
     }
 
@@ -493,8 +496,9 @@ struct TeamRankingsCard: View {
         loading = true
         loadError = nil
         do {
-            // 30 days back covers the largest window — 7/15 are derived client-side.
-            let since = Calendar.current.date(byAdding: .day, value: -30, to: .now) ?? .now
+            // Pull a wide window (last ~120 days of the season) so the client can
+            // slice the most recent 1 / 3 / 5 games out of it.
+            let since = Calendar.current.date(byAdding: .day, value: -120, to: .now) ?? .now
             logs = try await fetch(team, season, since)
         } catch {
             loadError = "Couldn't load team form. Pull to refresh."
@@ -518,7 +522,7 @@ struct TeamRankingsCard: View {
     }
 
     private var weightedCaption: some View {
-        Text("Weighted by \(side == .pitching ? "IP" : "PA") across the \(side.label.lowercased()) roster")
+        Text("Averaged across the \(side.label.lowercased()) roster")
             .font(SavantType.micro)
             .tracking(0.3)
             .foregroundStyle(SavantPalette.inkTertiary)
@@ -528,12 +532,10 @@ struct TeamRankingsCard: View {
     }
 
     private func rebuildCurves() {
-        // Cover both the season aggregate labels (every roster metric) and the
-        // recent specs' season labels (e.g. pitchers' "Avg EV Against").
-        let recentSeasonLabels = ["xwOBA", "Barrel%", "Hard-Hit%", "EV", "Max EV", "Avg EV Against", "K%", "BB%"]
         let rosterLabels = players.flatMap { $0.metrics.map(\.label) }
-        let labels = Array(Set(rosterLabels + recentSeasonLabels))
-        batterCurves = LeaguePercentileCurves(players: leaguePlayers, playerType: "batter", labels: labels)
-        pitcherCurves = LeaguePercentileCurves(players: leaguePlayers, playerType: "pitcher", labels: labels)
+        let recentLabels = MetricCategory.allCases.flatMap { $0.metricPriorityOrder }
+        let labels = Array(Set(rosterLabels + recentLabels))
+        offenseCurves = LeaguePercentileCurves(players: leaguePlayers, categories: [.passing, .rushing, .receiving], labels: labels)
+        defenseCurves = LeaguePercentileCurves(players: leaguePlayers, categories: [.defense], labels: labels)
     }
 }

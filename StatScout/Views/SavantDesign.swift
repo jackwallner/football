@@ -93,75 +93,91 @@ enum SavantGeo {
     static let rowHeightHeader: CGFloat = 28
 }
 
+/// NFL team primary colors, keyed by nflverse abbreviation. (Type name kept as
+/// `MLBTeamColor` to avoid churning every call site; it holds NFL colors now.)
 enum MLBTeamColor {
     static let primary: [String: Color] = [
-        "ARI": Color(red: 0.65, green: 0.10, blue: 0.20),
-        "ATL": Color(red: 0.79, green: 0.10, blue: 0.18),
-        "BAL": Color(red: 0.87, green: 0.30, blue: 0.07),
-        "BOS": Color(red: 0.74, green: 0.13, blue: 0.18),
-        "CHC": Color(red: 0.04, green: 0.22, blue: 0.46),
-        "CWS": Color(red: 0.10, green: 0.10, blue: 0.10),
-        "CIN": Color(red: 0.78, green: 0.07, blue: 0.13),
-        "CLE": Color(red: 0.04, green: 0.22, blue: 0.42),
-        "COL": Color(red: 0.20, green: 0.16, blue: 0.42),
-        "DET": Color(red: 0.05, green: 0.25, blue: 0.45),
-        "HOU": Color(red: 0.92, green: 0.34, blue: 0.13),
-        "KC":  Color(red: 0.00, green: 0.27, blue: 0.51),
-        "LAA": Color(red: 0.74, green: 0.13, blue: 0.18),
-        "LAD": Color(red: 0.00, green: 0.30, blue: 0.55),
-        "MIA": Color(red: 0.00, green: 0.65, blue: 0.83),
-        "MIL": Color(red: 0.07, green: 0.20, blue: 0.36),
-        "MIN": Color(red: 0.00, green: 0.27, blue: 0.51),
-        "NYM": Color(red: 0.00, green: 0.27, blue: 0.55),
-        "NYY": Color(red: 0.00, green: 0.18, blue: 0.40),
-        "OAK": Color(red: 0.00, green: 0.32, blue: 0.27),
-        "PHI": Color(red: 0.90, green: 0.16, blue: 0.20),
-        "PIT": Color(red: 0.99, green: 0.78, blue: 0.13),
-        "SD":  Color(red: 0.18, green: 0.10, blue: 0.07),
-        "SEA": Color(red: 0.00, green: 0.36, blue: 0.46),
-        "SF":  Color(red: 0.99, green: 0.36, blue: 0.07),
-        "STL": Color(red: 0.78, green: 0.13, blue: 0.20),
-        "TB":  Color(red: 0.00, green: 0.21, blue: 0.40),
-        "TEX": Color(red: 0.00, green: 0.20, blue: 0.50),
-        "TOR": Color(red: 0.07, green: 0.30, blue: 0.65),
-        "WSH": Color(red: 0.67, green: 0.10, blue: 0.18)
+        "ARI": Color(red: 0.59, green: 0.14, blue: 0.25),
+        "ATL": Color(red: 0.65, green: 0.10, blue: 0.19),
+        "BAL": Color(red: 0.14, green: 0.09, blue: 0.45),
+        "BUF": Color(red: 0.00, green: 0.20, blue: 0.55),
+        "CAR": Color(red: 0.00, green: 0.52, blue: 0.79),
+        "CHI": Color(red: 0.04, green: 0.09, blue: 0.16),
+        "CIN": Color(red: 0.98, green: 0.31, blue: 0.08),
+        "CLE": Color(red: 0.34, green: 0.18, blue: 0.05),
+        "DAL": Color(red: 0.02, green: 0.12, blue: 0.26),
+        "DEN": Color(red: 0.98, green: 0.31, blue: 0.08),
+        "DET": Color(red: 0.00, green: 0.46, blue: 0.71),
+        "GB":  Color(red: 0.13, green: 0.22, blue: 0.19),
+        "HOU": Color(red: 0.01, green: 0.13, blue: 0.18),
+        "IND": Color(red: 0.00, green: 0.17, blue: 0.37),
+        "JAX": Color(red: 0.00, green: 0.40, blue: 0.47),
+        "KC":  Color(red: 0.89, green: 0.09, blue: 0.22),
+        "LA":  Color(red: 0.00, green: 0.21, blue: 0.58),
+        "LAC": Color(red: 0.00, green: 0.50, blue: 0.78),
+        "LV":  Color(red: 0.10, green: 0.10, blue: 0.11),
+        "MIA": Color(red: 0.00, green: 0.56, blue: 0.59),
+        "MIN": Color(red: 0.31, green: 0.15, blue: 0.51),
+        "NE":  Color(red: 0.00, green: 0.13, blue: 0.27),
+        "NO":  Color(red: 0.62, green: 0.53, blue: 0.36),
+        "NYG": Color(red: 0.04, green: 0.13, blue: 0.40),
+        "NYJ": Color(red: 0.07, green: 0.34, blue: 0.25),
+        "PHI": Color(red: 0.00, green: 0.30, blue: 0.33),
+        "PIT": Color(red: 0.98, green: 0.71, blue: 0.07),
+        "SEA": Color(red: 0.00, green: 0.13, blue: 0.27),
+        "SF":  Color(red: 0.67, green: 0.00, blue: 0.00),
+        "TB":  Color(red: 0.84, green: 0.04, blue: 0.04),
+        "TEN": Color(red: 0.05, green: 0.14, blue: 0.25),
+        "WAS": Color(red: 0.35, green: 0.08, blue: 0.08)
     ]
     static func color(_ abbr: String) -> Color { primary[normalizedTeamAbbreviation(abbr)] ?? SavantPalette.inkTertiary }
 }
 
+/// NFL team abbreviations in nflverse form. Shared by the Teams grid and switcher.
+let nflTeamAbbreviations: [String] = [
+    "ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN",
+    "DET", "GB", "HOU", "IND", "JAX", "KC", "LA", "LAC", "LV", "MIA",
+    "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF", "TB",
+    "TEN", "WAS"
+]
+
 func normalizedTeamAbbreviation(_ team: String) -> String {
     let key = team.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
     let aliases: [String: String] = [
-        "ARIZONA DIAMONDBACKS": "ARI", "AZ": "ARI", "ATLANTA BRAVES": "ATL", "BALTIMORE ORIOLES": "BAL",
-        "BOSTON RED SOX": "BOS", "CHICAGO CUBS": "CHC", "CHICAGO WHITE SOX": "CWS",
-        "CHW": "CWS", "CINCINNATI REDS": "CIN", "CLEVELAND GUARDIANS": "CLE",
-        "CLEVELAND INDIANS": "CLE", "COLORADO ROCKIES": "COL", "DETROIT TIGERS": "DET",
-        "HOUSTON ASTROS": "HOU", "KANSAS CITY ROYALS": "KC", "KCR": "KC",
-        "LOS ANGELES ANGELS": "LAA", "ANAHEIM ANGELS": "LAA", "LOS ANGELES DODGERS": "LAD",
-        "MIAMI MARLINS": "MIA", "MILWAUKEE BREWERS": "MIL", "MINNESOTA TWINS": "MIN",
-        "NEW YORK METS": "NYM", "NEW YORK YANKEES": "NYY", "ATHLETICS": "OAK",
-        "OAKLAND ATHLETICS": "OAK", "ATH": "OAK", "PHILADELPHIA PHILLIES": "PHI",
-        "PITTSBURGH PIRATES": "PIT", "SAN DIEGO PADRES": "SD", "SDP": "SD",
-        "SEATTLE MARINERS": "SEA", "SAN FRANCISCO GIANTS": "SF", "SFG": "SF",
-        "ST. LOUIS CARDINALS": "STL", "ST LOUIS CARDINALS": "STL", "TAMPA BAY RAYS": "TB",
-        "TBR": "TB", "TEXAS RANGERS": "TEX", "TORONTO BLUE JAYS": "TOR",
-        "WASHINGTON NATIONALS": "WSH", "WSN": "WSH"
+        // Legacy / alternate abbreviations that map to the current nflverse code.
+        "OAK": "LV", "LVR": "LV", "SD": "LAC", "SDG": "LAC", "STL": "LA",
+        "LAR": "LA", "WSH": "WAS", "WFT": "WAS", "JAC": "JAX", "GNB": "GB",
+        "KAN": "KC", "NWE": "NE", "NOR": "NO", "SFO": "SF", "TAM": "TB",
+        "ARZ": "ARI", "CLV": "CLE", "HST": "HOU", "BLT": "BAL",
+        // Full names → abbreviation.
+        "ARIZONA CARDINALS": "ARI", "ATLANTA FALCONS": "ATL", "BALTIMORE RAVENS": "BAL",
+        "BUFFALO BILLS": "BUF", "CAROLINA PANTHERS": "CAR", "CHICAGO BEARS": "CHI",
+        "CINCINNATI BENGALS": "CIN", "CLEVELAND BROWNS": "CLE", "DALLAS COWBOYS": "DAL",
+        "DENVER BRONCOS": "DEN", "DETROIT LIONS": "DET", "GREEN BAY PACKERS": "GB",
+        "HOUSTON TEXANS": "HOU", "INDIANAPOLIS COLTS": "IND", "JACKSONVILLE JAGUARS": "JAX",
+        "KANSAS CITY CHIEFS": "KC", "LOS ANGELES RAMS": "LA", "LOS ANGELES CHARGERS": "LAC",
+        "LAS VEGAS RAIDERS": "LV", "MIAMI DOLPHINS": "MIA", "MINNESOTA VIKINGS": "MIN",
+        "NEW ENGLAND PATRIOTS": "NE", "NEW ORLEANS SAINTS": "NO", "NEW YORK GIANTS": "NYG",
+        "NEW YORK JETS": "NYJ", "PHILADELPHIA EAGLES": "PHI", "PITTSBURGH STEELERS": "PIT",
+        "SEATTLE SEAHAWKS": "SEA", "SAN FRANCISCO 49ERS": "SF", "TAMPA BAY BUCCANEERS": "TB",
+        "TENNESSEE TITANS": "TEN", "WASHINGTON COMMANDERS": "WAS"
     ]
     return aliases[key] ?? key
 }
 
 func teamFullName(_ abbr: String) -> String {
     let map: [String: String] = [
-        "ARI":"Arizona","ATL":"Atlanta","BAL":"Baltimore",
-        "BOS":"Boston","CHC":"Chicago (NL)","CWS":"Chicago (AL)",
-        "CIN":"Cincinnati","CLE":"Cleveland","COL":"Colorado",
-        "DET":"Detroit","HOU":"Houston","KC":"Kansas City",
-        "LAA":"Los Angeles (AL)","LAD":"Los Angeles (NL)","MIA":"Miami",
-        "MIL":"Milwaukee","MIN":"Minnesota","NYM":"New York (NL)",
-        "NYY":"New York (AL)","OAK":"Oakland","PHI":"Philadelphia",
-        "PIT":"Pittsburgh","SD":"San Diego","SEA":"Seattle",
-        "SF":"San Francisco","STL":"St. Louis","TB":"Tampa Bay",
-        "TEX":"Texas","TOR":"Toronto","WSH":"Washington"
+        "ARI": "Arizona Cardinals", "ATL": "Atlanta Falcons", "BAL": "Baltimore Ravens",
+        "BUF": "Buffalo Bills", "CAR": "Carolina Panthers", "CHI": "Chicago Bears",
+        "CIN": "Cincinnati Bengals", "CLE": "Cleveland Browns", "DAL": "Dallas Cowboys",
+        "DEN": "Denver Broncos", "DET": "Detroit Lions", "GB": "Green Bay Packers",
+        "HOU": "Houston Texans", "IND": "Indianapolis Colts", "JAX": "Jacksonville Jaguars",
+        "KC": "Kansas City Chiefs", "LA": "Los Angeles Rams", "LAC": "Los Angeles Chargers",
+        "LV": "Las Vegas Raiders", "MIA": "Miami Dolphins", "MIN": "Minnesota Vikings",
+        "NE": "New England Patriots", "NO": "New Orleans Saints", "NYG": "New York Giants",
+        "NYJ": "New York Jets", "PHI": "Philadelphia Eagles", "PIT": "Pittsburgh Steelers",
+        "SEA": "Seattle Seahawks", "SF": "San Francisco 49ers", "TB": "Tampa Bay Buccaneers",
+        "TEN": "Tennessee Titans", "WAS": "Washington Commanders"
     ]
     let normalized = normalizedTeamAbbreviation(abbr)
     return map[normalized] ?? abbr

@@ -18,28 +18,25 @@ struct RecentFormCard: View {
     @State private var logs: [PlayerGameLog] = []
     @State private var loading = false
     @State private var loadError: String?
-    @State private var windowDays: Int = 15
+    @State private var windowGames: Int = 3
     @State private var curves: LeaguePercentileCurves?
 
-    private var isPitcher: Bool {
-        player.playerType == "pitcher"
-    }
+    private var category: MetricCategory { player.primaryCategory }
+    private var isDefense: Bool { category == .defense }
 
-    /// Smallest sample we'll consider trustworthy. Anything below shows the
-    /// numbers but tags them as "small sample" so the user reads them with
-    /// appropriate skepticism.
-    private var smallSamplePAThreshold: Int { isPitcher ? 30 : 15 }
+    /// Smallest play count we'll consider trustworthy. Anything below shows the
+    /// numbers but tags them as "small sample".
+    private var smallSamplePlaysThreshold: Int { 10 }
 
     private var windowLogs: [PlayerGameLog] {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -windowDays, to: .now) ?? .now
-        return logs.filter { $0.gameDate >= cutoff }
+        Array(logs.sorted { $0.gameDate > $1.gameDate }.prefix(windowGames))
     }
 
     private var window: RecentFormWindow? {
         guard !windowLogs.isEmpty else { return nil }
         return RecentFormWindow.build(
-            label: "Last \(windowDays)",
-            days: windowDays,
+            label: "Last \(windowGames)",
+            span: windowGames,
             logs: windowLogs
         )
     }
@@ -64,14 +61,10 @@ struct RecentFormCard: View {
 
     private func rebuildCurves() {
         guard store.isPro else { return }
-        // Pitchers' season exit velocity is labeled "Avg EV Against", not "EV".
-        let evLabel = isPitcher ? "Avg EV Against" : "EV"
-        var labels = ["xwOBA", "Barrel%", "Hard-Hit%", evLabel, "K%", "BB%"]
-        if !isPitcher { labels.append("Max EV") }
         curves = LeaguePercentileCurves(
             players: leaguePlayers,
-            playerType: player.playerType ?? (isPitcher ? "pitcher" : "batter"),
-            labels: labels
+            categories: [category],
+            labels: category.metricPriorityOrder
         )
     }
 
@@ -118,22 +111,22 @@ struct RecentFormCard: View {
 
     private var windowPicker: some View {
         HStack(spacing: 6) {
-            ForEach(RecentFormWindow.windows, id: \.days) { w in
+            ForEach(RecentFormWindow.windows, id: \.span) { w in
                 Button {
-                    windowDays = w.days
+                    windowGames = w.span
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(w.label)
                         .font(SavantType.smallBold)
-                        .foregroundStyle(windowDays == w.days ? .white : SavantPalette.inkSecondary)
+                        .foregroundStyle(windowGames == w.span ? .white : SavantPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 30)
-                        .background(windowDays == w.days ? SavantPalette.savantRed : SavantPalette.surface)
+                        .background(windowGames == w.span ? SavantPalette.savantRed : SavantPalette.surface)
                         .clipShape(Capsule())
                         .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(w.label) days")
+                .accessibilityLabel("\(w.label) games")
             }
         }
     }
@@ -149,7 +142,7 @@ struct RecentFormCard: View {
                     .disabled(true)
                     .allowsHitTesting(false)
                 BlurGateUnlock(
-                    headline: "See last 7 / 15 / 30 day form for any player",
+                    headline: "See last 1 / 3 / 5 game form for any player",
                     cta: store.paywallBlurCTA,
                     subtext: store.paywallBlurSubtext,
                     action: onUpgradeTap
@@ -162,17 +155,24 @@ struct RecentFormCard: View {
     /// these are illustrative bars in the season percentile format so the blur
     /// reads as "real recent-form bars" without paying the network/battery cost.
     private var teaserBody: some View {
-        let sample: [Metric] = [
-            Metric(id: "t_xwoba",   label: "xwOBA",     value: "0.412",    percentile: 94, category: .hitting),
-            Metric(id: "t_barrel",  label: "Barrel%",   value: "18.2%",    percentile: 88, category: .hitting),
-            Metric(id: "t_hardhit", label: "Hard-Hit%", value: "52.1%",    percentile: 81, category: .hitting),
-            Metric(id: "t_ev",      label: "EV",        value: "93.4 mph", percentile: 76, category: .hitting),
-        ]
+        let sample: [Metric] = isDefense
+            ? [
+                Metric(id: "t_tackles", label: "Tackles", value: "22", percentile: 94, category: .defense),
+                Metric(id: "t_sacks",   label: "Sacks",   value: "3",  percentile: 88, category: .defense),
+                Metric(id: "t_int",     label: "INT",     value: "1",  percentile: 81, category: .defense),
+                Metric(id: "t_pd",      label: "PD",      value: "4",  percentile: 76, category: .defense),
+            ]
+            : [
+                Metric(id: "t_yds", label: "Rec Yds", value: "312", percentile: 94, category: category),
+                Metric(id: "t_rec", label: "Rec",     value: "24",  percentile: 88, category: category),
+                Metric(id: "t_td",  label: "Rec TD",  value: "3",   percentile: 81, category: category),
+                Metric(id: "t_yac", label: "YAC",     value: "6.1", percentile: 76, category: category),
+            ]
         return VStack(spacing: 0) {
             HStack(spacing: 12) {
-                summaryStat(label: "G", value: "12")
-                summaryStat(label: isPitcher ? "BF" : "PA", value: "48")
-                if !isPitcher { summaryStat(label: "BBE", value: "31") }
+                summaryStat(label: "G", value: "3")
+                summaryStat(label: "Plays", value: "48")
+                if !isDefense { summaryStat(label: "Touches", value: "31") }
                 Spacer(minLength: 0)
             }
             .padding(SavantGeo.padInline)
@@ -208,7 +208,7 @@ struct RecentFormCard: View {
                 Image(systemName: "calendar.badge.exclamationmark")
                     .font(.system(size: 22))
                     .foregroundStyle(SavantPalette.inkTertiary)
-                Text("No games in the last \(windowDays) days")
+                Text("No games in the last \(windowGames) games")
                     .font(SavantType.small)
                     .foregroundStyle(SavantPalette.inkSecondary)
             }
@@ -221,12 +221,12 @@ struct RecentFormCard: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 summaryStat(label: "G", value: "\(w.games)")
-                summaryStat(label: isPitcher ? "BF" : "PA", value: "\(w.plateAppearances)")
-                if !isPitcher {
-                    summaryStat(label: "BBE", value: "\(w.battedBallEvents)")
+                summaryStat(label: "Plays", value: "\(w.plays)")
+                if !isDefense {
+                    summaryStat(label: "Touches", value: "\(w.touches)")
                 }
                 Spacer(minLength: 0)
-                if w.plateAppearances < smallSamplePAThreshold {
+                if w.plays < smallSamplePlaysThreshold {
                     Text("SMALL SAMPLE")
                         .font(SavantType.micro)
                         .tracking(0.4)
@@ -280,25 +280,36 @@ struct RecentFormCard: View {
     /// (so the recent bar sits on the same ruler as the season card); the value
     /// is the recent-window number. Skips metrics with no window data or no
     /// curve so we never draw a bar we can't place.
+    /// Per-game log keys mapped to the season metric label they overlay.
+    private func recentSpecs(for category: MetricCategory) -> [(key: String, label: String, seasonLabel: String, format: String)] {
+        switch category {
+        case .passing:
+            return [
+                ("passing_yards", "Pass Yds", "Pass Yds", "%.0f"),
+                ("passing_tds",   "Pass TD",  "Pass TD",  "%.0f"),
+            ]
+        case .rushing:
+            return [
+                ("rushing_yards", "Rush Yds", "Rush Yds", "%.0f"),
+                ("rushing_tds",   "Rush TD",  "Rush TD",  "%.0f"),
+            ]
+        case .receiving:
+            return [
+                ("receiving_yards", "Rec Yds", "Rec Yds", "%.0f"),
+                ("receptions",      "Rec",     "Rec",     "%.0f"),
+                ("receiving_tds",   "Rec TD",  "Rec TD",  "%.0f"),
+            ]
+        case .defense:
+            return [
+                ("tackles",           "Tackles", "Tackles", "%.0f"),
+                ("def_sacks",         "Sacks",   "Sacks",   "%.1f"),
+                ("def_interceptions", "INT",     "INT",     "%.0f"),
+            ]
+        }
+    }
+
     private func recentMetricRows(window w: RecentFormWindow) -> [Metric] {
-        let category: MetricCategory = isPitcher ? .pitching : .hitting
-        let specs: [(key: String, label: String, seasonLabel: String, format: String)] = isPitcher
-            ? [
-                ("opp_xwoba",       "xwOBA",       "xwOBA",     "%.3f"),
-                ("k_pct",           "K%",          "K%",        "%.1f%%"),
-                ("bb_pct",          "BB%",         "BB%",       "%.1f%%"),
-                ("opp_hardhit_pct", "Hard-Hit%",   "Hard-Hit%", "%.1f%%"),
-                ("opp_barrel_pct",  "Barrel%",     "Barrel%",   "%.1f%%"),
-                ("opp_ev_avg",      "EV",          "Avg EV Against", "%.1f mph"),
-            ]
-            : [
-                ("xwoba",       "xwOBA",     "xwOBA",     "%.3f"),
-                ("barrel_pct",  "Barrel%",   "Barrel%",   "%.1f%%"),
-                ("hardhit_pct", "Hard-Hit%", "Hard-Hit%", "%.1f%%"),
-                ("ev_avg",      "EV",        "EV",        "%.1f mph"),
-                ("k_pct",       "K%",        "K%",        "%.1f%%"),
-                ("bb_pct",      "BB%",       "BB%",       "%.1f%%"),
-            ]
+        let specs: [(key: String, label: String, seasonLabel: String, format: String)] = recentSpecs(for: category)
 
         return specs.compactMap { spec -> Metric? in
             guard let v = w.metrics[spec.key],

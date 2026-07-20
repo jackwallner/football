@@ -1,25 +1,28 @@
-# Baseball — Project Guide
+# Gridiron StatScout — Project Guide
 
-StatScout: Statcast percentiles / player-comparison app (iOS). XcodeGen
-project/scheme: `StatScout`, simulator device `agent-baseball`.
+Gridiron StatScout: NFL advanced-stats percentiles / player-comparison app (iOS).
+XcodeGen project/scheme: `StatScout` (names kept to minimize churn), simulator
+device `agent-football` (UDID `93E5EECA-F542-4715-BA93-0EE303BE70A8`). Bundle id
+`com.jackwallner.football`, product name "Gridiron StatScout".
 
-**This repo is the fastlane template for the other iOS apps** — keep `Appfile`,
-`metadata/en-US/`, `screenshots/en-US/`, and `Fastfile` review info canonical
-here and copy outward.
+**This repo is NOT the fastlane template canonical source** — that lives in the
+baseball StatScout repo. Metadata/screenshots here are app-specific.
 
 **App Store reviews:** enjoyment funnel in `StatScout/Services/ReviewPromptTracker.swift`
-(passive triggers: 3rd+ player profile open, Pro player comparison). App Store
-ID `6743780853`; feedback `jackwallner+bb@gmail.com`.
+(passive triggers: 3rd+ player profile open, Pro player comparison). feedback
+`jackwallner+bb@gmail.com`. (New ASC record still to be created.)
 
-## Backend / data pipeline (Statcast)
+## Backend / data pipeline (NFL)
 
-Unlike the other apps, StatScout is backed by a Supabase Statcast dataset fed by a nightly pipeline.
+StatScout is backed by a Supabase NFL dataset fed by a nightly pipeline (already live).
 
-- **Supabase migrations**: in `supabase/migrations/`, applied after any schema change. Check CLI (`which supabase`), link (`supabase link --project-ref <ref>`, ref is in `SUPABASE_URL`), then `supabase db push`.
-- **Data refresh workflows**: nightly `.github/workflows/nightly-statcast.yml`; manual `gh workflow run nightly-statcast.yml`; watch with `gh run watch <run-id>`.
-- **Env vars**: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (GitHub secrets), `STATCAST_SEASON` (optional, defaults to current season). App reads `SUPABASE_URL` + `SUPABASE_ANON_KEY` from `~/.baseball_credentials` (Supabase project is `babzqsbmcunrezsdpyng` as of 2026-05-03 — refresh the ANON_KEY there if it rotates).
-- **Common issues**: FanGraphs blocks cloud IPs (403) — using MLB Stats API instead. Supabase upsert needs the composite PK on `(id, season)` (migration `20260502000000_ensure_composite_pk.sql`). Node 20 deprecation handled via `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`.
-- **TestFlight upload** sources the creds first: `source ~/.baseball_credentials && bash scripts/testflight.sh`.
+- **Data source**: `nflreadpy` (nflverse) — weekly player stats + Next Gen Stats, cloud-IP friendly, no API key. See `handoff/NFL_CONTRACT.md` for the metric/category/schema contract.
+- **Tables**: `player_snapshots` (id, season, PK (id, season); metrics/standard_stats/games jsonb; player_type ∈ qb/rb/wr/te/def). `player_game_logs` (PK (player_id, season, game_date, player_type); columns `plays`, `touches`, metrics jsonb).
+- **Categories** (jsonb `metrics[].category`, exact strings): `Passing`, `Rushing`, `Receiving`, `Defense`.
+- **Supabase**: shared "Sports" project ref `ucoveqbyfuxqvpysmixu` (the `briefings`/`source_*` tables belong to another app — do not touch). Creds in `~/.football_credentials` (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY). Migrations in `supabase/migrations/`.
+- **Data refresh workflows**: nightly `.github/workflows/nightly-statcast.yml` (name kept); manual `gh workflow run nightly-statcast.yml`. `STATCAST_SEASON` env var name kept for workflow compatibility; season = year if month ≥ 9 else year − 1.
+- **Historical bundle**: `StatScout/Data/players-historical.plist` (seasons 2020–2024) regenerated via `source ~/.football_credentials && python3 scripts/export_historical.py` (fetches `season=lt.2025`, then runs the swift plist converter).
+- **TestFlight upload** sources the creds first: `source ~/.football_credentials && bash scripts/testflight.sh`.
 
 ---
 Shared iOS conventions (build, simulator, release scripts, ASC key, review funnel, signing, gotchas):

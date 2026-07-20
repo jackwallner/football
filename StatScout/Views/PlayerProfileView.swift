@@ -22,7 +22,7 @@ struct PlayerProfileView: View {
     // yearly trial directly. PaywallView stays for the deliberate upsell card.
     @State private var trialPitchTrigger: PaywallTrigger?
     @State private var formDisplayMode: FormDisplayMode = .season
-    @State private var recentWindowDays: Int = 15
+    @State private var recentWindowGames: Int = 3
     @State private var recentLogs: [PlayerGameLog] = []
     @State private var recentLoading = false
     @State private var recentLoadError: String?
@@ -70,31 +70,18 @@ struct PlayerProfileView: View {
         }
     }
 
-    /// Players eligible for comparison: same player type (hitter↔hitter, pitcher↔pitcher),
-    /// sorted by xwOBA proximity to the current player so the closest match is first.
+    /// Players eligible for comparison: same position group, sorted by overall
+    /// percentile proximity to the current player so the closest match is first.
     private var comparablePlayers: [Player] {
-        let myType = player.playerType
+        let myType = player.playerType?.lowercased()
         let pool = allPlayers.filter { other in
             guard other.playerId != player.playerId else { return false }
-            switch myType {
-            case "pitcher": return other.playerType == "pitcher"
-            case "batter", "hitter": return other.playerType != "pitcher"
-            case "two_way": return true
-            default: return other.playerType == myType
-            }
+            guard let myType else { return true }
+            return other.playerType?.lowercased() == myType
         }
-        let myXwoba = player.metrics.first { $0.label == "xwOBA" }?.percentile
-        guard let mine = myXwoba else { return pool }
+        let mine = player.overallPercentile
         return pool.sorted { a, b in
-            let ax = a.metrics.first { $0.label == "xwOBA" }?.percentile
-            let bx = b.metrics.first { $0.label == "xwOBA" }?.percentile
-            switch (ax, bx) {
-            case let (.some(av), .some(bv)):
-                return abs(av - mine) < abs(bv - mine)
-            case (.some, .none): return true
-            case (.none, .some): return false
-            case (.none, .none): return a.name < b.name
-            }
+            abs(a.overallPercentile - mine) < abs(b.overallPercentile - mine)
         }
     }
 
@@ -537,9 +524,9 @@ struct PlayerProfileView: View {
                 )
             )
 
-            // Recent mode only makes sense for the live season — the 7/15/30-day
-            // window is anchored to today, so on a historical season it would
-            // always read "No games in the last N days".
+            // Recent mode only makes sense for the live season — game logs are
+            // only fetched for the current season, so on a historical season it
+            // would always read "No games".
             if store.isPro, isCurrentSeasonActive {
                 formModePicker
             }
@@ -563,7 +550,7 @@ struct PlayerProfileView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                 } else if recentWindow == nil {
-                    Text("No games in the last \(recentWindowDays) days")
+                    Text("No games in the last \(recentWindowGames) games")
                         .font(SavantType.small)
                         .foregroundStyle(SavantPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
@@ -599,7 +586,7 @@ struct PlayerProfileView: View {
             RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
                 .stroke(SavantPalette.hairline, lineWidth: 0.5)
         )
-        .task(id: "\(formDisplayMode)-\(recentWindowDays)-\(player.playerId)-\(activeSeason ?? 0)-\(store.isPro)") {
+        .task(id: "\(formDisplayMode)-\(recentWindowGames)-\(player.playerId)-\(activeSeason ?? 0)-\(store.isPro)") {
             guard store.isPro, effectiveFormDisplayMode != .season else { return }
             rebuildRecentCurves()
             await loadRecentLogs()
@@ -608,10 +595,11 @@ struct PlayerProfileView: View {
         .onChange(of: allPlayers.count) { _, _ in rebuildRecentCurves() }
     }
 
-    private var isPitcher: Bool { player.playerType == "pitcher" }
+    private var category: MetricCategory { player.primaryCategory }
 
-    /// Recent-form is anchored to today's date, so it's only meaningful while
-    /// viewing the current season. Historical seasons render season bars only.
+    /// Recent-form is anchored to the current season's game logs, so it's only
+    /// meaningful while viewing the current season. Historical seasons render
+    /// season bars only.
     private var isCurrentSeasonActive: Bool {
         (activeSeason ?? StatScoutSeason.current) == StatScoutSeason.current
     }
@@ -624,25 +612,24 @@ struct PlayerProfileView: View {
     }
 
     private var recentWindow: RecentFormWindow? {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -recentWindowDays, to: .now) ?? .now
-        let windowLogs = recentLogs.filter { $0.gameDate >= cutoff }
+        let windowLogs = Array(recentLogs.sorted { $0.gameDate > $1.gameDate }.prefix(recentWindowGames))
         guard !windowLogs.isEmpty else { return nil }
-        return RecentFormWindow.build(label: "Last \(recentWindowDays)", days: recentWindowDays, logs: windowLogs)
+        return RecentFormWindow.build(label: "Last \(recentWindowGames)", span: recentWindowGames, logs: windowLogs)
     }
 
     private var recentWindowPicker: some View {
         HStack(spacing: 6) {
-            ForEach(RecentFormWindow.windows, id: \.days) { w in
+            ForEach(RecentFormWindow.windows, id: \.span) { w in
                 Button {
-                    recentWindowDays = w.days
+                    recentWindowGames = w.span
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(w.label)
                         .font(SavantType.smallBold)
-                        .foregroundStyle(recentWindowDays == w.days ? .white : SavantPalette.inkSecondary)
+                        .foregroundStyle(recentWindowGames == w.span ? .white : SavantPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(recentWindowDays == w.days ? SavantPalette.savantRed : SavantPalette.surface)
+                        .background(recentWindowGames == w.span ? SavantPalette.savantRed : SavantPalette.surface)
                         .clipShape(Capsule())
                         .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
                 }
@@ -661,7 +648,7 @@ struct PlayerProfileView: View {
         // `percentileMetricRow`). Additionally inject a stub for any game-log spec
         // the season snapshot omits (Savant sometimes drops e.g. Hard-Hit%) so its
         // recent bar still appears even with no season row to hang it on.
-        let targetCategory: MetricCategory = isPitcher ? .pitching : .hitting
+        let targetCategory: MetricCategory = category
         guard metrics.first?.category == targetCategory else { return metrics }
         let existing = Set(metrics.map { $0.label })
         let stubs: [Metric] = recentSpecs.compactMap { spec in
@@ -679,24 +666,30 @@ struct PlayerProfileView: View {
     }
 
     private var recentSpecs: [(key: String, label: String, seasonLabel: String, format: String)] {
-        isPitcher
-            ? [
-                ("opp_xwoba", "xwOBA", "xwOBA", "%.3f"),
-                ("k_pct", "K%", "K%", "%.1f%%"),
-                ("bb_pct", "BB%", "BB%", "%.1f%%"),
-                ("opp_hardhit_pct", "Hard-Hit%", "Hard-Hit%", "%.1f%%"),
-                ("opp_barrel_pct", "Barrel%", "Barrel%", "%.1f%%"),
-                ("opp_ev_avg", "EV", "Avg EV Against", "%.1f mph"),
+        switch category {
+        case .passing:
+            return [
+                ("passing_yards", "Pass Yds", "Pass Yds", "%.0f"),
+                ("passing_tds",   "Pass TD",  "Pass TD",  "%.0f"),
             ]
-            : [
-                ("xwoba", "xwOBA", "xwOBA", "%.3f"),
-                ("barrel_pct", "Barrel%", "Barrel%", "%.1f%%"),
-                ("hardhit_pct", "Hard-Hit%", "Hard-Hit%", "%.1f%%"),
-                ("ev_avg", "EV", "EV", "%.1f mph"),
-                ("ev_max", "Max EV", "Max EV", "%.1f mph"),
-                ("k_pct", "K%", "K%", "%.1f%%"),
-                ("bb_pct", "BB%", "BB%", "%.1f%%"),
+        case .rushing:
+            return [
+                ("rushing_yards", "Rush Yds", "Rush Yds", "%.0f"),
+                ("rushing_tds",   "Rush TD",  "Rush TD",  "%.0f"),
             ]
+        case .receiving:
+            return [
+                ("receiving_yards", "Rec Yds", "Rec Yds", "%.0f"),
+                ("receptions",      "Rec",     "Rec",     "%.0f"),
+                ("receiving_tds",   "Rec TD",  "Rec TD",  "%.0f"),
+            ]
+        case .defense:
+            return [
+                ("tackles",           "Tackles", "Tackles", "%.0f"),
+                ("def_sacks",         "Sacks",   "Sacks",   "%.1f"),
+                ("def_interceptions", "INT",     "INT",     "%.0f"),
+            ]
+        }
     }
 
     @ViewBuilder
@@ -747,7 +740,7 @@ struct PlayerProfileView: View {
                 DualMetricBar(
                     season: metric,
                     recent: recentMetric,
-                    recentCaption: "Last \(recentWindowDays)d"
+                    recentCaption: "Last \(recentWindowGames)G"
                 )
                 .padding(.horizontal, SavantGeo.padCard)
                 .padding(.vertical, 12)
@@ -776,14 +769,10 @@ struct PlayerProfileView: View {
     }
 
     private func rebuildRecentCurves() {
-        // Pitchers' season exit velocity is labeled "Avg EV Against", not "EV".
-        let evLabel = isPitcher ? "Avg EV Against" : "EV"
-        var labels = ["xwOBA", "Barrel%", "Hard-Hit%", evLabel, "K%", "BB%"]
-        if !isPitcher { labels.append("Max EV") }
         recentCurves = LeaguePercentileCurves(
             players: allPlayers,
-            playerType: player.playerType ?? (isPitcher ? "pitcher" : "batter"),
-            labels: labels
+            categories: [category],
+            labels: category.metricPriorityOrder
         )
     }
 
@@ -886,7 +875,7 @@ struct PercentileInfoSheet: View {
                     }
                     .padding(.vertical, 8)
 
-                    Text("Data refreshes nightly from public baseball percentile leaderboards. Not all metrics are available for every player due to qualifying thresholds.")
+                    Text("Data refreshes nightly from public NFL advanced-stats leaderboards. Not all metrics are available for every player due to qualifying thresholds.")
                         .font(SavantType.small)
                         .foregroundStyle(SavantPalette.inkTertiary)
                 }

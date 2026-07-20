@@ -42,11 +42,7 @@ struct TeamsView: View {
     // re-push it, or the user can never reach the list.
     @State private var didAutoEnterFavorite = false
 
-    private static let allTeams: [String] = [
-        "ARI", "ATL", "BAL", "BOS", "CHC", "CWS", "CIN", "CLE", "COL", "DET",
-        "HOU", "KC", "LAA", "LAD", "MIA", "MIL", "MIN", "NYM", "NYY", "OAK",
-        "PHI", "PIT", "SD", "SEA", "SF", "STL", "TB", "TEX", "TOR", "WSH"
-    ]
+    private static let allTeams: [String] = nflTeamAbbreviations
 
     private var filteredTeams: [String] {
         let teams = searchText.isEmpty ? viewModel.teamsWithData : viewModel.teamsWithData.filter {

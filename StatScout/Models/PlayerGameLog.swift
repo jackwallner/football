@@ -1,7 +1,7 @@
 import Foundation
 
-/// One player's contribution in one game on one side of the ball (a two-way
-/// player has separate batter / pitcher rows). Powers the Recent Form card.
+/// One player's contribution in one game (one row per player_type). Powers the
+/// Recent Form card.
 struct PlayerGameLog: Codable, Hashable, Sendable {
     let playerId: Int
     let season: Int
@@ -9,8 +9,10 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
     let playerType: String
     let team: String?
     let opponent: String?
-    let plateAppearances: Int
-    let battedBallEvents: Int
+    /// Offensive involvement: pass attempts + carries + targets.
+    let plays: Int
+    /// Ball touches: completions + carries + receptions.
+    let touches: Int
     let metrics: [String: Double?]
 
     enum CodingKeys: String, CodingKey {
@@ -20,8 +22,8 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
         case playerType = "player_type"
         case team
         case opponent
-        case plateAppearances = "plate_appearances"
-        case battedBallEvents = "batted_ball_events"
+        case plays
+        case touches
         case metrics
     }
 
@@ -32,8 +34,8 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
         playerType = try c.decode(String.self, forKey: .playerType)
         team = try c.decodeIfPresent(String.self, forKey: .team)
         opponent = try c.decodeIfPresent(String.self, forKey: .opponent)
-        plateAppearances = try c.decode(Int.self, forKey: .plateAppearances)
-        battedBallEvents = try c.decode(Int.self, forKey: .battedBallEvents)
+        plays = try c.decodeIfPresent(Int.self, forKey: .plays) ?? 0
+        touches = try c.decodeIfPresent(Int.self, forKey: .touches) ?? 0
 
         // game_date arrives as "YYYY-MM-DD" from Supabase (date column, not timestamptz).
         let raw = try c.decode(String.self, forKey: .gameDate)
@@ -60,8 +62,8 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
         try c.encode(playerType, forKey: .playerType)
         try c.encodeIfPresent(team, forKey: .team)
         try c.encodeIfPresent(opponent, forKey: .opponent)
-        try c.encode(plateAppearances, forKey: .plateAppearances)
-        try c.encode(battedBallEvents, forKey: .battedBallEvents)
+        try c.encode(plays, forKey: .plays)
+        try c.encode(touches, forKey: .touches)
 
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
@@ -71,83 +73,52 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
     }
 }
 
-/// Aggregated stats over a window (last 7/15/30 days).
+/// Aggregated stats over the last N games. NFL cadence is weekly, so the window
+/// is measured in games (last 1 / 3 / 5), not days.
 struct RecentFormWindow {
     let label: String
-    let days: Int
+    /// Number of games requested for the window.
+    let span: Int
+    /// Actual number of games in the window.
     let games: Int
-    let plateAppearances: Int
-    let battedBallEvents: Int
-    /// Mean-of-means weighted by PA — close enough to a real recompute for
-    /// rate stats like xwOBA. For per-game rate metrics (K%, BB%) this is a
-    /// weighted average across games and is what users expect to see.
+    let plays: Int
+    let touches: Int
+    /// Per-metric totals across the window. NFL box-score stats are counting
+    /// stats (yards, TDs, receptions), so the window value is their sum.
     let metrics: [String: Double]
 
-    static let windows: [(label: String, days: Int)] = [
-        ("Last 7", 7),
-        ("Last 15", 15),
-        ("Last 30", 30),
+    static let windows: [(label: String, span: Int)] = [
+        ("Last 1", 1),
+        ("Last 3", 3),
+        ("Last 5", 5),
     ]
 
-    /// Build a window from per-game logs filtered to a date range. Per-game
-    /// rates are weighted by PA (or BBE for batted-ball-only metrics) to
-    /// approximate a true recompute without re-aggregating pitch-level data.
-    static func build(label: String, days: Int, logs: [PlayerGameLog]) -> RecentFormWindow {
-        let pa = logs.reduce(0) { $0 + $1.plateAppearances }
-        let bbe = logs.reduce(0) { $0 + $1.battedBallEvents }
+    /// Build a window by summing each metric across the supplied game logs.
+    static func build(label: String, span: Int, logs: [PlayerGameLog]) -> RecentFormWindow {
+        let plays = logs.reduce(0) { $0 + $1.plays }
+        let touches = logs.reduce(0) { $0 + $1.touches }
 
         var combined: [String: Double] = [:]
         let allKeys = Set(logs.flatMap { $0.metrics.keys })
-
         for key in allKeys {
-            let weight = Self.weight(for: key)
-            var numer = 0.0
-            var denom = 0.0
+            var total = 0.0
+            var any = false
             for log in logs {
-                guard let value = log.metrics[key] ?? nil else { continue }
-                let w: Double
-                switch weight {
-                case .pa: w = Double(log.plateAppearances)
-                case .bbe: w = Double(log.battedBallEvents)
+                if let value = log.metrics[key] ?? nil {
+                    total += value
+                    any = true
                 }
-                guard w > 0 else { continue }
-                numer += value * w
-                denom += w
             }
-            if denom > 0 {
-                combined[key] = numer / denom
-            }
-        }
-
-        // Max-type metrics are a peak, not a rate: the window value is the single
-        // hardest-hit ball across the window, matching how Savant reports Max EV.
-        for key in ["ev_max", "opp_ev_max"] {
-            if let peak = logs.compactMap({ $0.metrics[key] ?? nil }).max() {
-                combined[key] = peak
-            }
+            if any { combined[key] = total }
         }
 
         return RecentFormWindow(
             label: label,
-            days: days,
+            span: span,
             games: logs.count,
-            plateAppearances: pa,
-            battedBallEvents: bbe,
+            plays: plays,
+            touches: touches,
             metrics: combined
         )
-    }
-
-    private enum Weight { case pa, bbe }
-
-    /// Which denominator a metric is naturally a rate of. EV / HardHit% /
-    /// Barrel% are per-BBE; everything else is per-PA.
-    private static func weight(for key: String) -> Weight {
-        switch key {
-        case "ev_avg", "ev_max", "hardhit_pct", "barrel_pct",
-             "opp_ev_avg", "opp_hardhit_pct", "opp_barrel_pct":
-            return .bbe
-        default:
-            return .pa
-        }
     }
 }

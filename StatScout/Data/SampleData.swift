@@ -2,178 +2,184 @@
 import Foundation
 
 struct SampleData {
-    // Players for 2026 season
+    // Players for the 2025 season, plus one 2024 row to exercise year switching.
     static let players: [Player] = [
         Player(
-            playerId: 1,
-            name: "Aaron Judge",
-            team: "NYY",
-            position: "RF",
-            handedness: "R/R",
-            imageURL: nil,
-            updatedAt: Date(),
-            season: 2026,
-            metrics: [
-                Metric(id: "judge-xwoba", label: "xwOBA", value: ".463", percentile: 100, category: .hitting),
-                Metric(id: "judge-ev", label: "EV", value: "96.2", percentile: 100, category: .hitting),
-                Metric(id: "judge-barrel", label: "Barrel%", value: "26.9%", percentile: 100, category: .hitting),
-                Metric(id: "judge-sprint", label: "Sprint Speed", value: "27.2 ft/s", percentile: 58, category: .running)
-            ],
-            standardStats: [
-                StandardStat(id: "std-AVG", label: "AVG", value: ".312"),
-                StandardStat(id: "std-OBP", label: "OBP", value: ".458"),
-                StandardStat(id: "std-SLG", label: "SLG", value: ".701"),
-                StandardStat(id: "std-OPS", label: "OPS", value: "1.159"),
-                StandardStat(id: "std-HR", label: "HR", value: "58"),
-                StandardStat(id: "std-RBI", label: "RBI", value: "144"),
-                StandardStat(id: "std-R", label: "R", value: "133"),
-                StandardStat(id: "std-H", label: "H", value: "180"),
-                StandardStat(id: "std-BB", label: "BB", value: "133"),
-                StandardStat(id: "std-SO", label: "SO", value: "179"),
-                StandardStat(id: "std-SB", label: "SB", value: "13")
-            ],
-            games: [
-                GameTrend(id: "judge-bos-1", date: Date().addingTimeInterval(-86_400), opponent: "BOS", summary: "Two barrels and a 113 mph double pushed his quality-contact profile higher.", percentileDelta: 3, keyMetric: "Barrel%"),
-                GameTrend(id: "judge-tb-1", date: Date().addingTimeInterval(-172_800), opponent: "TB", summary: "Chase decisions stabilized after an aggressive weekend series.", percentileDelta: 1, keyMetric: "xwOBA")
-            ]
-        ),
-        Player(
-            playerId: 660271,
-            name: "Shohei Ohtani",
-            team: "LAD",
-            position: "DH",
-            handedness: "L/R",
-            imageURL: nil,
-            updatedAt: Date(),
-            season: 2026,
-            metrics: [
-                Metric(id: "ohtani-xslg", label: "xSLG", value: ".676", percentile: 100, category: .hitting),
-                Metric(id: "ohtani-hardhit", label: "Hard-Hit%", value: "61.4%", percentile: 100, category: .hitting),
-                Metric(id: "ohtani-sprint", label: "Sprint Speed", value: "28.1 ft/s", percentile: 82, category: .running),
-                Metric(id: "ohtani-arm", label: "Arm Value", value: "+2", percentile: 74, category: .fielding)
-            ],
-            standardStats: [
-                StandardStat(id: "std-AVG", label: "AVG", value: ".310"),
-                StandardStat(id: "std-OBP", label: "OBP", value: ".390"),
-                StandardStat(id: "std-SLG", label: "SLG", value: ".660"),
-                StandardStat(id: "std-OPS", label: "OPS", value: "1.050"),
-                StandardStat(id: "std-HR", label: "HR", value: "54"),
-                StandardStat(id: "std-RBI", label: "RBI", value: "130"),
-                StandardStat(id: "std-R", label: "R", value: "118"),
-                StandardStat(id: "std-H", label: "H", value: "178"),
-                StandardStat(id: "std-BB", label: "BB", value: "91"),
-                StandardStat(id: "std-SO", label: "SO", value: "162"),
-                StandardStat(id: "std-SB", label: "SB", value: "59")
-            ],
-            games: [
-                GameTrend(id: "ohtani-sf-1", date: Date().addingTimeInterval(-86_400), opponent: "SF", summary: "Lifted three balls over 100 mph and added a stolen-base opportunity.", percentileDelta: 4, keyMetric: "xSLG"),
-                GameTrend(id: "ohtani-sd-1", date: Date().addingTimeInterval(-259_200), opponent: "SD", summary: "Launch angle returned to his optimal power band.", percentileDelta: 2, keyMetric: "Hard-Hit%")
-            ]
-        ),
-        Player(
-            playerId: 669203,
-            name: "Bobby Witt Jr.",
+            playerId: 33873,
+            name: "Patrick Mahomes",
             team: "KC",
-            position: "SS",
-            handedness: "R/R",
-            imageURL: nil,
-            updatedAt: Date(),
-            season: 2026,
-            metrics: [
-                Metric(id: "witt-sprint", label: "Sprint Speed", value: "30.5 ft/s", percentile: 100, category: .running),
-                Metric(id: "witt-xba", label: "xBA", value: ".329", percentile: 99, category: .hitting),
-                Metric(id: "witt-oaa", label: "Range (OAA)", value: "+15", percentile: 98, category: .fielding),
-                Metric(id: "witt-ev", label: "Avg EV", value: "92.1", percentile: 87, category: .hitting)
-            ],
-            standardStats: [
-                StandardStat(id: "std-AVG", label: "AVG", value: ".332"),
-                StandardStat(id: "std-OBP", label: "OBP", value: ".389"),
-                StandardStat(id: "std-SLG", label: "SLG", value: ".588"),
-                StandardStat(id: "std-OPS", label: "OPS", value: ".977"),
-                StandardStat(id: "std-HR", label: "HR", value: "32"),
-                StandardStat(id: "std-RBI", label: "RBI", value: "109"),
-                StandardStat(id: "std-R", label: "R", value: "121"),
-                StandardStat(id: "std-H", label: "H", value: "211"),
-                StandardStat(id: "std-BB", label: "BB", value: "45"),
-                StandardStat(id: "std-SO", label: "SO", value: "77"),
-                StandardStat(id: "std-SB", label: "SB", value: "31")
-            ],
-            games: [
-                GameTrend(id: "witt-det-1", date: Date().addingTimeInterval(-86_400), opponent: "DET", summary: "Converted two elite-difficulty plays and beat out a 30.9 ft/s infield single.", percentileDelta: 5, keyMetric: "OAA"),
-                GameTrend(id: "witt-cle-1", date: Date().addingTimeInterval(-172_800), opponent: "CLE", summary: "Contact quality held while swing decisions improved.", percentileDelta: 2, keyMetric: "xBA")
-            ]
-        ),
-        Player(
-            playerId: 694973,
-            name: "Paul Skenes",
-            team: "PIT",
-            position: "SP",
-            handedness: "R/R",
-            imageURL: nil,
-            updatedAt: Date(),
-            season: 2026,
-            metrics: [
-                Metric(id: "skenes-velo", label: "Fastball Velo", value: "98.8", percentile: 99, category: .pitching),
-                Metric(id: "skenes-whiff", label: "Whiff%", value: "34.8%", percentile: 96, category: .pitching),
-                Metric(id: "skenes-chase", label: "Chase%", value: "33.1%", percentile: 91, category: .pitching),
-                Metric(id: "skenes-barrel", label: "Barrel Allowed", value: "4.2%", percentile: 88, category: .pitching)
-            ],
-            standardStats: [
-                StandardStat(id: "std-ERA", label: "ERA", value: "1.96"),
-                StandardStat(id: "std-WHIP", label: "WHIP", value: "0.95"),
-                StandardStat(id: "std-W", label: "W", value: "11"),
-                StandardStat(id: "std-L", label: "L", value: "3"),
-                StandardStat(id: "std-SV", label: "SV", value: "0"),
-                StandardStat(id: "std-IP", label: "IP", value: "133.1"),
-                StandardStat(id: "std-H", label: "H", value: "87"),
-                StandardStat(id: "std-R", label: "R", value: "32"),
-                StandardStat(id: "std-ER", label: "ER", value: "29"),
-                StandardStat(id: "std-BB", label: "BB", value: "39"),
-                StandardStat(id: "std-SO", label: "SO", value: "170")
-            ],
-            games: [
-                GameTrend(id: "skenes-chc-1", date: Date().addingTimeInterval(-86_400), opponent: "CHC", summary: "Generated 17 whiffs with premium fastball ride and splitter finish.", percentileDelta: 6, keyMetric: "Whiff%"),
-                GameTrend(id: "skenes-mil-1", date: Date().addingTimeInterval(-345_600), opponent: "MIL", summary: "Held exit velocity down despite elevated pitch count.", percentileDelta: 1, keyMetric: "Barrel Allowed")
-            ]
-        ),
-        // Players for 2025 season (different players to verify year switching works)
-        Player(
-            playerId: 2,
-            name: "Juan Soto",
-            team: "NYY",
-            position: "LF",
-            handedness: "L/L",
+            position: "QB",
+            handedness: "",
             imageURL: nil,
             updatedAt: Date(),
             season: 2025,
+            playerType: "qb",
             metrics: [
-                Metric(id: "soto-xwoba", label: "xwOBA", value: ".410", percentile: 98, category: .hitting),
-                Metric(id: "soto-bb", label: "BB%", value: "18.5%", percentile: 99, category: .hitting)
+                Metric(id: "mahomes-passyds", label: "Pass Yds", value: "3,928", percentile: 88, category: .passing),
+                Metric(id: "mahomes-passtd", label: "Pass TD", value: "26", percentile: 85, category: .passing),
+                Metric(id: "mahomes-cmp", label: "Cmp%", value: "67.5%", percentile: 82, category: .passing),
+                Metric(id: "mahomes-ya", label: "Y/A", value: "7.0", percentile: 70, category: .passing),
+                Metric(id: "mahomes-rating", label: "Rating", value: "98.5", percentile: 84, category: .passing),
+                Metric(id: "mahomes-epa", label: "EPA/Play", value: "0.14", percentile: 88, category: .passing),
+                Metric(id: "mahomes-cpoe", label: "CPOE", value: "3.5", percentile: 86, category: .passing),
+                Metric(id: "mahomes-int", label: "INT%", value: "1.5%", percentile: 75, category: .passing),
+                Metric(id: "mahomes-sack", label: "Sack%", value: "5.2%", percentile: 60, category: .passing)
             ],
             standardStats: [
-                StandardStat(id: "std-AVG", label: "AVG", value: ".288"),
-                StandardStat(id: "std-OBP", label: "OBP", value: ".420"),
-                StandardStat(id: "std-HR", label: "HR", value: "41")
+                StandardStat(id: "std-G", label: "G", value: "16"),
+                StandardStat(id: "std-CmpAtt", label: "Cmp/Att", value: "351/520"),
+                StandardStat(id: "std-PassYds", label: "Pass Yds", value: "3,928"),
+                StandardStat(id: "std-PassTD", label: "Pass TD", value: "26"),
+                StandardStat(id: "std-INT", label: "INT", value: "8"),
+                StandardStat(id: "std-Car", label: "Car", value: "58"),
+                StandardStat(id: "std-RushYds", label: "Rush Yds", value: "307"),
+                StandardStat(id: "std-RushTD", label: "Rush TD", value: "2")
             ],
             games: []
         ),
         Player(
-            playerId: 3,
-            name: "Vladimir Guerrero Jr.",
-            team: "TOR",
-            position: "1B",
-            handedness: "R/R",
+            playerId: 34857,
+            name: "Josh Allen",
+            team: "BUF",
+            position: "QB",
+            handedness: "",
             imageURL: nil,
             updatedAt: Date(),
             season: 2025,
+            playerType: "qb",
             metrics: [
-                Metric(id: "vlad-xslg", label: "xSLG", value: ".612", percentile: 97, category: .hitting),
-                Metric(id: "vlad-barrel", label: "Barrel%", value: "15.8%", percentile: 95, category: .hitting)
+                Metric(id: "allen-passyds", label: "Pass Yds", value: "3,731", percentile: 80, category: .passing),
+                Metric(id: "allen-passtd", label: "Pass TD", value: "28", percentile: 90, category: .passing),
+                Metric(id: "allen-rating", label: "Rating", value: "101.4", percentile: 88, category: .passing),
+                Metric(id: "allen-epa", label: "EPA/Play", value: "0.16", percentile: 91, category: .passing),
+                Metric(id: "allen-rushyds", label: "Rush Yds", value: "531", percentile: 96, category: .rushing),
+                Metric(id: "allen-rushtd", label: "Rush TD", value: "12", percentile: 99, category: .rushing),
+                Metric(id: "allen-yc", label: "Y/C", value: "5.6", percentile: 92, category: .rushing),
+                Metric(id: "allen-rushepa", label: "Rush EPA", value: "18.2", percentile: 95, category: .rushing)
             ],
             standardStats: [
-                StandardStat(id: "std-AVG", label: "AVG", value: ".323"),
-                StandardStat(id: "std-OBP", label: "OBP", value: ".396"),
-                StandardStat(id: "std-HR", label: "HR", value: "30")
+                StandardStat(id: "std-G", label: "G", value: "17"),
+                StandardStat(id: "std-CmpAtt", label: "Cmp/Att", value: "307/483"),
+                StandardStat(id: "std-PassYds", label: "Pass Yds", value: "3,731"),
+                StandardStat(id: "std-PassTD", label: "Pass TD", value: "28"),
+                StandardStat(id: "std-INT", label: "INT", value: "6"),
+                StandardStat(id: "std-Car", label: "Car", value: "94"),
+                StandardStat(id: "std-RushYds", label: "Rush Yds", value: "531"),
+                StandardStat(id: "std-RushTD", label: "Rush TD", value: "12")
+            ],
+            games: []
+        ),
+        Player(
+            playerId: 34844,
+            name: "Saquon Barkley",
+            team: "PHI",
+            position: "RB",
+            handedness: "",
+            imageURL: nil,
+            updatedAt: Date(),
+            season: 2025,
+            playerType: "rb",
+            metrics: [
+                Metric(id: "saquon-rushyds", label: "Rush Yds", value: "2,005", percentile: 99, category: .rushing),
+                Metric(id: "saquon-rushtd", label: "Rush TD", value: "13", percentile: 97, category: .rushing),
+                Metric(id: "saquon-yc", label: "Y/C", value: "5.8", percentile: 95, category: .rushing),
+                Metric(id: "saquon-rushepa", label: "Rush EPA", value: "22.1", percentile: 98, category: .rushing),
+                Metric(id: "saquon-explosive", label: "Explosive%", value: "12.5%", percentile: 94, category: .rushing),
+                Metric(id: "saquon-ryoe", label: "RYOE", value: "310", percentile: 97, category: .rushing),
+                Metric(id: "saquon-rec", label: "Rec", value: "33", percentile: 60, category: .receiving),
+                Metric(id: "saquon-recyds", label: "Rec Yds", value: "278", percentile: 55, category: .receiving),
+                Metric(id: "saquon-yac", label: "YAC", value: "8.1", percentile: 78, category: .receiving)
+            ],
+            standardStats: [
+                StandardStat(id: "std-G", label: "G", value: "16"),
+                StandardStat(id: "std-Car", label: "Car", value: "345"),
+                StandardStat(id: "std-RushYds", label: "Rush Yds", value: "2,005"),
+                StandardStat(id: "std-RushTD", label: "Rush TD", value: "13"),
+                StandardStat(id: "std-RecTgt", label: "Rec/Tgt", value: "33/43"),
+                StandardStat(id: "std-RecYds", label: "Rec Yds", value: "278"),
+                StandardStat(id: "std-RecTD", label: "Rec TD", value: "2")
+            ],
+            games: []
+        ),
+        Player(
+            playerId: 36900,
+            name: "Ja'Marr Chase",
+            team: "CIN",
+            position: "WR",
+            handedness: "",
+            imageURL: nil,
+            updatedAt: Date(),
+            season: 2025,
+            playerType: "wr",
+            metrics: [
+                Metric(id: "chase-rec", label: "Rec", value: "127", percentile: 99, category: .receiving),
+                Metric(id: "chase-recyds", label: "Rec Yds", value: "1,708", percentile: 99, category: .receiving),
+                Metric(id: "chase-rectd", label: "Rec TD", value: "17", percentile: 99, category: .receiving),
+                Metric(id: "chase-yac", label: "YAC", value: "5.9", percentile: 82, category: .receiving),
+                Metric(id: "chase-target", label: "Target Share", value: "29.5%", percentile: 97, category: .receiving),
+                Metric(id: "chase-wopr", label: "WOPR", value: "0.72", percentile: 96, category: .receiving),
+                Metric(id: "chase-racr", label: "RACR", value: "1.05", percentile: 80, category: .receiving),
+                Metric(id: "chase-catch", label: "Catch%", value: "68.3%", percentile: 72, category: .receiving),
+                Metric(id: "chase-sep", label: "Separation", value: "2.9", percentile: 62, category: .receiving)
+            ],
+            standardStats: [
+                StandardStat(id: "std-G", label: "G", value: "17"),
+                StandardStat(id: "std-RecTgt", label: "Rec/Tgt", value: "127/186"),
+                StandardStat(id: "std-RecYds", label: "Rec Yds", value: "1,708"),
+                StandardStat(id: "std-RecTD", label: "Rec TD", value: "17")
+            ],
+            games: []
+        ),
+        Player(
+            playerId: 36612,
+            name: "Micah Parsons",
+            team: "DAL",
+            position: "LB",
+            handedness: "",
+            imageURL: nil,
+            updatedAt: Date(),
+            season: 2025,
+            playerType: "def",
+            metrics: [
+                Metric(id: "parsons-tackles", label: "Tackles", value: "43", percentile: 55, category: .defense),
+                Metric(id: "parsons-sacks", label: "Sacks", value: "12.0", percentile: 95, category: .defense),
+                Metric(id: "parsons-int", label: "INT", value: "0", percentile: 20, category: .defense),
+                Metric(id: "parsons-pd", label: "PD", value: "3", percentile: 60, category: .defense),
+                Metric(id: "parsons-ff", label: "FF", value: "3", percentile: 90, category: .defense),
+                Metric(id: "parsons-tfl", label: "TFL", value: "15", percentile: 92, category: .defense),
+                Metric(id: "parsons-qbhits", label: "QB Hits", value: "24", percentile: 96, category: .defense)
+            ],
+            standardStats: [
+                StandardStat(id: "std-G", label: "G", value: "13"),
+                StandardStat(id: "std-Tackles", label: "Tackles", value: "43"),
+                StandardStat(id: "std-Sacks", label: "Sacks", value: "12.0"),
+                StandardStat(id: "std-DefINT", label: "Def INT", value: "0")
+            ],
+            games: []
+        ),
+        // 2024 row for the same player id (Mahomes) so year switching has data.
+        Player(
+            playerId: 33873,
+            name: "Patrick Mahomes",
+            team: "KC",
+            position: "QB",
+            handedness: "",
+            imageURL: nil,
+            updatedAt: Date(),
+            season: 2024,
+            playerType: "qb",
+            metrics: [
+                Metric(id: "mahomes24-passyds", label: "Pass Yds", value: "3,928", percentile: 84, category: .passing),
+                Metric(id: "mahomes24-passtd", label: "Pass TD", value: "26", percentile: 78, category: .passing),
+                Metric(id: "mahomes24-rating", label: "Rating", value: "93.5", percentile: 74, category: .passing),
+                Metric(id: "mahomes24-epa", label: "EPA/Play", value: "0.11", percentile: 79, category: .passing)
+            ],
+            standardStats: [
+                StandardStat(id: "std-G", label: "G", value: "16"),
+                StandardStat(id: "std-CmpAtt", label: "Cmp/Att", value: "392/581"),
+                StandardStat(id: "std-PassYds", label: "Pass Yds", value: "3,928"),
+                StandardStat(id: "std-PassTD", label: "Pass TD", value: "26"),
+                StandardStat(id: "std-INT", label: "INT", value: "11")
             ],
             games: []
         )

@@ -67,7 +67,11 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
 
     var overallPercentile: Int {
         guard !metrics.isEmpty else { return 0 }
-        if playerType == "two_way" {
+        // Players who span more than one category (e.g. a rushing QB with both
+        // Passing and Rushing metrics) shouldn't have their headline number
+        // diluted by averaging across unrelated skills — take the best category.
+        let categories = Set(metrics.map(\.category))
+        if categories.count > 1 {
             let categoryAverages = Dictionary(grouping: metrics) { $0.category }
                 .values
                 .map { group in
@@ -103,7 +107,7 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
             let valueText = metric.value.isEmpty ? "\(metric.percentile.ordinal) percentile" : "\(metric.value), \(metric.percentile.ordinal) percentile"
             return "\(metric.label) \(valueText)"
         } ?? "\(overallPercentile.ordinal) overall percentile"
-        return "\(name) · \(team) \(position)\nOverall: \(overallPercentile.ordinal) percentile\nTop stat: \(headline)\nStatScout"
+        return "\(name) · \(team) \(displayPosition)\nOverall: \(overallPercentile.ordinal) percentile\nTop stat: \(headline)\nGridiron StatScout"
     }
 
     func percentile(for category: MetricCategory) -> Int? {
@@ -135,25 +139,26 @@ enum MetricDirection: String, Codable, Hashable, Sendable {
 }
 
 enum MetricCategory: String, Codable, CaseIterable, Hashable, Sendable {
-    case hitting = "Hitting"
-    case pitching = "Pitching"
-    case fielding = "Fielding"
-    case running = "Running"
+    case passing = "Passing"
+    case rushing = "Rushing"
+    case receiving = "Receiving"
+    case defense = "Defense"
 
     /// The preferred display order of metric labels within this category,
-    /// matching Baseball Savant's convention.
+    /// leading with the headline counting stats then the advanced Next Gen metrics.
     var metricPriorityOrder: [String] {
         switch self {
-        case .hitting:
-            return ["xwOBA", "xBA", "xSLG", "wOBA", "BA", "SLG", "OBP", "OPS", "ISO",
-                    "K%", "BB%", "Whiff%", "Barrel%", "HardHit%", "EV", "LA", "Sprint Speed"]
-        case .pitching:
-            return ["xwOBA", "xERA", "K%", "BB%", "Whiff%", "Barrel%", "Chase%",
-                    "EV", "HardHit%", "GB%", "FB%"]
-        case .fielding:
-            return ["Range (OAA)", "Arm Strength", "Arm Value", "Jump", "Burst"]
-        case .running:
-            return ["Sprint Speed", "Bolts", "Acceleration"]
+        case .passing:
+            return ["Pass Yds", "Pass TD", "Cmp%", "Y/A", "Rating", "EPA/Play",
+                    "CPOE", "INT%", "Sack%", "Time to Throw", "Aggressiveness", "Intended Air Yds"]
+        case .rushing:
+            return ["Rush Yds", "Rush TD", "Y/C", "Rush EPA", "Rush 1D",
+                    "Explosive%", "RYOE", "Fumble%"]
+        case .receiving:
+            return ["Rec", "Rec Yds", "Rec TD", "YAC", "Target Share", "WOPR",
+                    "RACR", "Rec EPA", "Catch%", "Separation", "YAC+"]
+        case .defense:
+            return ["Tackles", "Sacks", "INT", "PD", "FF", "TFL", "QB Hits"]
         }
     }
 
@@ -172,37 +177,51 @@ struct TeamRoute: Hashable {
 }
 
 extension Player {
+    /// Known NFL position groups the snapshot feed assigns.
+    private static let knownTypes: Set<String> = ["qb", "rb", "wr", "te", "def"]
+
     func matchesPlayerType(for category: MetricCategory?) -> Bool {
         guard let category else { return true }
-        let type = playerType?.lowercased()
+        // Only filter on a recognized position group. An unknown / missing
+        // player_type falls through to "include" so we never drop a player who
+        // lost their role label upstream but still carries real metrics.
+        guard let type = playerType?.lowercased(), Self.knownTypes.contains(type) else { return true }
         switch category {
-        case .hitting:
-            // Pitchers carry batter-shaped fields in their feed (HR allowed, etc.) —
-            // a strict whitelist keeps them off the hitting board even when those
-            // fields are present. nil falls through to "include" so we don't drop
-            // legitimate batters who lost their role label upstream.
-            return type != "pitcher"
-        case .pitching:
-            return type == "pitcher" || type == "two_way"
-        case .fielding, .running:
-            return true
+        case .passing:
+            return type == "qb"
+        case .rushing:
+            return ["qb", "rb", "wr", "te"].contains(type)
+        case .receiving:
+            return ["rb", "wr", "te"].contains(type)
+        case .defense:
+            return type == "def"
         }
     }
 
-    /// Position to surface in the UI. When the snapshot has no fielding position
-    /// (TBD / empty) but the player has metrics, fall back to the player type
-    /// label so we never show "TBD" next to real stats.
+    /// The category a player leads with — drives Recent Form and single-category
+    /// framing. Derived from the position group, falling back to the most common
+    /// metric category when the role label is missing.
+    var primaryCategory: MetricCategory {
+        switch playerType?.lowercased() {
+        case "qb": return .passing
+        case "rb": return .rushing
+        case "wr", "te": return .receiving
+        case "def": return .defense
+        default:
+            let counts = Dictionary(grouping: metrics, by: \.category).mapValues(\.count)
+            return counts.max { $0.value < $1.value }?.key ?? .passing
+        }
+    }
+
+    /// Position to surface in the UI. When the snapshot has no position (TBD /
+    /// empty) but the player has metrics, fall back to the player-type label so
+    /// we never show "TBD" next to real stats.
     var displayPosition: String {
         let trimmed = position.trimmingCharacters(in: .whitespaces).uppercased()
         if !trimmed.isEmpty && trimmed != "TBD" && trimmed != "—" && trimmed != "-" {
             return position
         }
-        switch playerType?.lowercased() {
-        case "pitcher": return "P"
-        case "hitter", "batter": return "DH"
-        case "two_way": return "TWP"
-        default: return position
-        }
+        return playerType?.uppercased() ?? position
     }
 
     var initials: String {

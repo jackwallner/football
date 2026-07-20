@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Export all pre-2026 player data from Supabase into a bundled JSON file."""
+"""Export all historical (pre-current-season) player data from Supabase into a bundled JSON file.
+
+Historical = seasons earlier than StatScoutSeason.current (2025), i.e. 2020–2024.
+"""
 import json
 import os
 import urllib.request
@@ -21,7 +24,7 @@ all_players = []
 
 while True:
     req = urllib.request.Request(
-        f"{url}?select=*&season=lt.2026&order=id.asc&limit={page_size}&offset={offset}",
+        f"{url}?select=*&season=lt.2025&order=id.asc&limit={page_size}&offset={offset}",
         headers=headers,
     )
     with urllib.request.urlopen(req) as resp:
