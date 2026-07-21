@@ -178,7 +178,7 @@ struct AboutView: View {
 
             Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline)
 
-            if let supportURL = URL(string: "https://jackwallner.github.io/baseball/support.html") {
+            if let supportURL = URL(string: "https://jackwallner.github.io/football/support.html") {
                 Link(destination: supportURL) {
                     row(
                         icon: "envelope.fill",
@@ -191,7 +191,7 @@ struct AboutView: View {
             
             Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline)
             
-            if let privacyURL = URL(string: "https://jackwallner.github.io/baseball/privacy-policy.html") {
+            if let privacyURL = URL(string: "https://jackwallner.github.io/football/privacy-policy.html") {
                 Link(destination: privacyURL) {
                     row(
                         icon: "shield.lefthalf.filled",

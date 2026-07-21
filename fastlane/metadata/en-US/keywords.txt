@@ -1,1 +1,1 @@
-savant,xwoba,oaa,wrc,wrcplus,barrel,exit,velocity,hitting,pitching,fielding,metrics,analytics,launch
+nfl,football,epa,cpoe,yac,percentile,rankings,passing,rushing,receiving,defense,qb,fantasy,nextgen
