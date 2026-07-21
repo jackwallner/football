@@ -3,611 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" sizes="256x256" href="images/icon_256.png">
-    <link rel="apple-touch-icon" href="images/icon_256.png">
-    <title>Baseball Savvy StatScout - Visual Baseball Percentile Rankings & Advanced Metrics for iPhone</title>
-    <meta name="description" content="Visual baseball percentile rankings and leaderboards. Track player xwOBA, Hard-Hit%, Sprint Speed, Barrel%, and more with nightly updates. No ads, no tracking, no account required.">
-    <link rel="canonical" href="https://jackwallner.github.io/baseball/">
-    <meta name="apple-itunes-app" content="app-id=6763945657">
-    <meta name="keywords" content="baseball analytics, percentile rankings, statcast, xwOBA, hard hit rate, sprint speed, barrel rate, leaderboards, baseball stats, iPhone, MLB, nightly updates">
-    <meta property="og:title" content="Baseball Savvy StatScout - Visual Baseball Percentile Rankings for iPhone">
-    <meta property="og:description" content="Visual percentile rankings, nightly leaderboards, and advanced metrics for qualified MLB players. Privacy first, no account needed.">
+    <title>Gridiron StatScout - Visual NFL Percentile Rankings & Advanced Stats for iPhone</title>
+    <meta name="description" content="Visual NFL percentile rankings and leaderboards. Track passing, rushing, receiving, and defense metrics like EPA, CPOE, YAC, and target share with nightly updates. No ads, no tracking, no account required.">
+    <link rel="canonical" href="https://jackwallner.github.io/football/">
+    <meta name="apple-itunes-app" content="app-id=6792930447">
+    <meta name="keywords" content="NFL analytics, percentile rankings, next gen stats, EPA, CPOE, YAC, target share, football leaderboards, NFL stats, iPhone, nightly updates">
+    <meta property="og:title" content="Gridiron StatScout - Visual NFL Percentile Rankings for iPhone">
+    <meta property="og:description" content="Visual percentile rankings, nightly leaderboards, and advanced metrics for qualified NFL players. Privacy first, no account needed.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://jackwallner.github.io/baseball/">
-    <meta property="og:image" content="https://jackwallner.github.io/baseball/images/01_leaderboard.png">
-    <meta property="og:site_name" content="Baseball Savvy StatScout">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Baseball Savvy StatScout - Visual Baseball Percentile Rankings for iPhone">
-    <meta name="twitter:description" content="Visual percentile rankings, nightly leaderboards, and advanced metrics. Privacy first, no account required.">
-    <meta name="twitter:image" content="https://jackwallner.github.io/baseball/images/01_leaderboard.png">
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "Baseball Savvy StatScout",
-        "operatingSystem": "iOS",
-        "applicationCategory": "SportsApplication",
-        "offers": [
-            {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD",
-                "description": "Free tier with percentile rankings, leaderboards, and team rosters"
-            },
-            {
-                "@type": "Offer",
-                "price": "4.99",
-                "priceCurrency": "USD",
-                "description": "StatScout Pro — year-over-year comparisons, multi-season trends, and early access features"
-            }
-        ],
-        "description": "Visual baseball percentile rankings and leaderboards. Track player xwOBA, Hard-Hit%, Sprint Speed, Barrel%, and more with nightly updates.",
-        "url": "https://jackwallner.github.io/baseball/",
-        "downloadUrl": "https://apps.apple.com/us/app/baseball-savvy-statscout/id6763945657",
-        "screenshot": "https://jackwallner.github.io/baseball/images/01_leaderboard.png",
-        "softwareVersion": "1.2.2",
-        "author": {
-            "@type": "Person",
-            "name": "Jack Wallner"
-        }
-    }
-    </script>
+    <meta property="og:url" content="https://jackwallner.github.io/football/">
+    <meta property="og:site_name" content="Gridiron StatScout">
     <style>
+        :root {
+            --bg: #0b1727;
+            --bg-2: #10233b;
+            --card: #16273d;
+            --text: #f5f7fa;
+            --text-secondary: #aebbcc;
+            --accent: #e12e3a;
+            --accent-2: #2e6fd4;
+            --border: rgba(255,255,255,0.08);
+            --radius: 20px;
+            --radius-pill: 980px;
+            --max-width: 960px;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-            color: #1d1d1f;
-            background: #fafafa;
+            color: var(--text);
+            background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 40%);
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.6;
+            min-height: 100vh;
         }
+        .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+        a { color: inherit; }
 
-        .container {
-            max-width: 980px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        /* Nav */
         nav {
-            padding: 16px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            background: rgba(250,250,250,0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 10;
+            background: rgba(11,23,39,0.8);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         }
+        nav .container { display: flex; align-items: center; justify-content: space-between; }
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; }
+        .dot { width: 26px; height: 26px; border-radius: 8px; background: var(--accent); display: inline-block; position: relative; }
+        .dot::after { content: ""; position: absolute; inset: 7px 5px; border-radius: 50%; background: #7a4a2a; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5); }
+        .nav-links { display: flex; gap: 6px; align-items: center; }
+        .nav-link { font-size: 14px; text-decoration: none; padding: 8px 16px; border-radius: var(--radius-pill); font-weight: 500; color: var(--text-secondary); }
+        .nav-link:hover { color: var(--text); }
+        .nav-link.primary { background: var(--accent); color: #fff; font-weight: 600; }
 
-        nav .container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+        .hero { text-align: center; padding: 88px 0 56px; }
+        .hero h1 { font-size: 52px; font-weight: 800; letter-spacing: -1.6px; line-height: 1.05; margin-bottom: 20px; }
+        .hero h1 .grad { background: linear-gradient(90deg, var(--accent), #ff6b74); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .hero p { font-size: 20px; color: var(--text-secondary); max-width: 620px; margin: 0 auto 32px; }
+        .cta { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+        .btn { display: inline-block; padding: 14px 28px; border-radius: var(--radius-pill); font-weight: 600; text-decoration: none; font-size: 16px; }
+        .btn.primary { background: var(--accent); color: #fff; }
+        .btn.ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border); }
 
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: #1d1d1f;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; padding: 32px 0 20px; }
+        .feature { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; }
+        .feature h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .feature p { font-size: 14.5px; color: var(--text-secondary); }
+        .feature .tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
 
-        .nav-brand img {
-            width: 32px;
-            height: 32px;
-            border-radius: 7px;
-        }
+        .cats { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 8px 0 48px; }
+        .chip { padding: 8px 18px; border-radius: var(--radius-pill); background: rgba(255,255,255,0.05); border: 1px solid var(--border); font-size: 14px; font-weight: 600; }
 
-        .nav-brand span {
-            font-size: 15px;
-            font-weight: 600;
-        }
+        .pricing { padding: 40px 0 64px; text-align: center; }
+        .pricing h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 8px; }
+        .pricing .sub { color: var(--text-secondary); margin-bottom: 28px; }
+        .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .plan { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 22px; }
+        .plan .name { font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+        .plan .price { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+        .plan .per { color: var(--text-secondary); font-size: 14px; }
+        .plan.best { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+        .plan .trial { display: inline-block; margin-top: 10px; font-size: 12.5px; color: var(--accent); font-weight: 600; }
 
-        .nav-link {
-            font-size: 14px;
-            text-decoration: none;
-            background: #1d1d1f;
-            color: #fff;
-            padding: 8px 18px;
-            border-radius: 980px;
-            font-weight: 500;
-            transition: opacity 0.15s;
-        }
+        .legal { color: var(--text-secondary); font-size: 13px; max-width: 720px; margin: 28px auto 0; }
 
-        .nav-link:hover { opacity: 0.85; }
+        footer { text-align: center; padding: 40px 24px; font-size: 13px; color: var(--text-secondary); border-top: 1px solid var(--border); }
+        footer a { text-decoration: none; margin: 0 10px; color: var(--text-secondary); }
+        footer a:hover { color: var(--text); }
 
-        /* Hero */
-        .hero {
-            text-align: center;
-            padding: 100px 24px 64px;
-        }
-
-        .hero h1 {
-            font-size: 52px;
-            font-weight: 700;
-            letter-spacing: -1.5px;
-            line-height: 1.08;
-            margin-bottom: 16px;
-        }
-
-        .hero h1 span {
-            background: linear-gradient(135deg, #d32f2f, #c71a21);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero .tagline {
-            font-size: 19px;
-            color: #6e6e73;
-            line-height: 1.5;
-            max-width: 440px;
-            margin: 0 auto 12px;
-        }
-
-        .hero .platforms {
-            font-size: 13px;
-            color: #86868b;
-            letter-spacing: 0.3px;
-            margin-bottom: 36px;
-        }
-
-        .download-btn {
-            display: inline-block;
-            background: #1d1d1f;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 500;
-            padding: 14px 36px;
-            border-radius: 980px;
-            text-decoration: none;
-            transition: opacity 0.15s;
-        }
-
-        .download-btn:hover { opacity: 0.85; }
-
-        /* Showcase */
-        .showcase {
-            padding: 0 0 80px;
-        }
-
-        .showcase-scroll {
-            display: flex;
-            gap: 24px;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            padding: 0 24px;
-            max-width: 1200px;
-            margin: 0 auto;
-            scrollbar-width: none;
-        }
-
-        .showcase-scroll::-webkit-scrollbar { display: none; }
-
-        .showcase-card {
-            flex-shrink: 0;
-            scroll-snap-align: center;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.08);
-        }
-
-        .showcase-card img {
-            height: 540px;
-            display: block;
-        }
-
-        /* Features */
-        .features {
-            padding: 80px 0;
-            background: #fff;
-            border-top: 1px solid rgba(0,0,0,0.06);
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-        }
-
-        .features-header {
-            text-align: center;
-            margin-bottom: 56px;
-        }
-
-        .features-header h2 {
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            margin-bottom: 8px;
-        }
-
-        .features-header p {
-            font-size: 17px;
-            color: #6e6e73;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1px;
-            background: rgba(0,0,0,0.06);
-            border-top: 1px solid rgba(0,0,0,0.06);
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-        }
-
-        .feature-card {
-            background: #fff;
-            padding: 36px 32px;
-        }
-
-        .feature-card .label {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #86868b;
-            margin-bottom: 10px;
-        }
-
-        .feature-card .label.statscout-pro {
-            color: #c71a21;
-        }
-
-        .feature-card h3 {
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: -0.2px;
-            margin-bottom: 8px;
-        }
-
-        .feature-card p {
-            font-size: 14px;
-            color: #6e6e73;
-            line-height: 1.55;
-        }
-
-        /* Privacy */
-        .privacy {
-            padding: 80px 0;
-        }
-
-        .privacy .container {
-            max-width: 640px;
-            text-align: center;
-        }
-
-        .privacy .lockup {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: #f5f5f7;
-            margin-bottom: 20px;
-        }
-
-        .privacy .lockup svg {
-            width: 22px;
-            height: 22px;
-            fill: none;
-            stroke: #1d1d1f;
-            stroke-width: 1.8;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .privacy h2 {
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            margin-bottom: 12px;
-        }
-
-        .privacy p {
-            font-size: 17px;
-            color: #6e6e73;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .privacy a {
-            font-size: 15px;
-            color: #0066cc;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .privacy a:hover { text-decoration: underline; }
-
-        /* More Info */
-        .more-info {
-            padding: 64px 24px;
-            background: #fff;
-            border-top: 1px solid rgba(0,0,0,0.06);
-        }
-
-        .more-info-header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-
-        .more-info-header h2 {
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            margin-bottom: 8px;
-        }
-
-        .more-info-header p {
-            font-size: 17px;
-            color: #6e6e73;
-        }
-
-        .more-info-content {
-            max-width: 720px;
-            margin: 0 auto;
-        }
-
-        .more-info-section {
-            margin-bottom: 40px;
-        }
-
-        .more-info-section h3 {
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #86868b;
-            margin-bottom: 12px;
-        }
-
-        .more-info-section p {
-            font-size: 15px;
-            line-height: 1.6;
-            color: #1d1d1f;
-            margin-bottom: 12px;
-        }
-
-        .more-info-section p:last-child {
-            margin-bottom: 0;
-        }
-
-        .more-info-section strong {
-            font-weight: 600;
-        }
-
-        .specs-table {
-            width: 100%;
-            font-size: 14px;
-            border-collapse: collapse;
-            margin-top: 16px;
-        }
-
-        .specs-table td {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-        }
-
-        .specs-table td:first-child {
-            color: #86868b;
-            width: 140px;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* CTA */
-        .cta {
-            text-align: center;
-            padding: 64px 24px 80px;
-            background: #fff;
-            border-top: 1px solid rgba(0,0,0,0.06);
-        }
-
-        .cta h2 {
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            margin-bottom: 6px;
-        }
-
-        .cta p {
-            font-size: 15px;
-            color: #86868b;
-            margin-bottom: 28px;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 20px 24px;
-            font-size: 12px;
-            color: #86868b;
-        }
-
-        footer a {
-            color: #86868b;
-            text-decoration: none;
-            margin: 0 10px;
-        }
-
-        footer a:hover { color: #1d1d1f; }
-
-        footer .divider { margin: 4px 0; }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero { padding: 72px 20px 48px; }
-            .hero h1 { font-size: 36px; letter-spacing: -1px; }
-            .hero .tagline { font-size: 17px; }
-
-            .showcase-card img { height: 400px; }
-
-            .features-grid { grid-template-columns: 1fr; }
-
-            .features-header h2 { font-size: 28px; }
-            .privacy h2, .cta h2 { font-size: 26px; }
-        }
-
-        @media (max-width: 480px) {
-            .showcase-card img { height: 360px; }
+        @media (max-width: 700px) {
+            .hero h1 { font-size: 38px; }
+            .hero p { font-size: 17px; }
+            .nav-links .nav-link:not(.primary) { display: none; }
         }
     </style>
 </head>
 <body>
-
     <nav>
         <div class="container">
-            <a class="nav-brand" href="./">
-                <img src="images/icon_256.png" alt="StatScout">
-                <span>StatScout</span>
-            </a>
-            <a class="nav-link" href="https://apps.apple.com/us/app/baseball-savvy-statscout/id6763945657">Download</a>
+            <a class="nav-brand" href="index.html"><span class="dot"></span> Gridiron StatScout</a>
+            <div class="nav-links">
+                <a class="nav-link" href="support.html">Support</a>
+                <a class="nav-link" href="privacy-policy.html">Privacy</a>
+                <a class="nav-link primary" href="https://apps.apple.com/app/id6792930447">Download</a>
+            </div>
         </div>
     </nav>
 
-    <section class="hero">
-        <h1>Scout the league <span>like a pro</span></h1>
-        <p class="tagline">Baseball Savvy StatScout brings visual percentile rankings, nightly leaderboards, and advanced metrics for qualified players. Free with no ads or accounts.</p>
-        <p class="platforms">iPhone &middot; Nightly Updates &middot; Privacy First</p>
-        <a class="download-btn" href="https://apps.apple.com/us/app/baseball-savvy-statscout/id6763945657">Download on the App Store</a>
-    </section>
-
-    <section class="showcase">
-        <div class="showcase-scroll">
-            <div class="showcase-card">
-                <img src="images/01_leaderboard.png" alt="Leaderboard — Browse all qualified players with visual percentile bars">
-            </div>
-            <div class="showcase-card">
-                <img src="images/02_player_profile.png" alt="Player Profile — See every metric at a glance with color-coded percentiles">
-            </div>
-            <div class="showcase-card">
-                <img src="images/03_metric_leaders.png" alt="Metric Leaders — Filter the league by any stat including xwOBA and hard-hit rate">
-            </div>
-            <div class="showcase-card">
-                <img src="images/04_pitching_leaders.png" alt="Pitching Leaders — Sortable leaderboards for every pitching metric">
-            </div>
-            <div class="showcase-card">
-                <img src="images/05_box_score.png" alt="Box Score — Game-level stats and performance breakdowns">
-            </div>
-            <div class="showcase-card">
-                <img src="images/06_team_roster.png" alt="Team Roster — Browse every team with position breakdowns">
-            </div>
-        </div>
-    </section>
-
-    <section class="features">
+    <header class="hero">
         <div class="container">
-            <div class="features-header">
-                <h2>Built to do one thing well</h2>
-                <p>No bloat, no sign-up. Free to start &mdash; upgrade for deeper insights.</p>
+            <h1>Every NFL player, ranked by <span class="grad">percentile</span>.</h1>
+            <p>Visual percentile rankings and nightly leaderboards for passing, rushing, receiving, and defense. See where any player really stands, from EPA and CPOE to YAC and target share.</p>
+            <div class="cta">
+                <a class="btn primary" href="https://apps.apple.com/app/id6792930447">Download for iPhone</a>
+                <a class="btn ghost" href="#pricing">See pricing</a>
             </div>
         </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <span class="label">Percentiles</span>
-                <h3>Visual rankings</h3>
-                <p>See where every qualified player ranks in xwOBA, Hard-Hit%, Sprint Speed, Barrel%, and more with color-coded percentile bars.</p>
-            </div>
-            <div class="feature-card">
-                <span class="label">Leaderboards</span>
-                <h3>Nightly updates</h3>
-                <p>Filter the entire league across Hitting, Pitching, and Running metrics. Rankings refresh every night with the latest Statcast data.</p>
-            </div>
-            <div class="feature-card">
-                <span class="label">Search</span>
-                <h3>Find any player</h3>
-                <p>Type a name and jump straight to their profile. Every qualified player in the league, indexed and searchable instantly.</p>
-            </div>
-            <div class="feature-card">
-                <span class="label">Teams</span>
-                <h3>Rosters at a glance</h3>
-                <p>Browse all 30 MLB teams with full rosters, positions, and player percentile rankings. See how every lineup shakes out.</p>
-            </div>
-            <div class="feature-card">
-                <span class="label statscout-pro">Pro</span>
-                <h3>Year-over-year</h3>
-                <p>Compare player metrics across seasons to spot improvements, declines, and breakout trends with StatScout Pro.</p>
-            </div>
-            <div class="feature-card">
-                <span class="label">Metrics</span>
-                <h3>15+ stats tracked</h3>
-                <p>xwOBA, Hard-Hit%, Barrel%, Sprint Speed, Chase Rate, Whiff%, Fastball Velo, Exit Velocity, Launch Angle, and more.</p>
-            </div>
-        </div>
-    </section>
+    </header>
 
-    <section class="more-info">
+    <main>
         <div class="container">
-            <div class="more-info-header">
-                <h2>More info</h2>
-                <p>How it's built and why it matters.</p>
+            <div class="cats">
+                <span class="chip">Passing</span>
+                <span class="chip">Rushing</span>
+                <span class="chip">Receiving</span>
+                <span class="chip">Defense</span>
             </div>
-            <div class="more-info-content">
-                <div class="more-info-section">
-                    <h3>The Pitch</h3>
-                    <p>Most baseball analytics tools are buried in cluttered websites or locked behind paywalls. I wanted something that puts the numbers front and center — clean, fast, and actually useful on a phone.</p>
-                    <p>StatScout reads nightly Statcast data, calculates percentile rankings for every qualified player, and surfaces it all in one scannable view. No ads, no tracking, no account. The core features are free — always.</p>
-                </div>
 
-                <div class="more-info-section">
-                    <h3>StatScout Pro</h3>
-                    <p>An optional upgrade for deeper analysis. $4.99/month (or included with Pro yearly).</p>
-                    <p><strong>Year-over-Year Comparisons.</strong> See how a player's metrics have evolved across multiple seasons. Spot breakout candidates and decline trends at a glance.</p>
-                    <p><strong>Multi-Season Trends.</strong> Pull up any stat over the last several seasons in one chart. See the full arc of a player's development.</p>
-                    <p><strong>Early Access.</strong> Pro subscribers get new features first as StatScout continues to grow.</p>
+            <div class="grid">
+                <div class="feature">
+                    <span class="tag">Leaderboards</span>
+                    <h3>Percentile bars, not spreadsheets</h3>
+                    <p>Every stat is shown as a clean percentile bar so you can read talent at a glance. Sort any category by the metric that matters.</p>
                 </div>
-
-                <div class="more-info-section">
-                    <h3>Specs</h3>
-                    <table class="specs-table">
-                        <tr><td>Platform</td><td>iOS 17+</td></tr>
-                        <tr><td>Language</td><td>Swift 6 with strict concurrency</td></tr>
-                        <tr><td>Framework</td><td>SwiftUI</td></tr>
-                        <tr><td>Data Source</td><td>Statcast via MLB Stats API</td></tr>
-                        <tr><td>Backend</td><td>Supabase with nightly refresh</td></tr>
-                        <tr><td>Updates</td><td>Automated via GitHub Actions</td></tr>
-                    </table>
+                <div class="feature">
+                    <span class="tag">Advanced metrics</span>
+                    <h3>Next-gen numbers</h3>
+                    <p>Go beyond box scores with EPA per play, CPOE, time to throw, YAC over expected, separation, WOPR, and more.</p>
                 </div>
-
-                <div class="more-info-section">
-                    <h3>What Mattered</h3>
-                    <p><strong>Percentiles as the interface.</strong> Instead of tables of raw numbers, StatScout ranks every player on a 0–100 scale and shows it as a visual bar. One glance tells you if someone is elite (90+), average, or below.</p>
-                    <p><strong>Nightly automation.</strong> The data pipeline runs every night via GitHub Actions — fetch, compute percentiles, push to Supabase. By morning, the app has fresh rankings. No manual updates, no stale data.</p>
-                    <p><strong>Spotlight metric prioritization.</strong> Each player profile highlights their top (and bottom) metrics so you can instantly see what a player does best — and where they struggle.</p>
-                    <p><strong>Privacy as a feature.</strong> No accounts, no analytics, no crash reporting. StatScout doesn't know who you are. The app simply fetches public data and displays it.</p>
+                <div class="feature">
+                    <span class="tag">Recent form</span>
+                    <h3>Hot or cold, game by game</h3>
+                    <p>Track how a player is trending over their last games, not just the season line.</p>
+                </div>
+                <div class="feature">
+                    <span class="tag">Compare</span>
+                    <h3>Head-to-head</h3>
+                    <p>Put any two players side by side across every metric in their position group.</p>
+                </div>
+                <div class="feature">
+                    <span class="tag">History</span>
+                    <h3>Seasons back to 2020</h3>
+                    <p>See how today's leaders got here with season-by-season percentile history.</p>
+                </div>
+                <div class="feature">
+                    <span class="tag">Private</span>
+                    <h3>No ads, no tracking</h3>
+                    <p>No account, no analytics SDKs, no ad networks. Just the numbers.</p>
                 </div>
             </div>
+
+            <section class="pricing" id="pricing">
+                <h2>Free to start. Pro when you want more.</h2>
+                <p class="sub">The current season, leaderboards, and team rosters are free. Pro unlocks history, Recent Form, and comparisons.</p>
+                <div class="plans">
+                    <div class="plan">
+                        <div class="name">Monthly</div>
+                        <div class="price">$1.99</div>
+                        <div class="per">per month</div>
+                        <div class="trial">1-week free trial</div>
+                    </div>
+                    <div class="plan best">
+                        <div class="name">Yearly</div>
+                        <div class="price">$14.99</div>
+                        <div class="per">per year</div>
+                        <div class="trial">1-week free trial</div>
+                    </div>
+                    <div class="plan">
+                        <div class="name">Lifetime</div>
+                        <div class="price">$29.99</div>
+                        <div class="per">one-time</div>
+                        <div class="trial">pay once, keep forever</div>
+                    </div>
+                </div>
+                <p class="legal">
+                    Prices in USD; local pricing may vary. Auto-renewing subscriptions renew at the end of each period unless cancelled at least 24 hours before the period ends. Free trials convert to a paid subscription unless cancelled before the trial ends. Manage or cancel anytime in your Apple ID settings. See the <a href="terms.html">Terms of Use</a> and <a href="privacy-policy.html">Privacy Policy</a>.
+                </p>
+            </section>
         </div>
-    </section>
-
-    <section class="privacy">
-        <div class="container">
-            <div class="lockup">
-                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            </div>
-            <h2>Private by design</h2>
-            <p>No accounts. No ads. No third-party tracking. StatScout fetches public data from a backend — no personal information ever leaves your device.</p>
-            <a href="privacy-policy.html">Privacy Policy &rarr;</a>
-        </div>
-    </section>
-
-    <section class="cta">
-        <h2>Scout the league</h2>
-        <p>Baseball Savvy StatScout is free on the App Store. No account required. Upgrade to Pro anytime.</p>
-        <a class="download-btn" href="https://apps.apple.com/us/app/baseball-savvy-statscout/id6763945657">Download on the App Store</a>
-    </section>
+    </main>
 
     <footer>
-        <div class="divider">&copy; 2026 Jack Wallner</div>
-        <div>
+        <p>Gridiron StatScout is not affiliated with, authorized, or endorsed by the National Football League (NFL), any NFL team, or the NFLPA. All statistics are sourced from publicly available data.</p>
+        <div style="margin-top: 12px;">
+            <a href="index.html">Home</a>
             <a href="support.html">Support</a>
             <a href="privacy-policy.html">Privacy</a>
             <a href="terms.html">Terms</a>
         </div>
+        <p style="margin-top: 12px;">&copy; 2026 Jack Wallner</p>
     </footer>
-
 </body>
 </html>

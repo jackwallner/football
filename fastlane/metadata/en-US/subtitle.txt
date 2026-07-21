@@ -1,1 +1,1 @@
-MLB Statcast Percentile Ranks
+NFL Next Gen Percentile Ranks

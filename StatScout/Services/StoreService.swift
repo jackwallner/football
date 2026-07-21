@@ -3,15 +3,18 @@ import os
 @preconcurrency import RevenueCat
 
 enum StatScoutProduct {
-    static let lifetime = "com.jackwallner.baseball.pro"
-    static let yearly = "com.jackwallner.baseball.pro.yearly"
-    static let monthly = "com.jackwallner.baseball.pro.monthly"
+    static let lifetime = "com.jackwallner.football.pro"
+    static let yearly = "com.jackwallner.football.pro.yearly"
+    static let monthly = "com.jackwallner.football.pro.monthly"
     static let all: [String] = [lifetime, yearly, monthly]
 }
 
 enum RevenueCatConfig {
-    static let apiKey = "appl_qNlZGCCfGWBTsvcxlqYSNCtRupx"
-    static let proEntitlement = "StatScout Pro"
+    // RevenueCat "Football" project (proj9c303632), App Store app app039a312379.
+    // Public SDK key (appl_...) — used only in device Release / TestFlight / App
+    // Store builds; simulator runs skip Purchases.configure (see configureIfNeeded).
+    static let apiKey = "appl_REPLACE_WITH_FOOTBALL_APPL_KEY"
+    static let proEntitlement = "Football Pro"
     static let fallbackEntitlement = "pro"
 }
 
@@ -28,7 +31,7 @@ enum StatScoutSeason {
 enum StatScoutLegal {
     /// Apple's standard EULA — required on the paywall unless a custom one is hosted.
     static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
-    static let privacyURL = URL(string: "https://jackwallner.github.io/baseball/privacy-policy.html")!
+    static let privacyURL = URL(string: "https://jackwallner.github.io/football/privacy-policy.html")!
 }
 
 /// Session-scoped cap so the same contextual paywall can't be re-presented
@@ -459,12 +462,21 @@ final class StoreService: NSObject, ObservableObject {
 
     private func configureIfNeeded() {
         guard !isConfigured else { return }
+        #if targetEnvironment(simulator)
+        // Agent/sim runs must NOT hit the prod RevenueCat project — configuring
+        // the prod appl_ key on the simulator creates fake "new customers" in the
+        // prod charts (RC has no dashboard switch to exclude sim installs). Skip
+        // configure entirely; use StoreKit Testing + a local Pro override for
+        // paywall/IAP flows on device-less runs.
+        return
+        #else
         #if DEBUG
         Purchases.logLevel = .debug
         #endif
         Purchases.configure(withAPIKey: RevenueCatConfig.apiKey)
         Purchases.shared.delegate = self
         isConfigured = true
+        #endif
     }
 }
 

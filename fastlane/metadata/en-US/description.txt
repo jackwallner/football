@@ -1,34 +1,35 @@
-Scout the league like a pro.
- Statcast percentile rankings and MLB Savant-style metrics.
-StatScout brings baseball percentile rankings to your iPhone. See where qualified players rank — from xwOBA to Sprint Speed to Outs Above Average — with fast visual red-blue metric bars. 
+Scout the NFL like a pro.
+Advanced percentile rankings and Next Gen-style metrics for every qualified player.
+
+Gridiron StatScout brings NFL percentile rankings to your iPhone. See where players rank — from EPA per play and CPOE to YAC over expected and target share — with fast visual red-blue metric bars.
 
 VISUAL PERCENTILES
-Every metric displays as a horizontal percentile bar with a colored circle marker. The color shifts continuously from blue (0th percentile) through gray (50th) to red (100th), so you can spot elite performers instantly.
+Every metric displays as a horizontal percentile bar with a colored marker. The color shifts continuously from blue (0th percentile) through gray (50th) to red (100th), so you can spot elite performers instantly.
 
 COMPREHENSIVE PLAYER PROFILES
-Tap any player to see their full profile. View percentile rankings across Hitting, Pitching, Fielding, and Running. Switch between advanced metrics and standard season stats. Track performance trends with nightly-updated data.
+Tap any player to see their full profile. View percentile rankings across Passing, Rushing, Receiving, and Defense. Switch between advanced metrics and standard season stats, and track recent form game by game.
 
 NIGHTLY UPDATES
-Our data feed refreshes every night, pulling the latest percentile rankings and standard stats for qualified players. What you see is always current through the previous day's games.
+Our data feed refreshes every night, pulling the latest percentile rankings and standard stats for qualified players. What you see is always current through the previous week's games.
 
 LEADERBOARDS & FILTERS
-Browse the full league leaderboard filtered by Hitting, Pitching, Fielding, or Running. Sort and search across every active player. Tap any row to dive into their full profile.
+Browse the full league leaderboard filtered by Passing, Rushing, Receiving, or Defense. Sort and search across every active player. Tap any row to dive into their full profile.
 
-STATSCOUT PRO
-Unlock additional analysis with StatScout Pro:
-• Historical Seasons — load past seasons on demand
+GRIDIRON PRO
+Unlock additional analysis with Gridiron Pro:
+• Historical Seasons — load seasons back to 2020 on demand
 • Player Comparisons — compare any two players side by side
-• Year-Over-Year Tracking — see how a player's metrics changed season to season
+• Recent Form — see how a player is trending over their latest games
 
 Choose Monthly, Yearly (with free trial), or Lifetime — one purchase covers everything.
 
 PRIVACY-FIRST
-No accounts. No sign-up. No ads. No third-party tracking. The app makes only the network requests needed for baseball statistics, player images, and optional purchase verification.
+No accounts. No sign-up. No ads. No third-party tracking. The app makes only the network requests needed for NFL statistics, player images, and optional purchase verification.
 
 Subscription Details
-StatScout Pro is available as an auto-renewing subscription (Monthly $1.99 / Yearly $4.99 with a 7-day free trial) or a one-time Lifetime purchase ($9.99). Payment is charged to your Apple ID at confirmation. Subscriptions auto-renew unless canceled at least 24 hours before the end of the period. Manage or cancel anytime in Settings → Apple ID → Subscriptions.
+Gridiron Pro is available as an auto-renewing subscription (Monthly $1.99 / Yearly $14.99 with a 7-day free trial) or a one-time Lifetime purchase ($29.99). Payment is charged to your Apple ID at confirmation. Subscriptions auto-renew unless canceled at least 24 hours before the end of the period; a free trial converts to a paid subscription unless canceled before it ends. Manage or cancel anytime in Settings > Apple ID > Subscriptions.
 
-Privacy Policy: https://jackwallner.github.io/baseball/privacy-policy.html
+Privacy Policy: https://jackwallner.github.io/football/privacy-policy.html
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
-StatScout is not affiliated with, endorsed by, or sponsored by Major League Baseball, MLB Advanced Media, the MLBPA, or any individual team. Player names, team names, and statistics are used for identification and informational purposes only.
+Gridiron StatScout is not affiliated with, authorized, endorsed by, or sponsored by the National Football League (NFL), any NFL team, or the NFLPA. Player names, team names, and statistics are used for identification and informational purposes only.

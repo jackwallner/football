@@ -1,1 +1,1 @@
-Bug fixes and performance improvements across stats, compare, and team views.
+Welcome to Gridiron StatScout — visual NFL percentile rankings for passing, rushing, receiving, and defense, updated nightly. Browse leaderboards, dive into player profiles, track recent form, and compare players with Pro.
