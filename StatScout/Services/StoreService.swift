@@ -466,6 +466,48 @@ final class StoreService: NSObject, ObservableObject {
         }
     }
 
+    #if DEBUG
+    /// Populates `products` with mock packages (RevenueCat `TestStoreProduct`) so
+    /// the real PaywallView renders with correct prices/trials for App Store and
+    /// App Review screenshots — no `Purchases.configure`, no StoreKit, no network,
+    /// so prod RevenueCat stays clean. Used by `PaywallScreenshotHarness`.
+    func loadScreenshotProducts() {
+        let locale = Locale(identifier: "en_US")
+        func weekTrial() -> TestStoreProductDiscount {
+            TestStoreProductDiscount(
+                identifier: "free_trial", price: 0, localizedPriceString: "$0.00",
+                paymentMode: .freeTrial, subscriptionPeriod: .init(value: 1, unit: .week),
+                numberOfPeriods: 1, type: .introductory)
+        }
+        let monthly = TestStoreProduct(
+            localizedTitle: "Gridiron Pro Monthly", price: 1.99, currencyCode: "USD",
+            localizedPriceString: "$1.99", productIdentifier: StatScoutProduct.monthly,
+            productType: .autoRenewableSubscription, localizedDescription: "Gridiron Pro, billed monthly.",
+            subscriptionPeriod: .init(value: 1, unit: .month), introductoryDiscount: weekTrial(), locale: locale)
+        let yearly = TestStoreProduct(
+            localizedTitle: "Gridiron Pro Yearly", price: 14.99, currencyCode: "USD",
+            localizedPriceString: "$14.99", productIdentifier: StatScoutProduct.yearly,
+            productType: .autoRenewableSubscription, localizedDescription: "Gridiron Pro, billed yearly.",
+            subscriptionPeriod: .init(value: 1, unit: .year), introductoryDiscount: weekTrial(), locale: locale)
+        let lifetime = TestStoreProduct(
+            localizedTitle: "Gridiron Pro Lifetime", price: 29.99, currencyCode: "USD",
+            localizedPriceString: "$29.99", productIdentifier: StatScoutProduct.lifetime,
+            productType: .nonConsumable, localizedDescription: "Gridiron Pro, one-time purchase.",
+            subscriptionPeriod: nil, introductoryDiscount: nil, locale: locale)
+        products = [
+            Package(identifier: "$rc_annual", packageType: .annual,
+                    storeProduct: yearly.toStoreProduct(), offeringIdentifier: "default", webCheckoutUrl: nil),
+            Package(identifier: "$rc_monthly", packageType: .monthly,
+                    storeProduct: monthly.toStoreProduct(), offeringIdentifier: "default", webCheckoutUrl: nil),
+            Package(identifier: "$rc_lifetime", packageType: .lifetime,
+                    storeProduct: lifetime.toStoreProduct(), offeringIdentifier: "default", webCheckoutUrl: nil),
+        ]
+        introEligibility = [StatScoutProduct.monthly: true, StatScoutProduct.yearly: true]
+        isLoadingProducts = false
+        lastError = nil
+    }
+    #endif
+
     private func configureIfNeeded() {
         guard !isConfigured else { return }
         #if targetEnvironment(simulator)

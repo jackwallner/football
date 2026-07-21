@@ -17,7 +17,9 @@ struct PaywallScreenshotHarness: View {
         }
         .environmentObject(store)
         .task {
-            if store.products.isEmpty { await store.fetchProducts() }
+            // Render the real paywall with mock products (no RC configure / no
+            // StoreKit) so it works headless on the simulator for screenshots.
+            if store.products.isEmpty { store.loadScreenshotProducts() }
         }
     }
 
