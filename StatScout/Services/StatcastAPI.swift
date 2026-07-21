@@ -193,6 +193,22 @@ extension JSONDecoder {
             if let date = fallback.date(from: dateString) {
                 return date
             }
+
+            // Postgres/PostgREST emits variable-length fractional seconds
+            // (e.g. "…40.95411+00:00"). ISO8601DateFormatter's
+            // .withFractionalSeconds only accepts exactly 3 fractional digits
+            // on some iOS versions, and the plain formatter rejects any
+            // fractional part at all — so a 5-digit fraction fails BOTH above
+            // and every row's required updated_at drops, surfacing as a bogus
+            // "Data format changed" error. Strip the fraction and retry.
+            if let dotRange = dateString.range(of: #"\.\d+"#, options: .regularExpression) {
+                var stripped = dateString
+                stripped.removeSubrange(dotRange)
+                if let date = fallback.date(from: stripped) {
+                    return date
+                }
+            }
+
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid date: \(dateString)")
         }
         return decoder
