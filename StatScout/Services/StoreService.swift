@@ -13,7 +13,7 @@ enum RevenueCatConfig {
     // RevenueCat "Football" project (proj9c303632), App Store app app039a312379.
     // Public SDK key (appl_...) — used only in device Release / TestFlight / App
     // Store builds; simulator runs skip Purchases.configure (see configureIfNeeded).
-    static let apiKey = "appl_REPLACE_WITH_FOOTBALL_APPL_KEY"
+    static let apiKey = "appl_ivmIolnYwgJaeylzJwULBKiNrIx"
     static let proEntitlement = "Football Pro"
     static let fallbackEntitlement = "pro"
 }
@@ -334,6 +334,7 @@ final class StoreService: NSObject, ObservableObject {
         #if DEBUG
         if ProcessInfo.processInfo.environment["FORCE_PRO"] == "1" { return }
         #endif
+        guard isConfigured else { return }
         if oncePerSession {
             guard !paywallImpressionsThisSession.contains(id) else { return }
             paywallImpressionsThisSession.insert(id)
@@ -358,7 +359,7 @@ final class StoreService: NSObject, ObservableObject {
         isLapsed ? .winback : .upgrade
     }
 
-    private let logger = Logger(subsystem: "com.jackwallner.baseball", category: "Store")
+    private let logger = Logger(subsystem: "com.jackwallner.football", category: "Store")
     private var isConfigured = false
 
     private override init() {}
@@ -379,6 +380,7 @@ final class StoreService: NSObject, ObservableObject {
 
     func fetchProducts() async {
         configureIfNeeded()
+        guard isConfigured else { return }
         isLoadingProducts = true
         defer { isLoadingProducts = false }
         do {
@@ -397,6 +399,7 @@ final class StoreService: NSObject, ObservableObject {
     @discardableResult
     func purchase(_ product: Package) async throws -> PurchaseState {
         configureIfNeeded()
+        guard isConfigured else { return .pending }
         purchaseInFlight = true
         defer { purchaseInFlight = false }
 
@@ -413,6 +416,7 @@ final class StoreService: NSObject, ObservableObject {
 
     func updateCustomerProductStatus(fetchPolicy: CacheFetchPolicy = .default) async {
         configureIfNeeded()
+        guard isConfigured else { return }
         do {
             let info = try await Purchases.shared.customerInfo(fetchPolicy: fetchPolicy)
             apply(customerInfo: info)
@@ -425,6 +429,7 @@ final class StoreService: NSObject, ObservableObject {
 
     func restorePurchases() async {
         configureIfNeeded()
+        guard isConfigured else { return }
         lastError = nil
         do {
             let info = try await Purchases.shared.restorePurchases()
@@ -444,6 +449,7 @@ final class StoreService: NSObject, ObservableObject {
             introEligibility = [:]
             return
         }
+        guard isConfigured else { return }
         let result = await Purchases.shared.checkTrialOrIntroDiscountEligibility(productIdentifiers: identifiers)
         introEligibility = result.mapValues { $0.status == .eligible }
     }
