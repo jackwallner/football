@@ -56,17 +56,14 @@ struct MetricLeadersView: View {
             HStack(spacing: 8) {
                 Text("METRIC")
                     .font(GridironType.micro)
-                    .tracking(0.5)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(width: 88, alignment: .leading)
                 Text("BEST")
                     .font(GridironType.micro)
-                    .tracking(0.5)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text("WORST")
                     .font(GridironType.micro)
-                    .tracking(0.5)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

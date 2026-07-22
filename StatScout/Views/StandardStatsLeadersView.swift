@@ -170,26 +170,22 @@ struct StandardStatsLeadersView: View {
                 HStack(spacing: 0) {
                     Text("RANK")
                         .font(GridironType.micro)
-                        .tracking(0.5)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(width: 42, alignment: .leading)
 
                     Text("PLAYER")
                         .font(GridironType.micro)
-                        .tracking(0.5)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     Text("TEAM")
                         .font(GridironType.micro)
-                        .tracking(0.5)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(width: 44, alignment: .leading)
 
                     HStack(spacing: 4) {
                         Text(selectedStat.uppercased())
                             .font(GridironType.micro)
-                            .tracking(0.5)
                             .foregroundStyle(GridironPalette.turf)
                         Image(systemName: sortDescending ? "arrow.down" : "arrow.up")
                             .font(.system(size: 8, weight: .bold))
@@ -249,7 +245,6 @@ struct StandardStatsLeadersView: View {
                             .truncationMode(.tail)
                         Text(player.displayPosition)
                             .font(GridironType.micro)
-                            .tracking(0.4)
                             .foregroundStyle(GridironPalette.inkTertiary)
                     }
                 }

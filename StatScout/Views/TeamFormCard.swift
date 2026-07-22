@@ -104,7 +104,6 @@ struct TeamRankingsCard: View {
                 .font(.system(size: 9, weight: .bold))
             Text("STATSCOUT+")
                 .font(GridironType.micro)
-                .tracking(0.4)
                 .fontWeight(.bold)
         }
         .foregroundStyle(GridironPalette.midnight)
@@ -405,7 +404,6 @@ struct TeamRankingsCard: View {
             if w.plays < smallSamplePlaysThreshold {
                 Text("SMALL SAMPLE")
                     .font(GridironType.micro)
-                    .tracking(0.4)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
@@ -420,7 +418,6 @@ struct TeamRankingsCard: View {
         VStack(alignment: .leading, spacing: 1) {
             Text(label)
                 .font(GridironType.micro)
-                .tracking(0.4)
                 .foregroundStyle(GridironPalette.inkTertiary)
             Text(value)
                 .font(GridironType.bodyBold)
@@ -524,7 +521,6 @@ struct TeamRankingsCard: View {
     private var weightedCaption: some View {
         Text("Averaged across the \(side.label.lowercased()) roster")
             .font(GridironType.micro)
-            .tracking(0.3)
             .foregroundStyle(GridironPalette.inkTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, GridironGeo.padCard)

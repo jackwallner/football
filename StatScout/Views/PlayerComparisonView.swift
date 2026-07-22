@@ -87,7 +87,6 @@ struct PlayerComparisonView: View {
                         if let subtext = store.paywallBlurSubtext {
                             Text(subtext)
                                 .font(GridironType.micro)
-                                .tracking(0.3)
                                 .foregroundStyle(GridironPalette.inkTertiary)
                                 .multilineTextAlignment(.center)
                         }
@@ -184,17 +183,14 @@ struct PlayerComparisonView: View {
             HStack(spacing: 8) {
                 Text("METRIC")
                     .font(GridironType.micro)
-                    .tracking(0.5)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(width: 72, alignment: .leading)
                 Text(playerA.name.split(separator: " ").last.map(String.init) ?? "A")
                     .font(GridironType.micro)
-                    .tracking(0.5)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
                 Text(playerB.name.split(separator: " ").last.map(String.init) ?? "B")
                     .font(GridironType.micro)
-                    .tracking(0.5)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
             }

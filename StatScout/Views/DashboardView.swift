@@ -75,7 +75,6 @@ struct DashboardView: View {
                             .font(.system(size: 10))
                         Text("Unlock StatScout+")
                             .font(GridironType.micro)
-                            .tracking(0.4)
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16)
@@ -88,7 +87,6 @@ struct DashboardView: View {
             Button(action: { showingAbout = true }) {
                 Text("About StatScout")
                     .font(GridironType.micro)
-                    .tracking(0.4)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .padding(.vertical, 8)
             }
@@ -156,7 +154,6 @@ struct DashboardView: View {
                     .font(.system(size: 11, weight: .semibold))
                 Text(viewModel.qualifierLevel.rawValue)
                     .font(GridironType.micro)
-                    .tracking(0.4)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .bold))
             }
@@ -176,7 +173,6 @@ struct DashboardView: View {
         HStack(spacing: 8) {
             Text("LEAGUE LEADERS")
                 .font(GridironType.sectionTitle)
-                .tracking(0.8)
                 .foregroundStyle(GridironPalette.ink)
             Spacer(minLength: 0)
             searchToggle
@@ -315,7 +311,6 @@ struct DashboardView: View {
                 .foregroundStyle(GridironPalette.ink)
             Text("\(Int(min(max(viewModel.loadingProgress, 0), 1) * 100))%")
                 .font(GridironType.micro)
-                .tracking(0.5)
                 .foregroundStyle(GridironPalette.inkTertiary)
         }
         .padding(22)
@@ -338,7 +333,6 @@ struct DashboardView: View {
                 .frame(maxWidth: .infinity)
             Text(viewModel.loadingMessage)
                 .font(GridironType.micro)
-                .tracking(0.4)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .lineLimit(1)
         }

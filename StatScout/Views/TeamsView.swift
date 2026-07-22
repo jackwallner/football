@@ -217,7 +217,6 @@ struct TeamsView: View {
                 HStack {
                     Text("FAVORITE TEAM")
                         .font(GridironType.micro)
-                        .tracking(0.6)
                         .foregroundStyle(GridironPalette.inkSecondary)
                     Spacer()
                 }
@@ -239,7 +238,6 @@ struct TeamsView: View {
             HStack {
                 Text("ALL TEAMS")
                     .font(GridironType.micro)
-                    .tracking(0.6)
                     .foregroundStyle(GridironPalette.inkSecondary)
                 Spacer()
                 if searchText.isEmpty {
@@ -345,7 +343,7 @@ struct TeamGridTile: View {
                     .frame(width: 64, height: 64)
                     .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
                 Text(abbr)
-                    .font(GridironFont.condensed(20, weight: .black))
+                    .font(.system(size: 18, weight: .bold, design: .default))
                     .foregroundStyle(.white)
             }
             .frame(height: 64)
@@ -392,14 +390,13 @@ struct FavoriteTeamCard: View {
                             .frame(width: 52, height: 52)
                             .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
                         Text(abbr)
-                            .font(GridironFont.condensed(18, weight: .black))
+                            .font(.system(size: 16, weight: .bold, design: .default))
                             .foregroundStyle(.white)
                     }
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text("YOUR TEAM")
                             .font(GridironType.micro)
-                            .tracking(0.6)
                             .foregroundStyle(GridironPalette.turf)
                         Text(teamFullName(abbr))
                             .font(GridironType.bodyBold)
@@ -497,7 +494,7 @@ struct TeamTile: View {
                     .fill(NFLTeamColor.color(abbr))
                     .frame(width: 44, height: 44)
                 Text(abbr)
-                    .font(GridironType.statSmall)
+                    .font(GridironType.smallBold)
                     .foregroundStyle(.white)
 
                 if isFavorite {

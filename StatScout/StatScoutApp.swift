@@ -203,7 +203,6 @@ struct OnboardingCards: View {
                     if let disclosure = trialDisclosure {
                         Text(disclosure)
                             .font(GridironType.micro)
-                            .tracking(0.3)
                             .foregroundStyle(GridironPalette.inkTertiary)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
@@ -243,7 +242,6 @@ struct OnboardingCards: View {
                         Link("Privacy", destination: StatScoutLegal.privacyURL)
                     }
                     .font(GridironType.micro)
-                    .tracking(0.3)
                     .foregroundStyle(GridironPalette.inkTertiary)
                 }
             } else {
@@ -271,7 +269,6 @@ struct OnboardingCards: View {
                             .scaleEffect(0.7)
                         Text(viewModel.loadingMessage)
                             .font(GridironType.micro)
-                            .tracking(0.4)
                     }
                     .foregroundStyle(GridironPalette.inkSecondary)
                 } else if isLastPage {
@@ -291,7 +288,6 @@ struct OnboardingCards: View {
                     } label: {
                         Text(isRestoring ? "Restoring…" : "Restore Purchases")
                             .font(GridironType.micro)
-                            .tracking(0.4)
                             .foregroundStyle(GridironPalette.inkTertiary)
                     }
                     .buttonStyle(.plain)

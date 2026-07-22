@@ -72,7 +72,6 @@ struct YearComparePreview: View {
                 .foregroundStyle(GridironPalette.ink)
             Text(subtitle)
                 .font(GridironType.micro)
-                .tracking(0.3)
                 .foregroundStyle(GridironPalette.inkTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -177,7 +176,7 @@ struct YearComparePreview: View {
 
             HStack(spacing: 2) {
                 Text(arrow)
-                    .font(GridironFont.condensed(12, weight: .bold))
+                    .font(GridironType.smallBold)
                 Text("\(abs(delta))")
                     .font(GridironType.bodyBold)
             }
