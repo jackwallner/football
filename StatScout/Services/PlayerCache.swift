@@ -65,24 +65,41 @@ struct TwoTierPlayerCache: PlayerCaching {
     private let historical: PlistPlayerCache
     private let legacyHistorical: DiskPlayerCache
     private let current: DiskPlayerCache
-    private let bundleResourceName: String
+    private let bundle: Bundle
+    private let historicalBundleResourceName: String
+    private let currentBundleResourceName: String
 
-    init(fileManager: FileManager = .default, bundleResourceName: String = "players-historical") {
+    init(
+        fileManager: FileManager = .default,
+        bundle: Bundle = .main,
+        historicalBundleResourceName: String = "players-historical",
+        currentBundleResourceName: String = "players-current"
+    ) {
         let directory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first ?? fileManager.temporaryDirectory
         self.historical = PlistPlayerCache(fileURL: directory.appending(path: "players-historical.plist"))
         self.legacyHistorical = DiskPlayerCache(fileURL: directory.appending(path: "players-historical.json"), maxAge: nil)
         self.current = DiskPlayerCache(fileURL: directory.appending(path: "players-current.json"), maxAge: 48 * 60 * 60)
-        self.bundleResourceName = bundleResourceName
+        self.bundle = bundle
+        self.historicalBundleResourceName = historicalBundleResourceName
+        self.currentBundleResourceName = currentBundleResourceName
     }
 
     func loadPlayers() throws -> [Player] {
         let historicalPlayers = loadHistoricalPlayers()
-        let currentPlayers = (try? current.loadPlayers()) ?? []
+        let currentPlayers = (try? loadCurrentPlayers()) ?? []
         return historicalPlayers + currentPlayers
     }
 
     func loadCurrentPlayers() throws -> [Player] {
-        try current.loadPlayers()
+        if let cached = try? current.loadPlayers(), PlayerSnapshotValidator.isCompleteCurrent(cached) {
+            return cached
+        }
+        if let players = loadBundledPlayers(named: currentBundleResourceName),
+           PlayerSnapshotValidator.isCompleteCurrent(players) {
+            try? current.savePlayers(players)
+            return players
+        }
+        return []
     }
 
     func loadHistoricalPlayers() -> [Player] {
@@ -91,10 +108,7 @@ struct TwoTierPlayerCache: PlayerCaching {
             return cached
         }
         // 2. Bundled binary plist (shipped with the app).
-        if let bundleURL = Bundle.main.url(forResource: bundleResourceName, withExtension: "plist"),
-           let data = try? Data(contentsOf: bundleURL),
-           let players = try? PropertyListDecoder.statScout.decode([Player].self, from: data),
-           !players.isEmpty {
+        if let players = loadBundledPlayers(named: historicalBundleResourceName), !players.isEmpty {
             try? historical.savePlayers(players)
             try? FileManager.default.removeItem(at: legacyHistorical.fileURL)
             return players
@@ -106,14 +120,22 @@ struct TwoTierPlayerCache: PlayerCaching {
             return players
         }
         // 4. Bundled JSON fallback (in case the plist asset is ever missing).
-        if let bundleURL = Bundle.main.url(forResource: bundleResourceName, withExtension: "json"),
-           let data = try? Data(contentsOf: bundleURL),
-           let players = try? JSONDecoder.statScout.decode([Player].self, from: data),
-           !players.isEmpty {
+        if let players = loadBundledPlayers(named: historicalBundleResourceName, extension: "json"), !players.isEmpty {
             try? historical.savePlayers(players)
             return players
         }
         return []
+    }
+
+    private func loadBundledPlayers(named name: String, extension fileExtension: String = "plist") -> [Player]? {
+        guard let url = bundle.url(forResource: name, withExtension: fileExtension),
+              let data = try? Data(contentsOf: url) else {
+            return nil
+        }
+        if fileExtension == "plist" {
+            return try? PropertyListDecoder.statScout.decode([Player].self, from: data)
+        }
+        return try? JSONDecoder.statScout.decode([Player].self, from: data)
     }
 
     func savePlayers(_ players: [Player]) throws {
@@ -122,9 +144,25 @@ struct TwoTierPlayerCache: PlayerCaching {
         if !historicalPlayers.isEmpty {
             try historical.savePlayers(historicalPlayers)
         }
-        if !currentPlayers.isEmpty {
+        if !currentPlayers.isEmpty, PlayerSnapshotValidator.isCompleteCurrent(currentPlayers) {
             try current.savePlayers(currentPlayers)
         }
+    }
+}
+
+enum PlayerSnapshotValidator {
+    private static let minimumTeamCount = 30
+    private static let requiredTypes: Set<String> = ["qb", "rb", "wr", "te", "def"]
+
+    static func isCompleteCurrent(_ players: [Player]) -> Bool {
+        let current = players.filter { $0.season == StatScoutSeason.current }
+        let teams = Set(current.map { normalizedTeamAbbreviation($0.team) })
+        let types = Set(current.compactMap(\.playerType).map { $0.lowercased() })
+        let metricLabels = Set(current.flatMap(\.metrics).map(\.label))
+        let requiredMetrics: Set<String> = ["EPA/Play", "EPA/Rush", "EPA/Tgt"]
+        return teams.count >= minimumTeamCount
+            && requiredTypes.isSubset(of: types)
+            && requiredMetrics.isSubset(of: metricLabels)
     }
 }
 

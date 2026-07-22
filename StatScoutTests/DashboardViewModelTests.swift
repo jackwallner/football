@@ -100,6 +100,34 @@ final class DashboardViewModelTests: XCTestCase {
     }
 
     @MainActor
+    func testPartialRefreshPreservesCompleteCache() async {
+        let cached = makeCompleteCurrentPlayers()
+        let partial = Array(cached.prefix(5))
+        let cache = InMemoryPlayerCache(seed: cached)
+        let vm = DashboardViewModel(provider: MockProvider(players: partial), cache: cache)
+
+        await vm.load()
+
+        XCTAssertEqual(vm.seasonPlayers.count, cached.count)
+        XCTAssertEqual(vm.teamsWithData.count, 32)
+        XCTAssertTrue(vm.lastFetchFailed)
+        XCTAssertEqual(cache.savedPlayers.count, cached.count)
+    }
+
+    @MainActor
+    func testCompleteRefreshReplacesCurrentCache() async {
+        let refreshed = makeCompleteCurrentPlayers(namePrefix: "Fresh")
+        let cache = InMemoryPlayerCache(seed: makeCompleteCurrentPlayers())
+        let vm = DashboardViewModel(provider: MockProvider(players: refreshed), cache: cache)
+
+        await vm.load()
+
+        XCTAssertEqual(vm.seasonPlayers.count, refreshed.count)
+        XCTAssertTrue(vm.seasonPlayers.allSatisfy { $0.name.hasPrefix("Fresh") })
+        XCTAssertEqual(cache.savedPlayers.count, refreshed.count)
+    }
+
+    @MainActor
     func testCacheHydratesPlayersBeforeFetch() async {
         let cached = [
             Player(playerId: 99, name: "Cached", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
@@ -239,13 +267,44 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertEqual(formatted, "2026")
         XCTAssertFalse(formatted.contains(","), "Season should not contain comma separators")
     }
+
+    private func makeCompleteCurrentPlayers(namePrefix: String = "Cached") -> [Player] {
+        let teams = nflTeamAbbreviations
+        let types = ["qb", "rb", "wr", "te", "def"]
+        return teams.enumerated().map { index, team in
+            let type = types[index % types.count]
+            let position = type == "def" ? "LB" : type.uppercased()
+            let metric: (label: String, category: MetricCategory) = switch type {
+            case "qb": ("EPA/Play", .passing)
+            case "rb": ("EPA/Rush", .rushing)
+            case "wr", "te": ("EPA/Tgt", .receiving)
+            default: ("Tackles", .defense)
+            }
+            return Player(
+                playerId: 10_000 + index,
+                name: "\(namePrefix) \(team)",
+                team: team,
+                position: position,
+                handedness: "",
+                imageURL: nil,
+                updatedAt: Date(),
+                season: StatScoutSeason.current,
+                playerType: type,
+                metrics: [Metric(id: "metric-\(index)", label: metric.label, value: "1", percentile: 50, category: metric.category)],
+                standardStats: [StandardStat(id: "games-\(index)", label: "G", value: "1")],
+                games: []
+            )
+        }
+    }
 }
 
 final class InMemoryPlayerCache: PlayerCaching, @unchecked Sendable {
+    private let lock = NSLock()
     private var stored: [Player]
     init(seed: [Player] = []) { self.stored = seed }
-    func loadPlayers() throws -> [Player] { stored }
-    func savePlayers(_ players: [Player]) throws { stored = players }
+    var savedPlayers: [Player] { lock.withLock { stored } }
+    func loadPlayers() throws -> [Player] { lock.withLock { stored } }
+    func savePlayers(_ players: [Player]) throws { lock.withLock { stored = players } }
 }
 
 struct MockProvider: StatcastProviding, @unchecked Sendable {

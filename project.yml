@@ -18,9 +18,12 @@ targets:
     platform: iOS
     sources:
       - path: StatScout
+        excludes:
+          - Data/*.json
     resources:
       - StatScout/PrivacyInfo.xcprivacy
       - StatScout/Data/players-historical.plist
+      - StatScout/Data/players-current.plist
     settings:
       base:
         DEVELOPMENT_TEAM: YXG4MP6W39
