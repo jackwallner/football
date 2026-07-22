@@ -87,7 +87,7 @@ struct TeamsView: View {
             .padding(.top, 12)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { seasonMenu }
@@ -117,14 +117,14 @@ struct TeamsView: View {
             ForEach(0..<6, id: \.self) { _ in
                 HStack(spacing: 12) {
                     Circle()
-                        .fill(SavantPalette.surfaceAlt)
+                        .fill(GridironPalette.surfaceAlt)
                         .frame(width: 36, height: 36)
                     VStack(alignment: .leading, spacing: 6) {
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(SavantPalette.surfaceAlt)
+                            .fill(GridironPalette.surfaceAlt)
                             .frame(width: 140, height: 12)
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(SavantPalette.surfaceAlt)
+                            .fill(GridironPalette.surfaceAlt)
                             .frame(width: 40, height: 10)
                     }
                     Spacer()
@@ -134,18 +134,18 @@ struct TeamsView: View {
             }
         }
         .padding(.horizontal, 12)
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .padding(.horizontal, 12)
         .redacted(reason: .placeholder)
     }
 
-    // Nav-bar season selector — matches the Stats tab: a compact red pill with
-    // calendar + year, sitting on the navy bar. Replaces the old in-content
+    // Navigation-bar season selector matches the Stats tab: a compact turf pill
+    // with calendar and year on the midnight bar. Replaces the old in-content
     // season header card so Teams and Stats read the same.
     private var seasonMenu: some View {
         Menu {
@@ -179,7 +179,7 @@ struct TeamsView: View {
                         if isLocked {
                             Image(systemName: "crown.fill")
                                 .font(.system(size: 10))
-                                .foregroundStyle(SavantPalette.inkTertiary)
+                                .foregroundStyle(GridironPalette.inkTertiary)
                         }
                     }
                 }
@@ -189,14 +189,14 @@ struct TeamsView: View {
                 Image(systemName: "calendar")
                     .font(.system(size: 11, weight: .semibold))
                 Text(String(viewModel.selectedSeason))
-                    .font(SavantType.smallBold)
+                    .font(GridironType.smallBold)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .bold))
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(SavantPalette.savantRed)
+            .background(GridironPalette.turf)
             .clipShape(Capsule())
         }
         .menuOrder(.fixed)
@@ -216,9 +216,9 @@ struct TeamsView: View {
             if let fav = pinnedFavorite {
                 HStack {
                     Text("FAVORITE TEAM")
-                        .font(SavantType.micro)
+                        .font(GridironType.micro)
                         .tracking(0.6)
-                        .foregroundStyle(SavantPalette.inkSecondary)
+                        .foregroundStyle(GridironPalette.inkSecondary)
                     Spacer()
                 }
                 .padding(.horizontal, 16)
@@ -238,18 +238,18 @@ struct TeamsView: View {
 
             HStack {
                 Text("ALL TEAMS")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.6)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .foregroundStyle(GridironPalette.inkSecondary)
                 Spacer()
                 if searchText.isEmpty {
                     Text("\(filteredTeams.count) teams")
-                        .font(SavantType.micro)
-                        .foregroundStyle(SavantPalette.inkTertiary)
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
                 } else {
                     Button("Clear") { searchText = "" }
-                        .font(SavantType.micro)
-                        .foregroundStyle(SavantPalette.inkSecondary)
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkSecondary)
                 }
             }
             .padding(.horizontal, 16)
@@ -326,10 +326,10 @@ struct TeamGridTile: View {
             } label: {
                 Image(systemName: isFavorite ? "star.fill" : "star")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(isFavorite ? Color.yellow : SavantPalette.inkTertiary)
+                    .foregroundStyle(isFavorite ? Color.yellow : GridironPalette.inkTertiary)
                     .padding(6)
-                    .background(Circle().fill(SavantPalette.surface))
-                    .overlay(Circle().stroke(SavantPalette.hairline, lineWidth: 0.5))
+                    .background(Circle().fill(GridironPalette.surface))
+                    .overlay(Circle().stroke(GridironPalette.hairline, lineWidth: 0.5))
             }
             .buttonStyle(.borderless)
             .accessibilityLabel(isFavorite ? "Remove favorite" : "Set as favorite")
@@ -341,18 +341,18 @@ struct TeamGridTile: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(MLBTeamColor.color(abbr))
+                    .fill(NFLTeamColor.color(abbr))
                     .frame(width: 64, height: 64)
                     .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
                 Text(abbr)
-                    .font(SavantFont.condensed(20, weight: .black))
+                    .font(GridironFont.condensed(20, weight: .black))
                     .foregroundStyle(.white)
             }
             .frame(height: 64)
 
             Text(teamFullName(abbr))
-                .font(SavantType.smallBold)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.smallBold)
+                .foregroundStyle(GridironPalette.ink)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
                 .multilineTextAlignment(.center)
@@ -361,11 +361,11 @@ struct TeamGridTile: View {
         .padding(.vertical, 14)
         .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, minHeight: 130)
-        .background(isFavorite ? SavantPalette.surfaceAlt : SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(isFavorite ? GridironPalette.surfaceAlt : GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(isFavorite ? SavantPalette.savantRed : SavantPalette.hairline,
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(isFavorite ? GridironPalette.turf : GridironPalette.hairline,
                         lineWidth: isFavorite ? 1.5 : 0.5)
         )
     }
@@ -388,22 +388,22 @@ struct FavoriteTeamCard: View {
                 HStack(spacing: 14) {
                     ZStack {
                         Circle()
-                            .fill(MLBTeamColor.color(abbr))
+                            .fill(NFLTeamColor.color(abbr))
                             .frame(width: 52, height: 52)
                             .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
                         Text(abbr)
-                            .font(SavantFont.condensed(18, weight: .black))
+                            .font(GridironFont.condensed(18, weight: .black))
                             .foregroundStyle(.white)
                     }
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text("YOUR TEAM")
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.6)
-                            .foregroundStyle(SavantPalette.savantRed)
+                            .foregroundStyle(GridironPalette.turf)
                         Text(teamFullName(abbr))
-                            .font(SavantType.bodyBold)
-                            .foregroundStyle(SavantPalette.ink)
+                            .font(GridironType.bodyBold)
+                            .foregroundStyle(GridironPalette.ink)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                     }
@@ -412,16 +412,16 @@ struct FavoriteTeamCard: View {
 
                     Image(systemName: "chevron.right")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(SavantPalette.inkTertiary)
+                        .foregroundStyle(GridironPalette.inkTertiary)
                         .padding(.trailing, 36)
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity)
-                .background(SavantPalette.surfaceAlt)
-                .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+                .background(GridironPalette.surfaceAlt)
+                .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
                 .overlay(
-                    RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                        .stroke(SavantPalette.savantRed, lineWidth: 1.5)
+                    RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                        .stroke(GridironPalette.turf, lineWidth: 1.5)
                 )
             }
             .buttonStyle(.plain)
@@ -433,8 +433,8 @@ struct FavoriteTeamCard: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(Color.yellow)
                     .padding(8)
-                    .background(Circle().fill(SavantPalette.surface))
-                    .overlay(Circle().stroke(SavantPalette.hairline, lineWidth: 0.5))
+                    .background(Circle().fill(GridironPalette.surface))
+                    .overlay(Circle().stroke(GridironPalette.hairline, lineWidth: 0.5))
             }
             .buttonStyle(.borderless)
             .accessibilityLabel("Remove favorite")
@@ -452,35 +452,35 @@ struct TeamRowContent: View {
     var body: some View {
         HStack(spacing: 0) {
             Circle()
-                .fill(MLBTeamColor.color(abbr))
+                .fill(NFLTeamColor.color(abbr))
                 .frame(width: 36, height: 36)
                 .overlay(
                     Text(abbr)
-                        .font(SavantType.smallBold)
+                        .font(GridironType.smallBold)
                         .foregroundStyle(.white)
                 )
                 .padding(.trailing, 12)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(teamFullName(abbr))
-                    .font(SavantType.bodyBold)
-                    .foregroundStyle(SavantPalette.ink)
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
                     .lineLimit(1)
 
                 Text(abbr)
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkTertiary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
         }
         .padding(.leading, 12)
         .frame(height: 56)
         .contentShape(Rectangle())
-        .background(isFavorite ? SavantPalette.surfaceAlt : SavantPalette.surface)
+        .background(isFavorite ? GridironPalette.surfaceAlt : GridironPalette.surface)
     }
 }
 
@@ -494,10 +494,10 @@ struct TeamTile: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(MLBTeamColor.color(abbr))
+                    .fill(NFLTeamColor.color(abbr))
                     .frame(width: 44, height: 44)
                 Text(abbr)
-                    .font(SavantType.statSmall)
+                    .font(GridironType.statSmall)
                     .foregroundStyle(.white)
 
                 if isFavorite {
@@ -518,20 +518,20 @@ struct TeamTile: View {
             }
 
             Text(teamFullName(abbr))
-                .font(SavantType.smallBold)
-                .foregroundStyle(isFavorite ? SavantPalette.savantRed : SavantPalette.ink)
+                .font(GridironType.smallBold)
+                .foregroundStyle(isFavorite ? GridironPalette.turf : GridironPalette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .padding(.horizontal, 6)
-        .background(isFavorite ? SavantPalette.surfaceAlt : SavantPalette.surface)
+        .background(isFavorite ? GridironPalette.surfaceAlt : GridironPalette.surface)
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(isFavorite ? SavantPalette.savantRed : SavantPalette.hairline, lineWidth: isFavorite ? 2 : 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(isFavorite ? GridironPalette.turf : GridironPalette.hairline, lineWidth: isFavorite ? 2 : 0.5)
         )
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
     }
 }
 

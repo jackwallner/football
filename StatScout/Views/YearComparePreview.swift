@@ -21,10 +21,10 @@ struct YearComparePreview: View {
                 action: onUnlock
             )
         }
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .padding(.horizontal, 12)
         .padding(.top, 12)
@@ -53,32 +53,32 @@ struct YearComparePreview: View {
             mockYearButton(label: "2026", subtitle: "Recent")
             Image(systemName: "arrow.right")
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
             mockYearButton(label: "2025", subtitle: "Prior")
         }
         .padding(16)
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
     private func mockYearButton(label: String, subtitle: String) -> some View {
         VStack(spacing: 2) {
             Text(label)
-                .font(SavantType.statLarge)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.statLarge)
+                .foregroundStyle(GridironPalette.ink)
             Text(subtitle)
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.3)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(SavantPalette.surfaceAlt)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surfaceAlt)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
     }
 
     private var mockOverallChange: some View {
@@ -89,29 +89,29 @@ struct YearComparePreview: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Overall Change")
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
                 Text("72nd (2025) → 85th (2026)")
-                    .font(SavantType.bodyBold)
-                    .foregroundStyle(SavantPalette.ink)
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
             }
 
             Spacer()
 
             HStack(spacing: 4) {
                 Text("+")
-                    .font(SavantType.statLarge)
+                    .font(GridironType.statLarge)
                 Text("13")
-                    .font(SavantType.statLarge)
+                    .font(GridironType.statLarge)
             }
             .foregroundStyle(.green)
         }
         .padding(16)
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
@@ -124,48 +124,48 @@ struct YearComparePreview: View {
             mockRow(label: "Rating", priorPct: 72, recentPct: 76, delta: 4, priorVal: "94.5", recentVal: "98.1")
             mockRow(label: "EPA/Play", priorPct: 81, recentPct: 78, delta: -3, priorVal: "0.18", recentVal: "0.15")
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
     private func mockHeader(_ title: String) -> some View {
         HStack(spacing: 0) {
             Text("Metric")
-                .font(SavantType.micro)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.micro)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text("2025")
-                .font(SavantType.micro)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.micro)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(width: 72)
             Text("2026")
-                .font(SavantType.micro)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.micro)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(width: 72)
             Text("Δ")
-                .font(SavantType.micro)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.micro)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(width: 36)
         }
-        .padding(.horizontal, SavantGeo.padInline)
+        .padding(.horizontal, GridironGeo.padInline)
         .frame(height: 28)
-        .background(SavantPalette.surfaceAlt)
+        .background(GridironPalette.surfaceAlt)
     }
 
     private func mockRow(label: String, priorPct: Int, recentPct: Int, delta: Int, priorVal: String, recentVal: String) -> some View {
         let isUp = delta > 0
         let isDown = delta < 0
-        let deltaColor: Color = isUp ? .green : (isDown ? SavantPalette.savantRed : SavantPalette.inkSecondary)
+        let deltaColor: Color = isUp ? .green : (isDown ? GridironPalette.turf : GridironPalette.inkSecondary)
         let arrow = isUp ? "↑" : (isDown ? "↓" : "→")
 
         return HStack(spacing: 0) {
             Text(label)
-                .font(SavantType.body)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.body)
+                .foregroundStyle(GridironPalette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
 
@@ -177,20 +177,20 @@ struct YearComparePreview: View {
 
             HStack(spacing: 2) {
                 Text(arrow)
-                    .font(SavantFont.condensed(12, weight: .bold))
+                    .font(GridironFont.condensed(12, weight: .bold))
                 Text("\(abs(delta))")
-                    .font(SavantType.bodyBold)
+                    .font(GridironType.bodyBold)
             }
             .foregroundStyle(deltaColor)
             .frame(width: 36)
         }
         .frame(height: 48)
-        .padding(.horizontal, SavantGeo.padInline)
-        .background(SavantPalette.surface)
+        .padding(.horizontal, GridironGeo.padInline)
+        .background(GridironPalette.surface)
         .overlay(
             Rectangle()
-                .fill(SavantPalette.divider)
-                .frame(height: SavantGeo.hairline),
+                .fill(GridironPalette.divider)
+                .frame(height: GridironGeo.hairline),
             alignment: .bottom
         )
     }
@@ -199,16 +199,16 @@ struct YearComparePreview: View {
         VStack(spacing: 1) {
             HStack(spacing: 4) {
                 Text("\(percentile)")
-                    .font(SavantType.bodyBold)
-                    .foregroundStyle(isFaded ? SavantPalette.inkTertiary : SavantPalette.color(forPercentile: percentile))
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.color(forPercentile: percentile))
                 RoundedRectangle(cornerRadius: 1)
-                    .fill(SavantPalette.color(forPercentile: percentile))
+                    .fill(GridironPalette.color(forPercentile: percentile))
                     .frame(width: CGFloat(percentile) * 0.3, height: 4)
                     .opacity(isFaded ? 0.5 : 1)
             }
             Text(value)
-                .font(SavantType.micro)
-                .foregroundStyle(isFaded ? SavantPalette.inkTertiary : SavantPalette.inkSecondary)
+                .font(GridironType.micro)
+                .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.inkSecondary)
                 .lineLimit(1)
         }
     }

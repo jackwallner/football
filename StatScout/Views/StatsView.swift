@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Position-first home for league-wide NFL statistics. The dashboard owns the
-/// position, Advanced/Traditional lens, family, qualifier, and sort controls;
-/// the season remains in the navigation bar so it applies to the whole surface.
+/// position, metric, qualifier, and sort controls; the season remains in the
+/// navigation bar so it applies to the whole surface.
 struct StatsView: View {
     let viewModel: DashboardViewModel
     @EnvironmentObject private var store: StoreService
@@ -12,12 +12,12 @@ struct StatsView: View {
     var body: some View {
         DashboardView(viewModel: viewModel)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(SavantPalette.canvas)
+        .background(GridironPalette.canvas)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { seasonMenu }
             ToolbarItem(placement: .principal) {
                 Text("Stats")
-                    .font(SavantType.bodyBold)
+                    .font(GridironType.bodyBold)
                     .foregroundStyle(.white)
             }
         }
@@ -29,8 +29,8 @@ struct StatsView: View {
         }
     }
 
-    // Compact season selector for the leading toolbar slot. Sits on the navy
-    // nav bar, so it reads as a red pill with the year only.
+    // Compact season selector for the leading toolbar slot. It sits on the
+    // midnight navigation bar as a turf-green year pill.
     private var seasonMenu: some View {
         Menu {
             if viewModel.isHistoricalLoading {
@@ -62,7 +62,7 @@ struct StatsView: View {
                         if isLocked {
                             Image(systemName: "crown.fill")
                                 .font(.system(size: 10))
-                                .foregroundStyle(SavantPalette.inkTertiary)
+                                .foregroundStyle(GridironPalette.inkTertiary)
                         }
                     }
                 }
@@ -72,14 +72,14 @@ struct StatsView: View {
                 Image(systemName: "calendar")
                     .font(.system(size: 11, weight: .semibold))
                 Text(String(viewModel.selectedSeason))
-                    .font(SavantType.smallBold)
+                    .font(GridironType.smallBold)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .bold))
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(SavantPalette.savantRed)
+            .background(GridironPalette.turf)
             .clipShape(Capsule())
         }
         .menuOrder(.fixed)

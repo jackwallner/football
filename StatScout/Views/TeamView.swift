@@ -109,7 +109,7 @@ struct TeamView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .scrollDismissesKeyboard(.interactively)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) { teamSwitcherMenu }
@@ -134,8 +134,8 @@ struct TeamView: View {
 
     // MARK: - Tabs
 
-    /// Mirrors the player profile's tab selector — equal-width red pills that
-    /// swap the card content below. Two tabs: the team's percentile profile and
+    /// Mirrors the player profile's tab selector with equal-width turf controls
+    /// that swap the card content below. Two tabs: the team's percentile profile and
     /// its sortable roster.
     private var tabSelector: some View {
         HStack(spacing: 8) {
@@ -146,12 +146,12 @@ struct TeamView: View {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(tab.rawValue)
-                        .font(SavantType.bodyBold)
-                        .foregroundStyle(isSelected ? .white : SavantPalette.ink)
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(isSelected ? .white : GridironPalette.ink)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
-                        .background(isSelected ? SavantPalette.savantRed : SavantPalette.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+                        .background(isSelected ? GridironPalette.turf : GridironPalette.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
                 }
                 .buttonStyle(.plain)
             }
@@ -215,17 +215,17 @@ struct TeamView: View {
             } label: {
                 HStack(spacing: 6) {
                     Text(sortLabel)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(SavantPalette.ink)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.ink)
                     Image(systemName: sortDescending ? "arrow.down" : "arrow.up")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(SavantPalette.savantRed)
+                        .foregroundStyle(GridironPalette.turf)
                 }
                 .padding(.horizontal, 12)
                 .frame(height: 30)
-                .background(SavantPalette.surface)
+                .background(GridironPalette.surface)
                 .clipShape(Capsule())
-                .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
+                .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Sorted by \(sortLabel), \(sortDescending ? "highest first" : "lowest first")")
@@ -241,11 +241,11 @@ struct TeamView: View {
                 let active = isSearching || !searchText.isEmpty
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(active ? .white : SavantPalette.inkSecondary)
+                    .foregroundStyle(active ? .white : GridironPalette.inkSecondary)
                     .frame(width: 30, height: 30)
-                    .background(active ? SavantPalette.savantRed : SavantPalette.surface)
+                    .background(active ? GridironPalette.turf : GridironPalette.surface)
                     .clipShape(Capsule())
-                    .overlay(Capsule().stroke(active ? Color.clear : SavantPalette.hairline, lineWidth: 0.5))
+                    .overlay(Capsule().stroke(active ? Color.clear : GridironPalette.hairline, lineWidth: 0.5))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Search")
@@ -263,8 +263,8 @@ struct TeamView: View {
                     searchText = ""
                 }
             }
-            .font(SavantType.small)
-            .foregroundStyle(SavantPalette.savantRed)
+            .font(GridironType.small)
+            .foregroundStyle(GridironPalette.turf)
         }
         .padding(.horizontal, 12)
         .padding(.top, 8)
@@ -310,11 +310,11 @@ struct TeamView: View {
                 }
             }
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .padding(.horizontal, 12)
         .padding(.top, 12)
@@ -346,7 +346,7 @@ struct TeamView: View {
         } label: {
             HStack(spacing: 4) {
                 Text(teamFullName(team))
-                    .font(SavantType.bodyBold)
+                    .font(GridironType.bodyBold)
                     .foregroundStyle(.white)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 11, weight: .bold))
@@ -381,7 +381,7 @@ struct TeamView: View {
                         if isLocked {
                             Image(systemName: "crown.fill")
                                 .font(.system(size: 10))
-                                .foregroundStyle(SavantPalette.inkTertiary)
+                                .foregroundStyle(GridironPalette.inkTertiary)
                         }
                     }
                 }
@@ -391,14 +391,14 @@ struct TeamView: View {
                 Image(systemName: "calendar")
                     .font(.system(size: 11, weight: .semibold))
                 Text(String(viewModel.selectedSeason))
-                    .font(SavantType.smallBold)
+                    .font(GridironType.smallBold)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .bold))
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(SavantPalette.savantRed)
+            .background(GridironPalette.turf)
             .clipShape(Capsule())
         }
         .menuOrder(.fixed)

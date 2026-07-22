@@ -25,7 +25,7 @@ struct PaywallScreenshotHarness: View {
 
     private func trialBackdrop<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         ZStack {
-            SavantPalette.canvas.ignoresSafeArea()
+            GridironPalette.canvas.ignoresSafeArea()
             Color.black.opacity(0.18).ignoresSafeArea()
             VStack {
                 Spacer()

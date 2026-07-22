@@ -86,7 +86,7 @@ struct TrialPitchSheet: View {
 
             footer
         }
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         // Tick the session cap on the *pitch* sheet too, not just the full
         // PaywallView. Otherwise PaywallGate.shouldPresent(.playerScouting)
         // stays true forever for sheets that never reach PaywallView, and the
@@ -108,21 +108,21 @@ struct TrialPitchSheet: View {
         VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(SavantPalette.savantRed.opacity(0.12))
+                    .fill(GridironPalette.turf.opacity(0.12))
                     .frame(width: 84, height: 84)
                 Image(systemName: trigger.icon)
                     .font(.system(size: 36, weight: .semibold))
-                    .foregroundStyle(SavantPalette.savantRed)
+                    .foregroundStyle(GridironPalette.turf)
             }
 
             Text(trigger.title)
-                .font(SavantType.statLarge)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.statLarge)
+                .foregroundStyle(GridironPalette.ink)
                 .multilineTextAlignment(.center)
 
             Text(trigger.subtitle)
-                .font(SavantType.body)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.body)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -134,16 +134,16 @@ struct TrialPitchSheet: View {
                 HStack(spacing: 14) {
                     Image(systemName: benefit.icon)
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(SavantPalette.savantRed)
+                        .foregroundStyle(GridironPalette.turf)
                         .frame(width: 30)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(benefit.title)
-                            .font(SavantType.bodyBold)
-                            .foregroundStyle(SavantPalette.ink)
+                            .font(GridironType.bodyBold)
+                            .foregroundStyle(GridironPalette.ink)
                         Text(benefit.detail)
-                            .font(SavantType.small)
-                            .foregroundStyle(SavantPalette.inkSecondary)
+                            .font(GridironType.small)
+                            .foregroundStyle(GridironPalette.inkSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
@@ -153,17 +153,17 @@ struct TrialPitchSheet: View {
 
                 if index < benefits.count - 1 {
                     Rectangle()
-                        .fill(SavantPalette.divider)
-                        .frame(height: SavantGeo.hairline)
+                        .fill(GridironPalette.divider)
+                        .frame(height: GridironGeo.hairline)
                 }
             }
         }
         .padding(.horizontal, 16)
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
@@ -179,11 +179,11 @@ struct TrialPitchSheet: View {
                         ProgressView().tint(.white)
                     }
                 }
-                .font(SavantType.bodyBold)
+                .font(GridironType.bodyBold)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(SavantPalette.savantRed)
+                .background(GridironPalette.turf)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
@@ -194,17 +194,17 @@ struct TrialPitchSheet: View {
             // terms must sit beside the purchase point (Apple 3.1.2).
             if let disclosure = store.yearlyCTADisclosureText {
                 Text(disclosure)
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.2)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             if let purchaseError {
                 Text(purchaseError)
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.savantRed)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.turf)
                     .multilineTextAlignment(.center)
             }
 
@@ -212,24 +212,24 @@ struct TrialPitchSheet: View {
                 Link("Terms", destination: StatScoutLegal.termsURL)
                 Link("Privacy", destination: StatScoutLegal.privacyURL)
             }
-            .font(SavantType.micro)
+            .font(GridironType.micro)
             .tracking(0.3)
-            .foregroundStyle(SavantPalette.inkTertiary)
+            .foregroundStyle(GridironPalette.inkTertiary)
 
             Button("Maybe later") { dismiss() }
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .padding(.top, 2)
         }
         .padding(.horizontal, 24)
         .padding(.top, 14)
         .padding(.bottom, 12)
         .background(
-            SavantPalette.surface
+            GridironPalette.surface
                 .overlay(
                     Rectangle()
-                        .fill(SavantPalette.divider)
-                        .frame(height: SavantGeo.hairline),
+                        .fill(GridironPalette.divider)
+                        .frame(height: GridironGeo.hairline),
                     alignment: .top
                 )
                 .ignoresSafeArea(edges: .bottom)

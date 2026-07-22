@@ -32,7 +32,7 @@ struct RootTabView: View {
 
     var body: some View {
         tabView
-            .tint(SavantPalette.savantRed)
+            .tint(GridironPalette.turf)
             .sheet(isPresented: $showingAbout) {
             NavigationStack {
                 AboutView(
@@ -47,7 +47,7 @@ struct RootTabView: View {
                 )
                     .navigationTitle("About")
                     .navigationBarTitleDisplayMode(.inline)
-                    .modifier(SavantNavBar())
+                    .modifier(GridironNavBar())
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             Button("Done") { showingAbout = false }
@@ -143,7 +143,7 @@ struct RootTabView: View {
             StatsView(viewModel: viewModel)
                 .navigationTitle("Stats")
                 .navigationBarTitleDisplayMode(.inline)
-                .modifier(SavantNavBar())
+                .modifier(GridironNavBar())
                 .modifier(ProToolbarButton())
                 .modifier(StandardDestinations(viewModel: viewModel))
         }
@@ -154,7 +154,7 @@ struct RootTabView: View {
             TeamsView(viewModel: viewModel, path: $teamsPath)
                 .navigationTitle("Teams")
                 .navigationBarTitleDisplayMode(.inline)
-                .modifier(SavantNavBar())
+                .modifier(GridironNavBar())
                 .modifier(ProToolbarButton())
                 .modifier(StandardDestinations(viewModel: viewModel))
         }
@@ -168,17 +168,17 @@ struct RootTabView: View {
             CompareView(viewModel: viewModel)
                 .navigationTitle("Compare")
                 .navigationBarTitleDisplayMode(.inline)
-                .modifier(SavantNavBar())
+                .modifier(GridironNavBar())
                 .modifier(ProToolbarButton())
         }
     }
 
 }
 
-private struct SavantNavBar: ViewModifier {
+private struct GridironNavBar: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .toolbarBackground(SavantPalette.savantNavy, for: .navigationBar)
+            .toolbarBackground(GridironPalette.midnight, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
     }
@@ -214,11 +214,11 @@ private struct ProToolbarButton: ViewModifier {
                                 Image(systemName: "crown.fill")
                                     .font(.system(size: 10, weight: .bold))
                                 Text(ctaLabel)
-                                    .font(SavantType.micro)
+                                    .font(GridironType.micro)
                                     .tracking(0.4)
                                     .fontWeight(.bold)
                             }
-                            .foregroundStyle(SavantPalette.savantNavy)
+                            .foregroundStyle(GridironPalette.midnight)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
                             .background(Color.yellow)
@@ -255,7 +255,7 @@ private struct StandardDestinations: ViewModifier {
                         try await viewModel.fetchGameLogs(playerId: id, season: season)
                     }
                 )
-                    .modifier(SavantNavBar())
+                    .modifier(GridironNavBar())
             }
             .navigationDestination(for: TeamDestination.self) { dest in
                 TeamView(
@@ -267,15 +267,15 @@ private struct StandardDestinations: ViewModifier {
                         try await viewModel.fetchTeamGameLogs(team: team, season: season, sinceDate: since)
                     }
                 )
-                    .modifier(SavantNavBar())
+                    .modifier(GridironNavBar())
             }
             .navigationDestination(for: MetricRoute.self) { route in
                 MetricRankingView(metricLabel: route.label, metricCategory: route.category, players: viewModel.seasonPlayers, season: viewModel.selectedSeason)
-                    .modifier(SavantNavBar())
+                    .modifier(GridironNavBar())
             }
             .navigationDestination(for: ComparisonRoute.self) { route in
                 PlayerComparisonView(playerA: route.playerA, playerB: route.playerB)
-                    .modifier(SavantNavBar())
+                    .modifier(GridironNavBar())
             }
     }
 }

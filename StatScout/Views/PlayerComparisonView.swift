@@ -48,7 +48,7 @@ struct PlayerComparisonView: View {
                         .blur(radius: 8)
                         .overlay(
                             LinearGradient(
-                                colors: [.clear, SavantPalette.canvas.opacity(0.9)],
+                                colors: [.clear, GridironPalette.canvas.opacity(0.9)],
                                 startPoint: .center,
                                 endPoint: .bottom
                             )
@@ -62,12 +62,12 @@ struct PlayerComparisonView: View {
                             .foregroundStyle(Color.yellow)
 
                         Text("Find the Edge")
-                            .font(SavantType.cardTitle)
-                            .foregroundStyle(SavantPalette.ink)
+                            .font(GridironType.cardTitle)
+                            .foregroundStyle(GridironPalette.ink)
 
                         Text("StatScout+ unlocks side-by-side player comparisons across every metric. See who leads in xwOBA, Barrel%, Sprint Speed, and more.")
-                            .font(SavantType.small)
-                            .foregroundStyle(SavantPalette.inkSecondary)
+                            .font(GridironType.small)
+                            .foregroundStyle(GridironPalette.inkSecondary)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
 
@@ -75,38 +75,38 @@ struct PlayerComparisonView: View {
                             showingTrial = true
                         } label: {
                             Text(store.paywallBlurCTA)
-                                .font(SavantType.bodyBold)
+                                .font(GridironType.bodyBold)
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 48)
-                                .background(SavantPalette.savantRed)
+                                .background(GridironPalette.turf)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                         .buttonStyle(.plain)
 
                         if let subtext = store.paywallBlurSubtext {
                             Text(subtext)
-                                .font(SavantType.micro)
+                                .font(GridironType.micro)
                                 .tracking(0.3)
-                                .foregroundStyle(SavantPalette.inkTertiary)
+                                .foregroundStyle(GridironPalette.inkTertiary)
                                 .multilineTextAlignment(.center)
                         }
                     }
                     .padding(.horizontal, 24)
                     .padding(.vertical, 20)
                     .background(
-                        RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                            .fill(SavantPalette.surface)
+                        RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                            .fill(GridironPalette.surface)
                             .shadow(color: .black.opacity(0.08), radius: 12, y: -4)
                     )
                     .overlay(alignment: .top) {
                         Rectangle()
-                            .fill(SavantPalette.divider)
-                            .frame(height: SavantGeo.hairline)
+                            .fill(GridironPalette.divider)
+                            .frame(height: GridironGeo.hairline)
                     }
                     .offset(y: -8)
                 }
-                .background(SavantPalette.canvas.ignoresSafeArea())
+                .background(GridironPalette.canvas.ignoresSafeArea())
                 .sheet(isPresented: $showingTrial) {
                     TrialPitchSheet(trigger: .playerComparison)
                 }
@@ -143,7 +143,7 @@ struct PlayerComparisonView: View {
             .padding(.bottom, 12)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationTitle("Player Comparison")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -159,77 +159,77 @@ struct PlayerComparisonView: View {
         VStack(spacing: 8) {
             PlayerHeadshot(team: player.team, initials: player.initials, size: 56)
             Text(player.name)
-                .font(SavantType.smallBold)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.smallBold)
+                .foregroundStyle(GridironPalette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text("\(player.team) · \(player.displayPosition)")
-                .font(SavantType.micro)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .font(GridironType.micro)
+                .foregroundStyle(GridironPalette.inkTertiary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
     private func categoryCard(category: MetricCategory, metrics: [(label: String, a: Metric?, b: Metric?)]) -> some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: category.rawValue.uppercased())
+            GridironSectionBar(title: category.rawValue.uppercased())
 
             HStack(spacing: 8) {
                 Text("METRIC")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.5)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(width: 72, alignment: .leading)
                 Text(playerA.name.split(separator: " ").last.map(String.init) ?? "A")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.5)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
                 Text(playerB.name.split(separator: " ").last.map(String.init) ?? "B")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.5)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
-            .frame(height: SavantGeo.rowHeightHeader)
-            .padding(.horizontal, SavantGeo.padInline)
-            .background(SavantPalette.surfaceAlt)
+            .frame(height: GridironGeo.rowHeightHeader)
+            .padding(.horizontal, GridironGeo.padInline)
+            .background(GridironPalette.surfaceAlt)
             .overlay(
-                Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline),
+                Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
                 alignment: .bottom
             )
 
             ForEach(Array(metrics.enumerated()), id: \.offset) { index, item in
                 HStack(spacing: 8) {
                     Text(item.label)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(SavantPalette.ink)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.ink)
                         .frame(width: 72, alignment: .leading)
 
                     metricValueCell(metric: item.a, other: item.b)
                     metricValueCell(metric: item.b, other: item.a)
                 }
                 .frame(height: 56)
-                .padding(.horizontal, SavantGeo.padInline)
-                .background(index % 2 == 0 ? SavantPalette.surface : SavantPalette.surfaceAlt)
+                .padding(.horizontal, GridironGeo.padInline)
+                .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
                 .overlay(
-                    Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline),
+                    Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
                     alignment: .bottom
                 )
             }
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
@@ -237,7 +237,7 @@ struct PlayerComparisonView: View {
         Group {
             if let m = metric {
                 let isWinner = (other.map { m.percentile > $0.percentile }) ?? false
-                let pctColor = SavantPalette.color(forPercentile: m.percentile)
+                let pctColor = GridironPalette.color(forPercentile: m.percentile)
                 // Raw value only — the colored bar conveys percentile. Tinting
                 // the value text by percentile keeps the "who's better" cue
                 // without doubling up the number.
@@ -249,7 +249,7 @@ struct PlayerComparisonView: View {
                                 .foregroundStyle(Color.yellow)
                         }
                         Text(m.value.isEmpty ? "—" : m.value)
-                            .font(SavantType.statMed)
+                            .font(GridironType.statMed)
                             .foregroundStyle(pctColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
@@ -262,8 +262,8 @@ struct PlayerComparisonView: View {
                 .frame(maxWidth: .infinity)
             } else {
                 Text("—")
-                    .font(SavantType.statSmall)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .font(GridironType.statSmall)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity)
             }
         }

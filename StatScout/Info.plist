@@ -28,16 +28,6 @@
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>SUPABASE_URL</key>
 	<string>$(SUPABASE_URL)</string>
-	<key>UIAppFonts</key>
-	<array>
-		<string>RobotoCondensed-Regular.ttf</string>
-		<string>RobotoCondensed-Medium.ttf</string>
-		<string>RobotoCondensed-Bold.ttf</string>
-		<string>RobotoCondensed-Black.ttf</string>
-		<string>RobotoMono-Regular.ttf</string>
-		<string>RobotoMono-Medium.ttf</string>
-		<string>RobotoMono-Bold.ttf</string>
-	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

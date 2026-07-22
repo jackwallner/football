@@ -130,16 +130,20 @@ def test_aggregate_derived_rates(weekly_df):
     # cmp% = 100/160 = 62.5, ypa = 1200/160 = 7.5
     assert round(qb["cmp_pct"], 1) == 62.5
     assert round(qb["ypa"], 1) == 7.5
+    # EPA/play uses dropbacks, including sacks suffered.
+    assert round(qb["passing_epa_per_play"], 4) == round(qb["passing_epa"] / (160 + qb["sacks_suffered"]), 4)
     # int_rate = 4/160 = 2.5%
     assert round(qb["int_rate"], 2) == 2.5
     rb = agg.loc[2]
     # ypc = 440/100 = 4.4, explosive = 16/100 = 16%, fumble = 4/100 = 4%
     assert round(rb["ypc"], 1) == 4.4
+    assert round(rb["rushing_epa_per_carry"], 4) == round(rb["rushing_epa"] / 100, 4)
     assert round(rb["explosive_rush_rate"], 1) == 16.0
     assert round(rb["fumble_rate"], 1) == 4.0
     wr = agg.loc[3]
-    # catch% = 32/48 = 66.7
+    # catch% = 32/48 = 66.7; receiving EPA is normalized per target.
     assert round(wr["catch_pct"], 1) == 66.7
+    assert round(wr["receiving_epa_per_target"], 4) == round(wr["receiving_epa"] / 48, 4)
 
 
 def test_aggregate_player_type_and_team(weekly_df):
@@ -184,6 +188,10 @@ def test_build_snapshot_rows_shape(weekly_df, ngs_passing_df, ngs_rushing_df, ng
     for m in qb["metrics"]:
         assert set(m) == {"id", "label", "value", "percentile", "category"}
         assert 1 <= m["percentile"] <= 100
+    rb = by_id[2]
+    assert next(m for m in rb["metrics"] if m["label"] == "EPA/Rush")["value"]
+    wr = by_id[3]
+    assert next(m for m in wr["metrics"] if m["label"] == "EPA/Tgt")["value"]
     # Season label and source.
     assert qb["season"] == 2025
     assert qb["source"] == "nflverse"

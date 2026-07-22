@@ -26,7 +26,7 @@ struct AboutView: View {
             .padding(.top, 12)
             .padding(.bottom, 12)
         }
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .sheet(item: $paywallTrigger) { trigger in
             PaywallView(trigger: trigger)
         }
@@ -34,46 +34,46 @@ struct AboutView: View {
 
     private var aboutCard: some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: "STATSCOUT")
+            GridironSectionBar(title: "STATSCOUT")
             HStack(spacing: 12) {
                 Image(systemName: "football.fill")
                     .font(.title2)
-                    .foregroundStyle(SavantPalette.savantRed)
+                    .foregroundStyle(GridironPalette.turf)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Percentile Rankings")
-                        .font(SavantType.cardTitle)
-                        .foregroundStyle(SavantPalette.ink)
+                        .font(GridironType.cardTitle)
+                        .foregroundStyle(GridironPalette.ink)
                     Text("Mobile-first percentile rankings and leaderboards for fans and media.")
-                        .font(SavantType.small)
-                        .foregroundStyle(SavantPalette.inkSecondary)
+                        .font(GridironType.small)
+                        .foregroundStyle(GridironPalette.inkSecondary)
                 }
                 Spacer()
             }
-            .padding(SavantGeo.padCard)
+            .padding(GridironGeo.padCard)
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
     private var proStatusCard: some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: "STATSCOUT+")
+            GridironSectionBar(title: "STATSCOUT+")
             VStack(spacing: 0) {
                 HStack {
                     Image(systemName: store.isPro ? "crown.fill" : "crown")
                         .font(.title2)
-                        .foregroundStyle(store.isPro ? Color.yellow : SavantPalette.inkTertiary)
+                        .foregroundStyle(store.isPro ? Color.yellow : GridironPalette.inkTertiary)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(store.isPro ? "StatScout+ Unlocked" : "Free Version")
-                            .font(SavantType.bodyBold)
-                            .foregroundStyle(SavantPalette.ink)
+                            .font(GridironType.bodyBold)
+                            .foregroundStyle(GridironPalette.ink)
                         Text(store.isPro ? "All StatScout+ features are active." : "Unlock historical seasons and year-over-year comparisons.")
-                            .font(SavantType.small)
-                            .foregroundStyle(SavantPalette.inkSecondary)
+                            .font(GridironType.small)
+                            .foregroundStyle(GridironPalette.inkSecondary)
                     }
                     Spacer()
                     if !store.isPro {
@@ -81,13 +81,13 @@ struct AboutView: View {
                             paywallTrigger = store.defaultUpgradeTrigger
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(SavantPalette.savantRed)
+                        .tint(GridironPalette.turf)
                         .controlSize(.small)
                     }
                 }
-                .padding(SavantGeo.padCard)
+                .padding(GridironGeo.padCard)
 
-                Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline)
+                Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
                 Button {
                     Task { await store.restorePurchases() }
                 } label: {
@@ -95,58 +95,58 @@ struct AboutView: View {
                         Image(systemName: "arrow.clockwise")
                             .font(.caption)
                         Text("Restore Purchases")
-                            .font(SavantType.smallBold)
+                            .font(GridironType.smallBold)
                     }
-                    .foregroundStyle(SavantPalette.linkBlue)
+                    .foregroundStyle(GridironPalette.linkBlue)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(SavantGeo.padCard)
+                    .padding(GridironGeo.padCard)
                 }
                 .buttonStyle(.plain)
 
                 if let error = store.lastError {
-                    Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline)
+                    Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
                     Text(error)
-                        .font(SavantType.small)
-                        .foregroundStyle(SavantPalette.savantRed)
+                        .font(GridironType.small)
+                        .foregroundStyle(GridironPalette.turf)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(SavantGeo.padCard)
+                        .padding(GridironGeo.padCard)
                 }
             }
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
     private var refreshCard: some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: "DATA")
+            GridironSectionBar(title: "DATA")
             row(
                 icon: "moon.stars.fill",
                 title: "Nightly Refresh",
                 subtitle: "Refreshed each night using publicly available NFL play-by-play and Next Gen Stats data."
             )
-            Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline)
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
             row(
                 icon: "clock.arrow.circlepath",
                 title: "Last Updated",
                 subtitle: lastUpdated.map { $0.formatted(date: .long, time: .shortened) } ?? "—"
             )
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
     private var linkCard: some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: "SUPPORT & PRIVACY")
+            GridironSectionBar(title: "SUPPORT & PRIVACY")
             Button {
                 if let onRequestReview {
                     onRequestReview()
@@ -162,7 +162,7 @@ struct AboutView: View {
             }
             .buttonStyle(.plain)
 
-            Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline)
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
 
             // Always-works fallback: the native rating sheet is rate-limited and
             // may show nothing, so keep a direct write-review link for users who
@@ -176,7 +176,7 @@ struct AboutView: View {
             }
             .buttonStyle(.plain)
 
-            Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline)
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
 
             if let supportURL = URL(string: "https://jackwallner.github.io/football/support.html") {
                 Link(destination: supportURL) {
@@ -189,7 +189,7 @@ struct AboutView: View {
                 .buttonStyle(.plain)
             }
             
-            Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline)
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
             
             if let privacyURL = URL(string: "https://jackwallner.github.io/football/privacy-policy.html") {
                 Link(destination: privacyURL) {
@@ -202,51 +202,51 @@ struct AboutView: View {
                 .buttonStyle(.plain)
             }
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
     private var versionCard: some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: "VERSION")
+            GridironSectionBar(title: "VERSION")
             HStack {
                 Text("App Version")
-                    .font(SavantType.bodyBold)
-                    .foregroundStyle(SavantPalette.ink)
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
                 Spacer()
                 Text(version)
-                    .font(SavantType.statSmall)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.statSmall)
+                    .foregroundStyle(GridironPalette.inkSecondary)
             }
-            .padding(SavantGeo.padCard)
+            .padding(GridironGeo.padCard)
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
     private var disclaimerCard: some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: "DISCLAIMER")
+            GridironSectionBar(title: "DISCLAIMER")
             Text("Not affiliated with, endorsed by, or sponsored by the National Football League, its teams, or the NFLPA. Team names and abbreviations are used for identification only. All trademarks are property of their respective owners.")
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(SavantGeo.padCard)
+                .padding(GridironGeo.padCard)
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
@@ -254,19 +254,19 @@ struct AboutView: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundStyle(SavantPalette.savantRed)
+                .foregroundStyle(GridironPalette.turf)
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(SavantType.bodyBold)
-                    .foregroundStyle(SavantPalette.ink)
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
                 Text(subtitle)
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
             }
             Spacer()
         }
-        .padding(SavantGeo.padCard)
+        .padding(GridironGeo.padCard)
     }
 }
 

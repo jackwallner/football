@@ -282,8 +282,8 @@ enum PlayerPositionGroup: String, CaseIterable, Identifiable, Hashable, Sendable
     var preferredAdvancedMetrics: [String] {
         switch self {
         case .qb: return ["EPA/Play", "CPOE", "Rating"]
-        case .rb: return ["RYOE", "Rush EPA", "Explosive%"]
-        case .wr, .te: return ["WOPR", "Rec EPA", "YAC+"]
+        case .rb: return ["EPA/Rush", "RYOE", "Explosive%", "Rush EPA"]
+        case .wr, .te: return ["EPA/Tgt", "WOPR", "YAC+", "Rec EPA"]
         case .defense: return []
         }
     }
@@ -350,21 +350,23 @@ enum FootballMetricRegistry {
         definition("Y/A", .passing, .traditional, .efficiency, [.qb], 140, "Passing yards per attempt."),
         definition("Rating", .passing, .traditional, .efficiency, [.qb], 150, "NFL passer rating."),
 
-        definition("RYOE", .rushing, .advanced, .expectedProduction, [.qb, .rb], 10, "Rushing yards over expectation."),
-        definition("Rush EPA", .rushing, .advanced, .efficiency, [.qb, .rb, .wr, .te], 20, "Expected points added on rushing plays."),
+        definition("EPA/Rush", .rushing, .advanced, .efficiency, [.qb, .rb, .wr, .te], 10, "Expected points added per rushing attempt."),
+        definition("RYOE", .rushing, .advanced, .expectedProduction, [.qb, .rb], 20, "Rushing yards over expectation."),
         definition("Explosive%", .rushing, .advanced, .explosiveness, [.qb, .rb, .wr, .te], 30, "Rate of explosive rushing plays."),
-        definition("Fumble%", .rushing, .advanced, .efficiency, [.qb, .rb, .wr, .te], 40, "Fumbles per rushing opportunity.", higherIsBetter: false),
+        definition("Rush EPA", .rushing, .advanced, .production, [.qb, .rb, .wr, .te], 40, "Total expected points added on rushing plays."),
+        definition("Fumble%", .rushing, .advanced, .efficiency, [.qb, .rb, .wr, .te], 50, "Fumbles per rushing opportunity.", higherIsBetter: false),
         definition("Rush Yds", .rushing, .traditional, .production, [.qb, .rb, .wr, .te], 110, "Total rushing yards."),
         definition("Rush TD", .rushing, .traditional, .production, [.qb, .rb, .wr, .te], 120, "Total rushing touchdowns."),
         definition("Y/C", .rushing, .traditional, .efficiency, [.qb, .rb, .wr, .te], 130, "Rushing yards per carry."),
         definition("Rush 1D", .rushing, .traditional, .production, [.qb, .rb, .wr, .te], 140, "Rushing first downs."),
 
-        definition("WOPR", .receiving, .advanced, .usage, [.rb, .wr, .te], 10, "Weighted opportunity rating from targets and air yards."),
-        definition("Rec EPA", .receiving, .advanced, .efficiency, [.rb, .wr, .te], 20, "Expected points added on receiving plays."),
+        definition("EPA/Tgt", .receiving, .advanced, .efficiency, [.rb, .wr, .te], 10, "Expected points added per target."),
+        definition("WOPR", .receiving, .advanced, .usage, [.rb, .wr, .te], 20, "Weighted opportunity rating from targets and air yards."),
         definition("Target Share", .receiving, .advanced, .usage, [.rb, .wr, .te], 30, "Share of team pass attempts targeting the player."),
         definition("RACR", .receiving, .advanced, .efficiency, [.rb, .wr, .te], 40, "Receiving yards per air yard."),
         definition("Separation", .receiving, .advanced, .separation, [.rb, .wr, .te], 50, "Average separation from the nearest defender."),
         definition("YAC+", .receiving, .advanced, .yac, [.rb, .wr, .te], 60, "Yards after catch over expectation."),
+        definition("Rec EPA", .receiving, .advanced, .production, [.rb, .wr, .te], 70, "Total expected points added on receiving plays."),
         definition("Rec", .receiving, .traditional, .production, [.rb, .wr, .te], 110, "Total receptions."),
         definition("Rec Yds", .receiving, .traditional, .production, [.rb, .wr, .te], 120, "Total receiving yards."),
         definition("Rec TD", .receiving, .traditional, .production, [.rb, .wr, .te], 130, "Total receiving touchdowns."),

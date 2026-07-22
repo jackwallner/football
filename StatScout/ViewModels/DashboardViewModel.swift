@@ -13,23 +13,6 @@ final class DashboardViewModel {
     var selectedPosition: PlayerPositionGroup = .qb {
         didSet {
             guard oldValue != selectedPosition else { return }
-            selectedMetricKind = selectedPosition == .defense ? .traditional : .advanced
-            selectedFamily = nil
-            userSortMetric = nil
-            applyDefaultSortDirection()
-        }
-    }
-    var selectedMetricKind: MetricKind = .advanced {
-        didSet {
-            guard oldValue != selectedMetricKind else { return }
-            selectedFamily = nil
-            userSortMetric = nil
-            applyDefaultSortDirection()
-        }
-    }
-    var selectedFamily: MetricFamily? {
-        didSet {
-            guard oldValue != selectedFamily else { return }
             userSortMetric = nil
             applyDefaultSortDirection()
         }
@@ -59,13 +42,6 @@ final class DashboardViewModel {
             return userSortMetric
         }
         return determineSortMetricLabel()
-    }
-
-    var availableFamilies: [MetricFamily] {
-        let present = Set(eligibleMetrics.compactMap {
-            FootballMetricRegistry.definition(for: $0.label, category: $0.category)?.family
-        })
-        return MetricFamily.allCases.filter(present.contains)
     }
 
     var availableSortMetrics: [String] {
@@ -210,12 +186,7 @@ final class DashboardViewModel {
         seasonPlayers
             .filter { $0.positionGroup == selectedPosition }
             .flatMap(\.metrics)
-            .filter { metric in
-                guard FootballMetricRegistry.kind(for: metric) == selectedMetricKind,
-                      FootballMetricRegistry.isSupported(metric, by: selectedPosition) else { return false }
-                guard let selectedFamily else { return true }
-                return FootballMetricRegistry.definition(for: metric.label, category: metric.category)?.family == selectedFamily
-            }
+            .filter { FootballMetricRegistry.isSupported($0, by: selectedPosition) }
     }
 
     var filteredPlayers: [Player] {
@@ -225,11 +196,8 @@ final class DashboardViewModel {
                 || player.team.localizedCaseInsensitiveContains(searchText)
                 || teamFullName(player.team).localizedCaseInsensitiveContains(searchText)
             let matchesPosition = player.positionGroup == selectedPosition
-            let matchingMetrics = player.metrics.filter { metric in
-                guard FootballMetricRegistry.kind(for: metric) == selectedMetricKind,
-                      FootballMetricRegistry.isSupported(metric, by: selectedPosition) else { return false }
-                guard let selectedFamily else { return true }
-                return FootballMetricRegistry.definition(for: metric.label, category: metric.category)?.family == selectedFamily
+            let matchingMetrics = player.metrics.filter {
+                FootballMetricRegistry.isSupported($0, by: selectedPosition)
             }
             let qualifies = matchingMetrics.contains { isQualified(player, for: $0.category) }
             return matchesSearch && matchesPosition && !matchingMetrics.isEmpty && qualifies
@@ -343,9 +311,7 @@ final class DashboardViewModel {
     }
 
     private func determineSortMetricLabel() -> String? {
-        let preferred = selectedMetricKind == .advanced
-            ? selectedPosition.preferredAdvancedMetrics
-            : selectedPosition.preferredTraditionalMetrics
+        let preferred = selectedPosition.preferredAdvancedMetrics + selectedPosition.preferredTraditionalMetrics
         for label in preferred where eligibleMetrics.contains(where: { $0.label == label }) {
             return label
         }
@@ -400,12 +366,12 @@ final class DashboardViewModel {
         }
         return metricMap.compactMap { (key, data) -> MetricLeaderEntry? in
             let label = key.split(separator: "|").first.map(String.init) ?? key
-            // Rank Best/Worst by Savant percentile, NOT by parsing the value
+            // Rank Best/Worst by Gridiron percentile, NOT by parsing the value
             // string. Roughly half of xISO / xOBP / Hard-Hit% (and 100% of
             // Arm Strength / Squared-Up%) ship a valid percentile but a blank
             // value; rawNumeric("") collapsed them all to 0, every player tied,
             // and the sort returned the same player (e.g. Ohtani) for both
-            // ends with empty cells. Percentile is Savant's normalized
+            // ends with empty cells. Percentile is Gridiron's normalized
             // goodness — already direction-correct (it inverts for pitchers),
             // so highest = best, lowest = worst with no per-metric polarity
             // table needed.

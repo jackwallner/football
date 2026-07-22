@@ -108,7 +108,7 @@ struct StandardStatsLeadersView: View {
             .padding(.vertical, 12)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
     }
     
@@ -124,12 +124,12 @@ struct StandardStatsLeadersView: View {
                     generator.impactOccurred()
                 }) {
                     Text(category.rawValue)
-                        .font(SavantType.bodyBold)
-                        .foregroundStyle(selectedCategory == category ? .white : SavantPalette.ink)
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(selectedCategory == category ? .white : GridironPalette.ink)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
-                        .background(selectedCategory == category ? SavantPalette.savantRed : SavantPalette.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+                        .background(selectedCategory == category ? GridironPalette.turf : GridironPalette.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
                 }
                 .buttonStyle(.plain)
             }
@@ -147,11 +147,11 @@ struct StandardStatsLeadersView: View {
                         generator.impactOccurred()
                     }) {
                         Text(stat)
-                            .font(SavantType.body)
-                            .foregroundStyle(selectedStat == stat ? .white : SavantPalette.ink)
+                            .font(GridironType.body)
+                            .foregroundStyle(selectedStat == stat ? .white : GridironPalette.ink)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(selectedStat == stat ? SavantPalette.savantNavy : SavantPalette.surface)
+                            .background(selectedStat == stat ? GridironPalette.midnight : GridironPalette.surface)
                             .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -169,38 +169,38 @@ struct StandardStatsLeadersView: View {
             } label: {
                 HStack(spacing: 0) {
                     Text("RANK")
-                        .font(SavantType.micro)
+                        .font(GridironType.micro)
                         .tracking(0.5)
-                        .foregroundStyle(SavantPalette.inkTertiary)
+                        .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(width: 42, alignment: .leading)
 
                     Text("PLAYER")
-                        .font(SavantType.micro)
+                        .font(GridironType.micro)
                         .tracking(0.5)
-                        .foregroundStyle(SavantPalette.inkTertiary)
+                        .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     Text("TEAM")
-                        .font(SavantType.micro)
+                        .font(GridironType.micro)
                         .tracking(0.5)
-                        .foregroundStyle(SavantPalette.inkTertiary)
+                        .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(width: 44, alignment: .leading)
 
                     HStack(spacing: 4) {
                         Text(selectedStat.uppercased())
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.5)
-                            .foregroundStyle(SavantPalette.savantRed)
+                            .foregroundStyle(GridironPalette.turf)
                         Image(systemName: sortDescending ? "arrow.down" : "arrow.up")
                             .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(SavantPalette.savantRed)
+                            .foregroundStyle(GridironPalette.turf)
                     }
                     .frame(width: 80, alignment: .trailing)
                 }
-                .frame(height: SavantGeo.rowHeightHeader)
-                .padding(.horizontal, SavantGeo.padInline)
-                .background(SavantPalette.surfaceAlt)
-                .overlay(Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline), alignment: .bottom)
+                .frame(height: GridironGeo.rowHeightHeader)
+                .padding(.horizontal, GridironGeo.padInline)
+                .background(GridironPalette.surfaceAlt)
+                .overlay(Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline), alignment: .bottom)
             }
             .buttonStyle(.plain)
             
@@ -212,18 +212,18 @@ struct StandardStatsLeadersView: View {
                     Text("No players have \(selectedStat) data for the current season.")
                 }
                 .padding(.vertical, 48)
-                .background(SavantPalette.surface)
+                .background(GridironPalette.surface)
             } else {
                 ForEach(Array(sortedPlayers.prefix(50).enumerated()), id: \.element.id) { index, player in
                     playerRow(rank: index + 1, player: player)
                 }
             }
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
     
@@ -232,8 +232,8 @@ struct StandardStatsLeadersView: View {
             HStack(spacing: 0) {
                 // Rank
                 Text("\(rank)")
-                    .font(SavantType.statSmall)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.statSmall)
+                    .foregroundStyle(GridironPalette.inkSecondary)
                     .frame(width: 36, alignment: .leading)
                     .monospacedDigit()
 
@@ -242,15 +242,15 @@ struct StandardStatsLeadersView: View {
                     PlayerHeadshot(team: player.team, initials: player.initials, size: 36)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(player.name)
-                            .font(SavantType.bodyBold)
-                            .foregroundStyle(SavantPalette.ink)
+                            .font(GridironType.bodyBold)
+                            .foregroundStyle(GridironPalette.ink)
                             .lineLimit(1)
                             .minimumScaleFactor(0.85)
                             .truncationMode(.tail)
                         Text(player.displayPosition)
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.4)
-                            .foregroundStyle(SavantPalette.inkTertiary)
+                            .foregroundStyle(GridironPalette.inkTertiary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -259,25 +259,25 @@ struct StandardStatsLeadersView: View {
                 HStack(spacing: 4) {
                     TeamColorDot(abbr: player.team, size: 6)
                     Text(displayTeamAbbr(player.team))
-                        .font(SavantType.small)
-                        .foregroundStyle(SavantPalette.inkSecondary)
+                        .font(GridironType.small)
+                        .foregroundStyle(GridironPalette.inkSecondary)
                 }
                 .frame(width: 44, alignment: .leading)
 
                 // Stat value
                 Text(statDisplay(for: player))
-                    .font(SavantType.statMed)
-                    .foregroundStyle(SavantPalette.savantRed)
+                    .font(GridironType.statMed)
+                    .foregroundStyle(GridironPalette.turf)
                     .frame(width: 70, alignment: .trailing)
                     .monospacedDigit()
             }
-            .frame(height: SavantGeo.rowHeight)
-            .padding(.horizontal, SavantGeo.padInline)
-            .background(rank % 2 == 1 ? SavantPalette.surface : SavantPalette.surfaceAlt)
+            .frame(height: GridironGeo.rowHeight)
+            .padding(.horizontal, GridironGeo.padInline)
+            .background(rank % 2 == 1 ? GridironPalette.surface : GridironPalette.surfaceAlt)
             .overlay(
                 Rectangle()
-                    .fill(SavantPalette.divider)
-                    .frame(height: SavantGeo.hairline),
+                    .fill(GridironPalette.divider)
+                    .frame(height: GridironGeo.hairline),
                 alignment: .bottom
             )
         }

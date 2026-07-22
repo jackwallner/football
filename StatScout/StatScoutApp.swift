@@ -134,7 +134,7 @@ struct OnboardingCards: View {
 
     var body: some View {
         ZStack {
-            SavantPalette.canvas.ignoresSafeArea()
+            GridironPalette.canvas.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 HStack {
@@ -143,8 +143,8 @@ struct OnboardingCards: View {
                         Button("Skip") {
                             withAnimation { hasCompletedOnboarding = true }
                         }
-                        .font(SavantType.bodyBold)
-                        .foregroundStyle(SavantPalette.savantRed)
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(GridironPalette.turf)
                         .padding(.trailing, 20)
                         .padding(.top, 8)
                     } else {
@@ -202,9 +202,9 @@ struct OnboardingCards: View {
 
                     if let disclosure = trialDisclosure {
                         Text(disclosure)
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.3)
-                            .foregroundStyle(SavantPalette.inkTertiary)
+                            .foregroundStyle(GridironPalette.inkTertiary)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -219,11 +219,11 @@ struct OnboardingCards: View {
                                 ProgressView().tint(.white)
                             }
                         }
-                        .font(SavantType.bodyBold)
+                        .font(GridironType.bodyBold)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(SavantPalette.savantNavy)
+                        .background(GridironPalette.midnight)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                     .buttonStyle(.plain)
@@ -231,8 +231,8 @@ struct OnboardingCards: View {
 
                     if let trialError {
                         Text(trialError)
-                            .font(SavantType.micro)
-                            .foregroundStyle(SavantPalette.savantRed)
+                            .font(GridironType.micro)
+                            .foregroundStyle(GridironPalette.turf)
                             .multilineTextAlignment(.center)
                     }
 
@@ -242,20 +242,20 @@ struct OnboardingCards: View {
                         Link("Terms", destination: StatScoutLegal.termsURL)
                         Link("Privacy", destination: StatScoutLegal.privacyURL)
                     }
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.3)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                 }
             } else {
                 Button {
                     withAnimation { currentPage += 1 }
                 } label: {
                     Text("Continue")
-                        .font(SavantType.bodyBold)
+                        .font(GridironType.bodyBold)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(SavantPalette.savantRed)
+                        .background(GridironPalette.turf)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .buttonStyle(.plain)
@@ -267,13 +267,13 @@ struct OnboardingCards: View {
                     HStack(spacing: 8) {
                         ProgressView()
                             .progressViewStyle(.circular)
-                            .tint(SavantPalette.inkSecondary)
+                            .tint(GridironPalette.inkSecondary)
                             .scaleEffect(0.7)
                         Text(viewModel.loadingMessage)
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.4)
                     }
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .foregroundStyle(GridironPalette.inkSecondary)
                 } else if isLastPage {
                     Button {
                         // Surface the outcome through the same trialError line the
@@ -290,9 +290,9 @@ struct OnboardingCards: View {
                         }
                     } label: {
                         Text(isRestoring ? "Restoring…" : "Restore Purchases")
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.4)
-                            .foregroundStyle(SavantPalette.inkTertiary)
+                            .foregroundStyle(GridironPalette.inkTertiary)
                     }
                     .buttonStyle(.plain)
                     .disabled(isRestoring)
@@ -313,15 +313,15 @@ struct OnboardingCards: View {
             withAnimation { hasCompletedOnboarding = true }
         } label: {
             Text("Get Started")
-                .font(SavantType.bodyBold)
-                .foregroundStyle(prominent ? .white : SavantPalette.ink)
+                .font(GridironType.bodyBold)
+                .foregroundStyle(prominent ? .white : GridironPalette.ink)
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background(prominent ? SavantPalette.savantRed : SavantPalette.surface)
+                .background(prominent ? GridironPalette.turf : GridironPalette.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
-                        .stroke(prominent ? Color.clear : SavantPalette.hairline, lineWidth: 0.5)
+                        .stroke(prominent ? Color.clear : GridironPalette.hairline, lineWidth: 0.5)
                 )
         }
         .buttonStyle(.plain)
@@ -363,9 +363,9 @@ struct OnboardingCards: View {
             title: "Your Pocket\nScout",
             description: "NFL percentile rankings built for a fast mobile view. Every qualified player, every metric, always up to date.",
             bullets: [
-                BulletItem(text: "Every qualified player ranked", icon: "checkmark.circle.fill", color: SavantPalette.savantRed),
-                BulletItem(text: "EPA, CPOE, YAC, RYOE, and more", icon: "checkmark.circle.fill", color: SavantPalette.savantRed),
-                BulletItem(text: "Updated nightly — fresh data, always", icon: "checkmark.circle.fill", color: SavantPalette.savantRed)
+                BulletItem(text: "Every qualified player ranked", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "EPA, CPOE, YAC, RYOE, and more", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Updated nightly — fresh data, always", icon: "checkmark.circle.fill", color: GridironPalette.turf)
             ]
         ),
         OnboardingPage(
@@ -373,9 +373,9 @@ struct OnboardingCards: View {
             title: "Find Insights\nFast",
             description: "Three tabs cover every angle of the game. See what's happening across the league in seconds.",
             bullets: [
-                BulletItem(text: "Stats — sort the league, leaders, best & worst", icon: "checkmark.circle.fill", color: SavantPalette.savantRed),
-                BulletItem(text: "Teams — browse any roster, see who's hot", icon: "checkmark.circle.fill", color: SavantPalette.savantRed),
-                BulletItem(text: "Compare — stack two players head-to-head", icon: "checkmark.circle.fill", color: SavantPalette.savantRed)
+                BulletItem(text: "Stats — sort the league, leaders, best & worst", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Teams — browse any roster, see who's hot", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Compare — stack two players head-to-head", icon: "checkmark.circle.fill", color: GridironPalette.turf)
             ]
         ),
         OnboardingPage(
@@ -383,9 +383,9 @@ struct OnboardingCards: View {
             title: "Go Deeper\nwith StatScout+",
             description: "Recent form, every roster player, head-to-head matchups, and seasons back to 2020 — the full scouting toolkit.",
             bullets: [
-                BulletItem(text: "Last 1 / 3 / 5 game form on any player or team", icon: "flame.fill", color: SavantPalette.savantRed),
-                BulletItem(text: "Head-to-head comparisons across every metric", icon: "person.2.fill", color: SavantPalette.savantRed),
-                BulletItem(text: "Year-over-year trends and every past season", icon: "calendar.badge.clock", color: SavantPalette.savantRed)
+                BulletItem(text: "Last 1 / 3 / 5 game form on any player or team", icon: "flame.fill", color: GridironPalette.turf),
+                BulletItem(text: "Head-to-head comparisons across every metric", icon: "person.2.fill", color: GridironPalette.turf),
+                BulletItem(text: "Year-over-year trends and every past season", icon: "calendar.badge.clock", color: GridironPalette.turf)
             ]
         )
     ]
@@ -406,23 +406,23 @@ struct OnboardingCard: View {
                     .frame(width: 220, height: 120)
                 ZStack {
                     Circle()
-                        .fill(SavantPalette.savantNavy)
+                        .fill(GridironPalette.midnight)
                         .frame(width: 96, height: 96)
                     Image(systemName: icon)
                         .font(.system(size: 42, weight: .semibold))
                         .foregroundStyle(.white)
                 }
-                .shadow(color: SavantPalette.savantNavy.opacity(0.25), radius: 12, y: 4)
+                .shadow(color: GridironPalette.midnight.opacity(0.25), radius: 12, y: 4)
             }
 
             Text(title)
-                .font(SavantType.playerName)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.playerName)
+                .foregroundStyle(GridironPalette.ink)
                 .multilineTextAlignment(.center)
 
             Text(description)
-                .font(SavantType.body)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.body)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
@@ -433,8 +433,8 @@ struct OnboardingCard: View {
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(bullet.color)
                         Text(bullet.text)
-                            .font(SavantType.body)
-                            .foregroundStyle(SavantPalette.ink)
+                            .font(GridironType.body)
+                            .foregroundStyle(GridironPalette.ink)
                         Spacer(minLength: 0)
                     }
                 }
@@ -462,7 +462,7 @@ private struct StatcastBarBackdrop: View {
         HStack(alignment: .bottom, spacing: 6) {
             ForEach(Array(percentiles.enumerated()), id: \.offset) { _, pct in
                 RoundedRectangle(cornerRadius: 3)
-                    .fill(SavantPalette.color(forPercentile: pct).opacity(0.55))
+                    .fill(GridironPalette.color(forPercentile: pct).opacity(0.55))
                     .frame(width: 14, height: CGFloat(pct) * 1.1)
             }
         }
@@ -475,22 +475,22 @@ struct ConfigMissingView: View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 44, weight: .bold))
-                .foregroundStyle(SavantPalette.savantRed)
+                .foregroundStyle(GridironPalette.turf)
             Text("StatScout can't load")
-                .font(SavantType.playerName)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.playerName)
+                .foregroundStyle(GridironPalette.ink)
             Text("This build is missing its data-feed configuration. Please install the latest TestFlight build or contact support.")
-                .font(SavantType.body)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.body)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
             if let supportURL = URL(string: "https://jackwallner.github.io/football/support.html") {
                 Link("Contact Support", destination: supportURL)
                     .buttonStyle(.borderedProminent)
-                    .tint(SavantPalette.savantRed)
+                    .tint(GridironPalette.turf)
             }
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
     }
 }

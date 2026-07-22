@@ -29,14 +29,14 @@ struct PlayerIdentityStrip: View {
                 .overlay(Circle().stroke(.white, lineWidth: 2))
             VStack(alignment: .leading, spacing: 4) {
                 Text(player.name)
-                    .font(SavantType.playerName)
-                    .foregroundStyle(SavantPalette.inkOnDark)
+                    .font(GridironType.playerName)
+                    .foregroundStyle(GridironPalette.inkOnDark)
                     .lineLimit(1).minimumScaleFactor(0.7)
                 Text(displayTeamFullName(player.team))
-                    .font(SavantType.bodyBold)
+                    .font(GridironType.bodyBold)
                     .foregroundStyle(.white.opacity(0.85))
                 Text(positionAndHandedness(player))
-                    .font(SavantType.small)
+                    .font(GridironType.small)
                     .foregroundStyle(.white.opacity(0.65))
             }
             Spacer(minLength: 8)
@@ -44,10 +44,10 @@ struct PlayerIdentityStrip: View {
                 OverallPercentileBadge(percentile: player.overallPercentile)
             }
         }
-        .padding(.horizontal, SavantGeo.padPage)
-        .padding(.vertical, SavantGeo.padPage)
+        .padding(.horizontal, GridironGeo.padPage)
+        .padding(.vertical, GridironGeo.padPage)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SavantPalette.savantNavy)
+        .background(GridironPalette.midnight)
     }
 }
 
@@ -68,79 +68,79 @@ struct TeamIdentityStrip: View {
         HStack(alignment: .center, spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(MLBTeamColor.color(normalizedTeam))
+                    .fill(NFLTeamColor.color(normalizedTeam))
                     .frame(width: 56, height: 56)
                 Text(normalizedTeam)
-                    .font(SavantType.statLarge)
+                    .font(GridironType.statLarge)
                     .foregroundStyle(.white)
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text(teamFullName(normalizedTeam))
-                    .font(SavantType.playerName)
-                    .foregroundStyle(SavantPalette.inkOnDark)
+                    .font(GridironType.playerName)
+                    .foregroundStyle(GridironPalette.inkOnDark)
                     .lineLimit(1).minimumScaleFactor(0.7)
                 Text(seasonLabel)
-                    .font(SavantType.small)
+                    .font(GridironType.small)
                     .foregroundStyle(.white.opacity(0.65))
             }
             Spacer(minLength: 8)
         }
-        .padding(.horizontal, SavantGeo.padPage)
-        .padding(.vertical, SavantGeo.padPage)
+        .padding(.horizontal, GridironGeo.padPage)
+        .padding(.vertical, GridironGeo.padPage)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(SavantPalette.savantNavy)
+        .background(GridironPalette.midnight)
     }
 }
 
 // MARK: - Module 3: Section Bar
 
-struct SavantSectionBar: View {
+struct GridironSectionBar: View {
     let title: String
     var trailing: AnyView? = nil
 
     var body: some View {
         HStack(spacing: 0) {
             Text(title.uppercased())
-                .font(SavantType.sectionTitle)
+                .font(GridironType.sectionTitle)
                 .tracking(0.8)
-                .foregroundStyle(SavantPalette.ink)
-                .padding(.leading, SavantGeo.padCard)
+                .foregroundStyle(GridironPalette.ink)
+                .padding(.leading, GridironGeo.padCard)
             Spacer()
             if let trailing { trailing.padding(.trailing, 12) }
         }
-        .frame(height: SavantGeo.rowHeightHeader)
-        .background(SavantPalette.surfaceSunk)
+        .frame(height: GridironGeo.rowHeightHeader)
+        .background(GridironPalette.surfaceSunk)
     }
 }
 
-struct SavantSubSectionBar: View {
+struct GridironSubSectionBar: View {
     let title: String
     var trailing: String? = nil
-    var trailingColor: Color = SavantPalette.inkSecondary
+    var trailingColor: Color = GridironPalette.inkSecondary
 
     var body: some View {
         HStack {
             Text(title.uppercased())
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.6)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .foregroundStyle(GridironPalette.inkSecondary)
             Spacer()
             if let trailing {
                 Text(trailing)
-                    .font(SavantType.statSmall)
+                    .font(GridironType.statSmall)
                     .foregroundStyle(trailingColor)
             }
         }
         .frame(height: 26)
-        .padding(.horizontal, SavantGeo.padCard)
-        .background(SavantPalette.surfaceAlt)
-        .overlay(Rectangle().fill(SavantPalette.divider).frame(height: 0.5), alignment: .bottom)
+        .padding(.horizontal, GridironGeo.padCard)
+        .background(GridironPalette.surfaceAlt)
+        .overlay(Rectangle().fill(GridironPalette.divider).frame(height: 0.5), alignment: .bottom)
     }
 }
 
 // MARK: - Module 5: Tab Bar
 
-struct SavantTabs: View {
+struct GridironTabs: View {
     let tabs: [String]
     @Binding var selected: String
 
@@ -155,21 +155,21 @@ struct SavantTabs: View {
                     }) {
                         VStack(spacing: 0) {
                             Text(tab.uppercased())
-                                .font(SavantType.smallBold)
+                                .font(GridironType.smallBold)
                                 .tracking(0.5)
-                                .foregroundStyle(selected == tab ? SavantPalette.ink : SavantPalette.inkTertiary)
+                                .foregroundStyle(selected == tab ? GridironPalette.ink : GridironPalette.inkTertiary)
                                 .padding(.vertical, 12)
                                 .padding(.horizontal, 14)
                             Rectangle()
-                                .fill(selected == tab ? SavantPalette.savantRed : Color.clear)
+                                .fill(selected == tab ? GridironPalette.turf : Color.clear)
                                 .frame(height: 2)
                         }
                     }
                 }
             }
         }
-        .background(SavantPalette.surface)
-        .overlay(Rectangle().fill(SavantPalette.hairline).frame(height: SavantGeo.hairline), alignment: .bottom)
+        .background(GridironPalette.surface)
+        .overlay(Rectangle().fill(GridironPalette.hairline).frame(height: GridironGeo.hairline), alignment: .bottom)
     }
 }
 
