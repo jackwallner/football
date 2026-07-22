@@ -27,7 +27,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.football
         PRODUCT_NAME: "Gridiron StatScout"
         MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "3"
+        CURRENT_PROJECT_VERSION: "4"
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: StatScout/Info.plist
         CODE_SIGN_ENTITLEMENTS: StatScout/StatScout.entitlements
@@ -48,13 +48,15 @@ targets:
           if ! command -v xcodegen &> /dev/null; then
             echo "warning: xcodegen not found. Install via 'brew install xcodegen'."
           fi
-          if [ -z "$SUPABASE_URL" ]; then
-            echo "error: SUPABASE_URL not set."
-            exit 1
-          fi
-          if [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "error: SUPABASE_ANON_KEY not set."
-            exit 1
+          if [ "$PLATFORM_NAME" != "iphonesimulator" ]; then
+            if [ -z "$SUPABASE_URL" ]; then
+              echo "error: SUPABASE_URL not set."
+              exit 1
+            fi
+            if [ -z "$SUPABASE_ANON_KEY" ]; then
+              echo "error: SUPABASE_ANON_KEY not set."
+              exit 1
+            fi
           fi
     entitlements:
       path: StatScout/StatScout.entitlements

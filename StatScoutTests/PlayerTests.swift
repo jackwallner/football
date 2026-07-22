@@ -121,3 +121,39 @@ final class PlayerTests: XCTestCase {
         XCTAssertEqual(tbd.displayPosition, "DEF")
     }
 }
+
+
+final class FootballMetricRegistryTests: XCTestCase {
+    func testAdvancedAndTraditionalClassification() {
+        let epa = Metric(id: "epa", label: "EPA/Play", value: "0.18", percentile: 90, category: .passing)
+        let yards = Metric(id: "yards", label: "Pass Yds", value: "4,000", percentile: 85, category: .passing)
+
+        XCTAssertEqual(FootballMetricRegistry.kind(for: epa), .advanced)
+        XCTAssertEqual(FootballMetricRegistry.kind(for: yards), .traditional)
+    }
+
+    func testDefenseHasNoAdvancedDefinitions() {
+        let defenseDefinitions = FootballMetricRegistry.definitions.filter { $0.positions.contains(.defense) }
+        XCTAssertFalse(defenseDefinitions.isEmpty)
+        XCTAssertTrue(defenseDefinitions.allSatisfy { $0.kind == .traditional })
+    }
+
+    func testPositionHeadlinePreferences() {
+        XCTAssertEqual(PlayerPositionGroup.qb.preferredAdvancedMetrics.first, "EPA/Play")
+        XCTAssertEqual(PlayerPositionGroup.rb.preferredAdvancedMetrics.first, "RYOE")
+        XCTAssertEqual(PlayerPositionGroup.wr.preferredAdvancedMetrics.first, "WOPR")
+    }
+
+    func testLowerIsBetterUsesRegistry() {
+        XCTAssertTrue(DashboardViewModel.lowerIsBetter(label: "INT%", category: .passing))
+        XCTAssertTrue(DashboardViewModel.lowerIsBetter(label: "Fumble%", category: .rushing))
+        XCTAssertFalse(DashboardViewModel.lowerIsBetter(label: "EPA/Play", category: .passing))
+    }
+
+    func testUnknownMetricIsPreserved() {
+        let unknown = Metric(id: "unknown", label: "New Metric", value: "1.0", percentile: 50, category: .passing)
+        XCTAssertEqual(FootballMetricRegistry.kind(for: unknown), .advanced)
+        XCTAssertTrue(FootballMetricRegistry.isSupported(unknown, by: .qb))
+        XCTAssertEqual(FootballMetricRegistry.sorted([unknown]), [unknown])
+    }
+}

@@ -97,21 +97,97 @@ struct DashboardView: View {
         .padding(.vertical, 8)
     }
 
-    // Category tabs are the only persistent header row now — season lives in
-    // the nav bar, search collapses behind an icon, and sort/qualifier sit in
-    // the controls row below. A loading strip animates in above the tabs only
-    // while data is refreshing, so the header never reserves empty space.
     private var unifiedControlBar: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             if (viewModel.isLoading || viewModel.isHistoricalLoading) && !viewModel.players.isEmpty {
                 loadingStatusBar
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
 
-            CategoryFilter(selectedCategory: $viewModel.selectedCategory)
-                .padding(.horizontal, 12)
+            positionSelector
+            metricKindSelector
+            if viewModel.availableFamilies.count > 1 {
+                familySelector
+            }
         }
+        .padding(.horizontal, 12)
         .padding(.top, 8)
+    }
+
+    private var positionSelector: some View {
+        HStack(spacing: 6) {
+            ForEach(PlayerPositionGroup.allCases) { position in
+                Button {
+                    viewModel.selectedPosition = position
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } label: {
+                    Text(position.rawValue)
+                        .font(SavantType.smallBold)
+                        .foregroundStyle(viewModel.selectedPosition == position ? .white : SavantPalette.inkSecondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(viewModel.selectedPosition == position ? SavantPalette.savantNavy : SavantPalette.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Position")
+    }
+
+    private var metricKindSelector: some View {
+        HStack(spacing: 4) {
+            ForEach(MetricKind.allCases) { kind in
+                let disabled = viewModel.selectedPosition == .defense && kind == .advanced
+                Button {
+                    viewModel.selectedMetricKind = kind
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } label: {
+                    Text(kind.rawValue)
+                        .font(SavantType.bodyBold)
+                        .foregroundStyle(viewModel.selectedMetricKind == kind ? .white : SavantPalette.inkSecondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 38)
+                        .background(viewModel.selectedMetricKind == kind ? SavantPalette.savantRed : Color.clear)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(disabled)
+                .opacity(disabled ? 0.35 : 1)
+            }
+        }
+        .padding(3)
+        .background(SavantPalette.surface)
+        .clipShape(Capsule())
+        .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
+    }
+
+    private var familySelector: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                familyButton(title: "All", family: nil)
+                ForEach(viewModel.availableFamilies) { family in
+                    familyButton(title: family.rawValue, family: family)
+                }
+            }
+        }
+    }
+
+    private func familyButton(title: String, family: MetricFamily?) -> some View {
+        Button {
+            viewModel.selectedFamily = family
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        } label: {
+            Text(title)
+                .font(SavantType.small)
+                .foregroundStyle(viewModel.selectedFamily == family ? .white : SavantPalette.ink)
+                .padding(.horizontal, 14)
+                .frame(height: 30)
+                .background(viewModel.selectedFamily == family ? SavantPalette.savantNavy : SavantPalette.surface)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     // Single button that hosts every secondary control — qualifier scope plus
@@ -300,12 +376,12 @@ struct DashboardView: View {
                 .padding(.vertical, 24)
                 .frame(minHeight: 200)
             } else if viewModel.leaderboard.isEmpty && !viewModel.isLoading {
-                let noCategoryData = viewModel.selectedCategory != nil && !viewModel.seasonPlayers.isEmpty
+                let hasSeasonData = !viewModel.seasonPlayers.isEmpty
                 ContentUnavailableView {
-                    Label(noCategoryData ? "No players in category" : "No players yet", systemImage: "football")
+                    Label(hasSeasonData ? "No matching metrics" : "No players yet", systemImage: "football")
                 } description: {
-                    Text(noCategoryData
-                         ? "No players match the selected category for the \(String(viewModel.selectedSeason)) season."
+                    Text(hasSeasonData
+                         ? "No \(viewModel.selectedMetricKind.rawValue.lowercased()) metrics are available for \(viewModel.selectedPosition.rawValue) in \(String(viewModel.selectedSeason))."
                          : "No player data is available for the \(String(viewModel.selectedSeason)) season.")
                 }
                 .padding(.vertical, 24)
