@@ -63,15 +63,15 @@ struct TeamRankingsCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            SavantSectionBar(
+            GridironSectionBar(
                 title: "TEAM PERCENTILE RANKINGS",
                 trailing: store.isPro ? nil : AnyView(proBadge)
             )
 
             sidePicker
-                .padding(.horizontal, SavantGeo.padInline)
+                .padding(.horizontal, GridironGeo.padInline)
                 .padding(.vertical, 8)
-                .background(SavantPalette.surfaceAlt)
+                .background(GridironPalette.surfaceAlt)
 
             modePicker
 
@@ -85,11 +85,11 @@ struct TeamRankingsCard: View {
                 recentSection
             }
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .task(id: "\(team)-\(season)-\(mode.rawValue)-\(store.isPro)") {
             if mode == .recent, store.isPro { await load() }
@@ -103,11 +103,11 @@ struct TeamRankingsCard: View {
             Image(systemName: "crown.fill")
                 .font(.system(size: 9, weight: .bold))
             Text("STATSCOUT+")
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.4)
                 .fontWeight(.bold)
         }
-        .foregroundStyle(SavantPalette.savantNavy)
+        .foregroundStyle(GridironPalette.midnight)
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
         .background(Color.yellow)
@@ -124,13 +124,13 @@ struct TeamRankingsCard: View {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(s.label)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(side == s ? SavantPalette.ink : SavantPalette.inkSecondary)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(side == s ? GridironPalette.ink : GridironPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                         .overlay(
                             Rectangle()
-                                .fill(side == s ? SavantPalette.savantRed : Color.clear)
+                                .fill(side == s ? GridironPalette.turf : Color.clear)
                                 .frame(height: 2)
                                 .padding(.top, 32),
                             alignment: .bottom
@@ -149,20 +149,20 @@ struct TeamRankingsCard: View {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(m.rawValue)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(mode == m ? .white : SavantPalette.inkSecondary)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(mode == m ? .white : GridironPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 30)
-                        .background(mode == m ? SavantPalette.savantRed : SavantPalette.surface)
+                        .background(mode == m ? GridironPalette.turf : GridironPalette.surface)
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
+                        .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, SavantGeo.padInline)
+        .padding(.horizontal, GridironGeo.padInline)
         .padding(.vertical, 10)
-        .background(SavantPalette.surfaceAlt)
+        .background(GridironPalette.surfaceAlt)
     }
 
     private var windowPicker: some View {
@@ -173,21 +173,21 @@ struct TeamRankingsCard: View {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(w.label)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(windowGames == w.span ? .white : SavantPalette.inkSecondary)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(windowGames == w.span ? .white : GridironPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(windowGames == w.span ? SavantPalette.savantRed : SavantPalette.surface)
+                        .background(windowGames == w.span ? GridironPalette.turf : GridironPalette.surface)
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
+                        .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(w.label) games")
             }
         }
-        .padding(.horizontal, SavantGeo.padInline)
+        .padding(.horizontal, GridironGeo.padInline)
         .padding(.bottom, 8)
-        .background(SavantPalette.surfaceAlt)
+        .background(GridironPalette.surfaceAlt)
     }
 
     // MARK: - Season
@@ -198,17 +198,17 @@ struct TeamRankingsCard: View {
         if rows.isEmpty {
             emptyAggregate
         } else {
-            SavantSubSectionBar(title: side.label.uppercased())
+            GridironSubSectionBar(title: side.label.uppercased())
 
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
                     NavigationLink(value: MetricRoute(label: metric.label, category: metric.category)) {
                         MetricBar(metric: metric)
-                            .padding(.horizontal, SavantGeo.padCard)
+                            .padding(.horizontal, GridironGeo.padCard)
                             .padding(.vertical, 12)
-                            .background(index % 2 == 0 ? SavantPalette.surface : SavantPalette.surfaceAlt)
+                            .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
                             .overlay(
-                                Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline),
+                                Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
                                 alignment: .bottom
                             )
                     }
@@ -326,17 +326,17 @@ struct TeamRankingsCard: View {
                 if side == .offense { summaryStat(label: "Touches", value: "318") }
                 Spacer(minLength: 0)
             }
-            .padding(SavantGeo.padInline)
+            .padding(GridironGeo.padInline)
 
-            SavantSubSectionBar(title: side.label.uppercased())
+            GridironSubSectionBar(title: side.label.uppercased())
             VStack(spacing: 0) {
                 ForEach(Array(sample.enumerated()), id: \.element.id) { index, metric in
                     MetricBar(metric: metric)
-                        .padding(.horizontal, SavantGeo.padCard)
+                        .padding(.horizontal, GridironGeo.padCard)
                         .padding(.vertical, 12)
-                        .background(index % 2 == 0 ? SavantPalette.surface : SavantPalette.surfaceAlt)
+                        .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
                         .overlay(
-                            Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline),
+                            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
                             alignment: .bottom
                         )
                 }
@@ -350,31 +350,31 @@ struct TeamRankingsCard: View {
             HStack(spacing: 10) {
                 ProgressView().progressViewStyle(.circular).scaleEffect(0.75)
                 Text("Loading recent games…")
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)
         } else if let err = loadError {
             Text(err)
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, SavantGeo.padInline)
+                .padding(.horizontal, GridironGeo.padInline)
                 .padding(.vertical, 24)
         } else if let w = recentWindow {
             recentSummaryRow(w)
             let rows = recentDisplayRows(window: w)
             if !rows.isEmpty {
-                SavantSubSectionBar(title: side.label.uppercased())
+                GridironSubSectionBar(title: side.label.uppercased())
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
                         MetricBar(metric: metric)
-                            .padding(.horizontal, SavantGeo.padCard)
+                            .padding(.horizontal, GridironGeo.padCard)
                             .padding(.vertical, 12)
-                            .background(index % 2 == 0 ? SavantPalette.surface : SavantPalette.surfaceAlt)
+                            .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
                             .overlay(
-                                Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline),
+                                Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
                                 alignment: .bottom
                             )
                     }
@@ -384,10 +384,10 @@ struct TeamRankingsCard: View {
             VStack(spacing: 6) {
                 Image(systemName: "calendar.badge.exclamationmark")
                     .font(.system(size: 22))
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                 Text("No \(side.label.lowercased()) data in the last \(windowGames) games")
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 22)
@@ -404,27 +404,27 @@ struct TeamRankingsCard: View {
             Spacer(minLength: 0)
             if w.plays < smallSamplePlaysThreshold {
                 Text("SMALL SAMPLE")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.4)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(SavantPalette.inkTertiary)
+                    .background(GridironPalette.inkTertiary)
                     .clipShape(Capsule())
             }
         }
-        .padding(SavantGeo.padInline)
+        .padding(GridironGeo.padInline)
     }
 
     private func summaryStat(label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(label)
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.4)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
             Text(value)
-                .font(SavantType.bodyBold)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.bodyBold)
+                .foregroundStyle(GridironPalette.ink)
         }
     }
 
@@ -512,10 +512,10 @@ struct TeamRankingsCard: View {
         VStack(spacing: 6) {
             Image(systemName: "chart.bar.xaxis")
                 .font(.system(size: 22))
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
             Text("Not enough \(side.label.lowercased()) data to aggregate")
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 22)
@@ -523,11 +523,11 @@ struct TeamRankingsCard: View {
 
     private var weightedCaption: some View {
         Text("Averaged across the \(side.label.lowercased()) roster")
-            .font(SavantType.micro)
+            .font(GridironType.micro)
             .tracking(0.3)
-            .foregroundStyle(SavantPalette.inkTertiary)
+            .foregroundStyle(GridironPalette.inkTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, SavantGeo.padCard)
+            .padding(.horizontal, GridironGeo.padCard)
             .padding(.vertical, 10)
     }
 

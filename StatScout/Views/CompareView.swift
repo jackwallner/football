@@ -50,7 +50,7 @@ struct CompareView: View {
             Color.clear.frame(height: 88)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         // Bottom-anchored unlock so the blurred Compare cards stay visible as a
         // teaser above the gate, instead of being fully covered by the box.
         .overlay(alignment: .bottom) {
@@ -88,22 +88,22 @@ struct CompareView: View {
         }
         .navigationDestination(item: $comparisonRoute) { route in
             PlayerComparisonView(playerA: route.playerA, playerB: route.playerB)
-                .modifier(SavantNavBarPublic())
+                .modifier(GridironNavBarPublic())
         }
         .navigationDestination(item: $yearRoute) { route in
             YearCompareDestination(route: route, viewModel: viewModel)
-                .modifier(SavantNavBarPublic())
+                .modifier(GridironNavBarPublic())
         }
     }
 
     private var intro: some View {
         VStack(spacing: 6) {
             Text("Compare")
-                .font(SavantType.statLarge)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.statLarge)
+                .foregroundStyle(GridironPalette.ink)
             Text("Stack two players head-to-head, or track one player across seasons.")
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -113,14 +113,14 @@ struct CompareView: View {
 
     private var playerVsPlayerCard: some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: "PLAYER VS PLAYER")
+            GridironSectionBar(title: "PLAYER VS PLAYER")
 
             VStack(spacing: 12) {
                 HStack(spacing: 10) {
                     playerSlot(player: playerA, placeholder: "Player A") { picker = .playerA }
                     Text("vs")
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(SavantPalette.inkTertiary)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.inkTertiary)
                     playerSlot(player: playerB, placeholder: "Player B") { picker = .playerB }
                 }
 
@@ -130,13 +130,13 @@ struct CompareView: View {
                     }
                 } label: {
                     Text("Compare")
-                        .font(SavantType.bodyBold)
+                        .font(GridironType.bodyBold)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 46)
                         .background(playerA != nil && playerB != nil
-                                    ? SavantPalette.savantRed
-                                    : SavantPalette.inkTertiary)
+                                    ? GridironPalette.turf
+                                    : GridironPalette.inkTertiary)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
@@ -144,22 +144,22 @@ struct CompareView: View {
             }
             .padding(16)
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
     private var yearOverYearCard: some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: "YEAR OVER YEAR")
+            GridironSectionBar(title: "YEAR OVER YEAR")
 
             VStack(spacing: 12) {
                 Text("Pick a player to see how their percentile rankings moved across every season.")
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -170,23 +170,23 @@ struct CompareView: View {
                         Image(systemName: "calendar.badge.clock")
                             .font(.system(size: 14, weight: .semibold))
                         Text("Choose a player")
-                            .font(SavantType.bodyBold)
+                            .font(GridironType.bodyBold)
                     }
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 46)
-                    .background(SavantPalette.savantRed)
+                    .background(GridironPalette.turf)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
             }
             .padding(16)
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 
@@ -196,28 +196,28 @@ struct CompareView: View {
                 if let player {
                     PlayerHeadshot(team: player.team, initials: player.initials, size: 44)
                     Text(player.name)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(SavantPalette.ink)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 } else {
                     ZStack {
                         Circle()
-                            .fill(SavantPalette.surfaceAlt)
+                            .fill(GridironPalette.surfaceAlt)
                             .frame(width: 44, height: 44)
                         Image(systemName: "plus")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(SavantPalette.inkTertiary)
+                            .foregroundStyle(GridironPalette.inkTertiary)
                     }
                     Text(placeholder)
-                        .font(SavantType.small)
-                        .foregroundStyle(SavantPalette.inkTertiary)
+                        .font(GridironType.small)
+                        .foregroundStyle(GridironPalette.inkTertiary)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(SavantPalette.surfaceAlt)
-            .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+            .background(GridironPalette.surfaceAlt)
+            .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         }
         .buttonStyle(.plain)
     }
@@ -228,11 +228,11 @@ struct CompareView: View {
                 .font(.system(size: 22))
                 .foregroundStyle(Color.yellow)
             Text("Find the Edge")
-                .font(SavantType.cardTitle)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.cardTitle)
+                .foregroundStyle(GridironPalette.ink)
             Text("Compare is a StatScout+ feature.")
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -249,34 +249,34 @@ struct CompareView: View {
             } label: {
                 HStack(spacing: 6) {
                     Text(store.paywallBlurCTA)
-                        .font(SavantType.bodyBold)
+                        .font(GridironType.bodyBold)
                     Image(systemName: "arrow.right")
                         .font(.system(size: 12, weight: .bold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
-                .background(SavantPalette.savantRed)
+                .background(GridironPalette.turf)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
             if let subtext = store.paywallBlurSubtext {
                 Text(subtext)
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.3)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .multilineTextAlignment(.center)
             }
         }
         .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .fill(SavantPalette.surface)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .fill(GridironPalette.surface)
                 .shadow(color: .black.opacity(0.1), radius: 16, y: 6)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .padding(.horizontal, 28)
     }
@@ -285,11 +285,11 @@ struct CompareView: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(SavantPalette.savantRed)
+                .foregroundStyle(GridironPalette.turf)
                 .frame(width: 16)
             Text(text)
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -322,7 +322,7 @@ private struct YearCompareDestination: View {
             }
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationTitle(route.playerName)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -355,11 +355,11 @@ private struct ComparePlayerPicker: View {
                         PlayerHeadshot(team: player.team, initials: player.initials, size: 36)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(player.name)
-                                .font(SavantType.bodyBold)
-                                .foregroundStyle(SavantPalette.ink)
+                                .font(GridironType.bodyBold)
+                                .foregroundStyle(GridironPalette.ink)
                             Text("\(player.team) · \(player.displayPosition)")
-                                .font(SavantType.small)
-                                .foregroundStyle(SavantPalette.inkTertiary)
+                                .font(GridironType.small)
+                                .foregroundStyle(GridironPalette.inkTertiary)
                         }
                     }
                     .padding(.vertical, 4)
@@ -377,12 +377,12 @@ private struct ComparePlayerPicker: View {
     }
 }
 
-/// Public mirror of RootTabView's private SavantNavBar so destinations pushed
-/// from this file keep the same navy bar treatment.
-struct SavantNavBarPublic: ViewModifier {
+/// Public mirror of RootTabView's private GridironNavBar so destinations pushed
+/// from this file keep the same midnight bar treatment.
+struct GridironNavBarPublic: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .toolbarBackground(SavantPalette.savantNavy, for: .navigationBar)
+            .toolbarBackground(GridironPalette.midnight, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
     }

@@ -46,11 +46,11 @@ struct RecentFormCard: View {
             header
             content
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .task(id: player.playerId) {
             await load()
@@ -73,38 +73,38 @@ struct RecentFormCard: View {
             HStack(spacing: 8) {
                 Image(systemName: "flame.fill")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(SavantPalette.savantRed)
+                    .foregroundStyle(GridironPalette.turf)
                 Text("RECENT FORM")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.6)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .foregroundStyle(GridironPalette.inkSecondary)
                 Spacer()
                 if !store.isPro {
                     HStack(spacing: 3) {
                         Image(systemName: "crown.fill")
                             .font(.system(size: 9, weight: .bold))
                         Text("STATSCOUT+")
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.4)
                             .fontWeight(.bold)
                     }
-                    .foregroundStyle(SavantPalette.savantNavy)
+                    .foregroundStyle(GridironPalette.midnight)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)
                     .background(Color.yellow)
                     .clipShape(Capsule())
                 }
             }
-            .padding(.horizontal, SavantGeo.padInline)
+            .padding(.horizontal, GridironGeo.padInline)
             .padding(.top, 12)
 
             windowPicker
-                .padding(.horizontal, SavantGeo.padInline)
+                .padding(.horizontal, GridironGeo.padInline)
                 .padding(.bottom, 10)
         }
-        .background(SavantPalette.surfaceAlt)
+        .background(GridironPalette.surfaceAlt)
         .overlay(
-            Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline),
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
             alignment: .bottom
         )
     }
@@ -117,13 +117,13 @@ struct RecentFormCard: View {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(w.label)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(windowGames == w.span ? .white : SavantPalette.inkSecondary)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(windowGames == w.span ? .white : GridironPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 30)
-                        .background(windowGames == w.span ? SavantPalette.savantRed : SavantPalette.surface)
+                        .background(windowGames == w.span ? GridironPalette.turf : GridironPalette.surface)
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
+                        .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(w.label) games")
@@ -175,7 +175,7 @@ struct RecentFormCard: View {
                 if !isDefense { summaryStat(label: "Touches", value: "31") }
                 Spacer(minLength: 0)
             }
-            .padding(SavantGeo.padInline)
+            .padding(GridironGeo.padInline)
 
             metricBarList(sample)
         }
@@ -189,17 +189,17 @@ struct RecentFormCard: View {
                     .progressViewStyle(.circular)
                     .scaleEffect(0.75)
                 Text("Loading recent games…")
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)
         } else if let err = loadError {
             Text(err)
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, SavantGeo.padInline)
+                .padding(.horizontal, GridironGeo.padInline)
                 .padding(.vertical, 24)
         } else if let w = window {
             statsBody(window: w)
@@ -207,10 +207,10 @@ struct RecentFormCard: View {
             VStack(spacing: 6) {
                 Image(systemName: "calendar.badge.exclamationmark")
                     .font(.system(size: 22))
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                 Text("No games in the last \(windowGames) games")
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 22)
@@ -228,16 +228,16 @@ struct RecentFormCard: View {
                 Spacer(minLength: 0)
                 if w.plays < smallSamplePlaysThreshold {
                     Text("SMALL SAMPLE")
-                        .font(SavantType.micro)
+                        .font(GridironType.micro)
                         .tracking(0.4)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(SavantPalette.inkTertiary)
+                        .background(GridironPalette.inkTertiary)
                         .clipShape(Capsule())
                 }
             }
-            .padding(SavantGeo.padInline)
+            .padding(GridironGeo.padInline)
 
             metricBarList(recentMetricRows(window: w))
         }
@@ -250,13 +250,13 @@ struct RecentFormCard: View {
         VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
                 MetricBar(metric: metric)
-                    .padding(.horizontal, SavantGeo.padCard)
+                    .padding(.horizontal, GridironGeo.padCard)
                     .padding(.vertical, 12)
-                    .background(index % 2 == 0 ? SavantPalette.surface : SavantPalette.surfaceAlt)
+                    .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
                     .overlay(
                         Rectangle()
-                            .fill(SavantPalette.divider)
-                            .frame(height: SavantGeo.hairline),
+                            .fill(GridironPalette.divider)
+                            .frame(height: GridironGeo.hairline),
                         alignment: .bottom
                     )
             }
@@ -266,12 +266,12 @@ struct RecentFormCard: View {
     private func summaryStat(label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(label)
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.4)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
             Text(value)
-                .font(SavantType.bodyBold)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.bodyBold)
+                .foregroundStyle(GridironPalette.ink)
         }
     }
 

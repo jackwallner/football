@@ -71,7 +71,7 @@ struct ReviewPromptSheet: View {
             }
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
-            .modifier(SavantNavBarPublic())
+            .modifier(GridironNavBarPublic())
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Not now") {
@@ -83,7 +83,7 @@ struct ReviewPromptSheet: View {
         }
         .presentationDetents(step == .feedback ? [.large] : [.medium, .large])
         .presentationDragIndicator(.visible)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
     }
 
     private var navigationTitle: String {
@@ -98,7 +98,7 @@ struct ReviewPromptSheet: View {
         VStack(spacing: 20) {
             ZStack {
                 Circle()
-                    .fill(SavantPalette.savantRed)
+                    .fill(GridironPalette.turf)
                     .frame(width: 64, height: 64)
                 Image(systemName: "football.fill")
                     .font(.system(size: 28, weight: .bold))
@@ -107,8 +107,8 @@ struct ReviewPromptSheet: View {
             .padding(.top, 8)
 
             Text("If StatScout is helping you scout the league, a quick rating on the App Store makes a real difference.")
-                .font(SavantType.body)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.body)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 8)
@@ -136,15 +136,15 @@ struct ReviewPromptSheet: View {
     private var reviewPitchContent: some View {
         VStack(spacing: 18) {
             Text("StatScout is built by one indie developer. No ads, no accounts, and your scouting data stays on your phone.")
-                .font(SavantType.body)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.body)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 8)
 
             Text("An honest App Store review takes seconds and helps more fans find a clean NFL advanced-stats scout.")
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkTertiary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -174,24 +174,24 @@ struct ReviewPromptSheet: View {
     private var feedbackContent: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("What would make StatScout work better for you?")
-                .font(SavantType.body)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.body)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
             TextEditor(text: $feedbackText)
-                .font(SavantType.body)
+                .font(GridironType.body)
                 .frame(minHeight: 140)
                 .padding(10)
-                .background(SavantPalette.surface, in: RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+                .background(GridironPalette.surface, in: RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
                 .overlay(
-                    RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                        .stroke(SavantPalette.hairline, lineWidth: 0.5)
+                    RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                        .stroke(GridironPalette.hairline, lineWidth: 0.5)
                 )
                 .focused($feedbackFocused)
 
             Text("Opens your mail app with a draft to the developer. No analytics — just your words.")
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkTertiary)
 
             Button {
                 sendFeedback()
@@ -209,17 +209,17 @@ struct ReviewPromptSheet: View {
 
     private func primaryButtonLabel(_ title: String) -> some View {
         Text(title)
-            .font(SavantType.bodyBold)
+            .font(GridironType.bodyBold)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(SavantPalette.savantRed, in: Capsule())
+            .background(GridironPalette.turf, in: Capsule())
     }
 
     private func secondaryButtonLabel(_ title: String) -> some View {
         Text(title)
-            .font(SavantType.smallBold)
-            .foregroundStyle(SavantPalette.linkBlue)
+            .font(GridironType.smallBold)
+            .foregroundStyle(GridironPalette.linkBlue)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
     }

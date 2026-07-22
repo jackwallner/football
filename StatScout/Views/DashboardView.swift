@@ -38,7 +38,7 @@ struct DashboardView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(SavantPalette.canvas)
+        .background(GridironPalette.canvas)
         .sheet(isPresented: $showingAbout) {
             NavigationStack {
                 AboutView(
@@ -74,22 +74,22 @@ struct DashboardView: View {
                         Image(systemName: "crown.fill")
                             .font(.system(size: 10))
                         Text("Unlock StatScout+")
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.4)
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(SavantPalette.savantRed)
+                    .background(GridironPalette.turf)
                     .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
             }
             Button(action: { showingAbout = true }) {
                 Text("About StatScout")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.4)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .padding(.vertical, 8)
             }
             .buttonStyle(.plain)
@@ -105,10 +105,6 @@ struct DashboardView: View {
             }
 
             positionSelector
-            metricKindSelector
-            if viewModel.availableFamilies.count > 1 {
-                familySelector
-            }
         }
         .padding(.horizontal, 12)
         .padding(.top, 8)
@@ -122,11 +118,11 @@ struct DashboardView: View {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text(position.rawValue)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(viewModel.selectedPosition == position ? .white : SavantPalette.inkSecondary)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(viewModel.selectedPosition == position ? .white : GridironPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 36)
-                        .background(viewModel.selectedPosition == position ? SavantPalette.savantNavy : SavantPalette.surface)
+                        .background(viewModel.selectedPosition == position ? GridironPalette.midnight : GridironPalette.surface)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .buttonStyle(.plain)
@@ -136,101 +132,10 @@ struct DashboardView: View {
         .accessibilityLabel("Position")
     }
 
-    private var metricKindSelector: some View {
-        HStack(spacing: 4) {
-            ForEach(MetricKind.allCases) { kind in
-                let disabled = viewModel.selectedPosition == .defense && kind == .advanced
-                Button {
-                    viewModel.selectedMetricKind = kind
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    Text(kind.rawValue)
-                        .font(SavantType.bodyBold)
-                        .foregroundStyle(viewModel.selectedMetricKind == kind ? .white : SavantPalette.inkSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 38)
-                        .background(viewModel.selectedMetricKind == kind ? SavantPalette.savantRed : Color.clear)
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .disabled(disabled)
-                .opacity(disabled ? 0.35 : 1)
-            }
-        }
-        .padding(3)
-        .background(SavantPalette.surface)
-        .clipShape(Capsule())
-        .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
-    }
-
-    private var familySelector: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                familyButton(title: "All", family: nil)
-                ForEach(viewModel.availableFamilies) { family in
-                    familyButton(title: family.rawValue, family: family)
-                }
-            }
-        }
-    }
-
-    private func familyButton(title: String, family: MetricFamily?) -> some View {
-        Button {
-            viewModel.selectedFamily = family
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        } label: {
-            Text(title)
-                .font(SavantType.small)
-                .foregroundStyle(viewModel.selectedFamily == family ? .white : SavantPalette.ink)
-                .padding(.horizontal, 14)
-                .frame(height: 30)
-                .background(viewModel.selectedFamily == family ? SavantPalette.savantNavy : SavantPalette.surface)
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-
-    // Single button that hosts every secondary control — qualifier scope plus
-    // the active sort metric and direction. Keeps the header to two visible
-    // rows while still putting the controls one tap away.
+    // Qualification is the only secondary filter left in the toolbar. Metric
+    // selection and sort direction live in the leaderboard column header.
     private var filtersMenu: some View {
         Menu {
-            Section("Sort by") {
-                ForEach(viewModel.availableSortMetrics, id: \.self) { metric in
-                    Button {
-                        viewModel.setUserSortMetric(metric)
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    } label: {
-                        if metric == viewModel.currentSortMetric {
-                            Label(metric, systemImage: "checkmark")
-                        } else {
-                            Text(metric)
-                        }
-                    }
-                }
-            }
-
-            Section("Direction") {
-                Button {
-                    if !viewModel.sortDescending { viewModel.toggleSortDirection() }
-                } label: {
-                    if viewModel.sortDescending {
-                        Label("Highest first", systemImage: "checkmark")
-                    } else {
-                        Text("Highest first")
-                    }
-                }
-                Button {
-                    if viewModel.sortDescending { viewModel.toggleSortDirection() }
-                } label: {
-                    if !viewModel.sortDescending {
-                        Label("Lowest first", systemImage: "checkmark")
-                    } else {
-                        Text("Lowest first")
-                    }
-                }
-            }
-
             Section("Qualifier") {
                 ForEach(DashboardViewModel.QualifierLevel.allCases) { level in
                     Button {
@@ -249,50 +154,30 @@ struct DashboardView: View {
             HStack(spacing: 4) {
                 Image(systemName: "line.3.horizontal.decrease.circle")
                     .font(.system(size: 11, weight: .semibold))
-                Text("Filters")
-                    .font(SavantType.micro)
+                Text(viewModel.qualifierLevel.rawValue)
+                    .font(GridironType.micro)
                     .tracking(0.4)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .bold))
             }
-            .foregroundStyle(SavantPalette.inkSecondary)
+            .foregroundStyle(GridironPalette.inkSecondary)
             .padding(.horizontal, 10)
             .frame(height: 30)
-            .background(SavantPalette.surface)
+            .background(GridironPalette.surface)
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
+            .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
         }
         .menuOrder(.fixed)
-        .accessibilityLabel("Filters")
+        .accessibilityLabel("Qualifier")
+        .accessibilityValue(viewModel.qualifierLevel.rawValue)
     }
 
-    // Compact sort chip on the left (tap to flip direction), then a search
-    // toggle and the Filters menu trailing. The column header in the table
-    // acts as the live sort indicator, so the chip stays terse — no
-    // "Sorted by"/"Highest first" narration.
     private var activeSortChip: some View {
         HStack(spacing: 8) {
-            Button {
-                viewModel.toggleSortDirection()
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            } label: {
-                HStack(spacing: 6) {
-                    Text(viewModel.currentSortMetric ?? viewModel.sortLabel)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(SavantPalette.ink)
-                    Image(systemName: viewModel.sortDescending ? "arrow.down" : "arrow.up")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(SavantPalette.savantRed)
-                }
-                .padding(.horizontal, 12)
-                .frame(height: 30)
-                .background(SavantPalette.surface)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Sorted by \(viewModel.currentSortMetric ?? viewModel.sortLabel), \(viewModel.sortDescending ? "highest first" : "lowest first")")
-            .accessibilityHint("Tap to flip sort direction")
+            Text("LEAGUE LEADERS")
+                .font(GridironType.sectionTitle)
+                .tracking(0.8)
+                .foregroundStyle(GridironPalette.ink)
             Spacer(minLength: 0)
             searchToggle
             filtersMenu
@@ -311,11 +196,11 @@ struct DashboardView: View {
         } label: {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(isActiveSearch ? .white : SavantPalette.inkSecondary)
+                .foregroundStyle(isActiveSearch ? .white : GridironPalette.inkSecondary)
                 .frame(width: 30, height: 30)
-                .background(isActiveSearch ? SavantPalette.savantRed : SavantPalette.surface)
+                .background(isActiveSearch ? GridironPalette.turf : GridironPalette.surface)
                 .clipShape(Capsule())
-                .overlay(Capsule().stroke(isActiveSearch ? Color.clear : SavantPalette.hairline, lineWidth: 0.5))
+                .overlay(Capsule().stroke(isActiveSearch ? Color.clear : GridironPalette.hairline, lineWidth: 0.5))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Search")
@@ -332,8 +217,8 @@ struct DashboardView: View {
                     viewModel.searchText = ""
                 }
             }
-            .font(SavantType.small)
-            .foregroundStyle(SavantPalette.savantRed)
+            .font(GridironType.small)
+            .foregroundStyle(GridironPalette.turf)
         }
         .padding(.horizontal, 12)
         .padding(.top, 8)
@@ -341,14 +226,19 @@ struct DashboardView: View {
     }
 
     private var sortHeader: some View {
-        // Direct tap-to-toggle (matches Box Score, which works reliably).
-        Button {
-            viewModel.toggleSortDirection()
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        } label: {
-            LeaderboardTableHeader(sortDescending: viewModel.sortDescending, sortLabel: viewModel.currentSortMetric ?? viewModel.sortLabel)
-        }
-        .buttonStyle(.plain)
+        LeaderboardTableHeader(
+            sortDescending: viewModel.sortDescending,
+            sortLabel: viewModel.currentSortMetric ?? viewModel.sortLabel,
+            metrics: viewModel.availableSortMetrics,
+            onSelectMetric: { metric in
+                viewModel.setUserSortMetric(metric)
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            },
+            onToggleDirection: {
+                viewModel.toggleSortDirection()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
+        )
     }
 
     private var leaderboardSection: some View {
@@ -371,7 +261,7 @@ struct DashboardView: View {
                         Task { await viewModel.load() }
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(SavantPalette.inkTertiary)
+                    .tint(GridironPalette.inkTertiary)
                 }
                 .padding(.vertical, 24)
                 .frame(minHeight: 200)
@@ -381,7 +271,7 @@ struct DashboardView: View {
                     Label(hasSeasonData ? "No matching metrics" : "No players yet", systemImage: "football")
                 } description: {
                     Text(hasSeasonData
-                         ? "No \(viewModel.selectedMetricKind.rawValue.lowercased()) metrics are available for \(viewModel.selectedPosition.rawValue) in \(String(viewModel.selectedSeason))."
+                         ? "No metrics are available for \(viewModel.selectedPosition.rawValue) in \(String(viewModel.selectedSeason))."
                          : "No player data is available for the \(String(viewModel.selectedSeason)) season.")
                 }
                 .padding(.vertical, 24)
@@ -404,11 +294,11 @@ struct DashboardView: View {
                 }
             }
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .padding(.horizontal, 12)
         .padding(.top, 8)
@@ -419,22 +309,22 @@ struct DashboardView: View {
         VStack(spacing: 14) {
             ProgressView(value: min(max(viewModel.loadingProgress, 0), 1), total: 1)
                 .progressViewStyle(.linear)
-                .tint(SavantPalette.savantRed)
+                .tint(GridironPalette.turf)
             Text(viewModel.loadingMessage)
-                .font(SavantType.bodyBold)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.bodyBold)
+                .foregroundStyle(GridironPalette.ink)
             Text("\(Int(min(max(viewModel.loadingProgress, 0), 1) * 100))%")
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.5)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
         }
         .padding(22)
         .frame(maxWidth: 300)
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.08), radius: 16, y: 8)
         .padding(.horizontal, 24)
@@ -444,21 +334,21 @@ struct DashboardView: View {
         HStack(spacing: 10) {
             ProgressView(value: min(max(viewModel.loadingProgress, 0), 1), total: 1)
                 .progressViewStyle(.linear)
-                .tint(SavantPalette.savantRed)
+                .tint(GridironPalette.turf)
                 .frame(maxWidth: .infinity)
             Text(viewModel.loadingMessage)
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.4)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .lineLimit(1)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(SavantPalette.surface)
+        .background(GridironPalette.surface)
         .clipShape(Capsule())
         .overlay(
             Capsule()
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .padding(.horizontal, 12)
     }

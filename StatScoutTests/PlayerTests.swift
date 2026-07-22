@@ -140,8 +140,8 @@ final class FootballMetricRegistryTests: XCTestCase {
 
     func testPositionHeadlinePreferences() {
         XCTAssertEqual(PlayerPositionGroup.qb.preferredAdvancedMetrics.first, "EPA/Play")
-        XCTAssertEqual(PlayerPositionGroup.rb.preferredAdvancedMetrics.first, "RYOE")
-        XCTAssertEqual(PlayerPositionGroup.wr.preferredAdvancedMetrics.first, "WOPR")
+        XCTAssertEqual(PlayerPositionGroup.rb.preferredAdvancedMetrics.first, "EPA/Rush")
+        XCTAssertEqual(PlayerPositionGroup.wr.preferredAdvancedMetrics.first, "EPA/Tgt")
     }
 
     func testLowerIsBetterUsesRegistry() {

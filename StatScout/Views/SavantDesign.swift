@@ -1,24 +1,26 @@
 import SwiftUI
 
-enum SavantPalette {
-    static let canvas       = Color(red: 0.94, green: 0.94, blue: 0.95)
-    static let surface      = Color.white
-    static let surfaceAlt   = Color(red: 0.96, green: 0.96, blue: 0.97)
-    static let surfaceSunk  = Color(red: 0.91, green: 0.91, blue: 0.92)
-    static let hairline     = Color(red: 0.78, green: 0.78, blue: 0.80)
-    static let divider      = Color(red: 0.85, green: 0.85, blue: 0.87)
-    static let ink          = Color(red: 0.10, green: 0.10, blue: 0.11)
-    static let inkSecondary = Color(red: 0.25, green: 0.25, blue: 0.28)
-    static let inkTertiary  = Color(red: 0.40, green: 0.40, blue: 0.43)
-    static let inkOnDark    = Color.white
-    static let savantNavy   = Color(red: 0.06, green: 0.13, blue: 0.32)
-    static let savantRed    = Color(red: 0.78, green: 0.10, blue: 0.13)
-    static let linkBlue     = Color(red: 0.00, green: 0.36, blue: 0.69)
-    static let pctlHot      = Color(red: 0.80, green: 0.15, blue: 0.15)
-    static let pctlMid      = Color(red: 0.75, green: 0.75, blue: 0.78)
-    static let pctlCold     = Color(red: 0.15, green: 0.35, blue: 0.70)
-    static let up           = Color(red: 0.16, green: 0.55, blue: 0.27)
-    static let down         = savantRed
+enum GridironPalette {
+    static let canvas       = Color(red: 0.94, green: 0.93, blue: 0.89)
+    static let surface      = Color(red: 0.99, green: 0.98, blue: 0.94)
+    static let surfaceAlt   = Color(red: 0.96, green: 0.95, blue: 0.90)
+    static let surfaceSunk  = Color(red: 0.90, green: 0.89, blue: 0.84)
+    static let hairline     = Color(red: 0.72, green: 0.71, blue: 0.66)
+    static let divider      = Color(red: 0.82, green: 0.81, blue: 0.76)
+    static let ink          = Color(red: 0.07, green: 0.09, blue: 0.08)
+    static let inkSecondary = Color(red: 0.22, green: 0.25, blue: 0.23)
+    static let inkTertiary  = Color(red: 0.39, green: 0.41, blue: 0.38)
+    static let inkOnDark    = Color(red: 0.99, green: 0.98, blue: 0.94)
+    static let midnight     = Color(red: 0.035, green: 0.08, blue: 0.07)
+    static let turf         = Color(red: 0.08, green: 0.36, blue: 0.20)
+    static let leather      = Color(red: 0.48, green: 0.23, blue: 0.10)
+    static let gold         = Color(red: 0.84, green: 0.63, blue: 0.19)
+    static let linkBlue     = Color(red: 0.05, green: 0.32, blue: 0.45)
+    static let performanceHigh = Color(red: 0.08, green: 0.42, blue: 0.22)
+    static let performanceMid  = Color(red: 0.74, green: 0.72, blue: 0.65)
+    static let performanceLow  = Color(red: 0.62, green: 0.24, blue: 0.12)
+    static let up           = performanceHigh
+    static let down         = performanceLow
     static let flat         = inkTertiary
 
     static func color(forPercentile p: Int) -> Color {
@@ -30,9 +32,9 @@ enum SavantPalette {
         }
     }
 
-    private static let hotRGB: (Double, Double, Double) = (0.80, 0.15, 0.15)
-    private static let midRGB: (Double, Double, Double) = (0.75, 0.75, 0.78)
-    private static let coldRGB: (Double, Double, Double) = (0.15, 0.35, 0.70)
+    private static let hotRGB: (Double, Double, Double) = (0.08, 0.42, 0.22)
+    private static let midRGB: (Double, Double, Double) = (0.74, 0.72, 0.65)
+    private static let coldRGB: (Double, Double, Double) = (0.62, 0.24, 0.12)
 
     private static func lerp(_ a: (Double, Double, Double), _ b: (Double, Double, Double), _ t: Double) -> Color {
         let r = a.0 + (b.0 - a.0) * t
@@ -42,44 +44,36 @@ enum SavantPalette {
     }
 }
 
-enum SavantFont {
+enum GridironFont {
     static func condensed(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        Font.custom(condensedName(weight), size: size)
-    }
-    // Stat numbers route through the condensed face (plain zero) rather than
-    // RobotoMono, whose default zero glyph carries a dot/slash. The condensed
-    // family has tabular digits, so column alignment in leaderboards holds.
-    static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        condensed(size, weight: weight).monospacedDigit()
-    }
-
-    private static func condensedName(_ w: Font.Weight) -> String {
-        switch w {
-        case .black, .heavy:   return "RobotoCondensed-Black"
-        case .bold, .semibold: return "RobotoCondensed-Bold"
-        case .medium:          return "RobotoCondensed-Medium"
-        default:               return "RobotoCondensed-Regular"
+        if weight == .black || weight == .heavy || weight == .bold || weight == .semibold {
+            return .custom("DINCondensed-Bold", size: size)
         }
+        return .system(size: size, weight: weight, design: .default)
+    }
+
+    static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .system(size: size, weight: weight, design: .monospaced).monospacedDigit()
     }
 }
 
-enum SavantType {
-    static let playerName    = SavantFont.condensed(28, weight: .black)
-    static let pageTitle     = SavantFont.condensed(22, weight: .black)
-    static let sectionTitle  = SavantFont.condensed(13, weight: .black)
-    static let cardTitle     = SavantFont.condensed(16, weight: .bold)
-    static let body          = SavantFont.condensed(14, weight: .regular)
-    static let bodyBold      = SavantFont.condensed(14, weight: .medium)
-    static let small         = SavantFont.condensed(12, weight: .regular)
-    static let smallBold     = SavantFont.condensed(12, weight: .medium)
-    static let micro         = SavantFont.condensed(11, weight: .black)
-    static let statHero      = SavantFont.mono(32, weight: .bold)
-    static let statLarge     = SavantFont.mono(20, weight: .bold)
-    static let statMed       = SavantFont.mono(14, weight: .bold)
-    static let statSmall     = SavantFont.mono(12, weight: .medium)
+enum GridironType {
+    static let playerName    = GridironFont.condensed(28, weight: .black)
+    static let pageTitle     = GridironFont.condensed(22, weight: .black)
+    static let sectionTitle  = GridironFont.condensed(13, weight: .black)
+    static let cardTitle     = GridironFont.condensed(16, weight: .bold)
+    static let body          = Font.system(size: 14)
+    static let bodyBold      = Font.system(size: 14, weight: .semibold)
+    static let small         = Font.system(size: 12)
+    static let smallBold     = Font.system(size: 12, weight: .semibold)
+    static let micro         = GridironFont.condensed(11, weight: .black)
+    static let statHero      = GridironFont.mono(32, weight: .bold)
+    static let statLarge     = GridironFont.mono(20, weight: .bold)
+    static let statMed       = GridironFont.mono(14, weight: .bold)
+    static let statSmall     = GridironFont.mono(12, weight: .medium)
 }
 
-enum SavantGeo {
+enum GridironGeo {
     static let radiusCard: CGFloat = 4
     static let radiusBadge: CGFloat = 2
     static let hairline: CGFloat = 0.5
@@ -93,9 +87,8 @@ enum SavantGeo {
     static let rowHeightHeader: CGFloat = 28
 }
 
-/// NFL team primary colors, keyed by nflverse abbreviation. (Type name kept as
-/// `MLBTeamColor` to avoid churning every call site; it holds NFL colors now.)
-enum MLBTeamColor {
+/// NFL team primary colors, keyed by nflverse abbreviation.
+enum NFLTeamColor {
     static let primary: [String: Color] = [
         "ARI": Color(red: 0.59, green: 0.14, blue: 0.25),
         "ATL": Color(red: 0.65, green: 0.10, blue: 0.19),
@@ -130,7 +123,7 @@ enum MLBTeamColor {
         "TEN": Color(red: 0.05, green: 0.14, blue: 0.25),
         "WAS": Color(red: 0.35, green: 0.08, blue: 0.08)
     ]
-    static func color(_ abbr: String) -> Color { primary[normalizedTeamAbbreviation(abbr)] ?? SavantPalette.inkTertiary }
+    static func color(_ abbr: String) -> Color { primary[normalizedTeamAbbreviation(abbr)] ?? GridironPalette.inkTertiary }
 }
 
 /// NFL team abbreviations in nflverse form. Shared by the Teams grid and switcher.
@@ -184,17 +177,17 @@ func teamFullName(_ abbr: String) -> String {
 }
 
 struct StatScoutTheme {
-    static let background = LinearGradient(colors: [SavantPalette.canvas, SavantPalette.canvas], startPoint: .top, endPoint: .bottom)
-    static let card       = SavantPalette.surface
-    static let stroke     = SavantPalette.hairline
-    static let accent     = SavantPalette.savantRed
-    static let hot        = SavantPalette.pctlHot
-    static let savantBlue = SavantPalette.pctlCold
-    static let savantRed  = SavantPalette.pctlHot
-    static let savantOrange = Color(red: 0.90, green: 0.40, blue: 0.30)
-    static let savantMidBlue = Color(red: 0.30, green: 0.55, blue: 0.85)
+    static let background = LinearGradient(colors: [GridironPalette.canvas, GridironPalette.canvas], startPoint: .top, endPoint: .bottom)
+    static let card       = GridironPalette.surface
+    static let stroke     = GridironPalette.hairline
+    static let accent     = GridironPalette.turf
+    static let hot        = GridironPalette.performanceHigh
+    static let performanceLow = GridironPalette.performanceLow
+    static let turf       = GridironPalette.turf
+    static let leather    = GridironPalette.leather
+    static let sky        = Color(red: 0.30, green: 0.55, blue: 0.85)
 
     static func percentileColor(_ percentile: Int) -> Color {
-        SavantPalette.color(forPercentile: percentile)
+        GridironPalette.color(forPercentile: percentile)
     }
 }

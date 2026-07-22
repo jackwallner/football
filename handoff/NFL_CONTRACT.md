@@ -39,14 +39,14 @@ Derived from `position_group`. One snapshot row per player per season.
 ## Metric categories (jsonb `metrics[].category`, exact strings)
 - `"Passing"` — QBs. Metrics (id → label): pass_yards→"Pass Yds", pass_tds→"Pass TD",
   cmp_pct→"Cmp%", ypa→"Y/A", int_rate→"INT%" (inverted), passer_rating→"Rating",
-  passing_epa→"EPA/Play", cpoe→"CPOE", avg_time_to_throw→"Time to Throw",
+  passing_epa/dropbacks→"EPA/Play", cpoe→"CPOE", avg_time_to_throw→"Time to Throw",
   aggressiveness→"Aggressiveness", avg_intended_air_yards→"Intended Air Yds", sack_rate→"Sack%" (inverted).
 - `"Rushing"` — RBs + rushing QBs. rush_yards→"Rush Yds", rush_tds→"Rush TD", ypc→"Y/C",
-  rushing_epa→"Rush EPA", rush_first_downs→"Rush 1D", explosive_rush_rate→"Explosive%",
+  rushing_epa/carries→"EPA/Rush", rushing_epa→"Rush EPA", rush_first_downs→"Rush 1D", explosive_rush_rate→"Explosive%",
   fumble_rate→"Fumble%" (inverted), rush_yoe (NGS rush_yards_over_expected)→"RYOE" if available.
 - `"Receiving"` — WR/TE/RB with targets. receptions→"Rec", rec_yards→"Rec Yds",
   rec_tds→"Rec TD", yac→"YAC", target_share→"Target Share", wopr→"WOPR", racr→"RACR",
-  receiving_epa→"Rec EPA", catch_pct→"Catch%", avg_separation→"Separation" (NGS),
+  receiving_epa/targets→"EPA/Tgt", receiving_epa→"Rec EPA", catch_pct→"Catch%", avg_separation→"Separation" (NGS),
   avg_yac_above_expectation→"YAC+" (NGS).
 - `"Defense"` — DEF players. tackles→"Tackles", sacks→"Sacks", def_ints→"INT",
   passes_defended→"PD", forced_fumbles→"FF", tfl→"TFL", qb_hits→"QB Hits".

@@ -37,12 +37,12 @@ struct MetricLeadersView: View {
             }
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
     }
 
     /// Many metrics (xISO, xOBP, Hard-Hit%, Arm Strength, Squared-Up%) ship a
-    /// valid Savant percentile but a blank value string. Rather than render an
+    /// valid Gridiron percentile but a blank value string. Rather than render an
     /// empty cell, fall back to the percentile so the row still carries signal.
     private func displayValue(_ raw: String, percentile: Int) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespaces)
@@ -51,30 +51,30 @@ struct MetricLeadersView: View {
 
     private func categoryCard(_ group: (MetricCategory, [MetricLeaderEntry])) -> some View {
         VStack(spacing: 0) {
-            SavantSectionBar(title: group.0.rawValue.uppercased())
+            GridironSectionBar(title: group.0.rawValue.uppercased())
 
             HStack(spacing: 8) {
                 Text("METRIC")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.5)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(width: 88, alignment: .leading)
                 Text("BEST")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.5)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text("WORST")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.5)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(height: SavantGeo.rowHeightHeader)
-            .padding(.horizontal, SavantGeo.padInline)
-            .background(SavantPalette.surfaceAlt)
+            .frame(height: GridironGeo.rowHeightHeader)
+            .padding(.horizontal, GridironGeo.padInline)
+            .background(GridironPalette.surfaceAlt)
             .overlay(
-                Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline),
+                Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
                 alignment: .bottom
             )
 
@@ -83,11 +83,11 @@ struct MetricLeadersView: View {
                     NavigationLink(value: MetricRoute(label: item.label, category: item.category)) {
                         HStack(spacing: 2) {
                             Text(item.label)
-                                .font(SavantType.smallBold)
-                                .foregroundStyle(SavantPalette.ink)
+                                .font(GridironType.smallBold)
+                                .foregroundStyle(GridironPalette.ink)
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(SavantPalette.inkTertiary)
+                                .foregroundStyle(GridironPalette.inkTertiary)
                         }
                         .frame(width: 88, alignment: .leading)
                     }
@@ -99,13 +99,13 @@ struct MetricLeadersView: View {
                                 PlayerHeadshot(team: best.player.team, initials: best.player.initials, size: 24)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(best.player.name)
-                                        .font(SavantType.smallBold)
-                                        .foregroundStyle(SavantPalette.ink)
+                                        .font(GridironType.smallBold)
+                                        .foregroundStyle(GridironPalette.ink)
                                         .lineLimit(1)
                                         .minimumScaleFactor(0.7)
                                     Text(displayValue(best.actualValue, percentile: best.percentile))
-                                        .font(SavantType.statSmall)
-                                        .foregroundStyle(SavantPalette.inkSecondary)
+                                        .font(GridironType.statSmall)
+                                        .foregroundStyle(GridironPalette.inkSecondary)
                                         .lineLimit(1)
                                 }
                             }
@@ -114,8 +114,8 @@ struct MetricLeadersView: View {
                         .buttonStyle(.plain)
                     } else {
                         Text("No qualified players")
-                            .font(SavantType.micro)
-                            .foregroundStyle(SavantPalette.inkTertiary)
+                            .font(GridironType.micro)
+                            .foregroundStyle(GridironPalette.inkTertiary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .lineLimit(1)
                     }
@@ -126,13 +126,13 @@ struct MetricLeadersView: View {
                                 PlayerHeadshot(team: worst.player.team, initials: worst.player.initials, size: 24)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(worst.player.name)
-                                        .font(SavantType.smallBold)
-                                        .foregroundStyle(SavantPalette.ink)
+                                        .font(GridironType.smallBold)
+                                        .foregroundStyle(GridironPalette.ink)
                                         .lineLimit(1)
                                         .minimumScaleFactor(0.7)
                                     Text(displayValue(worst.actualValue, percentile: worst.percentile))
-                                        .font(SavantType.statSmall)
-                                        .foregroundStyle(SavantPalette.inkSecondary)
+                                        .font(GridironType.statSmall)
+                                        .foregroundStyle(GridironPalette.inkSecondary)
                                         .lineLimit(1)
                                 }
                             }
@@ -141,26 +141,26 @@ struct MetricLeadersView: View {
                         .buttonStyle(.plain)
                     } else {
                         Text("Only qualifier")
-                            .font(SavantType.micro)
-                            .foregroundStyle(SavantPalette.inkTertiary)
+                            .font(GridironType.micro)
+                            .foregroundStyle(GridironPalette.inkTertiary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .lineLimit(1)
                     }
                 }
-                .frame(height: SavantGeo.rowHeight)
-                .padding(.horizontal, SavantGeo.padInline)
-                .background(index % 2 == 0 ? SavantPalette.surface : SavantPalette.surfaceAlt)
+                .frame(height: GridironGeo.rowHeight)
+                .padding(.horizontal, GridironGeo.padInline)
+                .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
                 .overlay(
-                    Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline),
+                    Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
                     alignment: .bottom
                 )
             }
         }
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
 }

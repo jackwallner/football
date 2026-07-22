@@ -55,6 +55,7 @@ struct SampleData {
                 Metric(id: "allen-rushyds", label: "Rush Yds", value: "531", percentile: 96, category: .rushing),
                 Metric(id: "allen-rushtd", label: "Rush TD", value: "12", percentile: 99, category: .rushing),
                 Metric(id: "allen-yc", label: "Y/C", value: "5.6", percentile: 92, category: .rushing),
+                Metric(id: "allen-eparush", label: "EPA/Rush", value: "0.19", percentile: 95, category: .rushing),
                 Metric(id: "allen-rushepa", label: "Rush EPA", value: "18.2", percentile: 95, category: .rushing)
             ],
             standardStats: [
@@ -83,6 +84,7 @@ struct SampleData {
                 Metric(id: "saquon-rushyds", label: "Rush Yds", value: "2,005", percentile: 99, category: .rushing),
                 Metric(id: "saquon-rushtd", label: "Rush TD", value: "13", percentile: 97, category: .rushing),
                 Metric(id: "saquon-yc", label: "Y/C", value: "5.8", percentile: 95, category: .rushing),
+                Metric(id: "saquon-eparush", label: "EPA/Rush", value: "0.06", percentile: 91, category: .rushing),
                 Metric(id: "saquon-rushepa", label: "Rush EPA", value: "22.1", percentile: 98, category: .rushing),
                 Metric(id: "saquon-explosive", label: "Explosive%", value: "12.5%", percentile: 94, category: .rushing),
                 Metric(id: "saquon-ryoe", label: "RYOE", value: "310", percentile: 97, category: .rushing),
@@ -117,6 +119,7 @@ struct SampleData {
                 Metric(id: "chase-rectd", label: "Rec TD", value: "17", percentile: 99, category: .receiving),
                 Metric(id: "chase-yac", label: "YAC", value: "5.9", percentile: 82, category: .receiving),
                 Metric(id: "chase-target", label: "Target Share", value: "29.5%", percentile: 97, category: .receiving),
+                Metric(id: "chase-epatgt", label: "EPA/Tgt", value: "0.54", percentile: 98, category: .receiving),
                 Metric(id: "chase-wopr", label: "WOPR", value: "0.72", percentile: 96, category: .receiving),
                 Metric(id: "chase-racr", label: "RACR", value: "1.05", percentile: 80, category: .receiving),
                 Metric(id: "chase-catch", label: "Catch%", value: "68.3%", percentile: 72, category: .receiving),

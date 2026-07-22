@@ -87,6 +87,7 @@ METRIC_DEFS: dict[str, list[tuple[str, str, str, str, bool]]] = {
         ("rush_yards", "Rush Yds", "rushing_yards", "comma", False),
         ("rush_tds", "Rush TD", "rushing_tds", "int", False),
         ("ypc", "Y/C", "ypc", "dec1", False),
+        ("rushing_epa_per_carry", "EPA/Rush", "rushing_epa_per_carry", "dec2", False),
         ("rushing_epa", "Rush EPA", "rushing_epa", "dec1", False),
         ("rush_first_downs", "Rush 1D", "rushing_first_downs", "int", False),
         ("explosive_rush_rate", "Explosive%", "explosive_rush_rate", "pct1", False),
@@ -101,6 +102,7 @@ METRIC_DEFS: dict[str, list[tuple[str, str, str, str, bool]]] = {
         ("target_share", "Target Share", "target_share_pct", "pct1", False),
         ("wopr", "WOPR", "wopr", "dec2", False),
         ("racr", "RACR", "racr", "dec2", False),
+        ("receiving_epa_per_target", "EPA/Tgt", "receiving_epa_per_target", "dec2", False),
         ("receiving_epa", "Rec EPA", "receiving_epa", "dec1", False),
         ("catch_pct", "Catch%", "catch_pct", "pct1", False),
         ("avg_separation", "Separation", "avg_separation", "dec1", False),
@@ -283,7 +285,10 @@ def aggregate_seasons(weekly: pd.DataFrame, season: int) -> pd.DataFrame:
     agg["ypa"] = _safe_div(agg["passing_yards"], agg["attempts"])
     agg["int_rate"] = _safe_div(agg["passing_interceptions"], agg["attempts"]) * 100
     agg["sack_rate"] = _safe_div(agg["sacks_suffered"], agg["attempts"] + agg["sacks_suffered"]) * 100
-    agg["passing_epa_per_play"] = _safe_div(agg["passing_epa"], agg["attempts"])
+    agg["passing_epa_per_play"] = _safe_div(
+        agg["passing_epa"],
+        agg["attempts"] + agg["sacks_suffered"],
+    )
     agg["passer_rating"] = [
         passer_rating(c, a, y, t, i)
         for c, a, y, t, i in zip(
@@ -294,11 +299,13 @@ def aggregate_seasons(weekly: pd.DataFrame, season: int) -> pd.DataFrame:
 
     # Rushing derived rates.
     agg["ypc"] = _safe_div(agg["rushing_yards"], agg["carries"])
+    agg["rushing_epa_per_carry"] = _safe_div(agg["rushing_epa"], agg["carries"])
     agg["explosive_rush_rate"] = _safe_div(agg["rushing_10"], agg["carries"]) * 100
     agg["fumble_rate"] = _safe_div(agg["rushing_fumbles"], agg["carries"]) * 100
 
     # Receiving derived rates.
     agg["catch_pct"] = _safe_div(agg["receptions"], agg["targets"]) * 100
+    agg["receiving_epa_per_target"] = _safe_div(agg["receiving_epa"], agg["targets"])
     agg["racr"] = _safe_div(agg["receiving_yards"], agg["receiving_air_yards"])
     agg["rec_yac"] = agg["receiving_yards_after_catch"]
     if "target_share" in agg.columns:

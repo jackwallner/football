@@ -9,9 +9,9 @@ struct PlayerHeadshot: View {
 
     var body: some View {
         ZStack {
-            Circle().fill(MLBTeamColor.color(team))
+            Circle().fill(NFLTeamColor.color(team))
             Text(initials)
-                .font(SavantFont.condensed(size * 0.38, weight: .bold))
+                .font(GridironFont.condensed(size * 0.38, weight: .bold))
                 .foregroundStyle(.white)
         }
         .frame(width: size, height: size)
@@ -67,18 +67,18 @@ struct OverallPercentileBadge: View {
     var body: some View {
         VStack(spacing: 0) {
             Text("\(percentile)")
-                .font(SavantType.statHero)
+                .font(GridironType.statHero)
                 .foregroundStyle(.white)
                 .shadow(color: Color.black.opacity(0.4), radius: 2, x: 0, y: 1)
             Text(percentile.ordinal)
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.6)
                 .foregroundStyle(.white.opacity(0.9))
                 .shadow(color: Color.black.opacity(0.3), radius: 1, x: 0, y: 0.5)
         }
         .frame(width: size, height: size)
-        .background(SavantPalette.color(forPercentile: percentile))
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusBadge))
+        .background(GridironPalette.color(forPercentile: percentile))
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusBadge))
         .accessibilityLabel("Overall \(percentile)th percentile, \(tierDescription)")
     }
 }
@@ -87,7 +87,7 @@ struct TeamColorDot: View {
     let abbr: String
     var size: CGFloat = 8
     var body: some View {
-        Circle().fill(MLBTeamColor.color(abbr)).frame(width: size, height: size)
+        Circle().fill(NFLTeamColor.color(abbr)).frame(width: size, height: size)
             .accessibilityHidden(true)
     }
 }
@@ -100,7 +100,7 @@ func displayTeamAbbr(_ abbr: String) -> String {
     return abbr
 }
 
-// MARK: - Module 2: Percentile Bar Row (MetricBar) - Baseball Savant Style
+// MARK: - Module 2: Percentile Bar Row (MetricBar) - football analytics Style
 
 struct MetricBar: View {
     let metric: Metric
@@ -115,8 +115,8 @@ struct MetricBar: View {
         HStack(spacing: 12) {
             // Label column - left aligned
             Text(metric.label)
-                .font(SavantType.bodyBold)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.bodyBold)
+                .foregroundStyle(GridironPalette.ink)
                 .frame(width: 70, alignment: .leading)
 
             // Percentile bar - takes remaining space
@@ -129,23 +129,23 @@ struct MetricBar: View {
                 ZStack(alignment: .leading) {
                     // Track
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(SavantPalette.hairline)
+                        .fill(GridironPalette.hairline)
                         .frame(height: 10)
 
                     // Fill
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(SavantPalette.color(forPercentile: percentileValue))
+                        .fill(GridironPalette.color(forPercentile: percentileValue))
                         .frame(width: offset, height: 10)
 
                     // Percentile circle
                     ZStack {
                         Circle()
-                            .fill(SavantPalette.color(forPercentile: percentileValue))
+                            .fill(GridironPalette.color(forPercentile: percentileValue))
                             .frame(width: circleSize, height: circleSize)
 
                         Text("\(percentileValue)")
-                            .font(SavantFont.mono(11, weight: .bold))
-                            .foregroundStyle(percentileValue >= 35 && percentileValue <= 75 ? SavantPalette.ink : .white)
+                            .font(GridironFont.mono(11, weight: .bold))
+                            .foregroundStyle(percentileValue >= 35 && percentileValue <= 75 ? GridironPalette.ink : .white)
                             .shadow(color: percentileValue >= 35 && percentileValue <= 75 ? Color.clear : Color.black.opacity(0.3), radius: 1, x: 0, y: 0.5)
                     }
                     .position(x: offset, y: 14)
@@ -156,8 +156,8 @@ struct MetricBar: View {
             // Value column - far right, fixed width (sized for "30.0 ft/s" / "0.421" range)
             if showValue && !metric.value.isEmpty {
                 Text(metric.value)
-                    .font(SavantType.statMed)
-                    .foregroundStyle(SavantPalette.ink)
+                    .font(GridironType.statMed)
+                    .foregroundStyle(GridironPalette.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                     .frame(width: 72, alignment: .trailing)
@@ -171,7 +171,7 @@ struct MetricBar: View {
     }
 }
 
-/// Season + recent percentile bars stacked in one row — same Savant layout,
+/// Season + recent percentile bars stacked in one row — same Gridiron layout,
 /// with a compact recent track under the season bar when both are available.
 struct DualMetricBar: View {
     let season: Metric
@@ -182,9 +182,9 @@ struct DualMetricBar: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Text("Season")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.4)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(width: 52, alignment: .leading)
                 MetricBar(metric: season, showValue: true)
             }
@@ -192,9 +192,9 @@ struct DualMetricBar: View {
             if let recent {
                 HStack(spacing: 6) {
                     Text(recentCaption)
-                        .font(SavantType.micro)
+                        .font(GridironType.micro)
                         .tracking(0.4)
-                        .foregroundStyle(SavantPalette.savantRed)
+                        .foregroundStyle(GridironPalette.turf)
                         .frame(width: 52, alignment: .leading)
                     MetricBar(metric: recent, showValue: true)
                 }
@@ -213,17 +213,17 @@ struct SearchField: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .foregroundStyle(GridironPalette.inkSecondary)
             ZStack(alignment: .leading) {
                 if text.isEmpty {
                     Text("Search players or teams")
-                        .font(SavantType.body)
-                        .foregroundStyle(SavantPalette.inkSecondary)
+                        .font(GridironType.body)
+                        .foregroundStyle(GridironPalette.inkSecondary)
                         .allowsHitTesting(false)
                 }
                 TextField("", text: $text)
                     .textInputAutocapitalization(.never)
-                    .foregroundStyle(SavantPalette.ink)
+                    .foregroundStyle(GridironPalette.ink)
                     .focused($isFocused)
             }
         }
@@ -234,11 +234,11 @@ struct SearchField: View {
         }
         .padding(.horizontal, 12)
         .frame(height: 36)
-        .background(SavantPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
         .overlay(
-            RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                .stroke(SavantPalette.hairline, lineWidth: 1)
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.04), radius: 2, x: 0, y: 1)
     }
@@ -255,7 +255,7 @@ struct CategoryFilter: View {
         let tabs = showAllOption ? ["All"] + categoryTabs : categoryTabs
         let selectedTab = selectedCategory?.rawValue ?? (showAllOption ? "All" : MetricCategory.passing.rawValue)
 
-        SavantTabs(
+        GridironTabs(
             tabs: tabs,
             selected: Binding(
                 get: { selectedTab },
@@ -285,28 +285,28 @@ struct QualifierPicker: View {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     } label: {
                         Text(level.rawValue)
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.4)
-                            .foregroundStyle(selection == level ? .white : SavantPalette.inkSecondary)
+                            .foregroundStyle(selection == level ? .white : GridironPalette.inkSecondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 28)
-                            .background(selection == level ? SavantPalette.savantRed : Color.clear)
+                            .background(selection == level ? GridironPalette.turf : Color.clear)
                             .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(2)
-            .background(SavantPalette.surface)
+            .background(GridironPalette.surface)
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
+            .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
 
             // Threshold caption — keeps "All" and "Min Sample" from reading as
             // synonyms by spelling out what the active level actually filters.
             Text(selection.description)
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.3)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
         }
     }
 }
@@ -336,17 +336,17 @@ struct QualifierMenu: View {
                 Image(systemName: "line.3.horizontal.decrease.circle")
                     .font(.system(size: 11, weight: .semibold))
                 Text(selection.rawValue)
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.4)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .bold))
             }
-            .foregroundStyle(SavantPalette.inkSecondary)
+            .foregroundStyle(GridironPalette.inkSecondary)
             .padding(.horizontal, 10)
             .frame(height: 30)
-            .background(SavantPalette.surface)
+            .background(GridironPalette.surface)
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(SavantPalette.hairline, lineWidth: 0.5))
+            .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
         }
         .menuOrder(.fixed)
         .accessibilityLabel("Qualifier")
@@ -363,12 +363,12 @@ struct SectionHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(SavantType.sectionTitle)
+                .font(GridironType.sectionTitle)
                 .tracking(0.8)
-                .foregroundStyle(SavantPalette.ink)
+                .foregroundStyle(GridironPalette.ink)
             Text(subtitle)
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
         }
     }
 }
@@ -394,9 +394,9 @@ struct TrendGlyph: View {
 
     private var color: Color {
         switch direction {
-        case .up: SavantPalette.up
-        case .flat: SavantPalette.inkTertiary
-        case .down: SavantPalette.down
+        case .up: GridironPalette.up
+        case .flat: GridironPalette.inkTertiary
+        case .down: GridironPalette.down
         }
     }
 }
@@ -411,11 +411,11 @@ struct PercentileBarMini: View {
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: height/2)
-                    .fill(SavantPalette.hairline)
+                    .fill(GridironPalette.hairline)
                     .frame(height: height)
 
                 RoundedRectangle(cornerRadius: height/2)
-                    .fill(SavantPalette.color(forPercentile: percentile))
+                    .fill(GridironPalette.color(forPercentile: percentile))
                     .frame(width: proxy.size.width * CGFloat(percentile) / 100.0, height: height)
             }
         }
@@ -429,43 +429,75 @@ struct PercentileBarMini: View {
 struct LeaderboardTableHeader: View {
     let sortDescending: Bool
     var sortLabel: String = "OVERALL"
+    var metrics: [String] = []
+    var onSelectMetric: (String) -> Void = { _ in }
+    var onToggleDirection: () -> Void = {}
 
     var body: some View {
         HStack(spacing: 0) {
             Text("RANK")
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.5)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(width: 42, alignment: .leading)
 
             Text("PLAYER")
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.5)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text("TEAM")
-                .font(SavantType.micro)
+                .font(GridironType.micro)
                 .tracking(0.5)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(width: 44, alignment: .leading)
 
-            // Sort indicator - display only, tap SavantSectionBar to change sort
-            HStack(spacing: 4) {
-                Text(sortLabel.uppercased())
-                    .font(SavantType.micro)
-                    .tracking(0.5)
-                    .foregroundStyle(SavantPalette.savantRed)
-                Image(systemName: sortDescending ? "arrow.down" : "arrow.up")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(SavantPalette.savantRed)
+            HStack(spacing: 2) {
+                Menu {
+                    ForEach(metrics, id: \.self) { metric in
+                        Button {
+                            onSelectMetric(metric)
+                        } label: {
+                            if metric == sortLabel {
+                                Label(metric, systemImage: "checkmark")
+                            } else {
+                                Text(metric)
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 3) {
+                        Text(sortLabel.uppercased())
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 7, weight: .bold))
+                    }
+                    .font(GridironType.micro)
+                    .tracking(0.4)
+                    .foregroundStyle(GridironPalette.turf)
+                }
+                .menuOrder(.fixed)
+                .accessibilityLabel("Metric")
+                .accessibilityValue(sortLabel)
+
+                Button(action: onToggleDirection) {
+                    Image(systemName: sortDescending ? "arrow.down" : "arrow.up")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(GridironPalette.turf)
+                        .frame(width: 18, height: 26)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(sortDescending ? "Highest first" : "Lowest first")
+                .accessibilityHint("Double tap to reverse ranking order")
             }
-            .frame(width: 92, alignment: .trailing)
+            .frame(width: 104, alignment: .trailing)
         }
-        .frame(height: SavantGeo.rowHeightHeader)
-        .padding(.horizontal, SavantGeo.padInline)
-        .background(SavantPalette.surfaceAlt)
-        .overlay(Rectangle().fill(SavantPalette.divider).frame(height: SavantGeo.hairline), alignment: .bottom)
+        .frame(height: GridironGeo.rowHeightHeader)
+        .padding(.horizontal, GridironGeo.padInline)
+        .background(GridironPalette.surfaceAlt)
+        .overlay(Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline), alignment: .bottom)
     }
 }
 
@@ -503,8 +535,8 @@ struct LeaderboardTableRow: View {
     var body: some View {
         HStack(spacing: 0) {
             Text("\(rank)")
-                .font(SavantType.statSmall)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.statSmall)
+                .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(width: 42, alignment: .leading)
                 .monospacedDigit()
 
@@ -512,15 +544,15 @@ struct LeaderboardTableRow: View {
                 PlayerHeadshot(team: player.team, initials: player.initials, size: 36)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(player.name)
-                        .font(SavantType.bodyBold)
-                        .foregroundStyle(SavantPalette.ink)
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(GridironPalette.ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
                     Text(player.displayPosition)
-                        .font(SavantType.micro)
+                        .font(GridironType.micro)
                         .tracking(0.4)
-                        .foregroundStyle(SavantPalette.inkTertiary)
+                        .foregroundStyle(GridironPalette.inkTertiary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -528,8 +560,8 @@ struct LeaderboardTableRow: View {
             HStack(spacing: 4) {
                 TeamColorDot(abbr: player.team, size: 6)
                 Text(displayTeamAbbr(player.team))
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
             }
             .frame(width: 44, alignment: .leading)
 
@@ -541,24 +573,24 @@ struct LeaderboardTableRow: View {
                     PercentileBarMini(percentile: displayPercentile)
                         .frame(width: 36)
                     Text(displayValueText)
-                        .font(SavantType.statSmall)
-                        .foregroundStyle(SavantPalette.color(forPercentile: displayPercentile))
+                        .font(GridironType.statSmall)
+                        .foregroundStyle(GridironPalette.color(forPercentile: displayPercentile))
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                         .frame(width: 48, alignment: .trailing)
                         .monospacedDigit()
                 } else {
                     Text("—")
-                        .font(SavantType.statSmall)
-                        .foregroundStyle(SavantPalette.inkTertiary)
+                        .font(GridironType.statSmall)
+                        .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .monospacedDigit()
                 }
             }
-            .frame(width: 92, alignment: .trailing)
+            .frame(width: 104, alignment: .trailing)
         }
-        .frame(height: SavantGeo.rowHeight)
-        .padding(.horizontal, SavantGeo.padInline)
+        .frame(height: GridironGeo.rowHeight)
+        .padding(.horizontal, GridironGeo.padInline)
         .contentShape(Rectangle())
     }
 }
@@ -578,8 +610,8 @@ struct BlurGateUnlock: View {
     var body: some View {
         VStack(spacing: 8) {
             Text(headline)
-                .font(SavantType.smallBold)
-                .foregroundStyle(SavantPalette.ink)
+                .font(GridironType.smallBold)
+                .foregroundStyle(GridironPalette.ink)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -588,21 +620,21 @@ struct BlurGateUnlock: View {
                     Image(systemName: "crown.fill")
                         .font(.system(size: 11))
                     Text(cta)
-                        .font(SavantType.bodyBold)
+                        .font(GridironType.bodyBold)
                 }
                 .foregroundStyle(.white)
                 .padding(.horizontal, 22)
                 .frame(height: 42)
-                .background(SavantPalette.savantRed)
+                .background(GridironPalette.turf)
                 .clipShape(Capsule())
             }
             .buttonStyle(.plain)
 
             if let subtext {
                 Text(subtext)
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.3)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .multilineTextAlignment(.center)
             }
         }
@@ -612,7 +644,7 @@ struct BlurGateUnlock: View {
         .frame(maxWidth: .infinity)
         .background(
             LinearGradient(
-                colors: [.clear, SavantPalette.surface.opacity(0.95), SavantPalette.surface],
+                colors: [.clear, GridironPalette.surface.opacity(0.95), GridironPalette.surface],
                 startPoint: .top,
                 endPoint: .bottom
             )

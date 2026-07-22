@@ -131,7 +131,7 @@ struct PaywallView: View {
 
     var body: some View {
         ZStack {
-            SavantPalette.canvas.ignoresSafeArea()
+            GridironPalette.canvas.ignoresSafeArea()
 
             if store.isLoadingProducts && store.products.isEmpty {
                 loadingState
@@ -160,10 +160,10 @@ struct PaywallView: View {
     private var loadingState: some View {
         VStack(spacing: 14) {
             ProgressView()
-                .tint(SavantPalette.savantRed)
+                .tint(GridironPalette.turf)
             Text("Loading plans…")
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkTertiary)
         }
     }
 
@@ -171,13 +171,13 @@ struct PaywallView: View {
         VStack(spacing: 12) {
             Image(systemName: "wifi.exclamationmark")
                 .font(.system(size: 40))
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .foregroundStyle(GridironPalette.inkTertiary)
             Text("Couldn't Load Plans")
-                .font(SavantType.cardTitle)
-                .foregroundStyle(SavantPalette.inkSecondary)
+                .font(GridironType.cardTitle)
+                .foregroundStyle(GridironPalette.inkSecondary)
             Text(store.lastError ?? "Check your connection and try again.")
-                .font(SavantType.small)
-                .foregroundStyle(SavantPalette.inkTertiary)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkTertiary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             Button("Try Again") {
@@ -186,8 +186,8 @@ struct PaywallView: View {
                     selectDefaultPackageIfNeeded()
                 }
             }
-            .font(SavantType.bodyBold)
-            .foregroundStyle(SavantPalette.savantRed)
+            .font(GridironType.bodyBold)
+            .foregroundStyle(GridironPalette.turf)
         }
     }
 
@@ -210,13 +210,13 @@ struct PaywallView: View {
         .ignoresSafeArea(edges: .top)
     }
 
-    // Bold navy hero: the entry-point icon over a faint percentile-bar motif,
+    // Bold midnight hero: the entry-point icon over a faint percentile-bar motif,
     // a "Pro" eyebrow, the benefit headline, and the emotional subtitle. Sells
     // the upgrade before any pricing — pricing/feature density comes below.
     private var heroHeader: some View {
         ZStack {
             LinearGradient(
-                colors: [SavantPalette.savantNavy, SavantPalette.savantNavy.opacity(0.88)],
+                colors: [GridironPalette.midnight, GridironPalette.midnight.opacity(0.88)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -238,19 +238,19 @@ struct PaywallView: View {
                 }
 
                 Text("STATSCOUT+")
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(2.5)
                     .foregroundStyle(.white.opacity(0.65))
 
                 Text(trigger.title)
-                    .font(SavantType.playerName)
+                    .font(GridironType.playerName)
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .minimumScaleFactor(0.9)
 
                 Text(trigger.subtitle)
-                    .font(SavantType.small)
+                    .font(GridironType.small)
                     .foregroundStyle(.white.opacity(0.85))
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
@@ -270,11 +270,11 @@ struct PaywallView: View {
                 HStack(spacing: 12) {
                     Image(systemName: feature.icon)
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(SavantPalette.savantRed)
+                        .foregroundStyle(GridironPalette.turf)
                         .frame(width: 26)
                     Text(feature.title)
-                        .font(SavantType.body)
-                        .foregroundStyle(SavantPalette.ink)
+                        .font(GridironType.body)
+                        .foregroundStyle(GridironPalette.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                 }
@@ -292,20 +292,20 @@ struct PaywallView: View {
                 Image(systemName: "bolt.fill")
                     .font(.system(size: 11, weight: .semibold))
                 Text("Next Gen-grade data")
-                    .font(SavantType.smallBold)
+                    .font(GridironType.smallBold)
                     .tracking(0.2)
             }
             Text("·")
-                .font(SavantType.smallBold)
+                .font(GridironType.smallBold)
             HStack(spacing: 5) {
                 Image(systemName: "checkmark.shield.fill")
                     .font(.system(size: 11, weight: .semibold))
                 Text("Cancel anytime")
-                    .font(SavantType.smallBold)
+                    .font(GridironType.smallBold)
                     .tracking(0.2)
             }
         }
-        .foregroundStyle(SavantPalette.inkTertiary)
+        .foregroundStyle(GridironPalette.inkTertiary)
         .frame(maxWidth: .infinity)
     }
 
@@ -338,7 +338,7 @@ struct PaywallView: View {
             Button(action: startPurchase) {
                 ZStack {
                     Text(ctaTitle)
-                        .font(SavantType.bodyBold)
+                        .font(GridironType.bodyBold)
                         .foregroundStyle(.white)
                         .opacity(isPurchasing ? 0 : 1)
                     if isPurchasing {
@@ -347,7 +347,7 @@ struct PaywallView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(SavantPalette.savantRed)
+                .background(GridironPalette.turf)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
@@ -355,30 +355,30 @@ struct PaywallView: View {
 
             if let disclosure = disclosureText {
                 Text(disclosure)
-                    .font(SavantType.micro)
+                    .font(GridironType.micro)
                     .tracking(0.2)
-                    .foregroundStyle(SavantPalette.inkTertiary)
+                    .foregroundStyle(GridironPalette.inkTertiary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             if let errorMessage {
                 Text(errorMessage)
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.savantRed)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.turf)
                     .multilineTextAlignment(.center)
             }
             if let restoreMessage {
                 Text(restoreMessage)
-                    .font(SavantType.small)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
                     .multilineTextAlignment(.center)
             }
 
             Button(action: startRestore) {
                 Text(isRestoring ? "Restoring…" : "Restore Purchases")
-                    .font(SavantType.smallBold)
-                    .foregroundStyle(SavantPalette.inkSecondary)
+                    .font(GridironType.smallBold)
+                    .foregroundStyle(GridironPalette.inkSecondary)
             }
             .buttonStyle(.plain)
             .disabled(isRestoring || isPurchasing)
@@ -387,9 +387,9 @@ struct PaywallView: View {
                 Link("Terms", destination: StatScoutLegal.termsURL)
                 Link("Privacy", destination: StatScoutLegal.privacyURL)
             }
-            .font(SavantType.micro)
+            .font(GridironType.micro)
             .tracking(0.3)
-            .foregroundStyle(SavantPalette.inkTertiary)
+            .foregroundStyle(GridironPalette.inkTertiary)
         }
     }
 
@@ -533,11 +533,11 @@ private struct PaywallPlanCard: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .stroke(isSelected ? SavantPalette.savantRed : SavantPalette.hairline, lineWidth: 2)
+                        .stroke(isSelected ? GridironPalette.turf : GridironPalette.hairline, lineWidth: 2)
                         .frame(width: 22, height: 22)
                     if isSelected {
                         Circle()
-                            .fill(SavantPalette.savantRed)
+                            .fill(GridironPalette.turf)
                             .frame(width: 12, height: 12)
                     }
                 }
@@ -545,28 +545,28 @@ private struct PaywallPlanCard: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(package.displayName)
-                            .font(SavantType.bodyBold)
-                            .foregroundStyle(SavantPalette.ink)
+                            .font(GridironType.bodyBold)
+                            .foregroundStyle(GridironPalette.ink)
                         if isMostPopular {
                             Text("MOST POPULAR")
-                                .font(SavantType.micro)
+                                .font(GridironType.micro)
                                 .tracking(0.4)
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(SavantPalette.savantRed, in: Capsule())
+                                .background(GridironPalette.turf, in: Capsule())
                         }
                     }
                     if showsTrialBadge, let trial = package.introOfferLabel {
                         Text(trial.capitalized)
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.3)
-                            .foregroundStyle(SavantPalette.savantRed)
+                            .foregroundStyle(GridironPalette.turf)
                     } else if let savingsPercent {
                         Text("Save \(savingsPercent)% vs monthly")
-                            .font(SavantType.micro)
+                            .font(GridironType.micro)
                             .tracking(0.3)
-                            .foregroundStyle(SavantPalette.savantRed)
+                            .foregroundStyle(GridironPalette.turf)
                     }
                 }
 
@@ -574,31 +574,31 @@ private struct PaywallPlanCard: View {
 
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(package.priceLabel)
-                        .font(SavantType.smallBold)
-                        .foregroundStyle(SavantPalette.inkSecondary)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.inkSecondary)
                     if let perMonthLabel {
                         HStack(spacing: 5) {
                             if let monthlyAnchorLabel, savingsPercent != nil {
                                 Text(monthlyAnchorLabel)
-                                    .font(SavantType.micro)
-                                    .foregroundStyle(SavantPalette.inkTertiary)
-                                    .strikethrough(true, color: SavantPalette.inkTertiary)
+                                    .font(GridironType.micro)
+                                    .foregroundStyle(GridironPalette.inkTertiary)
+                                    .strikethrough(true, color: GridironPalette.inkTertiary)
                             }
                             Text("\(perMonthLabel)/mo")
-                                .font(SavantType.micro)
+                                .font(GridironType.micro)
                                 .tracking(0.2)
-                                .foregroundStyle(SavantPalette.ink)
+                                .foregroundStyle(GridironPalette.ink)
                         }
                     }
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(SavantPalette.surface)
-            .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+            .background(GridironPalette.surface)
+            .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
             .overlay {
-                RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                    .stroke(isSelected ? SavantPalette.savantRed : SavantPalette.hairline, lineWidth: isSelected ? 2 : 0.5)
+                RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                    .stroke(isSelected ? GridironPalette.turf : GridironPalette.hairline, lineWidth: isSelected ? 2 : 0.5)
             }
         }
         .buttonStyle(.plain)

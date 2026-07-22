@@ -33,14 +33,14 @@ struct MetricRankingView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                SavantSectionBar(
+                GridironSectionBar(
                     title: "\(metricLabel) · \(metricCategory.rawValue)",
                     trailing: AnyView(
                         HStack(spacing: 12) {
                             if let season {
                                 Text(String(season))
-                                    .font(SavantType.micro)
-                                    .foregroundStyle(SavantPalette.inkSecondary)
+                                    .font(GridironType.micro)
+                                    .foregroundStyle(GridironPalette.inkSecondary)
                             }
                             Button(action: {
                                 sortDescending.toggle()
@@ -51,8 +51,8 @@ struct MetricRankingView: View {
                                     Text(metricLabel)
                                     Image(systemName: sortDescending ? "arrow.down" : "arrow.up")
                                 }
-                                .font(SavantType.micro)
-                                .foregroundStyle(SavantPalette.inkSecondary)
+                                .font(GridironType.micro)
+                                .foregroundStyle(GridironPalette.inkSecondary)
                             }
                         }
                     )
@@ -82,17 +82,17 @@ struct MetricRankingView: View {
                     }
                 }
             }
-            .background(SavantPalette.surface)
-            .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+            .background(GridironPalette.surface)
+            .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
             .overlay(
-                RoundedRectangle(cornerRadius: SavantGeo.radiusCard)
-                    .stroke(SavantPalette.hairline, lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                    .stroke(GridironPalette.hairline, lineWidth: 0.5)
             )
             .padding(.horizontal, 12)
             .padding(.top, 12)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(SavantPalette.canvas.ignoresSafeArea())
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationTitle("\(metricLabel) · \(metricCategory.rawValue)")
         .navigationBarTitleDisplayMode(.inline)
     }
