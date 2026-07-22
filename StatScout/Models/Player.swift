@@ -144,22 +144,13 @@ enum MetricCategory: String, Codable, CaseIterable, Hashable, Sendable {
     case receiving = "Receiving"
     case defense = "Defense"
 
-    /// The preferred display order of metric labels within this category,
-    /// leading with the headline counting stats then the advanced Next Gen metrics.
+    /// Registry-driven display order. Advanced metrics lead within each category,
+    /// followed by traditional production metrics.
     var metricPriorityOrder: [String] {
-        switch self {
-        case .passing:
-            return ["Pass Yds", "Pass TD", "Cmp%", "Y/A", "Rating", "EPA/Play",
-                    "CPOE", "INT%", "Sack%", "Time to Throw", "Aggressiveness", "Intended Air Yds"]
-        case .rushing:
-            return ["Rush Yds", "Rush TD", "Y/C", "Rush EPA", "Rush 1D",
-                    "Explosive%", "RYOE", "Fumble%"]
-        case .receiving:
-            return ["Rec", "Rec Yds", "Rec TD", "YAC", "Target Share", "WOPR",
-                    "RACR", "Rec EPA", "Catch%", "Separation", "YAC+"]
-        case .defense:
-            return ["Tackles", "Sacks", "INT", "PD", "FF", "TFL", "QB Hits"]
-        }
+        FootballMetricRegistry.definitions
+            .filter { $0.category == self }
+            .sorted { $0.priority < $1.priority }
+            .map(\.label)
     }
 
     /// Returns a comparator for sorting metric labels within this category.
@@ -259,5 +250,210 @@ struct GameTrend: Identifiable, Codable, Hashable, Sendable {
         case summary
         case percentileDelta = "percentile_delta"
         case keyMetric = "key_metric"
+    }
+}
+
+
+enum PlayerPositionGroup: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case qb = "QB"
+    case rb = "RB"
+    case wr = "WR"
+    case te = "TE"
+    case defense = "DEF"
+
+    var id: String { rawValue }
+
+    var cohortDescription: String {
+        switch self {
+        case .defense: return "Among qualifying defensive players"
+        default: return "Among qualifying \(rawValue)s"
+        }
+    }
+
+    var primaryCategory: MetricCategory {
+        switch self {
+        case .qb: return .passing
+        case .rb: return .rushing
+        case .wr, .te: return .receiving
+        case .defense: return .defense
+        }
+    }
+
+    var preferredAdvancedMetrics: [String] {
+        switch self {
+        case .qb: return ["EPA/Play", "CPOE", "Rating"]
+        case .rb: return ["RYOE", "Rush EPA", "Explosive%"]
+        case .wr, .te: return ["WOPR", "Rec EPA", "YAC+"]
+        case .defense: return []
+        }
+    }
+
+    var preferredTraditionalMetrics: [String] {
+        switch self {
+        case .qb: return ["Pass Yds", "Pass TD", "Cmp%"]
+        case .rb: return ["Rush Yds", "Rush TD", "Car"]
+        case .wr, .te: return ["Rec Yds", "Rec TD", "Rec"]
+        case .defense: return ["Tackles", "Sacks", "Def INT"]
+        }
+    }
+}
+
+enum MetricKind: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case advanced = "Advanced"
+    case traditional = "Traditional"
+
+    var id: String { rawValue }
+}
+
+enum MetricFamily: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case efficiency = "Efficiency"
+    case accuracy = "Accuracy"
+    case pressure = "Pressure"
+    case aggressiveness = "Aggressiveness"
+    case rushing = "Rushing"
+    case expectedProduction = "Expected"
+    case explosiveness = "Explosiveness"
+    case usage = "Usage"
+    case receiving = "Receiving"
+    case separation = "Separation"
+    case yac = "YAC"
+    case production = "Production"
+    case passRush = "Pass Rush"
+    case turnovers = "Turnovers"
+
+    var id: String { rawValue }
+}
+
+struct MetricDefinition: Hashable, Sendable {
+    let label: String
+    let category: MetricCategory
+    let kind: MetricKind
+    let family: MetricFamily
+    let positions: Set<PlayerPositionGroup>
+    let higherIsBetter: Bool
+    let priority: Int
+    let description: String
+}
+
+enum FootballMetricRegistry {
+    static let definitions: [MetricDefinition] = [
+        definition("EPA/Play", .passing, .advanced, .efficiency, [.qb], 10, "Expected points added per passing play."),
+        definition("CPOE", .passing, .advanced, .accuracy, [.qb], 20, "Completion percentage over expectation."),
+        definition("INT%", .passing, .advanced, .accuracy, [.qb], 30, "Share of attempts intercepted.", higherIsBetter: false),
+        definition("Sack%", .passing, .advanced, .pressure, [.qb], 40, "Share of dropbacks ending in a sack.", higherIsBetter: false),
+        definition("Time to Throw", .passing, .advanced, .pressure, [.qb], 50, "Average time from snap to throw.", higherIsBetter: false),
+        definition("Aggressiveness", .passing, .advanced, .aggressiveness, [.qb], 60, "Share of throws into tight coverage."),
+        definition("Intended Air Yds", .passing, .advanced, .aggressiveness, [.qb], 70, "Average intended depth of target."),
+        definition("Pass Yds", .passing, .traditional, .production, [.qb], 110, "Total passing yards."),
+        definition("Pass TD", .passing, .traditional, .production, [.qb], 120, "Total passing touchdowns."),
+        definition("Cmp%", .passing, .traditional, .accuracy, [.qb], 130, "Completion percentage."),
+        definition("Y/A", .passing, .traditional, .efficiency, [.qb], 140, "Passing yards per attempt."),
+        definition("Rating", .passing, .traditional, .efficiency, [.qb], 150, "NFL passer rating."),
+
+        definition("RYOE", .rushing, .advanced, .expectedProduction, [.qb, .rb], 10, "Rushing yards over expectation."),
+        definition("Rush EPA", .rushing, .advanced, .efficiency, [.qb, .rb, .wr, .te], 20, "Expected points added on rushing plays."),
+        definition("Explosive%", .rushing, .advanced, .explosiveness, [.qb, .rb, .wr, .te], 30, "Rate of explosive rushing plays."),
+        definition("Fumble%", .rushing, .advanced, .efficiency, [.qb, .rb, .wr, .te], 40, "Fumbles per rushing opportunity.", higherIsBetter: false),
+        definition("Rush Yds", .rushing, .traditional, .production, [.qb, .rb, .wr, .te], 110, "Total rushing yards."),
+        definition("Rush TD", .rushing, .traditional, .production, [.qb, .rb, .wr, .te], 120, "Total rushing touchdowns."),
+        definition("Y/C", .rushing, .traditional, .efficiency, [.qb, .rb, .wr, .te], 130, "Rushing yards per carry."),
+        definition("Rush 1D", .rushing, .traditional, .production, [.qb, .rb, .wr, .te], 140, "Rushing first downs."),
+
+        definition("WOPR", .receiving, .advanced, .usage, [.rb, .wr, .te], 10, "Weighted opportunity rating from targets and air yards."),
+        definition("Rec EPA", .receiving, .advanced, .efficiency, [.rb, .wr, .te], 20, "Expected points added on receiving plays."),
+        definition("Target Share", .receiving, .advanced, .usage, [.rb, .wr, .te], 30, "Share of team pass attempts targeting the player."),
+        definition("RACR", .receiving, .advanced, .efficiency, [.rb, .wr, .te], 40, "Receiving yards per air yard."),
+        definition("Separation", .receiving, .advanced, .separation, [.rb, .wr, .te], 50, "Average separation from the nearest defender."),
+        definition("YAC+", .receiving, .advanced, .yac, [.rb, .wr, .te], 60, "Yards after catch over expectation."),
+        definition("Rec", .receiving, .traditional, .production, [.rb, .wr, .te], 110, "Total receptions."),
+        definition("Rec Yds", .receiving, .traditional, .production, [.rb, .wr, .te], 120, "Total receiving yards."),
+        definition("Rec TD", .receiving, .traditional, .production, [.rb, .wr, .te], 130, "Total receiving touchdowns."),
+        definition("YAC", .receiving, .traditional, .yac, [.rb, .wr, .te], 140, "Yards after catch."),
+        definition("Catch%", .receiving, .traditional, .efficiency, [.rb, .wr, .te], 150, "Share of targets caught."),
+
+        definition("Tackles", .defense, .traditional, .production, [.defense], 110, "Total tackles."),
+        definition("TFL", .defense, .traditional, .production, [.defense], 120, "Tackles for loss."),
+        definition("PD", .defense, .traditional, .production, [.defense], 130, "Passes defended."),
+        definition("Sacks", .defense, .traditional, .passRush, [.defense], 140, "Total sacks."),
+        definition("QB Hits", .defense, .traditional, .passRush, [.defense], 150, "Quarterback hits."),
+        definition("INT", .defense, .traditional, .turnovers, [.defense], 160, "Defensive interceptions."),
+        definition("FF", .defense, .traditional, .turnovers, [.defense], 170, "Forced fumbles.")
+    ]
+
+    static func definition(for label: String, category: MetricCategory) -> MetricDefinition? {
+        definitions.first { $0.label == label && $0.category == category }
+    }
+
+    static func kind(for metric: Metric) -> MetricKind {
+        definition(for: metric.label, category: metric.category)?.kind ?? .advanced
+    }
+
+    static func isSupported(_ metric: Metric, by position: PlayerPositionGroup) -> Bool {
+        definition(for: metric.label, category: metric.category)?.positions.contains(position) ?? true
+    }
+
+    static func sorted(_ metrics: [Metric]) -> [Metric] {
+        metrics.sorted { lhs, rhs in
+            let left = definition(for: lhs.label, category: lhs.category)?.priority ?? Int.max
+            let right = definition(for: rhs.label, category: rhs.category)?.priority ?? Int.max
+            if left == right { return lhs.label < rhs.label }
+            return left < right
+        }
+    }
+
+    private static func definition(
+        _ label: String,
+        _ category: MetricCategory,
+        _ kind: MetricKind,
+        _ family: MetricFamily,
+        _ positions: Set<PlayerPositionGroup>,
+        _ priority: Int,
+        _ description: String,
+        higherIsBetter: Bool = true
+    ) -> MetricDefinition {
+        MetricDefinition(
+            label: label,
+            category: category,
+            kind: kind,
+            family: family,
+            positions: positions,
+            higherIsBetter: higherIsBetter,
+            priority: priority,
+            description: description
+        )
+    }
+}
+
+extension Player {
+    var positionGroup: PlayerPositionGroup {
+        switch playerType?.lowercased() {
+        case "qb": return .qb
+        case "rb": return .rb
+        case "wr": return .wr
+        case "te": return .te
+        case "def": return .defense
+        default:
+            let position = displayPosition.uppercased()
+            if position == "QB" { return .qb }
+            if position == "RB" || position == "FB" { return .rb }
+            if position == "WR" { return .wr }
+            if position == "TE" { return .te }
+            return primaryCategory == .defense ? .defense : .wr
+        }
+    }
+
+    func metrics(kind: MetricKind) -> [Metric] {
+        FootballMetricRegistry.sorted(metrics.filter { FootballMetricRegistry.kind(for: $0) == kind })
+    }
+
+    func preferredHeadlineMetric(kind: MetricKind) -> Metric? {
+        let candidates = metrics(kind: kind)
+        let preferred = kind == .advanced
+            ? positionGroup.preferredAdvancedMetrics
+            : positionGroup.preferredTraditionalMetrics
+        for label in preferred {
+            if let metric = candidates.first(where: { $0.label == label }) { return metric }
+        }
+        return candidates.first
     }
 }

@@ -3,7 +3,7 @@ import RevenueCat
 
 @main
 struct StatScoutApp: App {
-    private let api: StatcastAPI?
+    private let api: (any StatcastProviding)?
     @StateObject private var store = StoreService.shared
 
     init() {
@@ -11,8 +11,14 @@ struct StatScoutApp: App {
         guard let urlString = Self.configValue(for: "SUPABASE_URL"),
               let url = URL(string: urlString),
               let key = Self.configValue(for: "SUPABASE_ANON_KEY") else {
+            #if targetEnvironment(simulator)
+            self.api = PreviewStatcastAPI()
+            StoreService.shared.start()
+            return
+            #else
             self.api = nil
             return
+            #endif
         }
         self.api = StatcastAPI(baseURL: url, apiKey: key)
         StoreService.shared.start()
@@ -68,7 +74,7 @@ struct ContentView: View {
 
     @State private var viewModel: DashboardViewModel
 
-    init(api: StatcastAPI) {
+    init(api: any StatcastProviding) {
         _viewModel = State(initialValue: DashboardViewModel(provider: api, cache: TwoTierPlayerCache()))
     }
 

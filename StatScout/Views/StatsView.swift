@@ -1,42 +1,25 @@
 import SwiftUI
 
-/// Single home for every league-wide stat view. Folds the old Leaders,
-/// Box Score, and StatScout-Best/Worst tabs into one place. The mode lives in
-/// the nav-bar title as a dropdown (Weather-app style) and the season selector
-/// sits in the leading toolbar slot, so both apply across every mode and the
-/// scroll content keeps its full height. Each mode's heavy data is only built
-/// when its branch is selected (the `switch` doesn't instantiate the others),
-/// which preserves the lazy-load behavior the old per-tab guards had.
+/// Position-first home for league-wide NFL statistics. The dashboard owns the
+/// position, Advanced/Traditional lens, family, qualifier, and sort controls;
+/// the season remains in the navigation bar so it applies to the whole surface.
 struct StatsView: View {
     let viewModel: DashboardViewModel
     @EnvironmentObject private var store: StoreService
 
-    private enum Mode: String, CaseIterable, Identifiable {
-        case leaders = "Leaders"
-        case boxScore = "Box Score"
-        case bestWorst = "Best/Worst"
-        var id: String { rawValue }
-    }
-
-    @State private var mode: Mode = .leaders
     @State private var paywallTrigger: PaywallTrigger?
 
     var body: some View {
-        VStack(spacing: 0) {
-            switch mode {
-            case .leaders:
-                DashboardView(viewModel: viewModel)
-            case .boxScore:
-                StandardStatsLeadersView(players: viewModel.qualifiedSeasonPlayers)
-            case .bestWorst:
-                MetricLeadersView(metrics: viewModel.allMetrics)
-            }
-        }
+        DashboardView(viewModel: viewModel)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(SavantPalette.canvas)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { seasonMenu }
-            ToolbarItem(placement: .principal) { modeMenu }
+            ToolbarItem(placement: .principal) {
+                Text("Stats")
+                    .font(SavantType.bodyBold)
+                    .foregroundStyle(.white)
+            }
         }
         // Contextual past-season pitches route through the low-friction
         // TrialPitchSheet (its CTA starts the yearly trial directly), not the
@@ -44,37 +27,6 @@ struct StatsView: View {
         .sheet(item: $paywallTrigger) { trigger in
             TrialPitchSheet(trigger: trigger)
         }
-    }
-
-    // Nav-title dropdown that swaps between Leaders / Box Score / Best-Worst.
-    // Replaces the old full-width segmented tab row.
-    private var modeMenu: some View {
-        Menu {
-            ForEach(Mode.allCases) { option in
-                Button {
-                    mode = option
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    if option == mode {
-                        Label(option.rawValue, systemImage: "checkmark")
-                    } else {
-                        Text(option.rawValue)
-                    }
-                }
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Text(mode.rawValue)
-                    .font(SavantType.bodyBold)
-                    .foregroundStyle(.white)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.85))
-            }
-        }
-        .menuOrder(.fixed)
-        .accessibilityLabel("View")
-        .accessibilityValue(mode.rawValue)
     }
 
     // Compact season selector for the leading toolbar slot. Sits on the navy

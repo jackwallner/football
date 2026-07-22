@@ -468,7 +468,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if ! command -v xcodegen &> /dev/null; then\n  echo \"warning: xcodegen not found. Install via 'brew install xcodegen'.\"\nfi\nif [ -z \"$SUPABASE_URL\" ]; then\n  echo \"error: SUPABASE_URL not set.\"\n  exit 1\nfi\nif [ -z \"$SUPABASE_ANON_KEY\" ]; then\n  echo \"error: SUPABASE_ANON_KEY not set.\"\n  exit 1\nfi\n";
+			shellScript = "if ! command -v xcodegen &> /dev/null; then\n  echo \"warning: xcodegen not found. Install via 'brew install xcodegen'.\"\nfi\nif [ \"$PLATFORM_NAME\" != \"iphonesimulator\" ]; then\n  if [ -z \"$SUPABASE_URL\" ]; then\n    echo \"error: SUPABASE_URL not set.\"\n    exit 1\n  fi\n  if [ -z \"$SUPABASE_ANON_KEY\" ]; then\n    echo \"error: SUPABASE_ANON_KEY not set.\"\n    exit 1\n  fi\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -559,7 +559,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = StatScout/StatScout.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = YXG4MP6W39;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StatScout/Info.plist;
@@ -678,7 +678,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = StatScout/StatScout.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = YXG4MP6W39;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StatScout/Info.plist;

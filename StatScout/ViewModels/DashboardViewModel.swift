@@ -10,69 +10,73 @@ final class DashboardViewModel {
     var players: [Player] = []
     var playerHistories: [Int: [Player]] = [:]
     var searchText = ""
-    var selectedCategory: MetricCategory? = .passing {
+    var selectedPosition: PlayerPositionGroup = .qb {
         didSet {
-            if oldValue != selectedCategory { applyDefaultSortDirection() }
+            guard oldValue != selectedPosition else { return }
+            selectedMetricKind = selectedPosition == .defense ? .traditional : .advanced
+            selectedFamily = nil
+            userSortMetric = nil
+            applyDefaultSortDirection()
         }
     }
-    // Tracks whether the user has manually flipped direction since the last
-    // metric/category change. When nil, sortDescending follows the metric's
-    // default ("best first"); once toggled it pins until the user switches
-    // metric or category again.
-    private var userToggledDirection = false
-    var sortDescending = true
-    // Defaults to current year, but `load()` will reset to the most recent season
-    // that actually has data once the cache/network resolves so first paint isn't an empty state.
-    var selectedSeason: Int = Calendar.current.component(.year, from: Date())
-    // User-selected sort metric per category. Overrides the auto-priority pick when present
-    // and still valid for the current season's data.
-    var userSortMetricByCategory: [MetricCategory: String] = [:]
-
-    // Label shown in the sort button - reflects actual metric being used
-    var sortLabel: String {
-        guard selectedCategory != nil else { return "Pass Yds" }
-        return currentSortMetric ?? "Top Category"
+    var selectedMetricKind: MetricKind = .advanced {
+        didSet {
+            guard oldValue != selectedMetricKind else { return }
+            selectedFamily = nil
+            userSortMetric = nil
+            applyDefaultSortDirection()
+        }
+    }
+    var selectedFamily: MetricFamily? {
+        didSet {
+            guard oldValue != selectedFamily else { return }
+            userSortMetric = nil
+            applyDefaultSortDirection()
+        }
+    }
+    // Compatibility bridge for callers that still speak in wire-format categories.
+    var selectedCategory: MetricCategory? {
+        get { selectedPosition.primaryCategory }
+        set {
+            switch newValue {
+            case .passing: selectedPosition = .qb
+            case .rushing: selectedPosition = .rb
+            case .receiving: selectedPosition = .wr
+            case .defense: selectedPosition = .defense
+            case nil: break
+            }
+        }
     }
 
-    // Resolved sort metric: user override (if still available) or auto-priority pick.
+    private var userSortMetric: String?
+    var sortDescending = true
+    var selectedSeason: Int = Calendar.current.component(.year, from: Date())
+
+    var sortLabel: String { currentSortMetric ?? "Top Metric" }
+
     var currentSortMetric: String? {
-        guard let category = selectedCategory else { return nil }
-        if let user = userSortMetricByCategory[category],
-           availableSortMetrics.contains(user) {
-            return user
+        if let userSortMetric, availableSortMetrics.contains(userSortMetric) {
+            return userSortMetric
         }
         return determineSortMetricLabel()
     }
 
-    // All metric labels available for the current category, priority metrics first.
+    var availableFamilies: [MetricFamily] {
+        let present = Set(eligibleMetrics.compactMap {
+            FootballMetricRegistry.definition(for: $0.label, category: $0.category)?.family
+        })
+        return MetricFamily.allCases.filter(present.contains)
+    }
+
     var availableSortMetrics: [String] {
-        guard let category = selectedCategory else { return [] }
-        var allLabels = Set<String>()
-        for player in seasonPlayers {
-            for metric in player.metrics where metric.category == category {
-                allLabels.insert(metric.label)
-            }
-        }
         var seen = Set<String>()
-        var ordered: [String] = []
-        for label in priorityMetrics(for: category) where allLabels.contains(label) {
-            if seen.insert(label).inserted {
-                ordered.append(label)
-            }
-        }
-        for label in allLabels.sorted() where seen.insert(label).inserted {
-            ordered.append(label)
-        }
-        return ordered
+        return FootballMetricRegistry.sorted(eligibleMetrics)
+            .filter { seen.insert($0.label).inserted }
+            .map(\.label)
     }
 
     func setUserSortMetric(_ label: String?) {
-        guard let category = selectedCategory else { return }
-        if let label {
-            userSortMetricByCategory[category] = label
-        } else {
-            userSortMetricByCategory.removeValue(forKey: category)
-        }
+        userSortMetric = label
         applyDefaultSortDirection()
     }
 
@@ -81,15 +85,18 @@ final class DashboardViewModel {
     /// the active metric or category.
     func toggleSortDirection() {
         sortDescending.toggle()
-        userToggledDirection = true
     }
 
     /// Reset direction to "best first" for the active metric. Triggered by
     /// category changes and by picking a new sort metric — but only when the
     /// user hasn't manually pinned a direction in this session.
     private func applyDefaultSortDirection() {
-        userToggledDirection = false
-        sortDescending = Self.defaultSortDescending(label: currentSortMetric, category: selectedCategory)
+        guard let label = currentSortMetric,
+              let metric = eligibleMetrics.first(where: { $0.label == label }) else {
+            sortDescending = true
+            return
+        }
+        sortDescending = FootballMetricRegistry.definition(for: label, category: metric.category)?.higherIsBetter ?? true
     }
     // Mirrors StoreService.isPro. Set by the view layer so season gating and
     // selectedSeason clamping stay consistent without the VM depending on the store.
@@ -199,16 +206,33 @@ final class DashboardViewModel {
         return allSeasonPlayers.filter { seenIds.insert($0.playerId).inserted }
     }
 
+    private var eligibleMetrics: [Metric] {
+        seasonPlayers
+            .filter { $0.positionGroup == selectedPosition }
+            .flatMap(\.metrics)
+            .filter { metric in
+                guard FootballMetricRegistry.kind(for: metric) == selectedMetricKind,
+                      FootballMetricRegistry.isSupported(metric, by: selectedPosition) else { return false }
+                guard let selectedFamily else { return true }
+                return FootballMetricRegistry.definition(for: metric.label, category: metric.category)?.family == selectedFamily
+            }
+    }
+
     var filteredPlayers: [Player] {
         seasonPlayers.filter { player in
             let matchesSearch = searchText.isEmpty
                 || player.name.localizedCaseInsensitiveContains(searchText)
                 || player.team.localizedCaseInsensitiveContains(searchText)
                 || teamFullName(player.team).localizedCaseInsensitiveContains(searchText)
-            let matchesCategory = selectedCategory == nil || player.metrics.contains { $0.category == selectedCategory }
-            let matchesType = player.matchesPlayerType(for: selectedCategory)
-            let qualifies = isQualified(player, for: selectedCategory)
-            return matchesSearch && matchesCategory && matchesType && qualifies
+            let matchesPosition = player.positionGroup == selectedPosition
+            let matchingMetrics = player.metrics.filter { metric in
+                guard FootballMetricRegistry.kind(for: metric) == selectedMetricKind,
+                      FootballMetricRegistry.isSupported(metric, by: selectedPosition) else { return false }
+                guard let selectedFamily else { return true }
+                return FootballMetricRegistry.definition(for: metric.label, category: metric.category)?.family == selectedFamily
+            }
+            let qualifies = matchingMetrics.contains { isQualified(player, for: $0.category) }
+            return matchesSearch && matchesPosition && !matchingMetrics.isEmpty && qualifies
         }
     }
 
@@ -268,14 +292,11 @@ final class DashboardViewModel {
     // exact metric are partitioned to the end so blank-value rows never
     // interleave above genuinely-ranked players.
     var leaderboard: [Player] {
-        let sortLabel = currentSortMetric
-        guard let category = selectedCategory, let label = sortLabel else {
-            return filteredPlayers.sorted { p1, p2 in
-                let v1 = Double(p1.overallPercentile)
-                let v2 = Double(p2.overallPercentile)
-                return sortDescending ? v1 > v2 : v1 < v2
-            }
+        guard let label = currentSortMetric,
+              let referenceMetric = eligibleMetrics.first(where: { $0.label == label }) else {
+            return filteredPlayers.sorted { $0.name < $1.name }
         }
+        let category = referenceMetric.category
 
         func rawValue(_ p: Player) -> Double? {
             guard let m = p.metrics.first(where: { $0.label == label && $0.category == category }) else { return nil }
@@ -308,19 +329,9 @@ final class DashboardViewModel {
         return scanner.scanDouble()
     }
 
-    /// Metrics where a lower raw value is the better outcome. Drives the
-    /// default sort direction (so pitcher xwOBA lists best pitchers first
-    /// instead of worst) and Best/Lowest selection on MetricLeadersView.
-    /// Hitter xwOBA / Barrel% high = good; pitcher xwOBA / Barrel% low = good.
     static func lowerIsBetter(label: String, category: MetricCategory) -> Bool {
-        switch category {
-        case .passing:
-            return ["INT%", "Sack%", "Time to Throw"].contains(label)
-        case .rushing:
-            return ["Fumble%"].contains(label)
-        case .receiving, .defense:
-            return false
-        }
+        guard let definition = FootballMetricRegistry.definition(for: label, category: category) else { return false }
+        return !definition.higherIsBetter
     }
 
     /// Default sort direction for a metric — descending (highest first) unless
@@ -331,50 +342,14 @@ final class DashboardViewModel {
         return !lowerIsBetter(label: label, category: category)
     }
 
-    // Determine which metric label to use for consistent sorting across all players
     private func determineSortMetricLabel() -> String? {
-        guard let category = selectedCategory else { return nil }
-
-        // Find the first priority metric that ANY player in the filtered set has
-        for metricLabel in priorityMetrics(for: category) {
-            let hasMetric = filteredPlayers.contains { player in
-                player.metrics.contains { $0.label == metricLabel && $0.category == category }
-            }
-            if hasMetric {
-                return metricLabel
-            }
+        let preferred = selectedMetricKind == .advanced
+            ? selectedPosition.preferredAdvancedMetrics
+            : selectedPosition.preferredTraditionalMetrics
+        for label in preferred where eligibleMetrics.contains(where: { $0.label == label }) {
+            return label
         }
-        return nil
-    }
-
-    // Get the sort score for a player using a specific metric label
-    private func playerSortScore(player: Player, metricLabel: String?) -> Int {
-        guard let category = selectedCategory else {
-            return player.overallPercentile
-        }
-        guard let label = metricLabel else {
-            return player.percentile(for: category) ?? 0
-        }
-
-        // Use the specific metric if available, otherwise fall back
-        if let metric = player.metrics.first(where: { $0.label == label && $0.category == category }) {
-            return metric.percentile
-        }
-        return player.percentile(for: category) ?? 0
-    }
-
-    // Priority sort metrics for each category — headline counting stats first.
-    private func priorityMetrics(for category: MetricCategory) -> [String] {
-        switch category {
-        case .passing:
-            return ["Pass Yds", "Pass TD", "Rating", "EPA/Play"]
-        case .rushing:
-            return ["Rush Yds", "Rush TD", "Y/C", "Rush EPA"]
-        case .receiving:
-            return ["Rec Yds", "Rec", "Rec TD", "YAC"]
-        case .defense:
-            return ["Tackles", "Sacks", "INT"]
-        }
+        return availableSortMetrics.first
     }
 
     // Expose the current sort metric for row display. When no category is
@@ -382,8 +357,11 @@ final class DashboardViewModel {
     // nil category) so LeaderboardTableRow matches by label alone and shows
     // each player's xwOBA value instead of a percentile fallback.
     var currentSortMetricForDisplay: (label: String?, category: MetricCategory?) {
-        if let label = currentSortMetric { return (label, selectedCategory) }
-        return ("Pass Yds", .passing)
+        guard let label = currentSortMetric,
+              let metric = eligibleMetrics.first(where: { $0.label == label }) else {
+            return (nil, nil)
+        }
+        return (label, metric.category)
     }
 
     func players(forTeam team: String) -> [Player] {

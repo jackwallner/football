@@ -62,12 +62,23 @@ struct PlayerProfileView: View {
         activeSeason.map(String.init) ?? "—"
     }
 
-    private var groupedMetrics: [(category: MetricCategory, metrics: [Metric])] {
-        let grouped = Dictionary(grouping: displayedPlayer.metrics) { $0.category }
-        return MetricCategory.allCases.compactMap { cat in
-            guard let m = grouped[cat], !m.isEmpty else { return nil }
-            return (category: cat, metrics: m.sorted { cat.sortMetrics($0.label, $1.label) })
+    private var profileMetricKind: MetricKind {
+        displayedPlayer.positionGroup == .defense ? .traditional : .advanced
+    }
+
+    private var groupedMetrics: [(family: MetricFamily, metrics: [Metric])] {
+        let eligible = displayedPlayer.metrics(kind: profileMetricKind)
+        let grouped = Dictionary(grouping: eligible) { metric in
+            FootballMetricRegistry.definition(for: metric.label, category: metric.category)?.family ?? .production
         }
+        return MetricFamily.allCases.compactMap { family in
+            guard let metrics = grouped[family], !metrics.isEmpty else { return nil }
+            return (family: family, metrics: FootballMetricRegistry.sorted(metrics))
+        }
+    }
+
+    private var profileHeadline: Metric? {
+        displayedPlayer.preferredHeadlineMetric(kind: profileMetricKind)
     }
 
     /// Players eligible for comparison: same position group, sorted by overall
@@ -90,18 +101,7 @@ struct PlayerProfileView: View {
             VStack(spacing: 0) {
                 PlayerIdentityStrip(player: player)
 
-                tabSelector
-                    .padding(.horizontal, 12)
-                    .padding(.top, 12)
-
-                switch selectedTab {
-                case .statcast:
-                    statcastContent
-                case .standard:
-                    standardContent
-                case .yearCompare:
-                    yearCompareContent
-                }
+                statcastContent
             }
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -238,7 +238,10 @@ struct PlayerProfileView: View {
 
     private var statcastContent: some View {
         VStack(spacing: 12) {
+            headlineCard
             percentileRankingsCard
+            standardStatsGridCard
+            yearCompareSection
 
             if !store.isPro {
                 RecentFormCard(
@@ -248,14 +251,81 @@ struct PlayerProfileView: View {
                     fetchGameLogs: fetchGameLogs,
                     onUpgradeTap: { trialPitchTrigger = .recentForm }
                 )
-            }
-
-            if !store.isPro {
                 proUpsellCard
             }
         }
         .padding(.horizontal, 12)
         .padding(.top, 12)
+    }
+
+    private var headlineCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(displayedPlayer.positionGroup == .defense ? "PRODUCTION PROFILE" : "ADVANCED PROFILE")
+                    .font(SavantType.micro)
+                    .tracking(0.7)
+                    .foregroundStyle(SavantPalette.inkTertiary)
+                Spacer()
+                seasonMenu
+            }
+            if let metric = profileHeadline {
+                HStack(alignment: .lastTextBaseline) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(metric.label)
+                            .font(SavantType.bodyBold)
+                            .foregroundStyle(SavantPalette.ink)
+                        Text(displayedPlayer.positionGroup.cohortDescription)
+                            .font(SavantType.small)
+                            .foregroundStyle(SavantPalette.inkSecondary)
+                    }
+                    Spacer()
+                    Text(metric.value.isEmpty ? "—" : metric.value)
+                        .font(SavantType.statMed)
+                        .foregroundStyle(SavantPalette.color(forPercentile: metric.percentile))
+                    Text("\(metric.percentile.ordinal)")
+                        .font(SavantType.smallBold)
+                        .foregroundStyle(SavantPalette.color(forPercentile: metric.percentile))
+                }
+            }
+        }
+        .padding(16)
+        .background(SavantPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .overlay(RoundedRectangle(cornerRadius: SavantGeo.radiusCard).stroke(SavantPalette.hairline, lineWidth: 0.5))
+    }
+
+    private var yearCompareSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("YEAR-OVER-YEAR")
+                        .font(SavantType.micro)
+                        .tracking(0.7)
+                        .foregroundStyle(SavantPalette.inkTertiary)
+                    Text("Compare how this profile changed by season.")
+                        .font(SavantType.small)
+                        .foregroundStyle(SavantPalette.inkSecondary)
+                }
+                Spacer()
+                Button("Compare") {
+                    selectedTab = .yearCompare
+                    if store.isPro, !hasLoadedHistorical, !isHistoricalLoading {
+                        Task { await loadHistorical?() }
+                    }
+                    if !store.isPro { trialPitchTrigger = .yearCompare }
+                }
+                .font(SavantType.smallBold)
+                .buttonStyle(.bordered)
+                .tint(SavantPalette.savantNavy)
+            }
+            if selectedTab == .yearCompare, store.isPro {
+                yearCompareContent
+            }
+        }
+        .padding(16)
+        .background(SavantPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: SavantGeo.radiusCard))
+        .overlay(RoundedRectangle(cornerRadius: SavantGeo.radiusCard).stroke(SavantPalette.hairline, lineWidth: 0.5))
     }
 
     private var proUpsellCard: some View {
@@ -510,7 +580,7 @@ struct PlayerProfileView: View {
     private var percentileRankingsCard: some View {
         VStack(spacing: 0) {
             SavantSectionBar(
-                title: "PERCENTILE RANKINGS",
+                title: displayedPlayer.positionGroup == .defense ? "PRODUCTION PERCENTILES" : "ADVANCED PERCENTILES",
                 trailing: AnyView(
                     HStack(spacing: 4) {
                         seasonMenu
@@ -566,11 +636,11 @@ struct PlayerProfileView: View {
                 )
                 .padding(.vertical, 24)
             } else {
-                ForEach(groupedMetrics, id: \.category) { group in
+                ForEach(groupedMetrics, id: \.family) { group in
                     let rows = displayedMetrics(in: group.metrics)
                     if !rows.isEmpty {
                         SavantSubSectionBar(
-                            title: "\(group.category.rawValue.uppercased())"
+                            title: group.family.rawValue.uppercased()
                         )
 
                         ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
