@@ -423,7 +423,11 @@ final class DashboardViewModel {
         do {
             let current = try await provider.fetchCurrentPlayers()
             let fallbackPlayers = cached.isEmpty ? playerHistories.values.flatMap { $0 } : cached
-            let allPlayers = current.isEmpty ? fallbackPlayers : mergePlayers(replacing: current)
+            let hasCompleteFallback = PlayerSnapshotValidator.isCompleteCurrent(fallbackPlayers)
+            let acceptedCurrent = PlayerSnapshotValidator.isCompleteCurrent(current) || !hasCompleteFallback
+                ? current
+                : []
+            let allPlayers = acceptedCurrent.isEmpty ? fallbackPlayers : mergePlayers(replacing: acceptedCurrent)
 
             guard !allPlayers.isEmpty else {
                 // No current data (offseason / cold cache / offline). Fall back to
@@ -449,7 +453,12 @@ final class DashboardViewModel {
             loadingMessage = "Preparing leaderboard…"
             loadingProgress = 0.85
             ingestPlayers(allPlayers)
-            try? cache?.savePlayers(current)
+            if !acceptedCurrent.isEmpty {
+                try? cache?.savePlayers(acceptedCurrent)
+            } else if !current.isEmpty {
+                errorMessage = "Showing complete saved data while the live feed finishes updating."
+                lastFetchFailed = true
+            }
 
         } catch is DecodingError {
             errorMessage = "Data format changed — app may need an update."

@@ -151,6 +151,14 @@ private struct Lenient<T: Decodable>: Decodable {
     }
 }
 
+struct OfflineStatcastAPI: StatcastProviding {
+    func fetchPlayers() async throws -> [Player] { [] }
+    func fetchHistoricalPlayers() async throws -> [Player] { [] }
+    func fetchCurrentPlayers() async throws -> [Player] { [] }
+    func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog] { [] }
+    func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog] { [] }
+}
+
 #if DEBUG
 struct PreviewStatcastAPI: StatcastProviding {
     func fetchPlayers() async throws -> [Player] {

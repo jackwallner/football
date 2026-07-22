@@ -12,7 +12,7 @@ struct StatScoutApp: App {
               let url = URL(string: urlString),
               let key = Self.configValue(for: "SUPABASE_ANON_KEY") else {
             #if targetEnvironment(simulator)
-            self.api = PreviewStatcastAPI()
+            self.api = OfflineStatcastAPI()
             StoreService.shared.start()
             return
             #else

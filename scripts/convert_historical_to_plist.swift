@@ -7,12 +7,15 @@
 // into native Date objects so PropertyListDecoder can decode them with its default strategy
 // (it has no dateDecodingStrategy on iOS — date types must be native in the plist).
 //
-// Run from repo root: swift scripts/convert_historical_to_plist.swift
+// Run from repo root:
+//   swift scripts/convert_historical_to_plist.swift
+//   swift scripts/convert_historical_to_plist.swift players-current
 
 import Foundation
 
-let input = "StatScout/Data/players-historical.json"
-let output = "StatScout/Data/players-historical.plist"
+let resourceName = CommandLine.arguments.dropFirst().first ?? "players-historical"
+let input = "StatScout/Data/\(resourceName).json"
+let output = "StatScout/Data/\(resourceName).plist"
 
 // Keys whose string values are ISO8601 timestamps in the source JSON.
 let dateKeys: Set<String> = ["updated_at", "date"]
