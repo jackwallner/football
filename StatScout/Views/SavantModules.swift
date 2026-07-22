@@ -71,7 +71,7 @@ struct TeamIdentityStrip: View {
                     .fill(NFLTeamColor.color(normalizedTeam))
                     .frame(width: 56, height: 56)
                 Text(normalizedTeam)
-                    .font(GridironType.statLarge)
+                    .font(GridironType.pageTitle)
                     .foregroundStyle(.white)
             }
             VStack(alignment: .leading, spacing: 4) {
@@ -102,7 +102,6 @@ struct GridironSectionBar: View {
         HStack(spacing: 0) {
             Text(title.uppercased())
                 .font(GridironType.sectionTitle)
-                .tracking(0.8)
                 .foregroundStyle(GridironPalette.ink)
                 .padding(.leading, GridironGeo.padCard)
             Spacer()
@@ -122,7 +121,6 @@ struct GridironSubSectionBar: View {
         HStack {
             Text(title.uppercased())
                 .font(GridironType.micro)
-                .tracking(0.6)
                 .foregroundStyle(GridironPalette.inkSecondary)
             Spacer()
             if let trailing {
@@ -156,7 +154,6 @@ struct GridironTabs: View {
                         VStack(spacing: 0) {
                             Text(tab.uppercased())
                                 .font(GridironType.smallBold)
-                                .tracking(0.5)
                                 .foregroundStyle(selected == tab ? GridironPalette.ink : GridironPalette.inkTertiary)
                                 .padding(.vertical, 12)
                                 .padding(.horizontal, 14)

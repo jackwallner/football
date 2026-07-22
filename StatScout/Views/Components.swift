@@ -11,7 +11,7 @@ struct PlayerHeadshot: View {
         ZStack {
             Circle().fill(NFLTeamColor.color(team))
             Text(initials)
-                .font(GridironFont.condensed(size * 0.38, weight: .bold))
+                .font(.system(size: size * 0.34, weight: .bold, design: .default))
                 .foregroundStyle(.white)
         }
         .frame(width: size, height: size)
@@ -72,7 +72,6 @@ struct OverallPercentileBadge: View {
                 .shadow(color: Color.black.opacity(0.4), radius: 2, x: 0, y: 1)
             Text(percentile.ordinal)
                 .font(GridironType.micro)
-                .tracking(0.6)
                 .foregroundStyle(.white.opacity(0.9))
                 .shadow(color: Color.black.opacity(0.3), radius: 1, x: 0, y: 0.5)
         }
@@ -144,7 +143,8 @@ struct MetricBar: View {
                             .frame(width: circleSize, height: circleSize)
 
                         Text("\(percentileValue)")
-                            .font(GridironFont.mono(11, weight: .bold))
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .monospacedDigit()
                             .foregroundStyle(percentileValue >= 35 && percentileValue <= 75 ? GridironPalette.ink : .white)
                             .shadow(color: percentileValue >= 35 && percentileValue <= 75 ? Color.clear : Color.black.opacity(0.3), radius: 1, x: 0, y: 0.5)
                     }
@@ -183,7 +183,6 @@ struct DualMetricBar: View {
             HStack(spacing: 6) {
                 Text("Season")
                     .font(GridironType.micro)
-                    .tracking(0.4)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(width: 52, alignment: .leading)
                 MetricBar(metric: season, showValue: true)
@@ -193,7 +192,6 @@ struct DualMetricBar: View {
                 HStack(spacing: 6) {
                     Text(recentCaption)
                         .font(GridironType.micro)
-                        .tracking(0.4)
                         .foregroundStyle(GridironPalette.turf)
                         .frame(width: 52, alignment: .leading)
                     MetricBar(metric: recent, showValue: true)
@@ -286,7 +284,6 @@ struct QualifierPicker: View {
                     } label: {
                         Text(level.rawValue)
                             .font(GridironType.micro)
-                            .tracking(0.4)
                             .foregroundStyle(selection == level ? .white : GridironPalette.inkSecondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 28)
@@ -305,7 +302,6 @@ struct QualifierPicker: View {
             // synonyms by spelling out what the active level actually filters.
             Text(selection.description)
                 .font(GridironType.micro)
-                .tracking(0.3)
                 .foregroundStyle(GridironPalette.inkTertiary)
         }
     }
@@ -337,7 +333,6 @@ struct QualifierMenu: View {
                     .font(.system(size: 11, weight: .semibold))
                 Text(selection.rawValue)
                     .font(GridironType.micro)
-                    .tracking(0.4)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .bold))
             }
@@ -364,7 +359,6 @@ struct SectionHeader: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(GridironType.sectionTitle)
-                .tracking(0.8)
                 .foregroundStyle(GridironPalette.ink)
             Text(subtitle)
                 .font(GridironType.small)
@@ -437,19 +431,16 @@ struct LeaderboardTableHeader: View {
         HStack(spacing: 0) {
             Text("RANK")
                 .font(GridironType.micro)
-                .tracking(0.5)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(width: 42, alignment: .leading)
 
             Text("PLAYER")
                 .font(GridironType.micro)
-                .tracking(0.5)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text("TEAM")
                 .font(GridironType.micro)
-                .tracking(0.5)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(width: 44, alignment: .leading)
 
@@ -475,7 +466,6 @@ struct LeaderboardTableHeader: View {
                             .font(.system(size: 7, weight: .bold))
                     }
                     .font(GridironType.micro)
-                    .tracking(0.4)
                     .foregroundStyle(GridironPalette.turf)
                 }
                 .menuOrder(.fixed)
@@ -551,7 +541,6 @@ struct LeaderboardTableRow: View {
                         .truncationMode(.tail)
                     Text(player.displayPosition)
                         .font(GridironType.micro)
-                        .tracking(0.4)
                         .foregroundStyle(GridironPalette.inkTertiary)
                 }
             }
@@ -633,7 +622,6 @@ struct BlurGateUnlock: View {
             if let subtext {
                 Text(subtext)
                     .font(GridironType.micro)
-                    .tracking(0.3)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .multilineTextAlignment(.center)
             }

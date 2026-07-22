@@ -106,7 +106,6 @@ struct YearComparisonView: View {
                     .foregroundStyle(GridironPalette.ink)
                 Text(year.wrappedValue == recentYear ? "Recent" : "Prior")
                     .font(GridironType.micro)
-                    .tracking(0.3)
                     .foregroundStyle(GridironPalette.inkTertiary)
             }
             .frame(maxWidth: .infinity)
@@ -283,7 +282,7 @@ struct YearComparisonView: View {
             // Delta (in percentile points)
             HStack(spacing: 2) {
                 Text(arrow)
-                    .font(GridironFont.condensed(12, weight: .bold))
+                    .font(GridironType.smallBold)
                 Text("\(abs(item.change))%")
                     .font(GridironType.bodyBold)
             }

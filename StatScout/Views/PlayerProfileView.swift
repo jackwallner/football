@@ -263,7 +263,6 @@ struct PlayerProfileView: View {
             HStack {
                 Text(displayedPlayer.positionGroup == .defense ? "PRODUCTION PROFILE" : "ADVANCED PROFILE")
                     .font(GridironType.micro)
-                    .tracking(0.7)
                     .foregroundStyle(GridironPalette.inkTertiary)
                 Spacer()
                 seasonMenu
@@ -300,7 +299,6 @@ struct PlayerProfileView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("YEAR-OVER-YEAR")
                         .font(GridironType.micro)
-                        .tracking(0.7)
                         .foregroundStyle(GridironPalette.inkTertiary)
                     Text("Compare how this profile changed by season.")
                         .font(GridironType.small)
@@ -336,7 +334,6 @@ struct PlayerProfileView: View {
                     .foregroundStyle(Color.yellow)
                 Text("StatScout+")
                     .font(GridironType.smallBold)
-                    .tracking(0.4)
                     .foregroundStyle(GridironPalette.ink)
             }
 
@@ -372,7 +369,6 @@ struct PlayerProfileView: View {
             if let subtext = store.paywallBlurSubtext {
                 Text(subtext)
                     .font(GridironType.micro)
-                    .tracking(0.3)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
@@ -441,7 +437,6 @@ struct PlayerProfileView: View {
                 .foregroundStyle(GridironPalette.ink)
             Text("\(Int(min(max(historicalLoadingProgress, 0), 1) * 100))%")
                 .font(GridironType.micro)
-                .tracking(0.5)
                 .foregroundStyle(GridironPalette.inkTertiary)
         }
         .padding(24)
@@ -536,7 +531,6 @@ struct PlayerProfileView: View {
                     HStack(spacing: 4) {
                         Text(seasonLabel)
                             .font(GridironType.micro)
-                            .tracking(0.5)
                             .foregroundStyle(GridironPalette.inkSecondary)
                         Image(systemName: "chevron.down")
                             .font(.system(size: 9, weight: .bold))
@@ -547,7 +541,6 @@ struct PlayerProfileView: View {
             } else {
                 Text(seasonLabel)
                     .font(GridironType.micro)
-                    .tracking(0.5)
                     .foregroundStyle(GridironPalette.inkSecondary)
             }
         }
@@ -890,7 +883,6 @@ struct PlayerProfileView: View {
                         VStack(spacing: 4) {
                             Text(stat.label.uppercased())
                                 .font(GridironType.micro)
-                                .tracking(0.4)
                                 .foregroundStyle(GridironPalette.inkTertiary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)

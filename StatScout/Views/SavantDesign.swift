@@ -44,33 +44,25 @@ enum GridironPalette {
     }
 }
 
-enum GridironFont {
-    static func condensed(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        if weight == .black || weight == .heavy || weight == .bold || weight == .semibold {
-            return .custom("DINCondensed-Bold", size: size)
-        }
-        return .system(size: size, weight: weight, design: .default)
-    }
-
-    static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .monospaced).monospacedDigit()
-    }
-}
-
 enum GridironType {
-    static let playerName    = GridironFont.condensed(28, weight: .black)
-    static let pageTitle     = GridironFont.condensed(22, weight: .black)
-    static let sectionTitle  = GridironFont.condensed(13, weight: .black)
-    static let cardTitle     = GridironFont.condensed(16, weight: .bold)
-    static let body          = Font.system(size: 14)
-    static let bodyBold      = Font.system(size: 14, weight: .semibold)
-    static let small         = Font.system(size: 12)
-    static let smallBold     = Font.system(size: 12, weight: .semibold)
-    static let micro         = GridironFont.condensed(11, weight: .black)
-    static let statHero      = GridironFont.mono(32, weight: .bold)
-    static let statLarge     = GridironFont.mono(20, weight: .bold)
-    static let statMed       = GridironFont.mono(14, weight: .bold)
-    static let statSmall     = GridironFont.mono(12, weight: .medium)
+    // SF Pro is the single language face throughout the app. Semantic styles
+    // keep the hierarchy coherent and participate in Dynamic Type.
+    static let playerName   = Font.system(.title2, design: .default, weight: .bold)
+    static let pageTitle    = Font.system(.title3, design: .default, weight: .bold)
+    static let sectionTitle = Font.system(.caption, design: .default, weight: .bold)
+    static let cardTitle    = Font.system(.headline, design: .default, weight: .semibold)
+    static let body         = Font.system(.subheadline, design: .default)
+    static let bodyBold     = Font.system(.subheadline, design: .default, weight: .semibold)
+    static let small        = Font.system(.caption, design: .default)
+    static let smallBold    = Font.system(.caption, design: .default, weight: .semibold)
+    static let micro        = Font.system(.caption2, design: .default, weight: .semibold)
+
+    // Monospacing is reserved for values and ranks so numeric columns remain
+    // stable while every word uses the same SF Pro hierarchy above.
+    static let statHero  = Font.system(.title, design: .monospaced, weight: .bold).monospacedDigit()
+    static let statLarge = Font.system(.title3, design: .monospaced, weight: .bold).monospacedDigit()
+    static let statMed   = Font.system(.subheadline, design: .monospaced, weight: .semibold).monospacedDigit()
+    static let statSmall = Font.system(.caption, design: .monospaced, weight: .medium).monospacedDigit()
 }
 
 enum GridironGeo {

@@ -116,7 +116,7 @@ struct TrialPitchSheet: View {
             }
 
             Text(trigger.title)
-                .font(GridironType.statLarge)
+                .font(GridironType.pageTitle)
                 .foregroundStyle(GridironPalette.ink)
                 .multilineTextAlignment(.center)
 
@@ -195,7 +195,6 @@ struct TrialPitchSheet: View {
             if let disclosure = store.yearlyCTADisclosureText {
                 Text(disclosure)
                     .font(GridironType.micro)
-                    .tracking(0.2)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -213,7 +212,6 @@ struct TrialPitchSheet: View {
                 Link("Privacy", destination: StatScoutLegal.privacyURL)
             }
             .font(GridironType.micro)
-            .tracking(0.3)
             .foregroundStyle(GridironPalette.inkTertiary)
 
             Button("Maybe later") { dismiss() }

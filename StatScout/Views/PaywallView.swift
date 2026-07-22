@@ -239,7 +239,6 @@ struct PaywallView: View {
 
                 Text("STATSCOUT+")
                     .font(GridironType.micro)
-                    .tracking(2.5)
                     .foregroundStyle(.white.opacity(0.65))
 
                 Text(trigger.title)
@@ -293,7 +292,6 @@ struct PaywallView: View {
                     .font(.system(size: 11, weight: .semibold))
                 Text("Next Gen-grade data")
                     .font(GridironType.smallBold)
-                    .tracking(0.2)
             }
             Text("·")
                 .font(GridironType.smallBold)
@@ -302,7 +300,6 @@ struct PaywallView: View {
                     .font(.system(size: 11, weight: .semibold))
                 Text("Cancel anytime")
                     .font(GridironType.smallBold)
-                    .tracking(0.2)
             }
         }
         .foregroundStyle(GridironPalette.inkTertiary)
@@ -356,7 +353,6 @@ struct PaywallView: View {
             if let disclosure = disclosureText {
                 Text(disclosure)
                     .font(GridironType.micro)
-                    .tracking(0.2)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -388,7 +384,6 @@ struct PaywallView: View {
                 Link("Privacy", destination: StatScoutLegal.privacyURL)
             }
             .font(GridironType.micro)
-            .tracking(0.3)
             .foregroundStyle(GridironPalette.inkTertiary)
         }
     }
@@ -550,7 +545,6 @@ private struct PaywallPlanCard: View {
                         if isMostPopular {
                             Text("MOST POPULAR")
                                 .font(GridironType.micro)
-                                .tracking(0.4)
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -560,12 +554,10 @@ private struct PaywallPlanCard: View {
                     if showsTrialBadge, let trial = package.introOfferLabel {
                         Text(trial.capitalized)
                             .font(GridironType.micro)
-                            .tracking(0.3)
                             .foregroundStyle(GridironPalette.turf)
                     } else if let savingsPercent {
                         Text("Save \(savingsPercent)% vs monthly")
                             .font(GridironType.micro)
-                            .tracking(0.3)
                             .foregroundStyle(GridironPalette.turf)
                     }
                 }
@@ -586,7 +578,6 @@ private struct PaywallPlanCard: View {
                             }
                             Text("\(perMonthLabel)/mo")
                                 .font(GridironType.micro)
-                                .tracking(0.2)
                                 .foregroundStyle(GridironPalette.ink)
                         }
                     }

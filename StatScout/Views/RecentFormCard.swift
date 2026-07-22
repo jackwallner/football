@@ -76,7 +76,6 @@ struct RecentFormCard: View {
                     .foregroundStyle(GridironPalette.turf)
                 Text("RECENT FORM")
                     .font(GridironType.micro)
-                    .tracking(0.6)
                     .foregroundStyle(GridironPalette.inkSecondary)
                 Spacer()
                 if !store.isPro {
@@ -85,7 +84,6 @@ struct RecentFormCard: View {
                             .font(.system(size: 9, weight: .bold))
                         Text("STATSCOUT+")
                             .font(GridironType.micro)
-                            .tracking(0.4)
                             .fontWeight(.bold)
                     }
                     .foregroundStyle(GridironPalette.midnight)
@@ -229,7 +227,6 @@ struct RecentFormCard: View {
                 if w.plays < smallSamplePlaysThreshold {
                     Text("SMALL SAMPLE")
                         .font(GridironType.micro)
-                        .tracking(0.4)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -267,7 +264,6 @@ struct RecentFormCard: View {
         VStack(alignment: .leading, spacing: 1) {
             Text(label)
                 .font(GridironType.micro)
-                .tracking(0.4)
                 .foregroundStyle(GridironPalette.inkTertiary)
             Text(value)
                 .font(GridironType.bodyBold)

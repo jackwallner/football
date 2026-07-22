@@ -99,7 +99,7 @@ struct CompareView: View {
     private var intro: some View {
         VStack(spacing: 6) {
             Text("Compare")
-                .font(GridironType.statLarge)
+                .font(GridironType.pageTitle)
                 .foregroundStyle(GridironPalette.ink)
             Text("Stack two players head-to-head, or track one player across seasons.")
                 .font(GridironType.small)
@@ -263,7 +263,6 @@ struct CompareView: View {
             if let subtext = store.paywallBlurSubtext {
                 Text(subtext)
                     .font(GridironType.micro)
-                    .tracking(0.3)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .multilineTextAlignment(.center)
             }

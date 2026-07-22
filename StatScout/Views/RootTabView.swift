@@ -215,7 +215,6 @@ private struct ProToolbarButton: ViewModifier {
                                     .font(.system(size: 10, weight: .bold))
                                 Text(ctaLabel)
                                     .font(GridironType.micro)
-                                    .tracking(0.4)
                                     .fontWeight(.bold)
                             }
                             .foregroundStyle(GridironPalette.midnight)
