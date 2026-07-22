@@ -57,17 +57,17 @@ enum PaywallTrigger: Identifiable, Hashable {
     var subtitle: String {
         switch self {
         case .pastSeason:
-            return "Track how every player ranked since 2020, plus the year-over-year trends behind today's leaders."
+            return "Track how every player ranked since 2015, plus the year-over-year trends behind today's leaders."
         case .yearCompare:
             return "Compare any player's percentile rankings across any two seasons. See what changed, what held, and where they're headed."
         case .playerComparison:
             return "Stack any two players head-to-head across every NFL metric: EPA, CPOE, YAC, RYOE, and more."
         case .onboarding:
-            return "Recent form, head-to-head matchups, and every season back to 2020. The full NFL Next Gen picture on every player."
+            return "Recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
         case .activation:
-            return "Recent form, head-to-head matchups, and every season back to 2020. The full NFL Next Gen picture on every player."
+            return "Recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
         case .upgrade:
-            return "Recent form, head-to-head matchups, and every season back to 2020. The full NFL Next Gen picture on every player."
+            return "Recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
         case .pastSeasonsLoad:
             return "Load historical data to explore past seasons, year-over-year trends, and more."
         case .teamView:
@@ -102,7 +102,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         ("flame.fill", "Catch hot streaks: last 1 / 3 / 5 game form"),
         ("person.2.fill", "Head-to-head: any two players, every metric"),
         ("shield.lefthalf.filled", "Every player on every roster, not just qualifiers"),
-        ("calendar.badge.clock", "Every season back to 2020 + year-over-year trends")
+        ("calendar.badge.clock", "Every season back to 2015 + year-over-year trends")
     ]
 
     var features: [(icon: String, title: String)] {

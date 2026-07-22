@@ -377,7 +377,7 @@ struct OnboardingCards: View {
         OnboardingPage(
             icon: "crown.fill",
             title: "Go Deeper\nwith StatScout+",
-            description: "Recent form, every roster player, head-to-head matchups, and seasons back to 2020 — the full scouting toolkit.",
+            description: "Recent form, every roster player, head-to-head matchups, and seasons back to 2015 — the full scouting toolkit.",
             bullets: [
                 BulletItem(text: "Last 1 / 3 / 5 game form on any player or team", icon: "flame.fill", color: GridironPalette.turf),
                 BulletItem(text: "Head-to-head comparisons across every metric", icon: "person.2.fill", color: GridironPalette.turf),

@@ -39,7 +39,7 @@ struct TrialPitchSheet: View {
                         detail: "Compare any two seasons and see which metrics moved, not just this year's snapshot."),
                 Benefit(icon: "calendar.badge.clock",
                         title: "Every past season",
-                        detail: "Browse back to 2020 with full percentile history, not locked to the current year."),
+                        detail: "Browse back to 2015 with full percentile history, not locked to the current year."),
                 Benefit(icon: "shield.lefthalf.filled",
                         title: "Full team scouting",
                         detail: "Every player on every roster, tap any team stat to sort the whole squad.")
