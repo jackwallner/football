@@ -153,6 +153,27 @@ def test_aggregate_player_type_and_team(weekly_df):
     assert agg.loc[1]["team"] == "KC"
 
 
+def test_aggregate_omits_metrics_without_historical_source_columns(weekly_df):
+    old_schema = weekly_df.drop(columns=[
+        "rushing_10",
+        "receiving_yards_after_catch",
+        "target_share",
+        "air_yards_share",
+        "def_qb_hits",
+    ]).copy()
+    old_schema["season"] = 2015
+
+    agg = ingest.aggregate_seasons(old_schema, 2015)
+
+    assert "explosive_rush_rate" not in agg.columns
+    assert "rec_yac" not in agg.columns
+    assert "target_share_pct" not in agg.columns
+    assert "wopr" not in agg.columns
+    assert "qb_hits" not in agg.columns
+    assert "rushing_epa_per_carry" in agg.columns
+    assert "receiving_epa_per_target" in agg.columns
+
+
 def test_merge_ngs(weekly_df, ngs_passing_df, ngs_rushing_df, ngs_receiving_df):
     agg = ingest.aggregate_seasons(weekly_df, 2025)
     agg = ingest.merge_ngs(agg, ngs_passing_df, ngs_rushing_df, ngs_receiving_df, 2025)
@@ -160,6 +181,30 @@ def test_merge_ngs(weekly_df, ngs_passing_df, ngs_rushing_df, ngs_receiving_df):
     assert round(agg.loc[1]["avg_time_to_throw"], 2) == 2.75
     assert round(agg.loc[2]["rush_yoe"], 1) == 120.5
     assert round(agg.loc[3]["avg_separation"], 1) == 3.2
+
+
+def test_build_agg_skips_ngs_before_2016(weekly_df):
+    old_weekly = weekly_df.copy()
+    old_weekly["season"] = 2015
+    with patch("ingest.nfl.load_player_stats", return_value=old_weekly):
+        with patch("ingest.nfl.load_nextgen_stats") as load_ngs:
+            with patch("ingest.load_headshots", return_value={}):
+                agg = ingest.build_agg_for_season(2015)
+
+    assert not agg.empty
+    load_ngs.assert_not_called()
+    assert "cpoe" not in agg.columns
+
+
+def test_build_agg_requests_only_selected_ngs_season(weekly_df):
+    empty_ngs = pd.DataFrame()
+    with patch("ingest.nfl.load_player_stats", return_value=weekly_df):
+        with patch("ingest.nfl.load_nextgen_stats", return_value=empty_ngs) as load_ngs:
+            with patch("ingest.load_headshots", return_value={}):
+                ingest.build_agg_for_season(2025)
+
+    assert load_ngs.call_count == 3
+    assert all(call.args[0] == [2025] for call in load_ngs.call_args_list)
 
 
 # --------------------------------------------------------------------------- #

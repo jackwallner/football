@@ -21,6 +21,14 @@ Run a season snapshot ingest:
 python backend/ingest.py --season 2025    # or set STATCAST_SEASON; defaults to current season
 ```
 
+Backfill and validate every supported snapshot season (2015 through current):
+
+```bash
+python scripts/backfill_historical.py
+```
+
+Use `--validate-only` to audit existing Supabase rows without re-ingesting.
+
 Run the per-game logs ingest (Recent Form data):
 
 ```bash

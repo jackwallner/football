@@ -24,11 +24,18 @@ struct StatcastAPI: StatcastProviding {
     }
 
     func fetchHistoricalPlayers() async throws -> [Player] {
-        try await fetchPlayers(seasonFilter: "lt.\(StatScoutSeason.current)")
+        try await fetchPlayers(queryItems: [
+            URLQueryItem(
+                name: "and",
+                value: "(season.gte.\(StatScoutSeason.oldest),season.lt.\(StatScoutSeason.current))"
+            ),
+        ])
     }
 
     func fetchCurrentPlayers() async throws -> [Player] {
-        try await fetchPlayers(seasonFilter: "eq.\(StatScoutSeason.current)")
+        try await fetchPlayers(queryItems: [
+            URLQueryItem(name: "season", value: "eq.\(StatScoutSeason.current)"),
+        ])
     }
 
     func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog] {
@@ -96,22 +103,22 @@ struct StatcastAPI: StatcastProviding {
         return all
     }
 
-    private func fetchPlayers(seasonFilter: String) async throws -> [Player] {
+    private func fetchPlayers(queryItems filters: [URLQueryItem]) async throws -> [Player] {
         var all: [Player] = []
         let pageSize = 1000
         var offset = 0
         while true {
+            let queryItems = [
+                URLQueryItem(name: "select", value: "*"),
+                // Stable key so offset paging can't skip/duplicate rows when
+                // updated_at changes mid-fetch.
+                URLQueryItem(name: "order", value: "season.asc,id.asc"),
+                URLQueryItem(name: "limit", value: String(pageSize)),
+                URLQueryItem(name: "offset", value: String(offset)),
+            ] + filters
             let endpoint = baseURL
                 .appending(path: "rest/v1/player_snapshots")
-                .appending(queryItems: [
-                    URLQueryItem(name: "select", value: "*"),
-                    URLQueryItem(name: "season", value: seasonFilter),
-                    // Stable key so offset paging can't skip/duplicate rows when
-                    // updated_at changes mid-fetch.
-                    URLQueryItem(name: "order", value: "id.asc"),
-                    URLQueryItem(name: "limit", value: String(pageSize)),
-                    URLQueryItem(name: "offset", value: String(offset))
-                ])
+                .appending(queryItems: queryItems)
             // Bypass URLCache so the shared headshot cache can't serve a stale page.
             var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData)
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")

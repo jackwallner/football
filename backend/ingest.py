@@ -41,6 +41,8 @@ SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 _now = datetime.now(UTC)
 DEFAULT_SEASON = _now.year if _now.month >= 9 else _now.year - 1
 MIN_SEASON = 1999
+OLDEST_SUPPORTED_SEASON = 2015
+NGS_FIRST_SEASON = 2016
 SOURCE = "nflverse"
 
 # Qualification thresholds per metric category (see NFL_CONTRACT.md).
@@ -247,6 +249,12 @@ def _safe_div(numer: pd.Series, denom: pd.Series) -> pd.Series:
     return numer / denom.replace(0, np.nan)
 
 
+def _derive(agg: pd.DataFrame, output: str, required: list[str], calculation: Any) -> None:
+    """Add a derived column only when every required source column exists."""
+    if all(column in agg.columns for column in required):
+        agg[output] = calculation()
+
+
 def aggregate_seasons(weekly: pd.DataFrame, season: int) -> pd.DataFrame:
     """Aggregate weekly REG rows to one season-total row per player (indexed by id).
 
@@ -281,48 +289,66 @@ def aggregate_seasons(weekly: pd.DataFrame, season: int) -> pd.DataFrame:
     ]
 
     # Passing derived rates.
-    agg["cmp_pct"] = _safe_div(agg["completions"], agg["attempts"]) * 100
-    agg["ypa"] = _safe_div(agg["passing_yards"], agg["attempts"])
-    agg["int_rate"] = _safe_div(agg["passing_interceptions"], agg["attempts"]) * 100
-    agg["sack_rate"] = _safe_div(agg["sacks_suffered"], agg["attempts"] + agg["sacks_suffered"]) * 100
-    agg["passing_epa_per_play"] = _safe_div(
-        agg["passing_epa"],
-        agg["attempts"] + agg["sacks_suffered"],
+    _derive(agg, "cmp_pct", ["completions", "attempts"], lambda: _safe_div(agg["completions"], agg["attempts"]) * 100)
+    _derive(agg, "ypa", ["passing_yards", "attempts"], lambda: _safe_div(agg["passing_yards"], agg["attempts"]))
+    _derive(agg, "int_rate", ["passing_interceptions", "attempts"], lambda: _safe_div(agg["passing_interceptions"], agg["attempts"]) * 100)
+    _derive(
+        agg,
+        "sack_rate",
+        ["sacks_suffered", "attempts"],
+        lambda: _safe_div(agg["sacks_suffered"], agg["attempts"] + agg["sacks_suffered"]) * 100,
     )
-    agg["passer_rating"] = [
-        passer_rating(c, a, y, t, i)
-        for c, a, y, t, i in zip(
-            agg["completions"], agg["attempts"], agg["passing_yards"],
-            agg["passing_tds"], agg["passing_interceptions"],
-        )
+    _derive(
+        agg,
+        "passing_epa_per_play",
+        ["passing_epa", "attempts", "sacks_suffered"],
+        lambda: _safe_div(agg["passing_epa"], agg["attempts"] + agg["sacks_suffered"]),
+    )
+    passer_rating_columns = [
+        "completions", "attempts", "passing_yards", "passing_tds",
+        "passing_interceptions",
     ]
+    if all(column in agg.columns for column in passer_rating_columns):
+        agg["passer_rating"] = [
+            passer_rating(c, a, y, t, i)
+            for c, a, y, t, i in zip(
+                agg["completions"], agg["attempts"], agg["passing_yards"],
+                agg["passing_tds"], agg["passing_interceptions"],
+            )
+        ]
 
     # Rushing derived rates.
-    agg["ypc"] = _safe_div(agg["rushing_yards"], agg["carries"])
-    agg["rushing_epa_per_carry"] = _safe_div(agg["rushing_epa"], agg["carries"])
-    agg["explosive_rush_rate"] = _safe_div(agg["rushing_10"], agg["carries"]) * 100
-    agg["fumble_rate"] = _safe_div(agg["rushing_fumbles"], agg["carries"]) * 100
+    _derive(agg, "ypc", ["rushing_yards", "carries"], lambda: _safe_div(agg["rushing_yards"], agg["carries"]))
+    _derive(agg, "rushing_epa_per_carry", ["rushing_epa", "carries"], lambda: _safe_div(agg["rushing_epa"], agg["carries"]))
+    _derive(agg, "explosive_rush_rate", ["rushing_10", "carries"], lambda: _safe_div(agg["rushing_10"], agg["carries"]) * 100)
+    _derive(agg, "fumble_rate", ["rushing_fumbles", "carries"], lambda: _safe_div(agg["rushing_fumbles"], agg["carries"]) * 100)
 
     # Receiving derived rates.
-    agg["catch_pct"] = _safe_div(agg["receptions"], agg["targets"]) * 100
-    agg["receiving_epa_per_target"] = _safe_div(agg["receiving_epa"], agg["targets"])
-    agg["racr"] = _safe_div(agg["receiving_yards"], agg["receiving_air_yards"])
-    agg["rec_yac"] = agg["receiving_yards_after_catch"]
+    _derive(agg, "catch_pct", ["receptions", "targets"], lambda: _safe_div(agg["receptions"], agg["targets"]) * 100)
+    _derive(agg, "receiving_epa_per_target", ["receiving_epa", "targets"], lambda: _safe_div(agg["receiving_epa"], agg["targets"]))
+    _derive(agg, "racr", ["receiving_yards", "receiving_air_yards"], lambda: _safe_div(agg["receiving_yards"], agg["receiving_air_yards"]))
+    if "receiving_yards_after_catch" in agg.columns:
+        agg["rec_yac"] = agg["receiving_yards_after_catch"]
     if "target_share" in agg.columns:
         agg["target_share_pct"] = agg["target_share"] * 100
-        agg["wopr"] = 1.5 * agg["target_share"] + 0.7 * agg.get("air_yards_share", 0)
-    else:
-        agg["target_share_pct"] = np.nan
-        agg["wopr"] = np.nan
+        if "air_yards_share" in agg.columns:
+            agg["wopr"] = 1.5 * agg["target_share"] + 0.7 * agg["air_yards_share"]
 
-    # Defense aliases.
-    agg["tackles"] = agg["def_tackles_solo"].fillna(0) + agg["def_tackle_assists"].fillna(0)
-    agg["sacks"] = agg["def_sacks"]
-    agg["def_ints"] = agg["def_interceptions"]
-    agg["passes_defended"] = agg["def_pass_defended"]
-    agg["forced_fumbles"] = agg["def_fumbles_forced"]
-    agg["tfl"] = agg["def_tackles_for_loss"]
-    agg["qb_hits"] = agg["def_qb_hits"]
+    # Defense aliases. Only combine fields that the source season actually has.
+    tackle_columns = [column for column in ["def_tackles_solo", "def_tackle_assists"] if column in agg.columns]
+    if tackle_columns:
+        agg["tackles"] = agg[tackle_columns].sum(axis=1, min_count=1)
+    defense_aliases = {
+        "sacks": "def_sacks",
+        "def_ints": "def_interceptions",
+        "passes_defended": "def_pass_defended",
+        "forced_fumbles": "def_fumbles_forced",
+        "tfl": "def_tackles_for_loss",
+        "qb_hits": "def_qb_hits",
+    }
+    for alias, source in defense_aliases.items():
+        if source in agg.columns:
+            agg[alias] = agg[source]
 
     return agg
 
@@ -514,11 +540,14 @@ def build_agg_for_season(season: int) -> pd.DataFrame:
         return agg
     logger.info("Aggregated to %d players", len(agg))
 
-    logger.info("Loading Next Gen Stats...")
-    ngs_pass = _to_pandas(nfl.load_nextgen_stats(stat_type="passing"))
-    ngs_rush = _to_pandas(nfl.load_nextgen_stats(stat_type="rushing"))
-    ngs_rec = _to_pandas(nfl.load_nextgen_stats(stat_type="receiving"))
-    agg = merge_ngs(agg, ngs_pass, ngs_rush, ngs_rec, season)
+    if season >= NGS_FIRST_SEASON:
+        logger.info("Loading Next Gen Stats for %s...", season)
+        ngs_pass = _to_pandas(nfl.load_nextgen_stats([season], stat_type="passing"))
+        ngs_rush = _to_pandas(nfl.load_nextgen_stats([season], stat_type="rushing"))
+        ngs_rec = _to_pandas(nfl.load_nextgen_stats([season], stat_type="receiving"))
+        agg = merge_ngs(agg, ngs_pass, ngs_rush, ngs_rec, season)
+    else:
+        logger.info("Skipping Next Gen Stats for %s (available since %s).", season, NGS_FIRST_SEASON)
 
     headshots = load_headshots()
     agg["image_url"] = [headshots.get(int(pid)) for pid in agg.index]

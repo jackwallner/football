@@ -103,15 +103,20 @@ struct TwoTierPlayerCache: PlayerCaching {
     }
 
     func loadHistoricalPlayers() -> [Player] {
-        // 1. Permanent disk cache (binary plist).
+        let bundled = loadBundledPlayers(named: historicalBundleResourceName)
+        let bundledIsComplete = bundled.map(PlayerSnapshotValidator.isCompleteHistorical) ?? false
+
+        // 1. Permanent disk cache, unless the bundled archive has broader coverage.
         if let cached = try? historical.loadPlayers(), !cached.isEmpty {
-            return cached
+            if PlayerSnapshotValidator.isCompleteHistorical(cached) || !bundledIsComplete {
+                return cached
+            }
         }
         // 2. Bundled binary plist (shipped with the app).
-        if let players = loadBundledPlayers(named: historicalBundleResourceName), !players.isEmpty {
-            try? historical.savePlayers(players)
+        if let bundled, bundledIsComplete {
+            try? historical.savePlayers(bundled)
             try? FileManager.default.removeItem(at: legacyHistorical.fileURL)
-            return players
+            return bundled
         }
         // 3. Legacy on-disk JSON cache from older builds — migrate forward.
         if let players = try? legacyHistorical.loadPlayers(), !players.isEmpty {
@@ -153,6 +158,23 @@ struct TwoTierPlayerCache: PlayerCaching {
 enum PlayerSnapshotValidator {
     private static let minimumTeamCount = 30
     private static let requiredTypes: Set<String> = ["qb", "rb", "wr", "te", "def"]
+
+    static func isCompleteHistorical(_ players: [Player]) -> Bool {
+        let expectedSeasons = Set(StatScoutSeason.oldest..<StatScoutSeason.current)
+        let grouped = Dictionary(grouping: players.filter {
+            guard let season = $0.season else { return false }
+            return expectedSeasons.contains(season)
+        }, by: { $0.season! })
+
+        guard Set(grouped.keys) == expectedSeasons else { return false }
+        return grouped.values.allSatisfy { seasonPlayers in
+            let teams = Set(seasonPlayers.map { normalizedTeamAbbreviation($0.team) })
+            let types = Set(seasonPlayers.compactMap(\.playerType).map { $0.lowercased() })
+            return teams.count >= minimumTeamCount
+                && requiredTypes.isSubset(of: types)
+                && seasonPlayers.allSatisfy { !$0.metrics.isEmpty }
+        }
+    }
 
     static func isCompleteCurrent(_ players: [Player]) -> Bool {
         let current = players.filter { $0.season == StatScoutSeason.current }

@@ -80,5 +80,6 @@ iOS side may reinterpret as last 1/3/5 games).
 JAX KC LA LAC LV MIA MIN NE NO NYG NYJ PHI PIT SEA SF TB TEN WAS.
 
 ## Free vs Pro season gating (iOS)
-- `StatScoutSeason.current = 2025`, `free = 2025`; historical seasons (Pro) = 2020–2024.
-- Backend backfills seasons 2020–2025.
+- `StatScoutSeason.current = 2025`, `free = 2025`, `oldest = 2015`; historical seasons (Pro) = 2015–2024.
+- Backend backfills snapshots for seasons 2015–2025. Next Gen Stats begins in 2016, so 2015 omits NGS-only metrics instead of emitting zero values.
+- Historical game logs are not bulk-backfilled; Recent Form remains an active-season feed.

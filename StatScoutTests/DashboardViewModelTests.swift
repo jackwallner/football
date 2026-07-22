@@ -203,6 +203,29 @@ final class DashboardViewModelTests: XCTestCase {
     }
 
     @MainActor
+    func testHistoricalArchiveRequiresEverySupportedSeason() async {
+        let complete = makeCompleteHistoricalPlayers()
+        XCTAssertTrue(PlayerSnapshotValidator.isCompleteHistorical(complete))
+
+        let missing2015 = complete.filter { $0.season != StatScoutSeason.oldest }
+        XCTAssertFalse(PlayerSnapshotValidator.isCompleteHistorical(missing2015))
+    }
+
+    @MainActor
+    func testAvailableSeasonsIncludes2015ThroughCurrent() async {
+        let players = makeCompleteHistoricalPlayers() + makeCompleteCurrentPlayers()
+        let vm = DashboardViewModel(provider: MockProvider(players: players))
+        vm.isPro = true
+
+        await vm.load()
+
+        XCTAssertEqual(
+            vm.availableSeasons,
+            Array(StatScoutSeason.oldest...StatScoutSeason.current).reversed()
+        )
+    }
+
+    @MainActor
     func testSeasonPlayersReturnsPlayersForSelectedSeason() async {
         // Create players with different seasons
         let player2025 = Player(
@@ -268,7 +291,17 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertFalse(formatted.contains(","), "Season should not contain comma separators")
     }
 
+    private func makeCompleteHistoricalPlayers() -> [Player] {
+        (StatScoutSeason.oldest..<StatScoutSeason.current).flatMap { season in
+            makeCompleteSeasonPlayers(season: season, namePrefix: "Historical")
+        }
+    }
+
     private func makeCompleteCurrentPlayers(namePrefix: String = "Cached") -> [Player] {
+        makeCompleteSeasonPlayers(season: StatScoutSeason.current, namePrefix: namePrefix)
+    }
+
+    private func makeCompleteSeasonPlayers(season: Int, namePrefix: String) -> [Player] {
         let teams = nflTeamAbbreviations
         let types = ["qb", "rb", "wr", "te", "def"]
         return teams.enumerated().map { index, team in
@@ -288,7 +321,7 @@ final class DashboardViewModelTests: XCTestCase {
                 handedness: "",
                 imageURL: nil,
                 updatedAt: Date(),
-                season: StatScoutSeason.current,
+                season: season,
                 playerType: type,
                 metrics: [Metric(id: "metric-\(index)", label: metric.label, value: "1", percentile: 50, category: metric.category)],
                 standardStats: [StandardStat(id: "games-\(index)", label: "G", value: "1")],
