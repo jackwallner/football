@@ -6,7 +6,7 @@ final class DashboardViewModelTests: XCTestCase {
     func testAllMetricsKeyCollision() async throws {
         let players: [Player] = [
             Player(
-                playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", imageURL: nil,
+                playerId: 1, name: "A", team: "KC", position: "QB", handedness: "",
                 updatedAt: Date(), season: 2025, playerType: "qb",
                 metrics: [
                     Metric(id: "m1", label: "TD", value: "26", percentile: 90, category: .passing)
@@ -15,7 +15,7 @@ final class DashboardViewModelTests: XCTestCase {
                 games: []
             ),
             Player(
-                playerId: 2, name: "B", team: "PHI", position: "RB", handedness: "", imageURL: nil,
+                playerId: 2, name: "B", team: "PHI", position: "RB", handedness: "",
                 updatedAt: Date(), season: 2025, playerType: "rb",
                 metrics: [
                     Metric(id: "m2", label: "TD", value: "13", percentile: 85, category: .rushing)
@@ -63,14 +63,14 @@ final class DashboardViewModelTests: XCTestCase {
     func testPlayersForTeamMatchesAliases() async {
         let players = [
             Player(
-                playerId: 1, name: "A", team: "Kansas City Chiefs", position: "QB", handedness: "", imageURL: nil,
+                playerId: 1, name: "A", team: "Kansas City Chiefs", position: "QB", handedness: "",
                 updatedAt: Date(), season: 2025,
                 metrics: [],
                 standardStats: [],
                 games: []
             ),
             Player(
-                playerId: 2, name: "B", team: "OAK", position: "WR", handedness: "", imageURL: nil,
+                playerId: 2, name: "B", team: "OAK", position: "WR", handedness: "",
                 updatedAt: Date(), season: 2025,
                 metrics: [],
                 standardStats: [],
@@ -88,9 +88,9 @@ final class DashboardViewModelTests: XCTestCase {
     @MainActor
     func testTeamCountsPopulatedAfterLoad() async {
         let players = [
-            Player(playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
-            Player(playerId: 2, name: "B", team: "KC", position: "RB", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
-            Player(playerId: 3, name: "C", team: "SF", position: "WR", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: [])
+            Player(playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
+            Player(playerId: 2, name: "B", team: "KC", position: "RB", handedness: "", updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
+            Player(playerId: 3, name: "C", team: "SF", position: "WR", handedness: "", updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: [])
         ]
         let vm = DashboardViewModel(provider: MockProvider(players: players))
         vm.selectedSeason = 2025
@@ -130,7 +130,7 @@ final class DashboardViewModelTests: XCTestCase {
     @MainActor
     func testCacheHydratesPlayersBeforeFetch() async {
         let cached = [
-            Player(playerId: 99, name: "Cached", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+            Player(playerId: 99, name: "Cached", team: "KC", position: "QB", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
         ]
         let cache = InMemoryPlayerCache(seed: cached)
         let vm = DashboardViewModel(provider: MockProvider(error: URLError(.notConnectedToInternet)), cache: cache)
@@ -142,7 +142,7 @@ final class DashboardViewModelTests: XCTestCase {
     func testSortLabelReflectsCategory() async {
         // Passers with a Pass Yds metric
         let passers = [
-            Player(playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "qb", source: "nflreadpy",
+            Player(playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", updatedAt: Date(), season: 2025, playerType: "qb", source: "nflreadpy",
                    metrics: [Metric(id: "m1", label: "Pass Yds", value: "4,000", percentile: 90, category: .passing)], standardStats: [], games: [])
         ]
 
@@ -155,7 +155,7 @@ final class DashboardViewModelTests: XCTestCase {
 
         // Test with rushers
         let rushers = [
-            Player(playerId: 2, name: "B", team: "PHI", position: "RB", handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "rb", source: "nflreadpy",
+            Player(playerId: 2, name: "B", team: "PHI", position: "RB", handedness: "", updatedAt: Date(), season: 2025, playerType: "rb", source: "nflreadpy",
                    metrics: [Metric(id: "m1", label: "Rush Yds", value: "1,500", percentile: 85, category: .rushing)], standardStats: [], games: [])
         ]
         let vmRushing = DashboardViewModel(provider: MockProvider(players: rushers))
@@ -185,7 +185,7 @@ final class DashboardViewModelTests: XCTestCase {
     func testRushingSortUsesAvailableMetrics() async {
         let back = Player(
             playerId: 1, name: "Test RB", team: "PHI", position: "RB",
-            handedness: "", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "rb", source: "nflreadpy",
+            handedness: "", updatedAt: Date(), season: 2025, playerType: "rb", source: "nflreadpy",
             metrics: [
                 Metric(id: "m1", label: "Rush Yds", value: "1,500", percentile: 85, category: .rushing),
                 Metric(id: "m2", label: "Y/C", value: "5.2", percentile: 70, category: .rushing)
@@ -231,11 +231,11 @@ final class DashboardViewModelTests: XCTestCase {
     func testSeasonPlayersReturnsPlayersForSelectedSeason() async {
         // Create players with different seasons
         let player2025 = Player(
-            playerId: 1, name: "Player 2025", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil,
+            playerId: 1, name: "Player 2025", team: "NYY", position: "RF", handedness: "R/R",
             updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []
         )
         let player2024 = Player(
-            playerId: 2, name: "Player 2024", team: "BOS", position: "1B", handedness: "L/R", imageURL: nil,
+            playerId: 2, name: "Player 2024", team: "BOS", position: "1B", handedness: "L/R",
             updatedAt: Date(), season: 2024, metrics: [], standardStats: [], games: []
         )
 
@@ -257,7 +257,7 @@ final class DashboardViewModelTests: XCTestCase {
     func testSeasonPlayersIsEmptyWhenSeasonHasNoData() async {
         // Players only have 2025 data
         let player2025 = Player(
-            playerId: 1, name: "Player 2025", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil,
+            playerId: 1, name: "Player 2025", team: "NYY", position: "RF", handedness: "R/R",
             updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []
         )
 
@@ -272,7 +272,7 @@ final class DashboardViewModelTests: XCTestCase {
     @MainActor
     func testLoadSnapsSelectedSeasonToAvailableData() async {
         let player2025 = Player(
-            playerId: 1, name: "Player 2025", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil,
+            playerId: 1, name: "Player 2025", team: "NYY", position: "RF", handedness: "R/R",
             updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []
         )
         let vm = DashboardViewModel(provider: MockProvider(players: [player2025]))
@@ -321,7 +321,6 @@ final class DashboardViewModelTests: XCTestCase {
                 team: team,
                 position: position,
                 handedness: "",
-                imageURL: nil,
                 updatedAt: Date(),
                 season: season,
                 playerType: type,
