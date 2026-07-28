@@ -7,7 +7,6 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
     let team: String
     let position: String
     let handedness: String
-    let imageURL: URL?
     let updatedAt: Date
     let season: Int?
     let playerType: String?
@@ -22,7 +21,6 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         case team
         case position
         case handedness
-        case imageURL = "image_url"
         case updatedAt = "updated_at"
         case season
         case playerType = "player_type"
@@ -32,13 +30,12 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         case games
     }
 
-    init(playerId: Int, name: String, team: String, position: String, handedness: String, imageURL: URL?, updatedAt: Date, season: Int? = nil, playerType: String? = nil, source: String? = nil, metrics: [Metric], standardStats: [StandardStat]?, games: [GameTrend]) {
+    init(playerId: Int, name: String, team: String, position: String, handedness: String, updatedAt: Date, season: Int? = nil, playerType: String? = nil, source: String? = nil, metrics: [Metric], standardStats: [StandardStat]?, games: [GameTrend]) {
         self.playerId = playerId
         self.name = name
         self.team = team
         self.position = position
         self.handedness = handedness
-        self.imageURL = imageURL
         self.updatedAt = updatedAt
         self.season = season
         self.playerType = playerType
@@ -55,7 +52,16 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         team = try container.decode(String.self, forKey: .team)
         position = try container.decode(String.self, forKey: .position)
         handedness = try container.decode(String.self, forKey: .handedness)
-        imageURL = try container.decodeIfPresent(URL.self, forKey: .imageURL)
+        // No headshot field: the app never renders player photos (same as the
+        // baseball build), and the league's headshot URLs aren't ours to
+        // redistribute. It was also a live decoding hazard — it used to be
+        // decoded as `URL`, which only round-trips from a plain string on
+        // JSONDecoder. PropertyListDecoder expects URL's keyed
+        // {relative, base} form, so it threw typeMismatch on the first row and
+        // took the whole `[Player]` array down with it, leaving the bundled
+        // current *and* historical datasets unreadable ("Data Error — No
+        // players found"). The feed still sends `image_url`; unknown keys are
+        // simply ignored.
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
         season = try container.decodeIfPresent(Int.self, forKey: .season)
         playerType = try container.decodeIfPresent(String.self, forKey: .playerType)
@@ -63,6 +69,26 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         metrics = try container.decode([Metric].self, forKey: .metrics)
         standardStats = try container.decodeIfPresent([StandardStat].self, forKey: .standardStats)
         games = try container.decodeIfPresent([GameTrend].self, forKey: .games) ?? []
+    }
+
+    /// Explicit mirror of `init(from:)` so the on-disk plist cache is written
+    /// in exactly the shape the decoder above reads back. Leaving this
+    /// synthesized is what let the encode and decode sides drift apart in the
+    /// first place.
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(playerId, forKey: .playerId)
+        try container.encode(name, forKey: .name)
+        try container.encode(team, forKey: .team)
+        try container.encode(position, forKey: .position)
+        try container.encode(handedness, forKey: .handedness)
+        try container.encode(updatedAt, forKey: .updatedAt)
+        try container.encodeIfPresent(season, forKey: .season)
+        try container.encodeIfPresent(playerType, forKey: .playerType)
+        try container.encodeIfPresent(source, forKey: .source)
+        try container.encode(metrics, forKey: .metrics)
+        try container.encodeIfPresent(standardStats, forKey: .standardStats)
+        try container.encode(games, forKey: .games)
     }
 
     var overallPercentile: Int {

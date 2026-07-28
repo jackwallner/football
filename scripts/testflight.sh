@@ -14,13 +14,27 @@ cd "$PROJECT_DIR"
 # archive bakes in empty/garbage values and the shipped app can't reach the
 # backend. Auto-source the canonical creds file, then hard-fail if still missing.
 if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
-  [ -f "$HOME/.baseball_credentials" ] && source "$HOME/.baseball_credentials"
+  [ -f "$HOME/.football_credentials" ] && source "$HOME/.football_credentials"
 fi
 if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
-  echo "error: SUPABASE_URL / SUPABASE_ANON_KEY not set and not found in ~/.baseball_credentials." >&2
+  echo "error: SUPABASE_URL / SUPABASE_ANON_KEY not set and not found in ~/.football_credentials." >&2
   echo "       Set them in the environment or that file before shipping." >&2
   exit 1
 fi
+# Gridiron has its own Supabase account, separate from the other StatScout apps.
+# A stale `source ~/.baseball_credentials` in the shell would otherwise bake the
+# wrong project into the archive and ship an app pointed at baseball data, which
+# fails silently (valid host, valid key, zero NFL rows). Pin the project ref.
+FOOTBALL_PROJECT_REF="qwkmpwnhrejsuplcwxrb"
+case "$SUPABASE_URL" in
+  *"$FOOTBALL_PROJECT_REF"*) ;;
+  *)
+    echo "error: SUPABASE_URL does not point at the Gridiron project ($FOOTBALL_PROJECT_REF)." >&2
+    echo "       Got: $SUPABASE_URL" >&2
+    echo "       Run: source ~/.football_credentials && bash scripts/testflight.sh" >&2
+    exit 1
+    ;;
+esac
 export SUPABASE_URL SUPABASE_ANON_KEY
 
 # Auto-increment build number so TestFlight never rejects a duplicate
