@@ -395,6 +395,59 @@ struct TrendGlyph: View {
     }
 }
 
+// MARK: - Trend Arrow
+
+/// Recent-vs-prior change for one metric, drawn as an arrow and a magnitude.
+///
+/// Lives on the Trends tab and the team form cards, and nowhere else. It used
+/// to ride along as an extra column on the Stats leaderboard, where it only
+/// rendered for the players the rolling window happened to cover: rows with a
+/// trend lost their percentile bar and rows without it kept one, so the board's
+/// most-read column changed shape halfway down the list. Trends are a screen,
+/// not a garnish on the season leaderboard.
+struct TrendArrow: View {
+    let delta: Double
+    /// Yardage and counting stats move in whole numbers, percentages in tenths,
+    /// EPA per play in hundredths.
+    var decimals: Int = 1
+    /// For metrics where down is the good direction, INT%, Sack%, Fumble%. The
+    /// arrow still points the way the number actually moved; only the colour
+    /// flips, so green always means "better".
+    var lowerIsBetter: Bool = false
+
+    /// Below half of the last displayed digit a delta is noise, and an arrow
+    /// would imply a signal: 0.5 for whole numbers, 0.05 for a percent reported
+    /// to a tenth, 0.005 for EPA per play.
+    private var isFlat: Bool { abs(delta) < 5 * pow(10, -Double(decimals + 1)) }
+
+    private var tint: Color {
+        if isFlat { return GridironPalette.inkTertiary }
+        let improved = lowerIsBetter ? delta < 0 : delta > 0
+        return improved ? GridironPalette.performanceHigh : GridironPalette.performanceLow
+    }
+
+    private var text: String {
+        if isFlat { return "0" }
+        return String(format: "%.\(decimals)f", abs(delta))
+    }
+
+    var body: some View {
+        HStack(spacing: 2) {
+            if !isFlat {
+                Image(systemName: delta > 0 ? "arrow.up" : "arrow.down")
+                    .font(.system(size: 8, weight: .bold))
+            }
+            Text(text)
+                .font(GridironType.micro)
+                .monospacedDigit()
+        }
+        .foregroundStyle(tint)
+        .accessibilityLabel(
+            isFlat ? "No recent change" : "\(delta > 0 ? "Up" : "Down") \(text) recently"
+        )
+    }
+}
+
 // MARK: - Percentile Bar Mini (for leaderboards)
 
 struct PercentileBarMini: View {
@@ -496,6 +549,11 @@ struct LeaderboardTableRow: View {
     let player: Player
     var metricLabel: String? = nil
     var metricCategory: MetricCategory? = nil
+    /// The rolling-window value, shown in place of the season number when the
+    /// list is ranking by recent form. Uncoloured: the season percentile is the
+    /// wrong ruler for five games' worth of numbers, and there is no window
+    /// curve to colour it against.
+    var valueOverride: String? = nil
 
     private var displayMetric: Metric? {
         guard let label = metricLabel else { return nil }
@@ -516,6 +574,7 @@ struct LeaderboardTableRow: View {
     // already conveys percentile visually; numeric percentile in this column
     // duplicates that signal and reads as "the stat value" at a glance.
     private var displayValueText: String {
+        if let valueOverride { return valueOverride }
         if let metric = displayMetric, !metric.value.isEmpty {
             return metric.value
         }
@@ -558,12 +617,19 @@ struct LeaderboardTableRow: View {
                 // A player without the sorted metric gets no bar — drawing one
                 // from their overall percentile would mislabel a different number
                 // as this column's stat. Show a muted "—" instead.
-                if displayMetric != nil {
-                    PercentileBarMini(percentile: displayPercentile)
-                        .frame(width: 36)
+                if displayMetric != nil || valueOverride != nil {
+                    // A window value drops the bar: the season percentile bar
+                    // beside five games' worth of numbers reads as that
+                    // number's rank, which it is not.
+                    if valueOverride == nil {
+                        PercentileBarMini(percentile: displayPercentile)
+                            .frame(width: 36)
+                    }
                     Text(displayValueText)
                         .font(GridironType.statSmall)
-                        .foregroundStyle(GridironPalette.color(forPercentile: displayPercentile))
+                        .foregroundStyle(valueOverride == nil
+                                         ? GridironPalette.color(forPercentile: displayPercentile)
+                                         : GridironPalette.ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                         .frame(width: 48, alignment: .trailing)
@@ -590,11 +656,18 @@ struct LeaderboardTableRow: View {
 /// bottom over a gradient that fades the blurred preview into the card surface,
 /// so the teaser stays visible as the hook instead of being buried under an
 /// opaque panel. Used by RecentFormCard, TeamRankingsCard, and YearComparePreview.
+///
+/// The CTA transacts. It used to open `TrialPitchSheet`, which showed the same
+/// offer a second time under a second button, so a user who had already said
+/// yes to "Start 7-day free trial" had to say it again before Apple's confirm
+/// sheet ever appeared. The button says what it does and then does it; the plan
+/// picker stays reachable behind a quiet "See all plans" link for anyone who
+/// actually wants to weigh monthly against lifetime.
 struct BlurGateUnlock: View {
     let headline: String
-    let cta: String
-    var subtext: String? = nil
-    let action: () -> Void
+    /// Entry point this gate represents, drives the impression id and the
+    /// copy on the plan picker, if the user asks for it.
+    let trigger: PaywallTrigger
 
     var body: some View {
         VStack(spacing: 8) {
@@ -604,27 +677,7 @@ struct BlurGateUnlock: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Button(action: action) {
-                HStack(spacing: 6) {
-                    Image(systemName: "crown.fill")
-                        .font(.system(size: 11))
-                    Text(cta)
-                        .font(GridironType.bodyBold)
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 22)
-                .frame(height: 42)
-                .background(GridironPalette.turf)
-                .clipShape(Capsule())
-            }
-            .buttonStyle(.plain)
-
-            if let subtext {
-                Text(subtext)
-                    .font(GridironType.micro)
-                    .foregroundStyle(GridironPalette.inkTertiary)
-                    .multilineTextAlignment(.center)
-            }
+            PlusDirectCTA(trigger: trigger, style: .capsule)
         }
         .padding(.horizontal, 20)
         .padding(.top, 52)
@@ -637,6 +690,142 @@ struct BlurGateUnlock: View {
                 endPoint: .bottom
             )
         )
+    }
+}
+
+// MARK: - One-tap StatScout+ CTA
+
+/// The app's only in-place conversion control, and the reason there is no
+/// pitch-then-pitch path left.
+///
+/// Every surface that names an offer, the blurred gates, the player-page
+/// upsell card, the trial sheet's footer, used to hand off to another screen
+/// that showed the same offer under another button. This one transacts: tap it
+/// and the next thing on screen is Apple's confirm sheet. The plan picker is
+/// still there for anyone who wants to weigh monthly against lifetime, but it's
+/// a quiet text link rather than a toll gate, and it's also where a failed
+/// product load lands because that's the only screen that can retry.
+struct PlusDirectCTA: View {
+    enum Style {
+        /// Compact pill, for the bottom of a blurred teaser.
+        case capsule
+        /// Full-width bar, for a card or sheet footer.
+        case bar
+    }
+
+    @EnvironmentObject private var store: StoreService
+
+    let trigger: PaywallTrigger
+    var style: Style = .bar
+    /// Hidden where the surrounding screen already offers plan choice.
+    var showsAllPlansLink: Bool = true
+
+    @State private var isPurchasing = false
+    @State private var statusMessage: String?
+    @State private var showingPlans = false
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Button(action: buy) {
+                label
+            }
+            .buttonStyle(.plain)
+            .disabled(isPurchasing)
+            .accessibilityLabel(store.paywallBlurCTA)
+
+            // Full auto-renew terms sit beside the purchase point, because this
+            // button *is* the purchase point now (Apple 3.1.2).
+            if let disclosure = store.yearlyCTADisclosureText ?? store.paywallBlurSubtext {
+                Text(disclosure)
+                    .font(GridironType.micro)
+                    .tracking(0.3)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let statusMessage {
+                Text(statusMessage)
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.turf)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if showsAllPlansLink {
+                Button("See all plans") { showingPlans = true }
+                    .font(GridironType.micro)
+                    .tracking(0.3)
+                    .foregroundStyle(GridironPalette.inkSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .task {
+            store.trackPaywallImpression(id: trigger.paywallImpressionId, oncePerSession: true)
+            if store.currentOffering == nil { await store.fetchProducts() }
+        }
+        .sheet(isPresented: $showingPlans) {
+            PaywallView(trigger: trigger)
+        }
+    }
+
+    @ViewBuilder
+    private var label: some View {
+        switch style {
+        case .capsule:
+            HStack(spacing: 6) {
+                if isPurchasing {
+                    ProgressView().tint(.white)
+                } else {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 11))
+                    Text(store.paywallBlurCTA)
+                        .font(GridironType.bodyBold)
+                }
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 22)
+            .frame(height: 42)
+            .background(GridironPalette.turf)
+            .clipShape(Capsule())
+        case .bar:
+            ZStack {
+                Text(store.paywallBlurCTA)
+                    .font(GridironType.bodyBold)
+                    .opacity(isPurchasing ? 0 : 1)
+                if isPurchasing {
+                    ProgressView().tint(.white)
+                }
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(GridironPalette.turf)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
+    private func buy() {
+        statusMessage = nil
+        isPurchasing = true
+        Task { @MainActor in
+            defer { isPurchasing = false }
+            switch await store.purchaseYearlyDirect() {
+            case .unlocked:
+                break
+            case .pending:
+                // Ask-to-Buy / deferred payment: not unlocked, not an error.
+                statusMessage = "Purchase pending approval. StatScout+ unlocks automatically once it's approved."
+            case .cancelled:
+                statusMessage = "Purchase cancelled. Tap again to continue."
+            case .failed(let message):
+                statusMessage = message
+            case .needsPlanPicker:
+                // Nothing loaded to buy, the picker's retry/empty state is the
+                // only surface that can say so and recover.
+                showingPlans = true
+            }
+        }
     }
 }
 

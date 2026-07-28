@@ -27,6 +27,7 @@ video_frames/
 
 # Claude Code runtime
 .claude/scheduled_tasks.lock
+.claude/settings.local.json
 
 # Python venv
 backend/.venv/

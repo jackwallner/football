@@ -164,12 +164,14 @@ final class DashboardViewModelTests: XCTestCase {
         _ = vmRushing.leaderboard  // Trigger computation
         XCTAssertEqual(vmRushing.sortLabel, "Rush Yds")
 
-        // Test empty data falls back to "Top Category"
+        // Test empty data falls back to the default label. The NFL redesign
+        // renamed this from "Top Category" to "Top Metric"; the fixture never
+        // followed.
         let vmEmpty = DashboardViewModel(provider: MockProvider(players: []))
         await vmEmpty.load()
         vmEmpty.selectedCategory = .passing
         _ = vmEmpty.leaderboard  // Trigger computation
-        XCTAssertEqual(vmEmpty.sortLabel, "Top Category")
+        XCTAssertEqual(vmEmpty.sortLabel, "Top Metric")
 
         // Test nil category shows the default label
         let vmNil = DashboardViewModel(provider: MockProvider(players: passers))
@@ -207,7 +209,7 @@ final class DashboardViewModelTests: XCTestCase {
         let complete = makeCompleteHistoricalPlayers()
         XCTAssertTrue(PlayerSnapshotValidator.isCompleteHistorical(complete))
 
-        let missing2015 = complete.filter { $0.season != StatScoutSeason.oldest }
+        let missing2015 = complete.filter { $0.season != StatScoutSeason.earliest }
         XCTAssertFalse(PlayerSnapshotValidator.isCompleteHistorical(missing2015))
     }
 
@@ -221,7 +223,7 @@ final class DashboardViewModelTests: XCTestCase {
 
         XCTAssertEqual(
             vm.availableSeasons,
-            Array(StatScoutSeason.oldest...StatScoutSeason.current).reversed()
+            Array(StatScoutSeason.earliest...StatScoutSeason.current).reversed()
         )
     }
 
@@ -292,7 +294,7 @@ final class DashboardViewModelTests: XCTestCase {
     }
 
     private func makeCompleteHistoricalPlayers() -> [Player] {
-        (StatScoutSeason.oldest..<StatScoutSeason.current).flatMap { season in
+        (StatScoutSeason.earliest..<StatScoutSeason.current).flatMap { season in
             makeCompleteSeasonPlayers(season: season, namePrefix: "Historical")
         }
     }
@@ -370,6 +372,11 @@ struct MockProvider: StatcastProviding, @unchecked Sendable {
     }
 
     func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog] {
+        if let error { throw error }
+        return []
+    }
+
+    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm] {
         if let error { throw error }
         return []
     }

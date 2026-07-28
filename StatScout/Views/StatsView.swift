@@ -14,7 +14,15 @@ struct StatsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(GridironPalette.canvas)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) { seasonMenu }
+            // The green pill is its own capsule; suppress the iOS 26 Liquid
+                // Glass container or it reads as a pill inside a pill, which is
+                // exactly what the upgrade CTA on the other side already avoids.
+                if #available(iOS 26.0, *) {
+                    ToolbarItem(placement: .topBarLeading) { seasonMenu }
+                        .sharedBackgroundVisibility(.hidden)
+                } else {
+                    ToolbarItem(placement: .topBarLeading) { seasonMenu }
+                }
             ToolbarItem(placement: .principal) {
                 Text("Stats")
                     .font(GridironType.bodyBold)

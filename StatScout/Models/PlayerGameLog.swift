@@ -87,11 +87,13 @@ struct RecentFormWindow {
     /// stats (yards, TDs, receptions), so the window value is their sum.
     let metrics: [String: Double]
 
-    static let windows: [(label: String, span: Int)] = [
-        ("Last 1", 1),
-        ("Last 3", 3),
-        ("Last 5", 5),
-    ]
+    /// Derived from `RecentWindow` so the per-player card, the team card and the
+    /// league Trends board all offer the same three choices under the same
+    /// wording. They used to be declared here as 1 / 3 / 5 and in RecentWindow
+    /// as 3 / 5 / 8, so the same word meant two different spans a tab apart.
+    static let windows: [(label: String, span: Int)] = RecentWindow.allCases.map {
+        (label: $0.label, span: $0.rawValue)
+    }
 
     /// Build a window by summing each metric across the supplied game logs.
     static func build(label: String, span: Int, logs: [PlayerGameLog]) -> RecentFormWindow {

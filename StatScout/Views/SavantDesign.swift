@@ -32,9 +32,30 @@ enum GridironPalette {
         }
     }
 
+    /// Percentile colour for *text* on a light surface.
+    ///
+    /// The fill ramp passes through a pale sand at the 50th percentile, which
+    /// is right for a bar sitting on the cream card and unreadable as type: an
+    /// average player's number came out the same value as the background. The
+    /// endpoints stay recognisably the same green and rust; only the middle is
+    /// pulled down to a dark neutral, so every value on the board clears
+    /// contrast while the hot/cold reading survives.
+    static func textColor(forPercentile p: Int) -> Color {
+        let t = max(0.0, min(1.0, Double(p) / 100.0))
+        if t < 0.5 {
+            return lerp(coldTextRGB, midTextRGB, t * 2.0)
+        } else {
+            return lerp(midTextRGB, hotTextRGB, (t - 0.5) * 2.0)
+        }
+    }
+
     private static let hotRGB: (Double, Double, Double) = (0.08, 0.42, 0.22)
     private static let midRGB: (Double, Double, Double) = (0.74, 0.72, 0.65)
     private static let coldRGB: (Double, Double, Double) = (0.62, 0.24, 0.12)
+
+    private static let hotTextRGB: (Double, Double, Double) = (0.06, 0.36, 0.19)
+    private static let midTextRGB: (Double, Double, Double) = (0.24, 0.26, 0.24)
+    private static let coldTextRGB: (Double, Double, Double) = (0.55, 0.20, 0.10)
 
     private static func lerp(_ a: (Double, Double, Double), _ b: (Double, Double, Double), _ t: Double) -> Color {
         let r = a.0 + (b.0 - a.0) * t

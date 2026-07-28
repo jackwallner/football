@@ -160,7 +160,7 @@ enum PlayerSnapshotValidator {
     private static let requiredTypes: Set<String> = ["qb", "rb", "wr", "te", "def"]
 
     static func isCompleteHistorical(_ players: [Player]) -> Bool {
-        let expectedSeasons = Set(StatScoutSeason.oldest..<StatScoutSeason.current)
+        let expectedSeasons = Set(StatScoutSeason.earliest..<StatScoutSeason.current)
         let grouped = Dictionary(grouping: players.filter {
             guard let season = $0.season else { return false }
             return expectedSeasons.contains(season)

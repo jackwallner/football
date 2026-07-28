@@ -182,6 +182,111 @@ final class DashboardViewModel {
         return allSeasonPlayers.filter { seenIds.insert($0.playerId).inserted }
     }
 
+    // MARK: - Recent form
+
+    /// Rolling windows keyed by length, cached per season so flipping between
+    /// 3 / 5 / 8 doesn't refetch what's already in hand.
+    var recentFormByWindow: [Int: [Int: RecentForm]] = [:]
+    var recentFormLoadingWindows: Set<Int> = []
+    var recentFormError: String?
+    private var recentFormSeason: Int?
+
+    /// The window the Trends board and the trend arrows read from.
+    var recentWindow: RecentWindow = .five
+
+    /// True while a board is showing recent form rather than season totals.
+    /// Pro-gated at the call site, free users get a blurred teaser.
+    var showingRecent = false
+
+    func recentForm(for playerId: Int, window: RecentWindow? = nil) -> RecentForm? {
+        recentFormByWindow[(window ?? recentWindow).rawValue]?[playerId]
+    }
+
+    var isRecentFormLoading: Bool {
+        recentFormLoadingWindows.contains(recentWindow.rawValue)
+    }
+
+    /// The last game date covered by the loaded window, for honest labelling.
+    var recentFormAsOf: Date? {
+        recentFormByWindow[recentWindow.rawValue]?.values.compactMap(\.asOf).max()
+    }
+
+    /// The latest week any loaded row reaches, so a board can say "through
+    /// Week 18" without every row carrying its own caption.
+    var recentFormThroughWeek: Int? {
+        recentFormByWindow[recentWindow.rawValue]?.values.compactMap(\.endWeek).max()
+    }
+
+    /// Every row for a window, keyed by side of the ball. The Trends board
+    /// ranks within one position group, so it needs the rows a per-player
+    /// dictionary throws away: a two-way player has one row per player_type.
+    func recentFormRows(window: RecentWindow, playerType: String) -> [RecentForm] {
+        (recentFormRowsByWindow[window.rawValue] ?? [])
+            .filter { $0.playerType == playerType }
+    }
+
+    private var recentFormRowsByWindow: [Int: [RecentForm]] = [:]
+
+    func loadRecentFormIfNeeded(window: RecentWindow? = nil) async {
+        let target = window ?? recentWindow
+        // Season changed under us, the cache describes a different year.
+        if recentFormSeason != selectedSeason {
+            recentFormByWindow.removeAll()
+            recentFormRowsByWindow.removeAll()
+            recentFormSeason = selectedSeason
+        }
+        guard recentFormByWindow[target.rawValue] == nil,
+              !recentFormLoadingWindows.contains(target.rawValue) else { return }
+
+        recentFormLoadingWindows.insert(target.rawValue)
+        recentFormError = nil
+        do {
+            let rows = try await provider.fetchRecentForm(
+                season: selectedSeason,
+                windowGames: target.rawValue
+            )
+            // A player who both runs and catches has a row per side; the
+            // per-player lookup keys by player, so keep whichever side carries
+            // the larger sample.
+            var byPlayer: [Int: RecentForm] = [:]
+            for row in rows {
+                if let existing = byPlayer[row.playerId], existing.plays >= row.plays { continue }
+                byPlayer[row.playerId] = row
+            }
+            recentFormByWindow[target.rawValue] = byPlayer
+            recentFormRowsByWindow[target.rawValue] = rows
+        } catch {
+            recentFormError = "Couldn't load recent form. Pull to refresh."
+        }
+        recentFormLoadingWindows.remove(target.rawValue)
+    }
+
+    /// Unique players for an arbitrary season, not just the selected one.
+    /// Drill-down leaderboards opened from a player profile need the season
+    /// that profile is showing, which can differ from `selectedSeason`.
+    func players(forSeason season: Int) -> [Player] {
+        let all = playerHistories.values.flatMap { $0 }.filter { $0.season == season }
+        var seen = Set<Int>()
+        return all.filter { seen.insert($0.playerId).inserted }
+    }
+
+    /// Clubs whose name or abbreviation matches the current search.
+    ///
+    /// Searching used to only ever narrow the list of players. Someone typing
+    /// "chiefs" is usually after Kansas City, so the club itself is now a
+    /// result: one tap to the team page, with the roster still filtered
+    /// underneath if that's what they wanted.
+    var searchedTeams: [String] {
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return [] }
+        return teamsWithData
+            .filter {
+                teamFullName($0).localizedCaseInsensitiveContains(query)
+                    || $0.localizedCaseInsensitiveContains(query)
+            }
+            .sorted { teamFullName($0) < teamFullName($1) }
+    }
+
     private var eligibleMetrics: [Metric] {
         seasonPlayers
             .filter { $0.positionGroup == selectedPosition }

@@ -144,6 +144,7 @@ final class FootballMetricRegistryTests: XCTestCase {
         XCTAssertEqual(PlayerPositionGroup.wr.preferredAdvancedMetrics.first, "EPA/Tgt")
     }
 
+    @MainActor
     func testLowerIsBetterUsesRegistry() {
         XCTAssertTrue(DashboardViewModel.lowerIsBetter(label: "INT%", category: .passing))
         XCTAssertTrue(DashboardViewModel.lowerIsBetter(label: "Fumble%", category: .rushing))

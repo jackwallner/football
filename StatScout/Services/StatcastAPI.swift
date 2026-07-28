@@ -6,6 +6,7 @@ protocol StatcastProviding: Sendable {
     func fetchCurrentPlayers() async throws -> [Player]
     func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog]
     func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog]
+    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm]
 }
 
 struct StatcastAPI: StatcastProviding {
@@ -27,7 +28,7 @@ struct StatcastAPI: StatcastProviding {
         try await fetchPlayers(queryItems: [
             URLQueryItem(
                 name: "and",
-                value: "(season.gte.\(StatScoutSeason.oldest),season.lt.\(StatScoutSeason.current))"
+                value: "(season.gte.\(StatScoutSeason.earliest),season.lt.\(StatScoutSeason.current))"
             ),
         ])
     }
@@ -103,6 +104,48 @@ struct StatcastAPI: StatcastProviding {
         return all
     }
 
+    /// The whole league's rolling window for one window length, in one paged
+    /// fetch. The board ranks by delta, so it needs every qualifying player at
+    /// once; there is no useful partial sort.
+    ///
+    /// Cache-bypassing for the same reason the game-log fetches are: the
+    /// nightly rewrites these rows in place, and a stale window is worse than a
+    /// slow one. The element decoder is lossy so a single malformed row can't
+    /// empty the board.
+    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm] {
+        var all: [RecentForm] = []
+        let pageSize = 1000
+        var offset = 0
+        while true {
+            let endpoint = baseURL
+                .appending(path: "rest/v1/player_recent_form")
+                .appending(queryItems: [
+                    URLQueryItem(name: "select", value: "*"),
+                    URLQueryItem(name: "season", value: "eq.\(season)"),
+                    URLQueryItem(name: "window_games", value: "eq.\(windowGames)"),
+                    URLQueryItem(name: "order", value: "player_id.asc"),
+                    URLQueryItem(name: "limit", value: String(pageSize)),
+                    URLQueryItem(name: "offset", value: String(offset)),
+                ])
+            var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData)
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            request.setValue(apiKey, forHTTPHeaderField: "apikey")
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  200..<300 ~= httpResponse.statusCode || httpResponse.statusCode == 206 else {
+                throw URLError(.badServerResponse)
+            }
+
+            let rows = try JSONDecoder.statScout.decode([Lenient<RecentForm>].self, from: data)
+            all.append(contentsOf: rows.compactMap(\.value))
+            if rows.count < pageSize { break }
+            offset += pageSize
+        }
+        return all
+    }
+
     private func fetchPlayers(queryItems filters: [URLQueryItem]) async throws -> [Player] {
         var all: [Player] = []
         let pageSize = 1000
@@ -164,6 +207,7 @@ struct OfflineStatcastAPI: StatcastProviding {
     func fetchCurrentPlayers() async throws -> [Player] { [] }
     func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog] { [] }
     func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog] { [] }
+    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm] { [] }
 }
 
 #if DEBUG
@@ -185,6 +229,10 @@ struct PreviewStatcastAPI: StatcastProviding {
     }
 
     func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog] {
+        []
+    }
+
+    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm] {
         []
     }
 }

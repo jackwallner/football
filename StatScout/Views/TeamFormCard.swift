@@ -27,7 +27,7 @@ struct TeamRankingsCard: View {
 
     @State private var side: Side = .offense
     @State private var mode: Mode = .season
-    @State private var windowGames: Int = 3
+    @State private var windowGames: Int = 5
     @State private var logs: [PlayerGameLog] = []
     @State private var loading = false
     @State private var loadError: String?
@@ -165,25 +165,13 @@ struct TeamRankingsCard: View {
     }
 
     private var windowPicker: some View {
-        HStack(spacing: 6) {
-            ForEach(RecentFormWindow.windows, id: \.span) { w in
-                Button {
-                    windowGames = w.span
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    Text(w.label)
-                        .font(GridironType.smallBold)
-                        .foregroundStyle(windowGames == w.span ? .white : GridironPalette.inkSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 28)
-                        .background(windowGames == w.span ? GridironPalette.turf : GridironPalette.surface)
-                        .clipShape(Capsule())
-                        .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(w.label) games")
-            }
-        }
+        GridironSegmented(
+            segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
+            selection: Binding(
+                get: { RecentWindow(rawValue: windowGames) ?? .three },
+                set: { windowGames = $0.rawValue }
+            )
+        )
         .padding(.horizontal, GridironGeo.padInline)
         .padding(.bottom, 8)
         .background(GridironPalette.surfaceAlt)
@@ -291,10 +279,8 @@ struct TeamRankingsCard: View {
                     .disabled(true)
                     .allowsHitTesting(false)
                 BlurGateUnlock(
-                    headline: "See every team's last 7 / 15 / 30 day form",
-                    cta: store.paywallBlurCTA,
-                    subtext: store.paywallBlurSubtext,
-                    action: onUpgradeTap
+                    headline: "See every team's last 3 / 5 / 8 game form",
+                    trigger: .teamView
                 )
             }
         }

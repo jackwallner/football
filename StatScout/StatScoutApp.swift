@@ -189,25 +189,53 @@ struct OnboardingCards: View {
 
     @ViewBuilder
     private var bottomButtons: some View {
+        // Layout invariant: the primary button and the 24pt footer slot are the
+        // ONLY things below the top of this stack that set the button's Y. The
+        // button + footer slot are IDENTICAL on every page (Continue and the
+        // trial CTA are both a 52pt turf button with the same 24pt slot
+        // beneath), and everything else (Get Started, status line, disclosure,
+        // Terms/Privacy) lives ABOVE the button where it grows upward. Because
+        // the stack is bottom-anchored, that upper content can never move the
+        // button, so the primary button is pixel-identical across all pages and
+        // the thumb target never shifts between taps.
         VStack(spacing: 10) {
+            if isLastPage && !store.isPro {
+                // --- Above the primary button (grows upward, never moves it) ---
+                getStartedButton(prominent: false)
+
+                // Reserved fixed-height status line: a restore/purchase result
+                // fills this slot in place instead of being inserted, so nothing
+                // above the button shifts either.
+                Text(trialError ?? " ")
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.performanceLow)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 32, alignment: .top)
+
+                if let disclosure = trialDisclosure {
+                    Text(disclosure)
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                // Terms/Privacy sit just above the purchase point (this CTA can
+                // buy the trial directly, no PaywallView handoff).
+                HStack(spacing: 12) {
+                    Link("Terms", destination: StatScoutLegal.termsURL)
+                    Link("Privacy", destination: StatScoutLegal.privacyURL)
+                }
+                .font(GridironType.micro)
+                .foregroundStyle(GridironPalette.inkTertiary)
+            }
+
+            // --- Primary button: identical 52pt turf slot on every page ---
             if isLastPage {
                 if store.isPro {
                     getStartedButton(prominent: true)
                 } else {
-                    // Secondary "Get Started" (continue on the free tier) sits
-                    // ABOVE the trial CTA so the primary button lands in the exact
-                    // spot the user has been tapping "Continue" — the CTA never
-                    // jumps to a new place between the last two taps.
-                    getStartedButton(prominent: false)
-
-                    if let disclosure = trialDisclosure {
-                        Text(disclosure)
-                            .font(GridironType.micro)
-                            .foregroundStyle(GridironPalette.inkTertiary)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
                     Button {
                         buyYearly()
                     } label: {
@@ -222,27 +250,11 @@ struct OnboardingCards: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(GridironPalette.midnight)
+                        .background(GridironPalette.turf)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                     .buttonStyle(.plain)
                     .disabled(isStartingTrial)
-
-                    if let trialError {
-                        Text(trialError)
-                            .font(GridironType.micro)
-                            .foregroundStyle(GridironPalette.turf)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    // Terms/Privacy must sit beside the purchase point now that
-                    // this CTA can buy the trial directly (no PaywallView handoff).
-                    HStack(spacing: 12) {
-                        Link("Terms", destination: StatScoutLegal.termsURL)
-                        Link("Privacy", destination: StatScoutLegal.privacyURL)
-                    }
-                    .font(GridironType.micro)
-                    .foregroundStyle(GridironPalette.inkTertiary)
                 }
             } else {
                 Button {
@@ -259,7 +271,10 @@ struct OnboardingCards: View {
                 .buttonStyle(.plain)
             }
 
-            // Fixed-height footer slot so the primary CTA doesn't jump between pages.
+            // --- Fixed 24pt footer slot BELOW the button, identical every page.
+            // On the last page it carries Restore (or the loading state); on the
+            // others it is empty. Its constant height is what keeps the button's
+            // bottom edge, and therefore its Y, pinned across pages.
             Group {
                 if isLastPage, !dataReady {
                     HStack(spacing: 8) {
@@ -271,18 +286,19 @@ struct OnboardingCards: View {
                             .font(GridironType.micro)
                     }
                     .foregroundStyle(GridironPalette.inkSecondary)
-                } else if isLastPage {
+                } else if isLastPage && !store.isPro {
                     Button {
                         // Surface the outcome through the same trialError line the
-                        // purchase CTA uses — a restore that silently does nothing
+                        // purchase CTA uses, a restore that silently does nothing
                         // reads as a dead button. Success flips isPro, which
                         // finishes onboarding via onChange.
                         isRestoring = true
+                        trialError = nil
                         Task { @MainActor in
-                            defer { isRestoring = false }
                             await store.restorePurchases()
+                            isRestoring = false
                             if !store.isPro {
-                                trialError = store.lastError ?? "No active StatScout+ purchase was found for this Apple ID."
+                                trialError = store.lastError ?? "No previous purchase found on this Apple ID."
                             }
                         }
                     } label: {
@@ -298,33 +314,42 @@ struct OnboardingCards: View {
             }
             .frame(height: 24)
         }
-        .frame(minHeight: isLastPage ? 148 : 52, alignment: .bottom)
+        .frame(maxWidth: .infinity, alignment: .bottom)
     }
 
     /// "Get Started" dismisses onboarding into the free tier. `prominent` is the
-    /// solo state (Pro users, where it's the only — and primary — action);
-    /// otherwise it renders as the de-emphasized secondary above the trial CTA.
+    /// solo state (Pro users, where it's the only, and primary, action, a filled
+    /// button); otherwise it's a de-emphasized, borderless text link that sits
+    /// above the turf trial CTA so it never competes for the tap.
     private func getStartedButton(prominent: Bool) -> some View {
         Button {
             withAnimation { hasCompletedOnboarding = true }
         } label: {
-            Text("Get Started")
-                .font(GridironType.bodyBold)
-                .foregroundStyle(prominent ? .white : GridironPalette.ink)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(prominent ? GridironPalette.turf : GridironPalette.surface)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(prominent ? Color.clear : GridironPalette.hairline, lineWidth: 0.5)
-                )
+            if prominent {
+                Text("Get Started")
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(GridironPalette.turf)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            } else {
+                // Borderless free-tier exit: same text as the boxed version,
+                // just no box. Keeps it legible and compliant (the free path
+                // must stay clearly visible) while the turf trial button is the
+                // prominent action.
+                Text("Get Started")
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+            }
         }
         .buttonStyle(.plain)
     }
 
-    // One-tap conversion: buy the yearly plan in place — trial when eligible,
-    // straight purchase otherwise — never a second paywall. PaywallView is only
+    // One-tap conversion: buy the yearly plan in place, trial when eligible,
+    // straight purchase otherwise, never a second paywall. PaywallView is only
     // the emergency fallback when products didn't load. Success flips
     // store.isPro, which finishes onboarding via the onChange handler.
     private func buyYearly() {
@@ -342,7 +367,7 @@ struct OnboardingCards: View {
                     break
                 case .pending:
                     // Ask-to-Buy / deferred payment: onboarding stays up because
-                    // isPro hasn't flipped — explain instead of appearing dead.
+                    // isPro hasn't flipped, explain instead of appearing dead.
                     trialError = "Purchase pending approval. StatScout+ unlocks automatically once it's approved."
                 case .cancelled:
                     trialError = "Purchase cancelled. Tap again to continue."
