@@ -11,6 +11,9 @@ struct PlayerProfileView: View {
     var historicalLoadingProgress = 0.12
     var loadHistorical: (() async -> Void)?
     var fetchGameLogs: ((Int, Int) async throws -> [PlayerGameLog])?
+    /// Pre-aggregated rolling window for this player, when one is loaded.
+    var recentFormLookup: ((Int, RecentWindow) -> RecentForm?)?
+    var loadRecentForm: ((RecentWindow) async -> Void)?
     @State private var showPercentileInfo = false
     @State private var selectedTab: PlayerStatTab = .statcast
     @State private var selectedPercentileSeason: Int? = nil
@@ -22,11 +25,14 @@ struct PlayerProfileView: View {
     // yearly trial directly. PaywallView stays for the deliberate upsell card.
     @State private var trialPitchTrigger: PaywallTrigger?
     @State private var formDisplayMode: FormDisplayMode = .season
-    @State private var recentWindowGames: Int = 3
+    @State private var recentWindowGames: Int = 5
     @State private var recentLogs: [PlayerGameLog] = []
     @State private var recentLoading = false
     @State private var recentLoadError: String?
     @State private var recentCurves: LeaguePercentileCurves?
+    @State private var standardMode: FormDisplayMode = .season
+    @State private var standardWindow: RecentWindow = .five
+    @State private var favorites = FavoritesStore.shared
 
     private let profileOpenCountKey = "profileOpenCount"
 
@@ -115,19 +121,8 @@ struct PlayerProfileView: View {
         .navigationTitle(player.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    if store.isPro {
-                        showingPlayerPicker = true
-                    } else {
-                        trialPitchTrigger = .playerComparison
-                    }
-                } label: {
-                    Image(systemName: "person.2.fill")
-                        .foregroundStyle(.white)
-                }
-                .accessibilityLabel("Compare with another player")
-            }
+            ToolbarItem(placement: .topBarTrailing) { favoriteButton }
+            ToolbarItem(placement: .topBarTrailing) { compareButton }
         }
         .sheet(isPresented: $showPercentileInfo) {
             PercentileInfoSheet()
@@ -163,6 +158,35 @@ struct PlayerProfileView: View {
                 ReviewPromptTracker.recordPositiveMoment()
             }
         }
+    }
+
+    /// Following a player is free. It's the signal the Trends tab and the
+    /// review funnel read from, so gating it would suppress the thing we most
+    /// want people to do.
+    private var favoriteButton: some View {
+        let isFavorite = favorites.isFavorite(playerId: player.playerId)
+        return Button {
+            favorites.toggleFavorite(playerId: player.playerId)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        } label: {
+            Image(systemName: isFavorite ? "star.fill" : "star")
+                .foregroundStyle(isFavorite ? Color.yellow : .white)
+        }
+        .accessibilityLabel(isFavorite ? "Unfollow \(player.name)" : "Follow \(player.name)")
+    }
+
+    private var compareButton: some View {
+        Button {
+            if store.isPro {
+                showingPlayerPicker = true
+            } else {
+                trialPitchTrigger = .playerComparison
+            }
+        } label: {
+            Image(systemName: "person.2.fill")
+                .foregroundStyle(.white)
+        }
+        .accessibilityLabel("Compare with another player")
     }
 
     private var tabSelector: some View {
@@ -681,27 +705,13 @@ struct PlayerProfileView: View {
     }
 
     private var recentWindowPicker: some View {
-        HStack(spacing: 6) {
-            ForEach(RecentFormWindow.windows, id: \.span) { w in
-                Button {
-                    recentWindowGames = w.span
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    Text(w.label)
-                        .font(GridironType.smallBold)
-                        .foregroundStyle(recentWindowGames == w.span ? .white : GridironPalette.inkSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 28)
-                        .background(recentWindowGames == w.span ? GridironPalette.turf : GridironPalette.surface)
-                        .clipShape(Capsule())
-                        .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, GridironGeo.padInline)
-        .padding(.bottom, 8)
-        .background(GridironPalette.surfaceAlt)
+        GridironSegmented(
+            segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
+            selection: Binding(
+                get: { RecentWindow(rawValue: recentWindowGames) ?? .three },
+                set: { recentWindowGames = $0.rawValue }
+            )
+        )
     }
 
     private func displayedMetrics(in metrics: [Metric]) -> [Metric] {
@@ -762,7 +772,7 @@ struct PlayerProfileView: View {
 
         switch effectiveFormDisplayMode {
         case .season:
-            NavigationLink(value: MetricRoute(label: metric.label, category: metric.category)) {
+            NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason)) {
                 MetricBar(metric: metric)
                     .padding(.horizontal, GridironGeo.padCard)
                     .padding(.vertical, 12)
@@ -786,7 +796,7 @@ struct PlayerProfileView: View {
             } else if !metric.id.hasPrefix("recent-stub-") {
                 // No game-log data for this metric — fall back to the season bar
                 // so the recent view still shows every percentile bar.
-                NavigationLink(value: MetricRoute(label: metric.label, category: metric.category)) {
+                NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason)) {
                     MetricBar(metric: metric)
                         .padding(.horizontal, GridironGeo.padCard)
                         .padding(.vertical, 12)
@@ -799,11 +809,11 @@ struct PlayerProfileView: View {
                 .buttonStyle(.plain)
             }
         case .both:
-            NavigationLink(value: MetricRoute(label: metric.label, category: metric.category)) {
+            NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason)) {
                 DualMetricBar(
                     season: metric,
                     recent: recentMetric,
-                    recentCaption: "Last \(recentWindowGames)G"
+                    recentCaption: "Last \(recentWindowGames)"
                 )
                 .padding(.horizontal, GridironGeo.padCard)
                 .padding(.vertical, 12)
@@ -855,12 +865,140 @@ struct PlayerProfileView: View {
         recentLoading = false
     }
 
+    /// Which of the four boards a traditional stat belongs to, so tapping a row
+    /// opens the leaderboard that actually lists it. Without this a running
+    /// back's Rec Yds row pushed the Passing board, which has no Rec Yds column.
+    private static func standardCategory(for label: String, fallback: StandardStatCategory) -> StandardStatCategory {
+        switch label.uppercased() {
+        case "PASS YDS", "PASS TD", "INT", "CMP/ATT": return .passing
+        case "CAR", "RUSH YDS", "RUSH TD":            return .rushing
+        case "REC/TGT", "REC YDS", "REC TD":          return .receiving
+        case "TACKLES", "SACKS", "DEF INT":           return .defense
+        default:                                      return fallback
+        }
+    }
+
+    private var standardFallbackCategory: StandardStatCategory {
+        switch player.playerType?.lowercased() {
+        case "qb":  return .passing
+        case "rb":  return .rushing
+        case "wr", "te": return .receiving
+        default:    return .defense
+        }
+    }
+
+    /// Stats where a lower number is the better outcome. Only one on a football
+    /// line: interceptions thrown. A defender's takeaways are their own label
+    /// ("Def INT") and read the normal way round.
+    private static let lowerIsBetterStandard: Set<String> = ["INT"]
+
+    /// Counting stats. Ranking these is honest but playing-time driven, a
+    /// backup's 2 rushing touchdowns isn't a talent signal, so they're grouped
+    /// separately from the rate stats and captioned as volume.
+    ///
+    /// Football's traditional line is almost entirely counting stats, unlike
+    /// baseball's, so in practice the RATE group is usually empty and the
+    /// sub-section bars are only drawn when both groups have something in them.
+    private static let countingStats: Set<String> = [
+        "G", "PASS YDS", "PASS TD", "INT", "CAR", "RUSH YDS", "RUSH TD",
+        "REC", "REC YDS", "REC TD", "TACKLES", "SACKS", "DEF INT",
+    ]
+
+    /// Percentile rank for a traditional stat against the league.
+    ///
+    /// The pipeline publishes percentiles for the advanced metrics but not for
+    /// the traditional line, so these are computed here: a player's position in
+    /// the distribution of every same-position player who has the stat. Returns
+    /// nil below a usable pool size rather than drawing a bar off five samples.
+    private func standardStatPercentile(label: String, value: Double) -> Int? {
+        let key = label.uppercased()
+        let myType = player.playerType?.lowercased()
+        let values: [Double] = allPlayers.compactMap { other in
+            guard other.playerType?.lowercased() == myType else { return nil }
+            guard let stat = other.standardStats?.first(where: { $0.label.uppercased() == key })
+            else { return nil }
+            return DashboardViewModel.rawNumeric(stat.value)
+        }
+        guard values.count >= 20 else { return nil }
+
+        // Midpoint rank, so a cluster of identical values lands mid-band
+        // instead of all sharing the top of it.
+        let below = values.reduce(0) { $0 + ($1 < value ? 1 : 0) }
+        let equal = values.reduce(0) { $0 + ($1 == value ? 1 : 0) }
+        let raw = (Double(below) + Double(equal) / 2) / Double(values.count) * 100
+        let oriented = Self.lowerIsBetterStandard.contains(key) ? 100 - raw : raw
+        return max(1, min(100, Int(oriented.rounded())))
+    }
+
+    /// Standard stats rendered as the same `Metric` the percentile card uses, so
+    /// both tabs read on one ruler. Stats with too small a league pool, and the
+    /// composite ones like Cmp/Att that aren't a single number, keep their value
+    /// but get no bar.
+    private func standardMetrics(counting: Bool) -> [Metric] {
+        (displayedPlayer.standardStats ?? [])
+            .filter { Self.countingStats.contains($0.label.uppercased()) == counting }
+            .map { stat in
+                let pct = DashboardViewModel.rawNumeric(stat.value)
+                    .flatMap { standardStatPercentile(label: stat.label, value: $0) }
+                return Metric(
+                    id: "std-\(stat.label)",
+                    label: stat.label.uppercased(),
+                    value: stat.value,
+                    percentile: pct ?? 0,
+                    category: Self.standardCategory(for: stat.label, fallback: standardFallbackCategory).metricCategory
+                )
+            }
+    }
+
+    /// Traditional stat label to the rollup's key. Games played and the
+    /// composite Cmp/Att and Rec/Tgt lines have no single-number window
+    /// counterpart, so they keep their season row alone.
+    private static let standardRecentKeys: [String: String] = [
+        "PASS YDS": "pass_yards", "PASS TD": "pass_tds", "INT": "interceptions",
+        "CAR": "carries", "RUSH YDS": "rush_yards", "RUSH TD": "rush_tds",
+        "REC": "receptions", "REC YDS": "rec_yards", "REC TD": "rec_tds",
+        "TACKLES": "tackles", "SACKS": "sacks", "DEF INT": "def_ints",
+    ]
+
+    private var standardRecentForm: RecentForm? {
+        recentFormLookup?(player.playerId, standardWindow)
+    }
+
+    /// The recent-window version of one traditional stat, or nil when the window
+    /// has no figure for it. Percentile comes from the same league season
+    /// distribution the season row uses, so both sit on one ruler.
+    private func recentStandardMetric(for seasonMetric: Metric) -> Metric? {
+        guard let key = Self.standardRecentKeys[seasonMetric.label],
+              let value = standardRecentForm?.metrics[key] else { return nil }
+        let text = seasonMetric.label == "SACKS"
+            ? String(format: "%.1f", value)
+            : Int(value.rounded()).formatted(.number.grouping(.automatic))
+        return Metric(
+            id: "std-recent-\(seasonMetric.label)",
+            label: seasonMetric.label,
+            value: text,
+            percentile: standardStatPercentile(label: seasonMetric.label, value: value) ?? 0,
+            category: seasonMetric.category
+        )
+    }
+
     private var standardStatsGridCard: some View {
         VStack(spacing: 0) {
+            // The season already appears in the picker on the right; printing
+            // it in the title too was saying it twice.
             GridironSectionBar(
-                title: "STANDARD STATS · \(seasonLabel)",
+                title: "STANDARD STATS",
                 trailing: AnyView(seasonMenu)
             )
+
+            // Recent only means something on the season the rollup covers; on a
+            // past season the window would always be empty.
+            if isCurrentSeasonActive {
+                standardModePicker
+                if effectiveStandardMode != .season {
+                    standardWindowPicker
+                }
+            }
 
             if (displayedPlayer.standardStats ?? []).isEmpty {
                 emptyStateCard(
@@ -870,35 +1008,21 @@ struct PlayerProfileView: View {
                 )
                 .padding(.vertical, 24)
             } else {
-                let stats = displayedPlayer.standardStats ?? []
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible(), spacing: 1),
-                        GridItem(.flexible(), spacing: 1),
-                        GridItem(.flexible(), spacing: 1)
-                    ],
-                    spacing: 1
-                ) {
-                    ForEach(stats) { stat in
-                        VStack(spacing: 4) {
-                            Text(stat.label.uppercased())
-                                .font(GridironType.micro)
-                                .foregroundStyle(GridironPalette.inkTertiary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                            Text(stat.value)
-                                .font(GridironType.statMed)
-                                .foregroundStyle(GridironPalette.ink)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                                .monospacedDigit()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(GridironPalette.surface)
-                    }
+                let rates = standardMetrics(counting: false)
+                let counts = standardMetrics(counting: true)
+                // Only worth labelling the two groups when there are two of
+                // them. A football line is usually all volume, and a lone
+                // "VOLUME" bar above every row says nothing.
+                let labelled = !rates.isEmpty && !counts.isEmpty
+
+                if !rates.isEmpty {
+                    if labelled { GridironSubSectionBar(title: "RATE") }
+                    standardRows(rates)
                 }
-                .background(GridironPalette.divider)
+                if !counts.isEmpty {
+                    if labelled { GridironSubSectionBar(title: "VOLUME") }
+                    standardRows(counts, startingIndex: rates.count)
+                }
             }
         }
         .background(GridironPalette.surface)
@@ -907,6 +1031,79 @@ struct PlayerProfileView: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
+    }
+
+    private var effectiveStandardMode: FormDisplayMode {
+        (store.isPro && isCurrentSeasonActive) ? standardMode : .season
+    }
+
+    private var standardModePicker: some View {
+        GridironSegmented(
+            segments: FormDisplayMode.allCases.map {
+                .init(value: $0, label: $0.rawValue, isLocked: !store.isPro && $0 != .season)
+            },
+            selection: $standardMode,
+            onLockedTap: { _ in trialPitchTrigger = .recentForm }
+        )
+        .padding(.horizontal, GridironGeo.padInline)
+        .padding(.vertical, 10)
+        .background(GridironPalette.surfaceAlt)
+        .onChange(of: standardMode) { _, mode in
+            if mode != .season { Task { await loadRecentForm?(standardWindow) } }
+        }
+    }
+
+    private var standardWindowPicker: some View {
+        GridironSegmented(
+            segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
+            selection: $standardWindow
+        )
+        .padding(.horizontal, GridironGeo.padInline)
+        .padding(.bottom, 8)
+        .background(GridironPalette.surfaceAlt)
+        .onChange(of: standardWindow) { _, window in
+            Task { await loadRecentForm?(window) }
+        }
+    }
+
+    @ViewBuilder
+    private func standardRows(_ metrics: [Metric], startingIndex: Int = 0) -> some View {
+        ForEach(Array(metrics.enumerated()), id: \.element.id) { offset, metric in
+            let recent = recentStandardMetric(for: metric)
+            let background = (startingIndex + offset) % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt
+
+            NavigationLink(value: StandardStatRoute(
+                stat: metric.label,
+                category: Self.standardCategory(for: metric.label, fallback: standardFallbackCategory),
+                season: activeSeason
+            )) {
+                Group {
+                    switch effectiveStandardMode {
+                    case .season:
+                        MetricBar(metric: metric)
+                    case .recent:
+                        // No recent figure for this stat, fall back to season
+                        // rather than dropping the row, matching the percentile
+                        // card's behaviour.
+                        MetricBar(metric: recent ?? metric)
+                    case .both:
+                        DualMetricBar(
+                            season: metric,
+                            recent: recent,
+                            recentCaption: standardWindow.segmentLabel
+                        )
+                    }
+                }
+                .padding(.horizontal, GridironGeo.padCard)
+                .padding(.vertical, 12)
+                .background(background)
+                .overlay(
+                    Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
+                    alignment: .bottom
+                )
+            }
+            .buttonStyle(.plain)
+        }
     }
 
 }

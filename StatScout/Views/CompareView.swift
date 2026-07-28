@@ -8,11 +8,19 @@ struct YearCompareRoute: Hashable {
     let playerName: String
 }
 
-/// Dedicated "Compare" tab. The comparison flows already live inside the
-/// player profile (Year Compare tab + the compare toolbar button); this tab
-/// doesn't replace those — it's a discoverable promo surface that puts both
-/// head-to-head and year-over-year one tap away, and blurs behind a trial
+/// Dedicated "Compare" tab, and the home of the players you follow.
+///
+/// The comparison flows also live inside the player profile (Year Compare tab +
+/// the compare toolbar button); this tab doesn't replace those, it puts both
+/// head-to-head and year-over-year one tap away, and blurs them behind a trial
 /// pitch for non-Pro users.
+///
+/// Following used to have nowhere to live at all. It sat briefly on the Trends
+/// board, which made Trends do two jobs, a league leaderboard and a personal
+/// list, and left the tab you'd look for your own players in with no mention of
+/// them. The list lives here now, above the comparison cards it feeds, and
+/// stays free: following is what makes the app feel like yours, and what's paid
+/// is the payoff.
 struct CompareView: View {
     @EnvironmentObject private var store: StoreService
     let viewModel: DashboardViewModel
@@ -28,38 +36,63 @@ struct CompareView: View {
     @State private var comparisonRoute: ComparisonRoute?
     @State private var yearRoute: YearCompareRoute?
     @State private var showingTrial = false
+    @State private var showingFollowSheet = false
+    @State private var favorites = FavoritesStore.shared
 
     private var players: [Player] {
         viewModel.seasonPlayers.sorted { $0.name < $1.name }
     }
 
+    /// The followed players that exist in the selected season, in the order
+    /// they were followed.
+    private var followedPlayers: [Player] {
+        let roster = viewModel.players(forSeason: viewModel.selectedSeason)
+        return favorites.playerIds.compactMap { id in
+            roster.first { $0.playerId == id }
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
-                intro
-                playerVsPlayerCard
-                yearOverYearCard
+                yourPlayersCard
+
+                // Only the comparison cards blur. Following is free, so putting
+                // the whole page behind the gate would have hidden the one
+                // thing a free user can actually do here.
+                ZStack(alignment: .bottom) {
+                    VStack(spacing: 12) {
+                        playerVsPlayerCard
+                        yearOverYearCard
+                    }
+                    .blur(radius: store.isPro ? 0 : 5)
+                    .disabled(!store.isPro)
+                    .allowsHitTesting(store.isPro)
+
+                    if !store.isPro {
+                        // The same gate every other locked module uses, rather
+                        // than this screen's own floating panel.
+                        BlurGateUnlock(
+                            headline: "Stack any two players, or any player against his own past seasons",
+                            trigger: .playerComparison
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+                    }
+                }
             }
             .padding(.horizontal, 12)
             .padding(.top, 12)
             .padding(.bottom, 16)
-            .blur(radius: store.isPro ? 0 : 5)
-            .disabled(!store.isPro)
             // Scroll-under spacer so content can pass behind the floating tab
-            // bar — matches the Dashboard / Teams pattern.
+            // bar, matches the Dashboard / Teams pattern.
             Color.clear.frame(height: 88)
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(GridironPalette.canvas.ignoresSafeArea())
-        // Bottom-anchored unlock so the blurred Compare cards stay visible as a
-        // teaser above the gate, instead of being fully covered by the box.
-        .overlay(alignment: .bottom) {
-            if !store.isPro {
-                lockedOverlay
-                    .padding(.bottom, 100)
-            }
-        }
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingFollowSheet) {
+            FollowPlayersSheet(viewModel: viewModel)
+        }
         .onAppear {
             if store.isPro, !viewModel.hasLoadedHistorical, !viewModel.isHistoricalLoading {
                 Task { await viewModel.loadHistoricalIfNeeded() }
@@ -109,6 +142,180 @@ struct CompareView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
+    }
+
+    /// The followed list. Free, and the first thing on the tab: it's the only
+    /// personal state the app holds, and it feeds the slots below it.
+    private var yourPlayersCard: some View {
+        VStack(spacing: 0) {
+            GridironSectionBar(
+                title: "YOUR PLAYERS",
+                trailing: AnyView(
+                    Button {
+                        showingFollowSheet = true
+                    } label: {
+                        Label(favorites.playerIds.isEmpty ? "Add" : "Edit", systemImage: "star")
+                            .font(GridironType.micro)
+                            .foregroundStyle(GridironPalette.turf)
+                    }
+                    .buttonStyle(.plain)
+                )
+            )
+
+            if followedPlayers.isEmpty {
+                VStack(spacing: 8) {
+                    Text("Follow players to keep them one tap from a comparison, and to spot them on the Trends board.")
+                        .font(GridironType.small)
+                        .foregroundStyle(GridironPalette.inkSecondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        showingFollowSheet = true
+                    } label: {
+                        Text("Follow players")
+                            .font(GridironType.smallBold)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .frame(height: GridironControl.height)
+                            .background(GridironPalette.turf)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.vertical, 18)
+                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity)
+            } else {
+                ForEach(Array(followedPlayers.enumerated()), id: \.element.playerId) { index, player in
+                    followedRow(player: player, index: index)
+                }
+                Text(store.isPro
+                     ? "Tap a player to load them into a slot below."
+                     : "Tap a player to see their stats. Head-to-head needs StatScout+.")
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, GridironGeo.padCard)
+                    .padding(.vertical, 10)
+            }
+        }
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+    }
+
+    /// A followed player, and what tapping him does.
+    ///
+    /// For Pro that's "load into a comparison slot". For everyone else it's
+    /// "open his page": his own stats are free, so a free tap that threw up the
+    /// comparison pitch would give the user nothing, on a list they built
+    /// themselves. Head-to-head is what's paid; a player's own numbers never
+    /// were. The pitch is still one row further down, on the blurred cards that
+    /// actually need it.
+    @ViewBuilder
+    private func followedRow(player: Player, index: Int) -> some View {
+        let inSlot = playerA?.playerId == player.playerId || playerB?.playerId == player.playerId
+
+        HStack(spacing: 0) {
+            if store.isPro {
+                Button {
+                    loadIntoSlot(player)
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } label: {
+                    followedRowLabel(player: player, inSlot: inSlot)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Loads \(player.name) into a comparison slot")
+
+                // A Pro tap is spent on the slot, which left the list you
+                // curated yourself with no way through to any of the pages it
+                // names. The chevron is its own target and does the obvious
+                // thing.
+                NavigationLink(value: player) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                        .frame(width: 40, height: GridironGeo.rowHeight)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Open \(player.name)'s page")
+            } else {
+                NavigationLink(value: player) {
+                    followedRowLabel(player: player, inSlot: inSlot)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens \(player.name)'s stats")
+            }
+        }
+        .padding(.trailing, store.isPro ? 4 : 0)
+        .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
+        .overlay(
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
+            alignment: .bottom
+        )
+        .contextMenu {
+            NavigationLink(value: player) {
+                Label("Open player page", systemImage: "person.text.rectangle")
+            }
+            Button(role: .destructive) {
+                favorites.toggleFavorite(playerId: player.playerId)
+            } label: {
+                Label("Unfollow", systemImage: "star.slash")
+            }
+        }
+    }
+
+    private func followedRowLabel(player: Player, inSlot: Bool) -> some View {
+        HStack(spacing: 10) {
+            PlayerHeadshot(team: player.team, initials: player.initials, size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(player.name)
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
+                    .lineLimit(1)
+                Text("\(displayTeamAbbr(player.team)) · \(player.displayPosition)")
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+            }
+            Spacer(minLength: 0)
+            if inSlot {
+                Text("IN SLOT")
+                    .font(GridironType.micro)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(GridironPalette.turf)
+                    .clipShape(Capsule())
+            } else {
+                // The glyph states the outcome: a slot to fill for Pro (the
+                // chevron beside it opens the page), a page to open for
+                // everyone else.
+                Image(systemName: store.isPro ? "plus.circle" : "chevron.right")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(GridironPalette.inkTertiary)
+            }
+        }
+        .padding(.leading, GridironGeo.padInline)
+        .padding(.trailing, store.isPro ? 6 : GridironGeo.padInline)
+        .frame(height: GridironGeo.rowHeight)
+        .contentShape(Rectangle())
+    }
+
+    /// Fills the first empty slot, then replaces the older of the two, so
+    /// tapping down a list keeps swapping the challenger against a held player
+    /// rather than clearing both.
+    private func loadIntoSlot(_ player: Player) {
+        if playerA == nil || playerA?.playerId == player.playerId {
+            playerA = player
+        } else if playerB == nil || playerB?.playerId == player.playerId {
+            playerB = player
+        } else {
+            playerB = player
+        }
     }
 
     private var playerVsPlayerCard: some View {

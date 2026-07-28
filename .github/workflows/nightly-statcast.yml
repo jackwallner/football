@@ -2,8 +2,17 @@ name: Nightly NFL Refresh
 
 on:
   schedule:
+    # nflverse publishes its data mirror on a weekly cadence (games are once a
+    # week per team), unlike Statcast which updates nightly during an MLB
+    # season — so one run a night is enough here; there's no second pass to
+    # add the way baseball's workflow needed one.
     - cron: "0 9 * * *"
   workflow_dispatch:
+    inputs:
+      full_game_log_reingest:
+        description: "Re-ingest per-game logs from season start (needed after a metric-set change)"
+        type: boolean
+        default: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -14,7 +23,10 @@ jobs:
     permissions:
       contents: read
       issues: write
-    timeout-minutes: 30
+    # The nightly incremental path is quick. A full game-log re-ingest walks
+    # the whole season's weekly stats plus the recent-form rollup and needs
+    # more headroom.
+    timeout-minutes: 60
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -48,9 +60,26 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           STATCAST_SEASON: ${{ vars.STATCAST_SEASON || '2025' }}
+          # A metric-set change only reaches already-ingested games via a full
+          # re-ingest; the nightly path stays incremental from the last date.
+          FULL_REINGEST: ${{ inputs.full_game_log_reingest }}
         run: |
           set -o pipefail
-          python backend/ingest_game_logs.py 2>&1 | tee game_logs_ingestion.log
+          if [ "$FULL_REINGEST" = "true" ]; then
+            python backend/ingest_game_logs.py --full 2>&1 | tee game_logs_ingestion.log
+          else
+            python backend/ingest_game_logs.py 2>&1 | tee game_logs_ingestion.log
+          fi
+
+      - name: Roll up rolling windows (last 3/5/8 games)
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STATCAST_SEASON: ${{ vars.STATCAST_SEASON || '2025' }}
+        run: |
+          set -o pipefail
+          python backend/rollup_recent_form.py 2>&1 | tee recent_form_rollup.log
 
       - name: Upload artifacts on failure
         if: failure()

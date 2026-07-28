@@ -5,6 +5,10 @@ enum PaywallTrigger: Identifiable, Hashable {
     var id: Self { self }
 
     case pastSeason
+    /// A specific locked year the user reached for. Naming the year they were
+    /// curious about converts better than a generic "unlock more" pitch, so the
+    /// season menus route through this rather than `.pastSeason`.
+    case lockedSeason(Int)
     case yearCompare
     case playerComparison
     case onboarding
@@ -15,7 +19,7 @@ enum PaywallTrigger: Identifiable, Hashable {
     case winback
     /// Soft, half-sheet trial pitch shown on a free user's first player open.
     /// Distinct from the old `.activation` full-PaywallView popup (removed for
-    /// being too intrusive) — this routes through TrialPitchSheet, which is
+    /// being too intrusive), this routes through TrialPitchSheet, which is
     /// native/intentional, dismissible with "Maybe later", and gated by
     /// PaywallGate so it caps at 2 per session.
     case playerScouting
@@ -25,6 +29,7 @@ enum PaywallTrigger: Identifiable, Hashable {
     var icon: String {
         switch self {
         case .pastSeason:        return "calendar.badge.clock"
+        case .lockedSeason:      return "calendar.badge.clock"
         case .yearCompare:       return "arrow.left.arrow.right.circle.fill"
         case .playerComparison:  return "person.2.fill"
         case .onboarding:        return "crown.fill"
@@ -41,6 +46,7 @@ enum PaywallTrigger: Identifiable, Hashable {
     var title: String {
         switch self {
         case .pastSeason:        return "Unlock Past Seasons"
+        case .lockedSeason(let year): return "Unlock \(year)"
         case .yearCompare:       return "Year-over-Year Comparison"
         case .playerComparison:  return "Player Comparison"
         case .onboarding:        return "Scout Like a GM"
@@ -58,26 +64,28 @@ enum PaywallTrigger: Identifiable, Hashable {
         switch self {
         case .pastSeason:
             return "Track how every player ranked since 2015, plus the year-over-year trends behind today's leaders."
+        case .lockedSeason(let year):
+            return "See every player's \(year) percentile rankings, and how they stack up against any other season."
         case .yearCompare:
             return "Compare any player's percentile rankings across any two seasons. See what changed, what held, and where they're headed."
         case .playerComparison:
             return "Stack any two players head-to-head across every NFL metric: EPA, CPOE, YAC, RYOE, and more."
         case .onboarding:
-            return "Recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
+            return "The Trends board, recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
         case .activation:
-            return "Recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
+            return "The Trends board, recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
         case .upgrade:
-            return "Recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
+            return "The Trends board, recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
         case .pastSeasonsLoad:
             return "Load historical data to explore past seasons, year-over-year trends, and more."
         case .teamView:
-            return "Every player on every roster, not just qualified starters, plus side-by-side comparisons for every squad."
+            return "Advanced and standard stats for every club, a roster you can rank by any metric over any window, and side-by-side comparisons for every squad."
         case .winback:
-            return "Your StatScout+ access has lapsed. Pick it back up to get recent form, head-to-head matchups, and every past season."
+            return "Your StatScout+ access has lapsed. Pick it back up to get the Trends board, recent form, head-to-head matchups, and every past season."
         case .playerScouting:
-            return "Last 1 / 3 / 5 game form, head-to-head matchups, every roster. The full picture, not just season totals."
+            return "Last 3 / 5 / 8 game form, head-to-head matchups, every roster. The full picture, not just season totals."
         case .recentForm:
-            return "Every player's last 1 / 3 / 5 game form. Catch hot streaks and slumps before the season totals catch up."
+            return "Every player's last 3 / 5 / 8 game form. Catch hot streaks and slumps before the season totals catch up."
         }
     }
 
@@ -85,6 +93,7 @@ enum PaywallTrigger: Identifiable, Hashable {
     var paywallImpressionId: String {
         switch self {
         case .pastSeason:        return "statscout_paywall_past_season"
+        case .lockedSeason:      return "statscout_paywall_locked_season"
         case .yearCompare:       return "statscout_paywall_year_compare"
         case .playerComparison:  return "statscout_paywall_player_comparison"
         case .onboarding:        return "statscout_paywall_onboarding"
@@ -98,10 +107,15 @@ enum PaywallTrigger: Identifiable, Hashable {
         }
     }
 
+    /// What the subscription actually opens, kept in step with the app. The
+    /// Trends board and the team Advanced / Standard windows shipped after this
+    /// list was written and went unmentioned, so the pitch was selling less
+    /// than the product does.
     private static let proFeatures: [(icon: String, title: String)] = [
-        ("flame.fill", "Catch hot streaks: last 1 / 3 / 5 game form"),
+        ("flame.fill", "The Trends board: who's heating up and cooling off, league-wide"),
+        ("chart.bar.fill", "Last 3 / 5 / 8 game form on any player, team or leaderboard"),
         ("person.2.fill", "Head-to-head: any two players, every metric"),
-        ("shield.lefthalf.filled", "Every player on every roster, not just qualifiers"),
+        ("shield.lefthalf.filled", "Team scouting: advanced and standard, season or recent"),
         ("calendar.badge.clock", "Every season back to 2015 + year-over-year trends")
     ]
 
@@ -212,7 +226,7 @@ struct PaywallView: View {
 
     // Bold midnight hero: the entry-point icon over a faint percentile-bar motif,
     // a "Pro" eyebrow, the benefit headline, and the emotional subtitle. Sells
-    // the upgrade before any pricing — pricing/feature density comes below.
+    // the upgrade before any pricing, pricing/feature density comes below.
     private var heroHeader: some View {
         ZStack {
             LinearGradient(
@@ -282,7 +296,7 @@ struct PaywallView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // Reassurance + real credibility — public NFL Next Gen Stats are the source of truth
+    // Reassurance + real credibility, public NFL Next Gen Stats are the source of truth
     // for these percentiles, which is the actual moat. No fabricated ratings
     // or user counts.
     private var trustRow: some View {

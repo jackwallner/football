@@ -16,9 +16,7 @@ struct YearComparePreview: View {
 
             BlurGateUnlock(
                 headline: "See how \(playerName) evolved season to season",
-                cta: store.paywallBlurCTA,
-                subtext: store.paywallBlurSubtext,
-                action: onUnlock
+                trigger: .yearCompare
             )
         }
         .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))

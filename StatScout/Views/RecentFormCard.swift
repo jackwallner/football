@@ -18,7 +18,7 @@ struct RecentFormCard: View {
     @State private var logs: [PlayerGameLog] = []
     @State private var loading = false
     @State private var loadError: String?
-    @State private var windowGames: Int = 3
+    @State private var windowGames: Int = 5
     @State private var curves: LeaguePercentileCurves?
 
     private var category: MetricCategory { player.primaryCategory }
@@ -108,25 +108,13 @@ struct RecentFormCard: View {
     }
 
     private var windowPicker: some View {
-        HStack(spacing: 6) {
-            ForEach(RecentFormWindow.windows, id: \.span) { w in
-                Button {
-                    windowGames = w.span
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    Text(w.label)
-                        .font(GridironType.smallBold)
-                        .foregroundStyle(windowGames == w.span ? .white : GridironPalette.inkSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 30)
-                        .background(windowGames == w.span ? GridironPalette.turf : GridironPalette.surface)
-                        .clipShape(Capsule())
-                        .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(w.label) games")
-            }
-        }
+        GridironSegmented(
+            segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
+            selection: Binding(
+                get: { RecentWindow(rawValue: windowGames) ?? .three },
+                set: { windowGames = $0.rawValue }
+            )
+        )
     }
 
     @ViewBuilder
@@ -140,10 +128,8 @@ struct RecentFormCard: View {
                     .disabled(true)
                     .allowsHitTesting(false)
                 BlurGateUnlock(
-                    headline: "See last 1 / 3 / 5 game form for any player",
-                    cta: store.paywallBlurCTA,
-                    subtext: store.paywallBlurSubtext,
-                    action: onUpgradeTap
+                    headline: "See last 3 / 5 / 8 game form for any player",
+                    trigger: .recentForm
                 )
             }
         }

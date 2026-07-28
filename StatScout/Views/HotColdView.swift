@@ -1,0 +1,572 @@
+import SwiftUI
+
+/// League-wide recent form, ranked by change rather than by level.
+///
+/// The same THEN / NOW / delta framing the baseball app's rolling leaderboard
+/// uses, because the delta is the story. A 9.1 Y/A is interesting; a 9.1 that
+/// was 6.2 three weeks ago is a quarterback you want to know about right now,
+/// and that is the thing season totals cannot tell you.
+///
+/// Colour is the app's own performance gradient. The flame / snowflake accent
+/// is reserved for the direction control rather than applied to every row:
+/// marking everything marks nothing. (Those are SF Symbols, not emoji, which
+/// render as missing-glyph boxes here.)
+///
+/// Purely league-wide. The players you follow live on the Compare tab, which is
+/// where they can actually be used; a personal list wedged above this board
+/// made the tab answer two questions at once and buried the leaderboard the
+/// subscription is sold on. Followed players are still marked with a star here,
+/// and any row can be followed from its context menu.
+struct HotColdView: View {
+    @EnvironmentObject private var store: StoreService
+    @Bindable var viewModel: DashboardViewModel
+    @State private var favorites = FavoritesStore.shared
+    @State private var showingCold = false
+    @State private var side: TrendSide = .qb
+    @State private var statMode: TrendStatMode = .advanced
+    @State private var metric: TrendMetric = TrendMetric.qbAdvanced[0]
+
+    /// The metrics the picker offers, narrowed by the Advanced / Standard
+    /// switch. Every other board in the app splits its stats this way (the
+    /// player page, the team page, the Stats tab), and Trends was the one place
+    /// where the two vocabularies were mixed into a single long menu.
+    private var metricOptions: [TrendMetric] {
+        TrendMetric.list(for: side, mode: statMode)
+    }
+
+    private var forms: [RecentForm] {
+        viewModel.recentFormRows(window: viewModel.recentWindow, playerType: side.playerType)
+    }
+
+    /// How much better this player got. Falling numbers are the improvement for
+    /// an interception rate or a sack rate, so the board ranks on this rather
+    /// than on the raw delta.
+    private func improvement(_ form: RecentForm) -> Double? {
+        guard let delta = form.delta[metric.key] else { return nil }
+        return metric.lowerIsBetter ? -delta : delta
+    }
+
+    /// Ranked by improvement, hot first or cold first. Small samples are
+    /// excluded outright: four carries in a mop-up week produce enormous deltas
+    /// that would crowd out every real riser.
+    private var ranked: [RecentForm] {
+        forms
+            .filter { !$0.isSmallSample && improvement($0) != nil }
+            .sorted {
+                let a = improvement($0) ?? 0
+                let b = improvement($1) ?? 0
+                return showingCold ? a < b : a > b
+            }
+    }
+
+    /// Free users get the header and a full-height locked board; Pro users get
+    /// a scrolling one.
+    ///
+    /// The locked board deliberately does *not* scroll. It used to sit in the
+    /// same `ScrollView` as the Pro board, which meant its height was whatever
+    /// twelve invented rows happened to add up to, short of the viewport on a
+    /// big phone, so the card stopped mid-screen with canvas under it and the
+    /// unlock panel floating in the middle of nothing. There is also nothing
+    /// below the fold to scroll *to* when the rows are a teaser.
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+
+            if store.isPro {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        proContent
+                        Color.clear.frame(height: 88)
+                    }
+                }
+                .scrollBounceBehavior(.basedOnSize)
+            } else {
+                lockedContent
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(GridironPalette.canvas)
+        // Keyed on entitlement as well as the window. `isPro` starts false and
+        // only flips once RevenueCat answers, which on a real device is often
+        // after this view is already on screen; with the window alone as the
+        // id, that first task had already returned at the guard and nothing
+        // ever re-ran it. The board then sat empty forever: not loading, no
+        // error, just a bare header.
+        //
+        // Free users load it too: the top row of the locked board is the real
+        // league leader, and a fabricated one would be a lie in the one place
+        // we're asking to be trusted. It's a single request against the
+        // pre-aggregated rollup table, the same one Pro reads.
+        .task(id: "\(viewModel.recentWindow.rawValue)-\(store.isPro)") {
+            await viewModel.loadRecentFormIfNeeded()
+        }
+        .onChange(of: side) { _, newSide in
+            // Keys don't carry across position groups, so land on that group's
+            // headline metric rather than an empty board. Defence has no
+            // advanced list, so the mode falls back with it.
+            if !newSide.hasAdvancedMetrics { statMode = .standard }
+            metric = metricOptions[0]
+        }
+        .onChange(of: statMode) { _, _ in
+            metric = metricOptions[0]
+        }
+    }
+
+    private var header: some View {
+        VStack(spacing: 8) {
+            // Which position group, and which vocabulary. Both narrow the stat
+            // list below them, so they sit above it.
+            //
+            // Baseball draws its side switch as two inline segments. Five
+            // position groups is past what a segmented row can hold at a
+            // legible size, so the group is a menu and the mode keeps the
+            // segments, which also puts the wider control on the wider half of
+            // the row.
+            HStack(spacing: 8) {
+                sideMenu
+                if side.hasAdvancedMetrics {
+                    GridironSegmented(
+                        segments: TrendStatMode.allCases.map { .init(value: $0, label: $0.label) },
+                        selection: $statMode
+                    )
+                }
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 8) {
+                metricPicker
+                Spacer(minLength: 0)
+                if let through = throughLabel {
+                    Text(through)
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                }
+            }
+
+            // Same control as every other inline picker; only the selected fill
+            // differs, because here the choice itself encodes hot vs cold.
+            GridironSegmented(
+                segments: [
+                    .init(value: false, label: "Heating up", systemImage: "flame.fill"),
+                    .init(value: true, label: "Cooling off", systemImage: "snowflake"),
+                ],
+                selection: $showingCold,
+                selectedFill: { $0 ? GridironPalette.performanceLow : GridironPalette.performanceHigh }
+            )
+
+            GridironSegmented(
+                segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
+                selection: $viewModel.recentWindow
+            )
+
+            // The window is games the player actually appeared in, not weeks
+            // elapsed: a bye or a missed game shifts the window back rather
+            // than shrinking it. The per-row week range is what says when.
+            Text("Games played, against the same number before them. Each row shows the weeks it covers.")
+                .font(GridironType.micro)
+                .foregroundStyle(GridironPalette.inkTertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+    }
+
+    /// Weeks read better than dates in a sport that plays once a week, but the
+    /// rollup only started storing them recently, so the date is the fallback.
+    private var throughLabel: String? {
+        if let week = viewModel.recentFormThroughWeek { return "Through Week \(week)" }
+        if let asOf = viewModel.recentFormAsOf {
+            return "Through \(asOf.formatted(.dateTime.month(.abbreviated).day()))"
+        }
+        return nil
+    }
+
+    /// Five position groups is past what a segmented row can hold, so this is
+    /// the app's other picker shape: the same plain `Menu` the season selector
+    /// and every sort control use.
+    private var sideMenu: some View {
+        Menu {
+            ForEach(TrendSide.allCases) { option in
+                Button {
+                    side = option
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } label: {
+                    if option == side {
+                        Label(option.label, systemImage: "checkmark")
+                    } else {
+                        Text(option.label)
+                    }
+                }
+            }
+        } label: {
+            GridironInlinePill(systemImage: "person.fill", title: side.shortLabel)
+        }
+        .menuOrder(.fixed)
+        .accessibilityLabel("Position group")
+        .accessibilityValue(side.label)
+    }
+
+    /// Same shape as the group picker, listing whichever family the Advanced /
+    /// Standard switch above has selected.
+    private var metricPicker: some View {
+        Menu {
+            metricButtons(metricOptions)
+        } label: {
+            GridironInlinePill(systemImage: "chart.bar.fill", title: metric.label)
+        }
+        .menuOrder(.fixed)
+        .accessibilityLabel("Metric")
+        .accessibilityValue(metric.label)
+    }
+
+    private func metricButtons(_ list: [TrendMetric]) -> some View {
+        ForEach(list) { option in
+            Button {
+                metric = option
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                if option.key == metric.key {
+                    Label(option.label, systemImage: "checkmark")
+                } else {
+                    Text(option.label)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var proContent: some View {
+        if viewModel.isRecentFormLoading && forms.isEmpty {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+        } else if let error = viewModel.recentFormError, forms.isEmpty {
+            ContentUnavailableView {
+                Label("Couldn't load recent form", systemImage: "exclamationmark.triangle")
+            } description: {
+                Text(error)
+            }
+            .padding(.vertical, 32)
+        } else if ranked.isEmpty {
+            // A metric the pipeline hasn't produced a prior window for yet
+            // ranks nobody, and a bare header under a full set of controls
+            // reads as a broken screen. Name the reason and point at the
+            // metrics that do have movement.
+            ContentUnavailableView {
+                Label("No movement to rank yet", systemImage: "chart.line.flattrend.xyaxis")
+            } description: {
+                Text("\(metric.label) doesn't have enough of a prior window to compare against. Try another stat or a longer window.")
+            }
+            .padding(.vertical, 32)
+        } else {
+            section(title: boardTitle, forms: Array(ranked.prefix(50)), ranked: true)
+        }
+    }
+
+    /// Free users get the real number one, then the wall.
+    ///
+    /// A gate that shows nobody is easy to walk away from. Showing the actual
+    /// hottest player in the league, his name, his THEN to NOW, tappable
+    /// through to his page, makes the board demonstrably real, and makes the
+    /// blurred ranks below it a thing you can't see rather than a thing that
+    /// might not exist. Everything under row one stays invented: blur is not a
+    /// security boundary, so the rows behind it were never real numbers.
+    private var lockedContent: some View {
+        VStack(spacing: 0) {
+            GridironSectionBar(title: boardTitle)
+
+            leaderRow
+
+            // The rows are drawn as an overlay on an empty flexible spacer, not
+            // stacked directly. A VStack of eighteen rows has an ideal height
+            // of ~800pt and `frame(maxHeight:)` doesn't shrink a child below
+            // its ideal, so laying them out inline made the card taller than
+            // the screen and shoved the whole page up, taking the pickers off
+            // the top and the unlock panel off the bottom. `Color.clear` has no
+            // ideal height of its own, so it takes exactly the space left over;
+            // the overlay fills it and the excess is clipped.
+            Color.clear
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay(alignment: .top) {
+                    VStack(spacing: 0) {
+                        ForEach(Array(teaserRows.dropFirst().enumerated()), id: \.offset) { index, teaser in
+                            teaserRow(teaser, index: index + 1)
+                        }
+                    }
+                    .blur(radius: 8)
+                    .allowsHitTesting(false)
+                }
+                .clipped()
+                .overlay(alignment: .bottom) {
+                    BlurGateUnlock(
+                        headline: "See the full board: every position ranked by how far they've moved",
+                        trigger: .recentForm
+                    )
+                }
+        }
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+        // Sits just clear of the floating tab bar. Measured from the safe area,
+        // not the screen edge, so this is the pill's height above the inset
+        // plus a hair; the page doesn't scroll, so unlike every other screen
+        // there's nothing to gain from running underneath it.
+        .padding(.bottom, 46)
+    }
+
+    /// Row one of the locked board: the genuine leader once the rollup lands,
+    /// and a placeholder of the same height until then so the card doesn't
+    /// resize under the gate as data arrives.
+    @ViewBuilder
+    private var leaderRow: some View {
+        if let leader = ranked.first {
+            row(form: leader, rank: 1, index: 0)
+        } else {
+            HStack(spacing: 10) {
+                if viewModel.isRecentFormLoading {
+                    ProgressView().scaleEffect(0.7)
+                }
+                Text(viewModel.isRecentFormLoading ? "Loading the board…" : "No movement to rank yet")
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, GridironGeo.padInline)
+            .frame(height: GridironGeo.rowHeight)
+            .background(GridironPalette.surface)
+            .overlay(
+                Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
+                alignment: .bottom
+            )
+        }
+    }
+
+    /// Names the group as well as the direction. Baseball's board covers one of
+    /// two sides, so "in the league" is unambiguous there; here it's one of
+    /// five position groups and the group is the more useful half of the title.
+    private var boardTitle: String {
+        let direction = showingCold ? "COOLING OFF" : "HEATING UP"
+        return "\(side.label.uppercased()) · \(direction)"
+    }
+
+    private func section(title: String, forms: [RecentForm], ranked: Bool) -> some View {
+        VStack(spacing: 0) {
+            GridironSectionBar(title: title)
+            ForEach(Array(forms.enumerated()), id: \.element.id) { index, form in
+                row(form: form, rank: ranked ? index + 1 : nil, index: index)
+            }
+        }
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+    }
+
+    @ViewBuilder
+    private func row(form: RecentForm, rank: Int?, index: Int) -> some View {
+        let player = viewModel.players(forSeason: form.season).first { $0.playerId == form.playerId }
+        let delta = form.delta[metric.key] ?? 0
+        let now = form.metrics[metric.key]
+        let then = form.priorMetrics[metric.key]
+
+        HStack(spacing: 10) {
+            if let rank {
+                Text("\(rank)")
+                    .font(GridironType.statSmall)
+                    .foregroundStyle(GridironPalette.inkSecondary)
+                    .frame(width: 26, alignment: .leading)
+                    .monospacedDigit()
+            }
+
+            PlayerHeadshot(
+                team: player?.team ?? form.team ?? "",
+                initials: player?.initials ?? "-",
+                size: 34
+            )
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Text(player?.name ?? "Player \(form.playerId)")
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(GridironPalette.ink)
+                        .lineLimit(1)
+                    if favorites.isFavorite(playerId: form.playerId) {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(Color.yellow)
+                    }
+                }
+                // THEN to NOW, plus the weeks it covers. Weeks rather than a
+                // game count because in a weekly sport "Weeks 15-17" says both
+                // how many games and when they were.
+                if let then, let now {
+                    Text([
+                        "\(metric.format(then)) → \(metric.format(now))",
+                        form.weekRangeLabel ?? "\(form.games)G",
+                    ].joined(separator: " · "))
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            TrendArrow(delta: delta, decimals: metric.decimals, lowerIsBetter: metric.lowerIsBetter)
+                .frame(width: 56, alignment: .trailing)
+        }
+        .padding(.horizontal, GridironGeo.padInline)
+        .frame(height: GridironGeo.rowHeight)
+        .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
+        .overlay(
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
+            alignment: .bottom
+        )
+        .contentShape(Rectangle())
+        .overlay {
+            if let player {
+                NavigationLink(value: player) { Color.clear }
+                    .buttonStyle(.plain)
+            }
+        }
+        // Following straight off the board, so a name you spot here can be
+        // pinned without a round trip through the player page.
+        .contextMenu {
+            Button {
+                favorites.toggleFavorite(playerId: form.playerId)
+            } label: {
+                let following = favorites.isFavorite(playerId: form.playerId)
+                Label(following ? "Unfollow" : "Follow", systemImage: following ? "star.slash" : "star")
+            }
+        }
+    }
+
+    /// One row of the invented board behind the gate. Same geometry as the real
+    /// `row`, so the blur reads as the board continuing rather than as a
+    /// different component.
+    private func teaserRow(_ teaser: TeaserRow, index: Int) -> some View {
+        HStack(spacing: 10) {
+            Text("\(index + 1)")
+                .font(GridironType.statSmall)
+                .foregroundStyle(GridironPalette.inkSecondary)
+                .frame(width: 26, alignment: .leading)
+            PlayerHeadshot(team: teaser.team, initials: teaser.initials, size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(teaser.name)
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
+                Text("\(metric.format(teaser.then)) → \(metric.format(teaser.now)) · Weeks \(teaser.startWeek)-\(teaser.endWeek)")
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            TrendArrow(
+                delta: teaser.now - teaser.then,
+                decimals: metric.decimals,
+                lowerIsBetter: metric.lowerIsBetter
+            )
+            .frame(width: 56, alignment: .trailing)
+        }
+        .padding(.horizontal, GridironGeo.padInline)
+        .frame(height: GridironGeo.rowHeight)
+        .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
+    }
+
+    struct TeaserRow {
+        let name: String
+        let team: String
+        let initials: String
+        let then: Double
+        let now: Double
+        let startWeek: Int
+        let endWeek: Int
+    }
+
+    /// Enough plausible rows to overflow the tallest phone behind the gate; the
+    /// container clips them, so too many costs nothing and too few leaves the
+    /// dead void that made this screen read as broken.
+    ///
+    /// The faces are real players from the selected group's roster (season data
+    /// is free, so nothing is being given away), picked and ordered by a seed
+    /// built from the metric, the direction and the window. That's what makes
+    /// the board visibly redraw when a picker moves: with a fixed cast the
+    /// twelve team colours stayed in exactly the same order no matter what the
+    /// controls said, which gives the game away immediately.
+    private var teaserRows: [TeaserRow] {
+        let count = 18
+        let seedSuffix = "\(metric.key)-\(showingCold)-\(viewModel.recentWindow.rawValue)"
+        let roster = viewModel.players(forSeason: viewModel.selectedSeason)
+            .filter { ($0.playerType ?? "") == side.playerType }
+        let names: [(String, String, String)]
+        if roster.count >= count {
+            names = roster
+                .map { ($0, Self.stableSeed("\($0.playerId)-\(seedSuffix)")) }
+                .sorted { $0.1 < $1.1 }
+                .prefix(count)
+                .map { ($0.0.name, $0.0.team, $0.0.initials) }
+        } else {
+            // Pre-load, or a season with no roster yet.
+            let placeholders = [
+                ("Player One", "KC", "PO"), ("Player Two", "BUF", "PT"),
+                ("Player Three", "PHI", "PT"), ("Player Four", "SF", "PF"),
+                ("Player Five", "DAL", "PF"), ("Player Six", "BAL", "PS"),
+                ("Player Seven", "DET", "PS"), ("Player Eight", "GB", "PE"),
+                ("Player Nine", "MIA", "PN"), ("Player Ten", "SEA", "PT"),
+                ("Player Eleven", "CIN", "PE"), ("Player Twelve", "MIN", "PT"),
+                ("Player Thirteen", "LAC", "PT"), ("Player Fourteen", "HOU", "PF"),
+                ("Player Fifteen", "TB", "PF"), ("Player Sixteen", "PIT", "PS"),
+                ("Player Seventeen", "DEN", "PS"), ("Player Eighteen", "NYJ", "PE"),
+            ]
+            names = placeholders
+                .map { ($0, Self.stableSeed("\($0.0)-\(seedSuffix)")) }
+                .sorted { $0.1 < $1.1 }
+                .map { $0.0 }
+        }
+        // Centre and spread the invented values on the metric's own scale, so a
+        // percentage reads 58%→66% and a yardage total reads 240→380.
+        let base: Double
+        let swing: Double
+        switch metric.decimals {
+        case 0:  base = 280;  swing = 130
+        case 2:  base = 0.12; swing = 0.22
+        default: base = metric.unit == "%" ? 58 : 7.2
+                 swing = metric.unit == "%" ? 12 : 2.4
+        }
+        // Cooling off inverts the movement, and a lower-is-better metric
+        // inverts it again: heating up on INT% means the number falls.
+        let improving = !showingCold
+        let sign: Double = (improving != metric.lowerIsBetter) ? 1 : -1
+        let window = viewModel.recentWindow.rawValue
+
+        return names.enumerated().map { index, who in
+            let decay = max(0.15, 1.0 - Double(index) * 0.045)
+            let move = swing * decay
+            let then = base - sign * move / 2
+            let endWeek = 18 - index % 3
+            return TeaserRow(
+                name: who.0,
+                team: who.1,
+                initials: who.2,
+                then: then,
+                now: then + sign * move,
+                startWeek: max(1, endWeek - window + 1),
+                endWeek: endWeek
+            )
+        }
+    }
+
+    /// Deterministic across launches, unlike `hashValue`, so the preview doesn't
+    /// reshuffle itself on a redraw.
+    private static func stableSeed(_ text: String) -> Int {
+        abs(text.unicodeScalars.reduce(7) { ($0 &* 31 &+ Int($1.value)) % 100_003 })
+    }
+}

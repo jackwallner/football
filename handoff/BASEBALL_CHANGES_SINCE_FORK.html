@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baseball StatScout — changes since the football fork</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#16181d; --muted:#5c6370; --line:#e3e6ec;
+    --card:#f7f8fa; --accent:#d22d3f; --accent-soft:#fdecee;
+    --blue:#2b6cb0; --code-bg:#f2f3f6;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f1115; --fg:#e8eaef; --muted:#9aa2b1; --line:#252932;
+      --card:#161922; --accent:#ff5c6c; --accent-soft:#2a151a;
+      --blue:#7ab0ea; --code-bg:#1a1e27;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:44px 22px 96px}
+  header.top{border-bottom:3px solid var(--accent); padding-bottom:22px; margin-bottom:30px}
+  h1{font-size:30px; line-height:1.2; margin:0 0 10px; letter-spacing:-.02em}
+  .sub{color:var(--muted); font-size:15px; margin:0}
+  .facts{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px}
+  .fact{background:var(--card); border:1px solid var(--line); border-radius:8px; padding:6px 11px; font-size:13px}
+  .fact b{font-variant-numeric:tabular-nums}
+  h2{font-size:21px; margin:44px 0 6px; letter-spacing:-.01em; scroll-margin-top:20px}
+  h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:8px}
+  h3{font-size:16px; margin:26px 0 4px}
+  p{margin:10px 0}
+  ul{margin:10px 0; padding-left:22px}
+  li{margin:6px 0}
+  code{font-family:var(--mono); font-size:.88em; background:var(--code-bg); padding:1px 5px; border-radius:4px}
+  pre{background:var(--code-bg); border:1px solid var(--line); border-radius:8px; padding:13px 15px; overflow-x:auto; font-family:var(--mono); font-size:13px; line-height:1.5}
+  .why{border-left:3px solid var(--line); padding:2px 0 2px 14px; color:var(--muted); margin:12px 0}
+  .why b{color:var(--fg)}
+  .port{background:var(--accent-soft); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:12px 15px; margin:16px 0}
+  .port b{display:block; font-size:12px; letter-spacing:.07em; text-transform:uppercase; color:var(--accent); margin-bottom:4px}
+  .files{font-family:var(--mono); font-size:12.5px; color:var(--muted); margin:10px 0 0; line-height:1.75; word-break:break-word}
+  .files span{white-space:nowrap}
+  .files::before{content:"files "; letter-spacing:.06em; text-transform:uppercase; font-size:11px}
+  nav.toc{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin:26px 0 0}
+  nav.toc ol{margin:0; padding-left:20px; columns:2; column-gap:28px}
+  nav.toc li{margin:3px 0; break-inside:avoid}
+  nav.toc a{color:var(--fg); text-decoration:none; border-bottom:1px solid transparent}
+  nav.toc a:hover{border-bottom-color:var(--accent)}
+  @media (max-width:640px){ nav.toc ol{columns:1} }
+  .tablewrap{overflow-x:auto; margin:14px 0}
+  table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+  th,td{text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+  td code{font-size:12.5px}
+  .tag{display:inline-block; font-size:11px; letter-spacing:.06em; text-transform:uppercase; padding:2px 7px; border-radius:999px; border:1px solid var(--line); color:var(--muted); vertical-align:2px; margin-left:8px}
+  footer{margin-top:60px; padding-top:20px; border-top:1px solid var(--line); color:var(--muted); font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Baseball StatScout: everything that changed since Gridiron forked</h1>
+  <p class="sub">Handoff for the football repo. Common ancestor is <code>f7150c7</code> (18 Jul 2026, “docs: align landing page brand”); everything below landed on baseball <code>main</code> between then and <code>05bb114</code> (27 Jul 2026).</p>
+  <div class="facts">
+    <span class="fact"><b>46</b> commits</span>
+    <span class="fact"><b>51</b> files</span>
+    <span class="fact"><b>+6,678</b> / <b>−1,379</b> lines</span>
+    <span class="fact">v1.2.5 b130 → <b>v1.3.1 b143</b></span>
+    <span class="fact">11 TestFlight builds</span>
+  </div>
+  <nav class="toc">
+    <ol>
+      <li><a href="#s1">Rolling-window data pipeline</a></li>
+      <li><a href="#s2">Recent-form client layer</a></li>
+      <li><a href="#s3">Trends tab (hot / cold board)</a></li>
+      <li><a href="#s4">Following players</a></li>
+      <li><a href="#s5">Player profile rework</a></li>
+      <li><a href="#s6">Teams rework</a></li>
+      <li><a href="#s7">One control vocabulary</a></li>
+      <li><a href="#s8">Floating tab bar &amp; settings gear</a></li>
+      <li><a href="#s9">One-tap purchase</a></li>
+      <li><a href="#s10">Review funnel fixes</a></li>
+      <li><a href="#s11">Onboarding, metadata, misc</a></li>
+      <li><a href="#s12">Port checklist</a></li>
+    </ol>
+  </nav>
+</header>
+
+<p>The release is one feature with a lot of surface area: <strong>recent form</strong>. Season percentiles answer “how good has this player been”; nothing in the app answered “what is he doing <em>right now</em>”. Adding that meant a new backend table, a new tab, new controls, and a pass over every screen that shows a number. Roughly half the diff is the recent-form feature, a quarter is the design-system cleanup it forced, and a quarter is monetization and review-funnel fixes.</p>
+
+<h2 id="s1"><span class="n">1</span>Rolling-window data pipeline</h2>
+
+<h3>Per-game metric expansion</h3>
+<p><code>ingest_game_logs.py</code> previously wrote a thin per-game row off the terminal pitch of each plate appearance. It now does a second, pitch-level pass and stores far more:</p>
+<ul>
+  <li><strong>Pitch-level rates</strong> (Whiff%, Chase%) — these can’t be derived from the terminal-PA frame, since most whiffs happen on pitches that don’t end the PA. Separate groupby over every pitch in the chunk, keyed <code>(player_id, game_date)</code> and joined back.</li>
+  <li><strong>Swing tracking</strong> (bat speed, swing length) averaged <em>over swings only</em>, not over all pitches.</li>
+  <li><strong>Fastball-only velo and spin</strong> (<code>FF/SI/FC</code>). Averaging every pitch drags a starter’s number down with his changeup, so it couldn’t be placed on the season Fastball Velo ruler. Also stores <code>_fb_pitches</code> as the denominator — without it, velo/spin silently drop out of the rollup (that was a shipped bug, fixed in <code>c0ca144</code>).</li>
+  <li><strong>Traditional counting stats</strong> stored as raw underscore-prefixed counts (<code>_ab, _h, _2b, _3b, _hr, _tb, _bb, _so, _hbp, _sf</code>) rather than as rates, so the rollup can derive an exact window AVG/OBP/SLG from sums. Averaging per-game batting averages weights an 0-for-1 like a 4-for-4.</li>
+  <li><strong>Savant-correct expected stats</strong>: xBA/xSLG denominators are at-bats with strikeouts counted as an 0-for (Statcast leaves those columns null on non-batted-balls, so a plain mean drops strikeouts and inflates everything); xwOBA is <code>sum(xwOBA value) / sum(wOBA denominator)</code>.</li>
+</ul>
+<div class="why"><b>Rule that made all of it work:</b> store numerators and denominators, never pre-divided rates. Every window figure is then recomputed exactly rather than approximated.</div>
+
+<h3>New table: <code>player_recent_form</code></h3>
+<pre>primary key (player_id, season, player_type, window_days)
+as_of date, team, games, plate_appearances, batted_ball_events
+metrics jsonb, prior_metrics jsonb, delta jsonb</pre>
+<p>Shape is Savant’s rolling leaderboard: <strong>NOW / THEN / delta</strong>. <code>metrics</code> is the window ending on the latest game date, <code>prior_metrics</code> the equal-length window immediately before it, <code>delta</code> the change. Metrics stay in jsonb so the metric set evolves without a migration. Three indexes: leaderboard <code>(season, window_days, player_type)</code>, profile <code>(player_id, season)</code>, team <code>(season, window_days, team)</code>. RLS on, public read.</p>
+<div class="why"><b>Why pre-aggregate at all:</b> a league-wide 30-day slice of <code>player_game_logs</code> is ~9,700 rows / ~2.4 MB that the client would have to download and aggregate before it could sort anything. The rollup is ~1,100 rows per window, ~440 KB, one fetch.</div>
+
+<h3><code>rollup_recent_form.py</code></h3>
+<p>New script, 390 lines. Reads game logs, writes the three windows (7 / 15 / 30 days). The important part is the <code>WEIGHTS</code> map: each rate metric declares which stored denominator it’s a rate of (<code>xwoba → _woba_denom</code>, batted-ball rates → <code>_bbe</code>, whiff/bat speed → <code>_swings</code>, chase → <code>_oz_pitches</code>, fastball shape → <code>_fb_pitches</code>, K%/BB% → <code>_pa</code>). Aggregating as <code>sum(rate × denom) / sum(denom)</code> reproduces <code>sum(num)/sum(denom)</code> exactly. Peaks (max EV) take the max, not a weighted mean. A metric with no data in a window is <strong>omitted rather than zeroed</strong>, and the client drops nulls to match.</p>
+
+<h3>Workflow changes</h3>
+<ul>
+  <li>Two nightly crons instead of one: <code>30 8 * * *</code> (early pass, ~2.5 h after the last west-coast game) and <code>0 14 * * *</code> (backstop). A single early run is what the workflow originally had and it broke the app — Savant hadn’t published the previous night, so every run returned nothing new and the app permanently read “Through &lt;two days ago&gt;”. Upserts are idempotent, so the early pass wins when the source is prompt and the late pass catches the nights it isn’t.</li>
+  <li><code>workflow_dispatch</code> input <code>full_game_log_reingest</code> → <code>ingest_game_logs.py --full</code>. A metric-set change only reaches already-ingested games via a full re-ingest; the nightly path stays incremental. Timeout raised 30 → 90 min for that path.</li>
+  <li>New rollup step after game-log ingest.</li>
+</ul>
+<p class="files"><span>backend/ingest_game_logs.py</span> · <span>backend/rollup_recent_form.py</span> · <span>backend/ingest.py</span> · <span>supabase/migrations/20260725000000_create_player_recent_form.sql</span> · <span>.github/workflows/nightly-statcast.yml</span> · <span>backend/tests/{test_game_logs,test_rollup_recent_form,test_ingest}.py</span></p>
+<div class="port"><b>Football port</b>
+NFL is weekly, not daily, so <code>window_days</code> should become <code>window_games</code> with values like <strong>3 / 5 / 8</strong> (or last-N-weeks), and <code>as_of</code> becomes the last week included. Everything else transfers unchanged: same NOW/THEN/delta shape, same “store counts not rates” rule, same jsonb metrics, same three indexes. The weight map maps cleanly onto the NFL contract (<code>plays</code> / <code>touches</code> / attempts / targets are already the right denominators). The two-cron trick is unnecessary — nflverse publishes on a weekly cadence, so one post-<em>Tuesday</em> run is enough, but keep the idempotent upsert.</div>
+
+<h2 id="s2"><span class="n">2</span>Recent-form client layer</h2>
+<ul>
+  <li><strong><code>RecentForm.swift</code></strong> — model mirroring the table. Two things worth copying: <code>as_of</code> is a Postgres <code>date</code>, so it arrives as <code>"YYYY-MM-DD"</code> and will <em>not</em> parse with the ISO8601 strategy the rest of the payload uses (hand-parsed); and nulls in the metric dictionaries are dropped rather than coerced to zero. <code>isSmallSample</code> gates the UI at &lt;15 PA (batters) / &lt;30 (pitchers).</li>
+  <li><strong><code>TrendMetric.swift</code></strong> — the metric catalogue for the Trends board, keyed to rollup columns rather than season labels. Carries <code>unit</code>, <code>decimals</code>, and crucially <code>lowerIsBetter</code>, so a pitcher’s opponent-xwOBA and a hitter’s chase rate rank the right way round. Split into <code>batting</code>/<code>pitching</code> × <code>statcast</code>/<code>standard</code>.</li>
+  <li><strong><code>RecentMetricKey</code></strong> — one shared season-label → rollup-key mapping plus the one value formatter. The leaderboard, team roster and team cards had each grown a private copy, which is how a metric ends up trending on one screen and blank on the next.</li>
+  <li><strong><code>StatcastAPI.fetchRecentForm(season:windowDays:)</code></strong> — paged fetch, cache-bypassing, with a lossy element decoder so one malformed row can’t empty the board.</li>
+  <li><strong><code>DashboardViewModel</code></strong> — <code>recentFormByWindow: [Int: [Int: RecentForm]]</code> cached per window so flipping 7/15/30 doesn’t refetch, plus <code>recentWindow</code>, <code>showingRecent</code>, <code>recentFormAsOf</code> (for honest “through Jul 24” labelling), and per-window loading/error state.</li>
+</ul>
+<p class="files"><span>StatScout/Models/RecentForm.swift</span> · <span>StatScout/Models/TrendMetric.swift</span> · <span>StatScout/Services/StatcastAPI.swift</span> · <span>StatScout/ViewModels/DashboardViewModel.swift</span></p>
+
+<h2 id="s3"><span class="n">3</span>Trends tab (hot / cold board)</h2>
+<p>New fourth tab, <code>HotColdView.swift</code> (514 lines). Ranks the league by <em>change</em>, not level: a .380 xwOBA is interesting, a .380 that was .250 a fortnight ago is the thing season totals can’t tell you.</p>
+<ul>
+  <li>Controls: <strong>Hitting / Pitching</strong> side, <strong>Advanced / Standard</strong> stat mode, a metric menu narrowed by that mode, a 7/15/30 window, and <strong>Heating / Cooling</strong> direction. Direction is the only control that colours itself (flame red / snowflake blue); rows use the normal percentile gradient.</li>
+  <li>Ranking is on <em>improvement</em> (<code>lowerIsBetter ? -delta : delta</code>), so “heating up” means the same thing on both sides of the ball.</li>
+  <li>Small samples are excluded outright — a 3-PA week produces enormous deltas that crowd out every real riser.</li>
+  <li>The board is purely league-wide. An earlier build wedged a personal “Your players” section above it; that made one tab answer two questions and buried the leaderboard the subscription is sold on. Followed players are now just starred inline, and the personal list lives on Compare.</li>
+  <li><strong>Locked state is a fixed, non-scrolling page.</strong> It used to share a ScrollView with the Pro board, so its height was whatever twelve invented rows added up to — short of the viewport on a big phone, leaving the unlock panel floating in grey. There is nothing below the fold to scroll to when the rows are a teaser.</li>
+</ul>
+<div class="port"><b>Football port</b>
+Direct. <code>TrendSide</code> becomes position group (QB / RB / WR / TE / DEF) rather than a two-way switch, which means the side control has to be a menu or a scrolling segmented row, not four inline segments. Small-sample gate becomes snaps/plays or touches rather than PA.</div>
+
+<h2 id="s4"><span class="n">4</span>Following players</h2>
+<p><code>FavoritesStore</code> is a new <code>@Observable</code> singleton over <code>UserDefaults</code> holding both followed player IDs and the favorite team — previously the team lived in one place and there was no player concept at all. Insertion-ordered (a Set reshuffles “Your players” on every launch). Reuses the existing <code>favoriteTeam</code> key so existing favorites survive the upgrade.</p>
+<p><code>FollowPlayersSheet</code> is the bulk manager: search the league, tap to follow. Reachable from the Compare tab, which owns the followed list.</p>
+<div class="why"><b>Deliberate:</b> following is <b>free</b>. It’s the signal the Trends board and the review funnel both read from, so gating it would suppress the exact behaviour we most want. What’s paid is the payoff — deltas on the players you follow.</div>
+<p class="files"><span>StatScout/Services/FavoritesStore.swift</span> · <span>StatScout/Views/FollowPlayersSheet.swift</span> · <span>StatScout/Views/CompareView.swift</span> · <span>StatScout/Views/TeamsView.swift</span></p>
+
+<h2 id="s5"><span class="n">5</span>Player profile rework</h2>
+<ul>
+  <li><strong>Season / Recent / Both</strong> segmented mode on the percentile card. Shown to everyone — a free user has to see that Recent exists before there’s anything to want — with locked segments carrying a crown and pitching on tap instead of switching.</li>
+  <li><strong>Recent bars on every metric that has a season ruler.</strong> The window value is drawn on the league’s <em>season</em> percentile curve, which means a metric only gets a recent bar if Savant publishes a season percentile for it. That’s why batter Hard-Hit%/Sweet-Spot%/LA and pitcher Whiff%/Chase% have no recent bar even though the game logs now carry them.</li>
+  <li><strong>Standard Stats tab is percentile-mapped</strong> — Savant publishes percentiles for Statcast metrics but not the traditional line, so the app computes them from the league distribution, returns nil below a usable pool size, and inverts per-side (a batter’s SO is bad, a pitcher’s is the point; a pitcher’s HR/R/BB are things surrendered). Counting stats are grouped separately and captioned as volume, since ranking them is playing-time driven.</li>
+  <li><strong>Recent windows on the Standard tab</strong>, derived from the rollup’s summed counts. RBI, runs, SB and CS aren’t recoverable from pitch-level data and stay season-only.</li>
+  <li><strong>Drill-downs carry the season.</strong> <code>MetricRoute</code>/<code>StandardStatRoute</code> gained a <code>season</code> field — tapping K% on a 2024 profile used to open the current-season leaderboard.</li>
+  <li>Trend arrows have a <strong>noise floor</strong>: below half of the last displayed digit (.005 / 0.05 / 0.5) no arrow is drawn, because an arrow implies a signal.</li>
+  <li>Trend columns are <strong>never blurred</strong>. Where the trend is a paid feature the column is simply absent — a smeared number on the main leaderboard read as broken data, not as a locked feature. The pitch lives on the controls that open the feature, not on top of the numbers.</li>
+</ul>
+<p class="files"><span>StatScout/Views/PlayerProfileView.swift</span> (+563) · <span>StatScout/Views/RecentFormCard.swift</span> · <span>StatScout/Views/RecentFormPercentile.swift</span> · <span>StatScout/Views/Components.swift</span> · <span>StatScout/Views/StatsView.swift</span></p>
+
+<h2 id="s6"><span class="n">6</span>Teams rework</h2>
+<ul>
+  <li><strong>Division grid</strong>: six divisions of five, in standings order, all thirty clubs on one screen with no scrolling. It’s how people already hold the league in their heads, so it reads faster than an alphabetical wall even before the space saving.</li>
+  <li><strong>Condensed team page</strong> with a “Both” mode (hitting + pitching at once) and roster split by side.</li>
+  <li><strong><code>TeamStandardCard</code></strong> (new, 554 lines): the traditional team line percentile-mapped against <em>the other 29 clubs</em>, not the several hundred players. Team rates are computed from summed roster counts with a per-stat weight map (<code>AVG/SLG → AB</code>, <code>OBP/OPS → PA</code>, <code>ERA/WHIP/K9/BB9 → IP</code>, <code>K%/BB% → BF</code>) — averaging players’ averages would weight a September call-up’s 1-for-2 like a regular’s season.</li>
+  <li>Season / Recent windows on team cards, fed by team-scoped game-log fetches.</li>
+  <li>Fix: team form counted <em>rows</em> instead of games (every player-game row inflated the count) and anchored its window to <em>today</em> rather than to the last date in the data.</li>
+</ul>
+<p class="files"><span>StatScout/Views/TeamsView.swift</span> · <span>StatScout/Views/TeamView.swift</span> · <span>StatScout/Views/TeamStandardCard.swift</span> · <span>StatScout/Views/TeamFormCard.swift</span></p>
+<div class="port"><b>Football port</b>
+32 clubs, 8 divisions of 4 — same grid, better fit. The 30-team-ruler idea is the transferable part: rank a team’s traditional line against the other clubs, never against individual players.</div>
+
+<h2 id="s7"><span class="n">7</span>One control vocabulary <span class="tag">design system</span></h2>
+<p>Adding Trends exposed that same-level choices were being drawn four different ways — large filled rounded-rects, tall capsules, short capsules, underlined text tabs — at six different heights (26, 28, 30, 32, 34, 44). Two pickers that mean the same kind of thing looked unrelated. The app now keeps exactly four tiers:</p>
+<div class="tablewrap">
+<table>
+  <tr><th>Tier</th><th>Control</th><th>Used for</th></tr>
+  <tr><td>Page-level switch</td><td>large filled rounded-rect row</td><td>Percentiles / Roster / Year Compare — “which screen is this”</td></tr>
+  <tr><td>Metric category</td><td><code>SavantTabs</code>, underlined text</td><td>Hitting / Pitching / Fielding / Running (matches Savant’s own tabs)</td></tr>
+  <tr><td>Inline options</td><td><code>SavantSegmented</code></td><td>2–4 options: Season/Recent/Both, 7/15/30, Heating/Cooling</td></tr>
+  <tr><td>Standalone</td><td><code>SavantChip</code></td><td>sort, search, Filters, anything opening a menu</td></tr>
+</table>
+</div>
+<p>All of them are <code>SavantControl.height = 32</code>. Wording is shared too: a rolling window is always “Last 15”, never “15d” on one screen and “Last 15” on the next. Segments can be individually locked — a crown, and the tap routes to the pitch instead of selecting, so a free user can see the feature exists.</p>
+
+<h3>Native menus only</h3>
+<p>Past four options, everything hands off to a plain SwiftUI <code>Menu</code>. There was an intermediate build with a hand-rolled <code>VerticalOptionPopover</code> (to get a narrow column of four-character years instead of UIKit’s wide menu minimum). It was <strong>reverted</strong>: it clipped its last row, opened without the system animation, and half the app’s choosers were <code>Menu</code>s anyway, so two shapes sat a tap apart and looked like different apps. Width was the wrong thing to optimise for.</p>
+<p>Two non-obvious fixes came with that: <code>.menuOrder(.fixed)</code> (UIKit reverses arrays for menus that open upward) and <code>savantMenuAppearance()</code>, which forces <code>colorScheme: .light</code> — a menu presented from a toolbar item inherits the nav bar’s <code>.toolbarColorScheme(.dark)</code>, so the season picker opened as a black panel while the identical Filters menu a row below opened white.</p>
+<p><code>SavantNavPill</code> (red, on the navy bar) and <code>SavantInlinePill</code> (outlined, on a card) are the two shared trigger labels. <code>fixedSize()</code> on the nav pill is load-bearing: without it the toolbar squeezes the label and the title is the first thing clipped, leaving a bare icon.</p>
+<p class="files"><span>StatScout/Views/SavantSegmented.swift</span> · <span>StatScout/Views/SavantMenus.swift</span> · <span>StatScout/Views/SavantDesign.swift</span> · <span>StatScout/Views/SavantModules.swift</span> · <span>StatScout/Views/Components.swift</span></p>
+<div class="port"><b>Football port</b>
+This is the highest-value / lowest-risk chunk to copy, and it’s independent of recent form. <code>SavantSegmented</code>, <code>SavantChip</code>, <code>SeasonMenu</code>, <code>SavantNavPill</code>, <code>SavantInlinePill</code> and <code>SavantControl.height</code> lift across nearly verbatim.</div>
+
+<h2 id="s8"><span class="n">8</span>Floating tab bar &amp; settings gear</h2>
+<ul>
+  <li><strong>Hand-rolled tab bar</strong> replacing <code>TabView</code>. On iOS 26 a <code>TabView</code> always draws its own Liquid Glass platter and <code>.toolbarBackground(.hidden, for: .tabBar)</code> is a no-op against it, which is what made the bar read as a grey box on the canvas. Owning the bar means there’s no system background to fight. Tabs live in a <code>ZStack</code> and toggle visibility so navigation stacks and scroll positions survive switching — and inactive tabs are hidden from VoiceOver too, since at <code>opacity(0)</code> they’re still reachable via the rotor.</li>
+  <li><strong>Settings gear in the trailing toolbar</strong>, shared by all three home tabs. Settings was previously only reachable from a link under the bottom of the leaderboard, which nobody scrolls to. Trailing, because Stats already owns the leading slot with its season pill. Outline cog, no filled disc — the Liquid Glass container was giving it a pale blue circle that made a secondary control louder than the upgrade CTA. The sheet flag is owned per tab, not shared, or it pushes Settings onto all three stacks at once.</li>
+</ul>
+<p class="files"><span>StatScout/Views/RootTabView.swift</span> (+348) · <span>StatScout/Views/SettingsView.swift</span></p>
+
+<h2 id="s9"><span class="n">9</span>One-tap purchase</h2>
+<p>The biggest conversion fix in the release. Every surface that named an offer (“Start 7-day free trial”) used to hand off to another screen showing the same offer under another button, so a user who had already said yes had to say it again before Apple’s confirm sheet appeared.</p>
+<ul>
+  <li><code>StoreService.purchaseYearlyDirect()</code> → <code>DirectPurchaseOutcome { unlocked, pending, cancelled, failed(String), needsPlanPicker }</code>. <strong><code>.needsPlanPicker</code> is the only case allowed to open <code>PaywallView</code></strong> — it means the offering never loaded, so the picker’s retry/empty state is the honest answer. Everything else is handled in place.</li>
+  <li><code>UpgradeButton</code> is now the app’s single conversion control, in a compact pill variant (bottom of a blurred teaser) and a full-width bar variant (card/sheet footer). The plan picker survives as a quiet “See all plans” text link, not a toll gate.</li>
+  <li><code>TrialPitchSheet</code> rebuilt as a compact native half-sheet: names what the user just reached for, three promises, buys in place. It was a scrolling page with an 84pt hero, headline, subtitle and five two-line benefit rows — on a phone the pitch and the button were never on screen together.</li>
+  <li>New <code>PaywallTrigger.lockedSeason(Int)</code>: naming the year someone reached for (“Unlock 2019”) converts better than a generic “unlock more”.</li>
+  <li><strong>Season menus now list every year the dataset covers (2015→), with locked ones crowned.</strong> They used to derive from loaded histories, so a free user opened the picker, saw one year plus a generic “past seasons require StatScout+” row, and the thing being sold was invisible.</li>
+  <li>Paywall benefit list refreshed — it predated Trends and the team windows, so the pitch was selling less than the product does.</li>
+  <li>RevenueCat is now isolated from the simulator (<code>configureIfNeeded()</code> returns false there, purchases throw a typed error) with a <code>STATSCOUT_FORCE_PRO=1</code> env override so paid surfaces are still testable headless.</li>
+</ul>
+<p class="files"><span>StatScout/Services/StoreService.swift</span> · <span>StatScout/Views/PaywallView.swift</span> · <span>StatScout/Views/TrialPitchSheet.swift</span> · <span>StatScout/Views/Components.swift</span></p>
+<div class="port"><b>Football port</b>
+Copy this wholesale and independently of everything else — it’s pure conversion mechanics with no baseball in it. The rule to carry over: <em>a CTA that names an offer must be that offer</em>; the next thing on screen is Apple’s confirm sheet, never a second pitch.</div>
+
+<h2 id="s10"><span class="n">10</span>Review funnel fixes</h2>
+<p>Both repos share <code>ReviewPromptTracker</code>, so these are straight bugs in the football copy too:</p>
+<ul>
+  <li><strong>Distinct-day counter.</strong> The old trigger fired on the third player profile opened, which a single sitting satisfies and which says nothing about whether anyone values the app. Now requires <code>minimumDistinctUseDays = 3</code> separate calendar days (local calendar, built from <code>DateComponents</code> — a cached formatter isn’t <code>Sendable</code> under Swift 6 strict concurrency).</li>
+  <li><strong>Soft defer, 30-day cooldown.</strong> Apple’s <code>requestReview()</code> is rate-limited and silently shows nothing much of the time, so the common case was a user who never saw a prompt being locked out for the full 120 days. “Maybe later” now sets <code>isSoftDeferred</code> and a 30-day cooldown.</li>
+  <li><strong>The leak:</strong> the sheet’s <code>onDismiss</code> called <code>markShown()</code> unconditionally, which cleared the soft-defer flag and reinstated the full cooldown — exactly the case the soft defer exists to prevent. Now guarded on <code>!ReviewPromptTracker.isSoftDeferred</code>.</li>
+  <li><code>FavoritesStore.hasAnyFavorite</code> is a new eligibility signal: someone who has curated a list has told you they’re invested, which is a better signal than page opens.</li>
+</ul>
+<p class="files"><span>StatScout/Services/ReviewPromptTracker.swift</span> · <span>StatScout/Views/RootTabView.swift</span> · <span>StatScout/Views/ReviewPromptSheet.swift</span></p>
+
+<h2 id="s11"><span class="n">11</span>Onboarding, metadata, misc</h2>
+<ul>
+  <li>Onboarding’s primary red button is pinned to an <strong>identical Y on every page</strong> with a reserved status slot, so the thumb target never shifts; “Get Started” is quiet and borderless so the trial CTA is the loud one.</li>
+  <li>Leaderboard <strong>position filter</strong> (groups first — infield / outfield — then individual spots), hidden on pitching boards where every player is a P, and offering only filters that would leave something on the board.</li>
+  <li>Search now surfaces <strong>matching clubs</strong>, so typing “mariners” can open Seattle’s page rather than only filtering the board.</li>
+  <li>Payload slimming: duplicate metric fields dropped from the snapshot response.</li>
+  <li><code>fastlane/metadata/en-US/description.txt</code>: em dashes replaced with commas/colons throughout.</li>
+  <li>Swift test fixtures refreshed for the new <code>DashboardViewModel</code> shape; new Python tests for game logs and the rollup.</li>
+</ul>
+
+<h2 id="s12"><span class="n">12</span>Port checklist</h2>
+<p>In dependency order. Items 1–3 are independent of the recent-form work and can ship first.</p>
+<div class="tablewrap">
+<table>
+  <tr><th>#</th><th>Chunk</th><th>Notes</th></tr>
+  <tr><td>1</td><td>Review-funnel fixes</td><td>Shared file, shared bugs. Smallest diff, ships today.</td></tr>
+  <tr><td>2</td><td>One-tap purchase</td><td>No sport-specific content. Highest revenue impact.</td></tr>
+  <tr><td>3</td><td>Control vocabulary + floating tab bar + settings gear</td><td>Lifts nearly verbatim; iOS 26 TabView platter bug applies equally.</td></tr>
+  <tr><td>4</td><td>Game-log metric expansion</td><td>Store counts, not rates. Needs a full re-ingest to backfill.</td></tr>
+  <tr><td>5</td><td><code>player_recent_form</code> + rollup + workflow step</td><td>Windows become last-N-<em>games</em>, not days.</td></tr>
+  <tr><td>6</td><td><code>RecentForm</code> / <code>TrendMetric</code> / API / view model</td><td>Watch the date-decoding gotcha and the null-drop rule.</td></tr>
+  <tr><td>7</td><td>Trends tab</td><td>Side control becomes a position-group menu.</td></tr>
+  <tr><td>8</td><td>Following + bulk sheet</td><td>Keep it free; it feeds both Trends and the review funnel.</td></tr>
+  <tr><td>9</td><td>Profile &amp; team recent surfaces</td><td>Largest diff, do last.</td></tr>
+</table>
+</div>
+
+<h3>Gotchas worth reading twice</h3>
+<ul>
+  <li>Store <strong>denominators alongside every rate</strong>, or the window can’t be recomputed exactly — and a missing denominator makes the metric vanish from recent form silently (that shipped once).</li>
+  <li>A metric-set change reaches old rows <strong>only</strong> via a full re-ingest. Wire the manual-dispatch flag at the same time as the metric change, not after.</li>
+  <li><strong>Omit</strong> metrics with no data in a window; never zero them. Client drops nulls to match.</li>
+  <li>A recent value has <strong>no percentile of its own</strong>. Draw it on the season ruler, and only for metrics that have one — otherwise it’s uncoloured ink.</li>
+  <li><strong>Never blur real numbers</strong> to sell a feature. Absent column + a pitch on the control that opens it.</li>
+  <li>Locked/teaser states must <strong>fill the viewport</strong>. A teaser inside a ScrollView ends mid-screen on a large phone.</li>
+  <li>Anchor rolling windows to the <strong>last date in the data</strong>, not to today, and label them with <code>as_of</code>.</li>
+</ul>
+
+<footer>
+Generated 27 Jul 2026 from <code>~/baseball</code>, range <code>f7150c7..05bb114</code>. Line-level detail is in the commit messages; every design decision above is also documented in a doc comment at the top of the file it belongs to.
+</footer>
+
+</div>
+</body>
+</html>

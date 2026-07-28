@@ -46,7 +46,11 @@ struct TeamView: View {
 
     private var rowDisplayMetric: (label: String?, category: MetricCategory?) {
         if let m = sortMetric { return (m.label, m.category) }
-        if selectedCategory == nil { return ("Pass Yds", .passing) }
+        // "All" is the whole roster at once, offence and defence together, so
+        // there is no one metric that means the same thing down the column. It
+        // used to force Pass Yds, which printed a zero beside every player who
+        // isn't a quarterback. Each row shows its own overall percentile
+        // instead.
         return (nil, nil)
     }
 
@@ -167,10 +171,22 @@ struct TeamView: View {
                 leaguePlayers: leaguePlayers,
                 fetchTeamGameLogs: fetchTeamGameLogs,
                 onUpgradeTap: {
-                    // Explicit tap — always answer it; the gate only caps
+                    // Explicit tap, always answer it; the gate only caps
                     // automatic pop-ups.
                     showingTrial = true
                 }
+            )
+
+            // The traditional line, ranked against the other 31 clubs rather
+            // than against individual players. A club's Y/A means nothing on a
+            // spread of quarterbacks and everything on a spread of teams.
+            TeamStandardCard(
+                team: team,
+                season: displaySeason,
+                players: players,
+                leaguePlayers: leaguePlayers,
+                fetchTeamGameLogs: fetchTeamGameLogs,
+                onUpgradeTap: { showingTrial = true }
             )
         }
         .padding(.horizontal, 12)
@@ -179,7 +195,10 @@ struct TeamView: View {
 
     private var rosterContent: some View {
         VStack(spacing: 0) {
-            CategoryFilter(selectedCategory: $selectedCategory)
+            // "All" is football's version of the team page's Both mode: the
+            // whole roster on one list rather than one position group at a
+            // time, which is how you actually read a squad.
+            CategoryFilter(selectedCategory: $selectedCategory, showAllOption: true)
                 .padding(.horizontal, 12)
                 .padding(.top, 12)
 

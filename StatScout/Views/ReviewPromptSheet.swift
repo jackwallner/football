@@ -32,7 +32,7 @@ enum ReviewPromptDismissOutcome: Sendable {
     case notNow
     case feedbackSubmitted
     case openedWriteReview
-    /// User chose "Yes" but dismissed the pitch without opening the store — host may call `requestReview()` once in `onDismiss`.
+    /// User chose "Yes" but dismissed the pitch without opening the store, host may call `requestReview()` once in `onDismiss`.
     case enjoyedMaybeLater
 }
 
@@ -189,7 +189,7 @@ struct ReviewPromptSheet: View {
                 )
                 .focused($feedbackFocused)
 
-            Text("Opens your mail app with a draft to the developer. No analytics — just your words.")
+            Text("Opens your mail app with a draft to the developer. No analytics, just your words.")
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkTertiary)
 

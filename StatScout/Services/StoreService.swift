@@ -24,10 +24,12 @@ enum StatScoutSeason {
     /// cache partition, and the free-tier gate all read this, so the yearly
     /// rollover is a one-line change.
     static let current = 2025
-    /// Oldest season included in the supported historical archive.
-    static let oldest = 2015
     /// The only season available without Pro. Everything older is gated.
     static let free = current
+    /// Oldest season in the dataset. NFL percentile history runs from 2015,
+    /// and the bundled players-historical.plist ships all of it, so the season
+    /// menus can list every year without waiting on a fetch.
+    static let earliest = 2015
 }
 
 enum StatScoutLegal {
@@ -59,6 +61,30 @@ enum PurchaseState {
     case purchased
     case cancelled
     case pending
+}
+
+/// Result of a one-tap CTA that transacts the yearly plan in place.
+///
+/// `.needsPlanPicker` is the only case that may open `PaywallView`: it means
+/// the offering never loaded, so there is nothing to buy and the plan picker's
+/// retry/empty state is the honest answer. Every other case is handled inline.
+enum DirectPurchaseOutcome: Equatable {
+    case unlocked
+    case pending
+    case cancelled
+    case failed(String)
+    case needsPlanPicker
+}
+
+enum StoreServiceError: LocalizedError {
+    case purchasesUnavailableInSimulator
+
+    var errorDescription: String? {
+        switch self {
+        case .purchasesUnavailableInSimulator:
+            return "Purchases are unavailable in simulator builds."
+        }
+    }
 }
 
 enum RCProductKind: Int {
@@ -234,7 +260,15 @@ final class StoreService: NSObject, ObservableObject {
     @Published private(set) var products: [Package] = []
     @Published private(set) var currentOffering: Offering?
     @Published private(set) var customerInfo: CustomerInfo?
+    #if DEBUG
+    /// Local-only StatScout+ override so Pro-gated surfaces (Recent Form,
+    /// past seasons, Compare) can be exercised in the simulator, where
+    /// RevenueCat is intentionally never configured. Set the
+    /// `STATSCOUT_FORCE_PRO=1` environment variable on the scheme/launch.
+    @Published private(set) var isPro: Bool = ProcessInfo.processInfo.environment["STATSCOUT_FORCE_PRO"] == "1"
+    #else
     @Published private(set) var isPro: Bool = false
+    #endif
     @Published private(set) var purchaseInFlight: Bool = false
     @Published private(set) var isLoadingProducts: Bool = false
     @Published private(set) var lastError: String?
@@ -332,11 +366,10 @@ final class StoreService: NSObject, ObservableObject {
 
     /// Reports a custom-paywall impression to RevenueCat (required for native UI).
     func trackPaywallImpression(id: String, oncePerSession: Bool = false) {
-        configureIfNeeded()
+        guard configureIfNeeded() else { return }
         #if DEBUG
         if ProcessInfo.processInfo.environment["FORCE_PRO"] == "1" { return }
         #endif
-        guard isConfigured else { return }
         if oncePerSession {
             guard !paywallImpressionsThisSession.contains(id) else { return }
             paywallImpressionsThisSession.insert(id)
@@ -375,14 +408,13 @@ final class StoreService: NSObject, ObservableObject {
             return
         }
         #endif
-        configureIfNeeded()
+        guard configureIfNeeded() else { return }
         Task { await updateCustomerProductStatus(fetchPolicy: .fetchCurrent) }
         Task { await fetchProducts() }
     }
 
     func fetchProducts() async {
-        configureIfNeeded()
-        guard isConfigured else { return }
+        guard configureIfNeeded() else { return }
         isLoadingProducts = true
         defer { isLoadingProducts = false }
         do {
@@ -400,8 +432,9 @@ final class StoreService: NSObject, ObservableObject {
 
     @discardableResult
     func purchase(_ product: Package) async throws -> PurchaseState {
-        configureIfNeeded()
-        guard isConfigured else { return .pending }
+        guard configureIfNeeded() else {
+            throw StoreServiceError.purchasesUnavailableInSimulator
+        }
         purchaseInFlight = true
         defer { purchaseInFlight = false }
 
@@ -416,9 +449,35 @@ final class StoreService: NSObject, ObservableObject {
         }
     }
 
+    /// The single conversion path behind every pitch in the app.
+    ///
+    /// A CTA that names an offer ("Start 7-day free trial") has to *be* that
+    /// offer: the next thing the user sees is Apple's confirm sheet, never a
+    /// second pitch asking them to agree again. Surfaces that used to hand off
+    /// to `PaywallView` call this instead; the plan picker is now reachable
+    /// only from a deliberate "See all plans" link, or as the fallback when the
+    /// offering failed to load and there is genuinely nothing to buy.
+    func purchaseYearlyDirect() async -> DirectPurchaseOutcome {
+        if yearlyPackage == nil, currentOffering == nil {
+            await fetchProducts()
+        }
+        guard let yearly = yearlyPackage else { return .needsPlanPicker }
+        do {
+            switch try await purchase(yearly) {
+            case .purchased:
+                return .unlocked
+            case .pending:
+                return .pending
+            case .cancelled:
+                return .cancelled
+            }
+        } catch {
+            return .failed(lastError ?? "Couldn't complete the purchase. Please try again.")
+        }
+    }
+
     func updateCustomerProductStatus(fetchPolicy: CacheFetchPolicy = .default) async {
-        configureIfNeeded()
-        guard isConfigured else { return }
+        guard configureIfNeeded() else { return }
         do {
             let info = try await Purchases.shared.customerInfo(fetchPolicy: fetchPolicy)
             apply(customerInfo: info)
@@ -430,8 +489,10 @@ final class StoreService: NSObject, ObservableObject {
     }
 
     func restorePurchases() async {
-        configureIfNeeded()
-        guard isConfigured else { return }
+        guard configureIfNeeded() else {
+            lastError = StoreServiceError.purchasesUnavailableInSimulator.localizedDescription
+            return
+        }
         lastError = nil
         do {
             let info = try await Purchases.shared.restorePurchases()
@@ -451,7 +512,6 @@ final class StoreService: NSObject, ObservableObject {
             introEligibility = [:]
             return
         }
-        guard isConfigured else { return }
         let result = await Purchases.shared.checkTrialOrIntroDiscountEligibility(productIdentifiers: identifiers)
         introEligibility = result.mapValues { $0.status == .eligible }
     }
@@ -510,15 +570,16 @@ final class StoreService: NSObject, ObservableObject {
     }
     #endif
 
-    private func configureIfNeeded() {
-        guard !isConfigured else { return }
+    @discardableResult
+    private func configureIfNeeded() -> Bool {
+        guard !isConfigured else { return true }
         #if targetEnvironment(simulator)
         // Agent/sim runs must NOT hit the prod RevenueCat project — configuring
         // the prod appl_ key on the simulator creates fake "new customers" in the
         // prod charts (RC has no dashboard switch to exclude sim installs). Skip
         // configure entirely; use StoreKit Testing + a local Pro override for
         // paywall/IAP flows on device-less runs.
-        return
+        return false
         #else
         #if DEBUG
         Purchases.logLevel = .debug
@@ -526,6 +587,7 @@ final class StoreService: NSObject, ObservableObject {
         Purchases.configure(withAPIKey: RevenueCatConfig.apiKey)
         Purchases.shared.delegate = self
         isConfigured = true
+        return true
         #endif
     }
 }

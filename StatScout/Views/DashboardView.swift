@@ -16,6 +16,10 @@ struct DashboardView: View {
                         activeSortChip
                         if isSearching || !viewModel.searchText.isEmpty {
                             searchRow
+                            teamResults
+                        }
+                        if viewModel.showingRecent {
+                            recentWindowRow
                         }
                     }
                     leaderboardSection
@@ -100,32 +104,32 @@ struct DashboardView: View {
             if (viewModel.isLoading || viewModel.isHistoricalLoading) && !viewModel.players.isEmpty {
                 loadingStatusBar
                     .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.horizontal, 12)
             }
 
             positionSelector
         }
-        .padding(.horizontal, 12)
         .padding(.top, 8)
     }
 
+    /// Position group is this app's metric-category control, the same tier as
+    /// baseball's Hitting / Pitching / Fielding / Running header, so it uses the
+    /// same underlined tabs. It used to be a row of filled rounded-rects 36pt
+    /// tall, which is the page-level-switch shape at a fifth distinct control
+    /// height, so the one control that decides what the whole screen is about
+    /// looked like nothing else in the app.
     private var positionSelector: some View {
-        HStack(spacing: 6) {
-            ForEach(PlayerPositionGroup.allCases) { position in
-                Button {
-                    viewModel.selectedPosition = position
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    Text(position.rawValue)
-                        .font(GridironType.smallBold)
-                        .foregroundStyle(viewModel.selectedPosition == position ? .white : GridironPalette.inkSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 36)
-                        .background(viewModel.selectedPosition == position ? GridironPalette.midnight : GridironPalette.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+        GridironTabs(
+            tabs: PlayerPositionGroup.allCases.map(\.rawValue),
+            selected: Binding(
+                get: { viewModel.selectedPosition.rawValue },
+                set: { raw in
+                    guard let next = PlayerPositionGroup.allCases.first(where: { $0.rawValue == raw }),
+                          next != viewModel.selectedPosition else { return }
+                    viewModel.selectedPosition = next
                 }
-                .buttonStyle(.plain)
-            }
-        }
+            )
+        )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Position")
     }
@@ -169,18 +173,85 @@ struct DashboardView: View {
         .accessibilityValue(viewModel.qualifierLevel.rawValue)
     }
 
+    /// This player's rolling-window figure for the sorted metric, when the
+    /// board is in Recent mode and the rollup has one. Metrics the rollup has
+    /// no column for (the Next Gen aggregates) simply keep their season number.
+    private func recentValue(for player: Player, metric label: String?) -> String? {
+        guard viewModel.showingRecent, store.isPro,
+              let label,
+              let key = RecentMetricKey.key(for: label),
+              let value = viewModel.recentForm(for: player.playerId)?.metrics[key]
+        else { return nil }
+        return RecentMetricKey.format(value, label: label)
+    }
+
     private var activeSortChip: some View {
         HStack(spacing: 8) {
             Text("LEAGUE LEADERS")
                 .font(GridironType.sectionTitle)
                 .foregroundStyle(GridironPalette.ink)
             Spacer(minLength: 0)
+            recentChip
             searchToggle
             filtersMenu
         }
         .padding(.horizontal, 12)
         .padding(.top, 8)
     }
+
+    /// Swaps the board from season totals to the rolling window.
+    ///
+    /// Locked rather than hidden, so a free user can see the feature exists.
+    /// The label carries the window's own wording ("Last 5 games"), the same
+    /// phrase the picker below it and every other screen use.
+    private var recentChip: some View {
+        Button {
+            if store.isPro {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    viewModel.showingRecent.toggle()
+                }
+                if viewModel.showingRecent {
+                    Task { await viewModel.loadRecentFormIfNeeded() }
+                }
+            } else {
+                paywallTrigger = .recentForm
+            }
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        } label: {
+            GridironChip(
+                title: viewModel.showingRecent ? viewModel.recentWindow.label : "Recent",
+                systemImage: "flame.fill",
+                isActive: viewModel.showingRecent,
+                isLocked: !store.isPro
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Recent form")
+        .accessibilityValue(viewModel.showingRecent ? viewModel.recentWindow.label : "off")
+    }
+
+    /// Window lengths, shown only while Recent is on: a picker for a mode
+    /// you're not in is just noise in the header.
+    private var recentWindowRow: some View {
+        HStack(spacing: 6) {
+            GridironSegmented(
+                segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
+                selection: $viewModel.recentWindow
+            )
+            if viewModel.isRecentFormLoading {
+                ProgressView().scaleEffect(0.6).frame(width: 20)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .onChange(of: viewModel.recentWindow) { _, _ in
+            Task { await viewModel.loadRecentFormIfNeeded() }
+        }
+    }
+
+    /// True while the search row is open or a query is still applied, so the
+    /// chip stays visually "on" and the user knows results are filtered.
+    private var isActiveSearch: Bool { isSearching || !viewModel.searchText.isEmpty }
 
     // Magnifier that expands the inline search row. When a query is active it
     // stays visually "on" so the user knows results are filtered.
@@ -190,19 +261,11 @@ struct DashboardView: View {
             if !isSearching { viewModel.searchText = "" }
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         } label: {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(isActiveSearch ? .white : GridironPalette.inkSecondary)
-                .frame(width: 30, height: 30)
-                .background(isActiveSearch ? GridironPalette.turf : GridironPalette.surface)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(isActiveSearch ? Color.clear : GridironPalette.hairline, lineWidth: 0.5))
+            GridironChip(systemImage: "magnifyingglass", isActive: isActiveSearch)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Search")
+        .accessibilityLabel("Search players or teams")
     }
-
-    private var isActiveSearch: Bool { isSearching || !viewModel.searchText.isEmpty }
 
     private var searchRow: some View {
         HStack(spacing: 8) {
@@ -235,6 +298,64 @@ struct DashboardView: View {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
         )
+    }
+
+    /// Clubs matching the search, above the filtered player rows.
+    ///
+    /// Searching used to only ever narrow the list of players. Someone typing
+    /// "chiefs" is usually after Kansas City, so the club itself is a result:
+    /// one tap to the team page, with the roster still filtered underneath if
+    /// that's what they wanted.
+    @ViewBuilder
+    private var teamResults: some View {
+        let teams = viewModel.searchedTeams
+        if !teams.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(Array(teams.prefix(3).enumerated()), id: \.element) { index, team in
+                    if index > 0 {
+                        Rectangle()
+                            .fill(GridironPalette.divider)
+                            .frame(height: GridironGeo.hairline)
+                    }
+                    NavigationLink(value: TeamDestination(abbr: team)) {
+                        HStack(spacing: 10) {
+                            ZStack {
+                                Circle()
+                                    .fill(NFLTeamColor.color(team))
+                                    .frame(width: 28, height: 28)
+                                Text(displayTeamAbbr(team))
+                                    .font(GridironType.micro)
+                                    .foregroundStyle(.white)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
+                            }
+                            Text(teamFullName(team))
+                                .font(GridironType.bodyBold)
+                                .foregroundStyle(GridironPalette.ink)
+                            Text("TEAM PAGE")
+                                .font(GridironType.micro)
+                                .foregroundStyle(GridironPalette.inkTertiary)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(GridironPalette.inkTertiary)
+                        }
+                        .padding(.horizontal, GridironGeo.padCard)
+                        .frame(height: GridironGeo.rowHeight)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .background(GridironPalette.surface)
+            .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+            .overlay(
+                RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                    .stroke(GridironPalette.hairline, lineWidth: 0.5)
+            )
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
+        }
     }
 
     private var leaderboardSection: some View {
@@ -282,7 +403,8 @@ struct DashboardView: View {
                                 rank: index + 1,
                                 player: player,
                                 metricLabel: sortMetric.label,
-                                metricCategory: sortMetric.category
+                                metricCategory: sortMetric.category,
+                                valueOverride: recentValue(for: player, metric: sortMetric.label)
                             )
                         }
                         .buttonStyle(.plain)
