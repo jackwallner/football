@@ -95,6 +95,13 @@ def export(
     print(f"\nExporting {name} ({filters_description})...")
     players = fetch_all(query_filters)
     validate_export(players, expected_seasons, require_rate_metrics)
+    # The app never renders player photos, and league headshot URLs aren't ours
+    # to redistribute in a shipped bundle. `created_at` is pipeline bookkeeping
+    # the client has no use for. Drop both rather than baking them into every
+    # build. (They stay in Supabase; this only trims the bundled snapshot.)
+    for player in players:
+        player.pop("image_url", None)
+        player.pop("created_at", None)
     output = f"StatScout/Data/{name}.json"
     with open(output, "w") as file:
         json.dump(players, file, separators=(",", ":"))
