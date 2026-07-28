@@ -10,7 +10,7 @@ final class PlayerTests: XCTestCase {
         ]
         let player = Player(
             playerId: 1, name: "Test", team: "KC", position: "QB",
-            handedness: "", imageURL: nil,
+            handedness: "",
             updatedAt: Date(), metrics: metrics, standardStats: [], games: []
         )
         XCTAssertEqual(player.overallPercentile, 76) // 75.9 rounded
@@ -20,7 +20,7 @@ final class PlayerTests: XCTestCase {
         let metric = Metric(id: "m1", label: "Pass Yds", value: "4,918", percentile: 100, category: .passing)
         let player = Player(
             playerId: 1, name: "Patrick Mahomes", team: "KC", position: "QB",
-            handedness: "", imageURL: nil,
+            handedness: "",
             updatedAt: Date(), metrics: [metric], standardStats: [], games: []
         )
         let summary = player.shareSummary
@@ -40,7 +40,7 @@ final class PlayerTests: XCTestCase {
         ]
         let player = Player(
             playerId: 1, name: "Dual Threat", team: "BUF", position: "QB",
-            handedness: "", imageURL: nil,
+            handedness: "",
             updatedAt: Date(), playerType: "qb",
             metrics: metrics, standardStats: [], games: []
         )
@@ -73,24 +73,24 @@ final class PlayerTests: XCTestCase {
     }
 
     func testInitialsHandleSuffixes() {
-        let witt = Player(playerId: 1, name: "Michael Pittman Jr.", team: "IND", position: "WR", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        let witt = Player(playerId: 1, name: "Michael Pittman Jr.", team: "IND", position: "WR", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
         XCTAssertEqual(witt.initials, "MP")
 
-        let harris = Player(playerId: 2, name: "Odell Beckham Jr.", team: "MIA", position: "WR", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        let harris = Player(playerId: 2, name: "Odell Beckham Jr.", team: "MIA", position: "WR", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
         XCTAssertEqual(harris.initials, "OB")
 
-        let third = Player(playerId: 3, name: "Robert Griffin III", team: "WAS", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        let third = Player(playerId: 3, name: "Robert Griffin III", team: "WAS", position: "QB", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
         XCTAssertEqual(third.initials, "RG")
     }
 
     func testInitialsStandardNames() {
-        let mahomes = Player(playerId: 1, name: "Patrick Mahomes", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        let mahomes = Player(playerId: 1, name: "Patrick Mahomes", team: "KC", position: "QB", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
         XCTAssertEqual(mahomes.initials, "PM")
 
-        let chase = Player(playerId: 2, name: "Ja'Marr Chase", team: "CIN", position: "WR", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        let chase = Player(playerId: 2, name: "Ja'Marr Chase", team: "CIN", position: "WR", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
         XCTAssertEqual(chase.initials, "JC")
 
-        let single = Player(playerId: 3, name: "Cher", team: "KC", position: "QB", handedness: "", imageURL: nil, updatedAt: Date(), metrics: [], standardStats: [], games: [])
+        let single = Player(playerId: 3, name: "Cher", team: "KC", position: "QB", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
         XCTAssertEqual(single.initials, "C")
     }
 
@@ -98,7 +98,7 @@ final class PlayerTests: XCTestCase {
         let now = Date()
         let player = Player(
             playerId: 1, name: "Test", team: "KC", position: "QB",
-            handedness: "", imageURL: nil,
+            handedness: "",
             updatedAt: now, metrics: [], standardStats: [],
             games: [
                 GameTrend(id: "recent-up", date: now.addingTimeInterval(-24 * 3600), opponent: "BUF", summary: "", percentileDelta: 5, keyMetric: "Pass Yds"),
@@ -117,7 +117,7 @@ final class PlayerTests: XCTestCase {
     }
 
     func testDisplayPositionFallsBackToPlayerType() {
-        let tbd = Player(playerId: 1, name: "Test", team: "KC", position: "TBD", handedness: "", imageURL: nil, updatedAt: Date(), playerType: "def", metrics: [], standardStats: [], games: [])
+        let tbd = Player(playerId: 1, name: "Test", team: "KC", position: "TBD", handedness: "", updatedAt: Date(), playerType: "def", metrics: [], standardStats: [], games: [])
         XCTAssertEqual(tbd.displayPosition, "DEF")
     }
 }

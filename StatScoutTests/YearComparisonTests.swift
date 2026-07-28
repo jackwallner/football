@@ -4,9 +4,9 @@ import XCTest
 final class YearComparisonTests: XCTestCase {
     func testPlayerHistorySortedBySeason() {
         let players = [
-            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2024, metrics: [], standardStats: [], games: []),
-            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
-            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2023, metrics: [], standardStats: [], games: [])
+            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2024, metrics: [], standardStats: [], games: []),
+            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
+            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2023, metrics: [], standardStats: [], games: [])
         ]
         let sorted = players.sorted {
             guard let s1 = $0.season, let s2 = $1.season else { return false }
@@ -17,19 +17,19 @@ final class YearComparisonTests: XCTestCase {
 
     func testUniqueYearsExtracted() {
         let players = [
-            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2024, metrics: [], standardStats: [], games: []),
-            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2024, metrics: [], standardStats: [], games: []),
-            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: [])
+            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2024, metrics: [], standardStats: [], games: []),
+            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2024, metrics: [], standardStats: [], games: []),
+            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: [])
         ]
         let years = players.compactMap { $0.season }.uniqued().sorted(by: >)
         XCTAssertEqual(years, [2025, 2024])
     }
 
     func testPercentileChangeCalculation() {
-        let p1 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [
+        let p1 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2025, metrics: [
             Metric(id: "m1", label: "xwOBA", value: ".400", percentile: 85, category: .passing)
         ], standardStats: [], games: [])
-        let p2 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2024, metrics: [
+        let p2 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2024, metrics: [
             Metric(id: "m1", label: "xwOBA", value: ".380", percentile: 75, category: .passing)
         ], standardStats: [], games: [])
 

@@ -7,8 +7,8 @@ final class YearComparisonFeatureTests: XCTestCase {
     func testYearCompareTabExistsForPlayersWithHistory() {
         // Create mock players with multi-year history
         let history = [
-            Player(playerId: 1, name: "Test Player", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
-            Player(playerId: 1, name: "Test Player", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2024, metrics: [], standardStats: [], games: [])
+            Player(playerId: 1, name: "Test Player", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
+            Player(playerId: 1, name: "Test Player", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2024, metrics: [], standardStats: [], games: [])
         ]
 
         // Verify player has history
@@ -22,7 +22,7 @@ final class YearComparisonFeatureTests: XCTestCase {
     func testYearCompareTabDisabledForPlayersWithoutHistory() {
         // Create mock player with single year
         let history = [
-            Player(playerId: 2, name: "New Player", team: "LAA", position: "SP", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: [])
+            Player(playerId: 2, name: "New Player", team: "LAA", position: "SP", handedness: "R/R", updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: [])
         ]
 
         // Verify Year Compare tab would be disabled
@@ -32,9 +32,9 @@ final class YearComparisonFeatureTests: XCTestCase {
 
     func testYearSelectionLogic() {
         let history = [
-            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, playerType: "batter", source: "baseball_savant", metrics: [], standardStats: [], games: []),
-            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2024, playerType: "batter", source: "baseball_savant", metrics: [], standardStats: [], games: []),
-            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2023, playerType: "batter", source: "baseball_savant", metrics: [], standardStats: [], games: [])
+            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2025, playerType: "batter", source: "baseball_savant", metrics: [], standardStats: [], games: []),
+            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2024, playerType: "batter", source: "baseball_savant", metrics: [], standardStats: [], games: []),
+            Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2023, playerType: "batter", source: "baseball_savant", metrics: [], standardStats: [], games: [])
         ]
 
         // Sort history by season descending
@@ -68,8 +68,8 @@ final class YearComparisonFeatureTests: XCTestCase {
             Metric(id: "m3", label: "K%", value: "25%", percentile: 35, category: .passing)
         ]
 
-        let player2025 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: metrics2025, standardStats: [], games: [])
-        let player2024 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2024, metrics: metrics2024, standardStats: [], games: [])
+        let player2025 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2025, metrics: metrics2025, standardStats: [], games: [])
+        let player2024 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2024, metrics: metrics2024, standardStats: [], games: [])
 
         // Build comparison (same logic as YearComparisonView)
         let dict1 = Dictionary(grouping: player2025.metrics) { $0.label }
@@ -109,8 +109,8 @@ final class YearComparisonFeatureTests: XCTestCase {
             Metric(id: "m2", label: "B", value: "2", percentile: 60, category: .passing)
         ]
 
-        let player2025 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2025, metrics: metrics2025, standardStats: [], games: [])
-        let player2024 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", imageURL: nil, updatedAt: Date(), season: 2024, metrics: metrics2024, standardStats: [], games: [])
+        let player2025 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2025, metrics: metrics2025, standardStats: [], games: [])
+        let player2024 = Player(playerId: 1, name: "Test", team: "NYY", position: "RF", handedness: "R/R", updatedAt: Date(), season: 2024, metrics: metrics2024, standardStats: [], games: [])
 
         // Calculate overall percentile change
         let overallChange = player2025.overallPercentile - player2024.overallPercentile
