@@ -410,7 +410,7 @@ struct OnboardingCards: View {
                 BulletItem(text: "The Trends board: the league ranked by who's moving", icon: "flame.fill", color: GridironPalette.turf),
                 BulletItem(text: "Last 3 / 5 / 8 game form on any player or team", icon: "chart.bar.fill", color: GridironPalette.turf),
                 BulletItem(text: "Head-to-head matchups across every percentile", icon: "person.2.fill", color: GridironPalette.turf),
-                BulletItem(text: "Every season back to 2015, plus year-over-year", icon: "calendar.badge.clock", color: GridironPalette.turf)
+                BulletItem(text: "Every season back to 2000, plus year-over-year", icon: "calendar.badge.clock", color: GridironPalette.turf)
             ]
         )
     ]

@@ -1,28 +1,17 @@
-"""Pre-aggregate per-game logs into rolling last-N-games windows.
+"""Pre-aggregate per-game logs into rolling last-N-weeks windows.
 
 Reads public.player_game_logs and writes public.player_recent_form: one row
-per (player, side of the ball, window length), holding the window ending on
-that player's most recent game, the equal-length window immediately before
+per (player, phase, side of the ball, window length), holding the shared
+league window ending on the latest available week, the equal-length window before
 it, and the delta between them — the THEN / NOW / delta shape ported from the
 baseball app's Baseball Savant-style rolling leaderboard.
 
 Ported from baseball's rollup_recent_form.py with one structural change: the
-NFL plays a single game a week, so a calendar-day window (baseball's 7/15/30)
-is meaningless here — most of it would be bye week. Windows are instead each
-player's LAST N GAMES, N in (3, 5, 8). Two consequences follow from that:
-
-  * The window is defined per player, not by a shared league-wide date. With
-    bye weeks, injuries, and a postseason where only two clubs still play the
-    final week, a single "as of" anchor would either leave the board mostly
-    empty or misdate half the rows. Each row's as_of/start_week/end_week
-    reflect that player's own most recent games; the client derives its
-    "through Week N" header from the max end_week it fetches.
-  * There's no recency cutoff. A player who last played in October still gets
-    a row for every window. For a finished season, "recent" collapses to "how
-    he finished" anyway, and mid-season, a player's last three games before
-    an injury or a benching are still the honest answer to "what was he doing
-    lately" — silently dropping him would just make the leaderboard wrong in
-    the other direction.
+NFL plays a single game a week, so a calendar-day window is meaningless here.
+Windows use the league's latest week as a shared anchor, N in (3, 5, 8).
+Players without an appearance in the current span are omitted. This keeps an
+early-season performance from remaining on Trends after an injury or benching.
+Regular season and postseason are anchored and ranked separately.
 
 Game logs store raw counts, never pre-divided rates (see ingest_game_logs.py),
 so window rates here are recomputed from summed numerators and denominators
@@ -53,7 +42,7 @@ UTC = timezone.utc
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
-WINDOW_GAMES = (3, 5, 8)
+WINDOW_WEEKS = (3, 5, 8)
 
 # Counting stats summed straight across the window. Game-log metric key -> the
 # recent-form output key, chosen to match the season metric id suffix in
@@ -238,34 +227,48 @@ def _delta(now: dict[str, Any], then: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_rows(logs: list[dict]) -> list[dict]:
-    """Build every (player, side, window) row from a season's game logs.
-
-    Each player's own game list is sorted most-recent-first; the current
-    window is the first N of those, the prior window the N immediately
-    before. A window is emitted even when the player has fewer than N games
-    on record (``games`` reports the real count) — the client is expected to
-    gate small samples on that field rather than have the rollup hide them.
-    """
-    by_player: dict[tuple[int, str], list[dict]] = {}
+    """Build every active (player, phase, side, week-window) row."""
+    anchors: dict[tuple[int, str], int] = {}
     for log in logs:
-        key = (log["player_id"], log["player_type"])
+        week = log.get("week")
+        if week is None:
+            continue
+        context = (int(log["season"]), str(log.get("season_type") or "REG"))
+        anchors[context] = max(anchors.get(context, 0), int(week))
+
+    by_player: dict[tuple[int, str, str], list[dict]] = {}
+    for log in logs:
+        phase = str(log.get("season_type") or "REG")
+        key = (log["player_id"], phase, log["player_type"])
         by_player.setdefault(key, []).append(log)
 
     rows: list[dict] = []
-    for (player_id, player_type), player_logs in by_player.items():
+    for (player_id, season_type, player_type), player_logs in by_player.items():
         player_logs = sorted(
             player_logs,
             key=lambda r: (r["game_date"], r.get("week") or 0),
             reverse=True,
         )
         season = player_logs[0]["season"]
-        team = player_logs[0].get("team")
+        anchor = anchors.get((int(season), season_type))
+        if anchor is None:
+            continue
 
-        for window in WINDOW_GAMES:
-            current = player_logs[:window]
-            prior = player_logs[window:window * 2]
+        for window in WINDOW_WEEKS:
+            current_start = anchor - window + 1
+            prior_start = anchor - (window * 2) + 1
+            prior_end = current_start - 1
+            current = [
+                log for log in player_logs
+                if current_start <= int(log.get("week") or -1) <= anchor
+            ]
+            prior = [
+                log for log in player_logs
+                if prior_start <= int(log.get("week") or -1) <= prior_end
+            ]
             if not current:
                 continue
+            team = current[0].get("team")
 
             now_metrics = _aggregate(current)
             then_metrics = _aggregate(prior)
@@ -273,11 +276,12 @@ def build_rows(logs: list[dict]) -> list[dict]:
             rows.append({
                 "player_id": player_id,
                 "season": season,
+                "season_type": season_type,
                 "player_type": player_type,
-                "window_games": window,
+                "window_weeks": window,
                 "as_of": current[0]["game_date"],
-                "start_week": current[-1].get("week"),
-                "end_week": current[0].get("week"),
+                "start_week": current_start,
+                "end_week": anchor,
                 "team": team,
                 "games": len(current),
                 "plays": sum(int(r.get("plays") or 0) for r in current),
@@ -294,12 +298,9 @@ def build_rows(logs: list[dict]) -> list[dict]:
 def _fetch_logs(client, season: int) -> list[dict]:
     """Page through every game log for the season.
 
-    Unlike baseball's date-limited fetch, this pulls the whole season: with no
-    recency cutoff (see module docstring) a player's last-N-games window can
-    reach back to week 1, so there's no shorter date range that's always
-    sufficient. A full NFL season of game logs (currently ~16,700 rows) is the
-    same order of magnitude as baseball's 30-day slice, so paging the whole
-    thing is not meaningfully more expensive.
+    Unlike baseball's date-limited fetch, this pulls the whole season so both
+    the current and prior shared week windows are available for either phase.
+    A full NFL season of game logs is still small enough to page cheaply.
     """
     rows: list[dict] = []
     page_size = 1000
@@ -321,15 +322,15 @@ def _fetch_logs(client, season: int) -> list[dict]:
     return rows
 
 
-def _fetch_snapshot_player_ids(client, season: int) -> set[int]:
-    """Player ids the app can resolve into a profile for this season."""
+def _fetch_snapshot_player_ids(client, season: int) -> set[tuple[int, str]]:
+    """Player and phase keys the app can resolve into a profile."""
     rows: list[dict] = []
     page_size = 1000
     offset = 0
     while True:
         resp = (
             client.table("player_snapshots")
-            .select("id")
+            .select("id,season_type")
             .eq("season", season)
             .range(offset, offset + page_size - 1)
             .execute()
@@ -339,12 +340,22 @@ def _fetch_snapshot_player_ids(client, season: int) -> set[int]:
         if len(page) < page_size:
             break
         offset += page_size
-    return {int(row["id"]) for row in rows}
+    return {
+        (int(row["id"]), str(row.get("season_type") or "REG"))
+        for row in rows
+    }
 
 
-def _routable_logs(logs: list[dict], snapshot_ids: set[int]) -> list[dict]:
+def _routable_logs(logs: list[dict], snapshot_ids: set[Any]) -> list[dict]:
     """Drop feed rows that cannot resolve to a player profile in the app."""
-    return [row for row in logs if int(row["player_id"]) in snapshot_ids]
+    return [
+        row for row in logs
+        if int(row["player_id"]) in snapshot_ids
+        or (
+            int(row["player_id"]),
+            str(row.get("season_type") or "REG"),
+        ) in snapshot_ids
+    ]
 
 
 def _upsert(client, rows: list[dict]) -> None:
@@ -356,7 +367,9 @@ def _upsert(client, rows: list[dict]) -> None:
         try:
             client.table("player_recent_form").upsert(
                 batch,
-                on_conflict="player_id,season,player_type,window_games",
+                on_conflict=(
+                    "player_id,season,season_type,player_type,window_weeks"
+                ),
             ).execute()
         except Exception:
             logger.exception("Upsert failed for batch starting at %d", i)
@@ -412,6 +425,12 @@ def run(season: Optional[int] = None) -> None:
     rows = build_rows(logs)
     logger.info("Built %d recent-form rows", len(rows))
 
+    (
+        client.table("player_recent_form")
+        .delete()
+        .eq("season", season)
+        .execute()
+    )
     _upsert(client, rows)
     logger.info("Done.")
 

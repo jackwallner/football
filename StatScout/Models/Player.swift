@@ -1,7 +1,7 @@
 import Foundation
 
 struct Player: Identifiable, Codable, Hashable, Sendable {
-    var id: String { "\(playerId)-\(season ?? 0)" }
+    var id: String { "\(playerId)-\(season ?? 0)-\(seasonPhase.rawValue)" }
     let playerId: Int
     let name: String
     let team: String
@@ -9,6 +9,7 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
     let handedness: String
     let updatedAt: Date
     let season: Int?
+    let seasonPhase: SeasonPhase
     let playerType: String?
     let source: String?
     let metrics: [Metric]
@@ -23,6 +24,7 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         case handedness
         case updatedAt = "updated_at"
         case season
+        case seasonPhase = "season_type"
         case playerType = "player_type"
         case source
         case metrics
@@ -30,7 +32,21 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         case games
     }
 
-    init(playerId: Int, name: String, team: String, position: String, handedness: String, updatedAt: Date, season: Int? = nil, playerType: String? = nil, source: String? = nil, metrics: [Metric], standardStats: [StandardStat]?, games: [GameTrend]) {
+    init(
+        playerId: Int,
+        name: String,
+        team: String,
+        position: String,
+        handedness: String,
+        updatedAt: Date,
+        season: Int? = nil,
+        seasonPhase: SeasonPhase = .regular,
+        playerType: String? = nil,
+        source: String? = nil,
+        metrics: [Metric],
+        standardStats: [StandardStat]?,
+        games: [GameTrend]
+    ) {
         self.playerId = playerId
         self.name = name
         self.team = team
@@ -38,6 +54,7 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         self.handedness = handedness
         self.updatedAt = updatedAt
         self.season = season
+        self.seasonPhase = seasonPhase
         self.playerType = playerType
         self.source = source
         self.metrics = metrics
@@ -64,6 +81,7 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         // simply ignored.
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
         season = try container.decodeIfPresent(Int.self, forKey: .season)
+        seasonPhase = try container.decodeIfPresent(SeasonPhase.self, forKey: .seasonPhase) ?? .regular
         playerType = try container.decodeIfPresent(String.self, forKey: .playerType)
         source = try container.decodeIfPresent(String.self, forKey: .source)
         metrics = try container.decode([Metric].self, forKey: .metrics)
@@ -84,6 +102,7 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         try container.encode(handedness, forKey: .handedness)
         try container.encode(updatedAt, forKey: .updatedAt)
         try container.encodeIfPresent(season, forKey: .season)
+        try container.encode(seasonPhase, forKey: .seasonPhase)
         try container.encodeIfPresent(playerType, forKey: .playerType)
         try container.encodeIfPresent(source, forKey: .source)
         try container.encode(metrics, forKey: .metrics)
@@ -141,6 +160,27 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         guard !categoryMetrics.isEmpty else { return nil }
         let total = categoryMetrics.map(\.percentile).reduce(0, +)
         return Int(round(Double(total) / Double(categoryMetrics.count)))
+    }
+}
+
+enum SeasonPhase: String, Codable, CaseIterable, Identifiable, Hashable, Sendable {
+    case regular = "REG"
+    case playoffs = "POST"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .regular: return "Regular"
+        case .playoffs: return "Playoffs"
+        }
+    }
+
+    var fullLabel: String {
+        switch self {
+        case .regular: return "Regular Season"
+        case .playoffs: return "Playoffs"
+        }
     }
 }
 
@@ -382,41 +422,41 @@ struct MetricDefinition: Hashable, Sendable {
 
 enum FootballMetricRegistry {
     static let definitions: [MetricDefinition] = [
-        definition("EPA/Play", .passing, .advanced, .efficiency, [.qb], 10, "Expected points added per passing play."),
-        definition("CPOE", .passing, .advanced, .accuracy, [.qb], 20, "Completion percentage over expectation."),
-        definition("INT%", .passing, .advanced, .accuracy, [.qb], 30, "Share of attempts intercepted.", higherIsBetter: false),
-        definition("Sack%", .passing, .advanced, .pressure, [.qb], 40, "Share of dropbacks ending in a sack.", higherIsBetter: false),
-        definition("Time to Throw", .passing, .advanced, .pressure, [.qb], 50, "Average time from snap to throw.", higherIsBetter: false),
-        definition("Aggressiveness", .passing, .advanced, .aggressiveness, [.qb], 60, "Share of throws into tight coverage."),
-        definition("Intended Air Yds", .passing, .advanced, .aggressiveness, [.qb], 70, "Average intended depth of target."),
+        definition("EPA/Play", .passing, .advanced, .efficiency, [.qb], 10, "Passing expected points added divided by attempts plus sacks. EPA measures the change in expected points from before to after a play."),
+        definition("CPOE", .passing, .advanced, .accuracy, [.qb], 20, "Completion percentage minus the completion rate expected from throw difficulty, in percentage points."),
+        definition("INT%", .passing, .advanced, .accuracy, [.qb], 30, "Passing interceptions divided by attempts.", higherIsBetter: false),
+        definition("Sack%", .passing, .advanced, .pressure, [.qb], 40, "Sacks taken divided by attempts plus sacks.", higherIsBetter: false),
+        definition("Time to Throw", .passing, .advanced, .pressure, [.qb], 50, "Average seconds from the snap until the passer releases the ball."),
+        definition("Aggressiveness", .passing, .advanced, .aggressiveness, [.qb], 60, "Percentage of attempts thrown into tight coverage, with a defender within one yard of the receiver."),
+        definition("Intended Air Yds", .passing, .advanced, .aggressiveness, [.qb], 70, "Average vertical distance the ball travels from the line of scrimmage to the intended target."),
         definition("Pass Yds", .passing, .traditional, .production, [.qb], 110, "Total passing yards."),
         definition("Pass TD", .passing, .traditional, .production, [.qb], 120, "Total passing touchdowns."),
-        definition("Cmp%", .passing, .traditional, .accuracy, [.qb], 130, "Completion percentage."),
+        definition("Cmp%", .passing, .traditional, .accuracy, [.qb], 130, "Completions divided by passing attempts."),
         definition("Y/A", .passing, .traditional, .efficiency, [.qb], 140, "Passing yards per attempt."),
-        definition("Rating", .passing, .traditional, .efficiency, [.qb], 150, "NFL passer rating."),
+        definition("Rating", .passing, .traditional, .efficiency, [.qb], 150, "NFL passer rating calculated from completion rate, yards per attempt, touchdown rate, and interception rate. Maximum 158.3."),
 
         definition("EPA/Rush", .rushing, .advanced, .efficiency, [.qb, .rb, .wr, .te], 10, "Expected points added per rushing attempt."),
-        definition("RYOE", .rushing, .advanced, .expectedProduction, [.qb, .rb], 20, "Rushing yards over expectation."),
-        definition("Explosive%", .rushing, .advanced, .explosiveness, [.qb, .rb, .wr, .te], 30, "Rate of explosive rushing plays."),
+        definition("RYOE", .rushing, .advanced, .expectedProduction, [.qb, .rb], 20, "Total rushing yards gained above or below the yards expected by the Next Gen Stats model."),
+        definition("Explosive%", .rushing, .advanced, .explosiveness, [.qb, .rb, .wr, .te], 30, "Percentage of carries gaining at least 10 yards."),
         definition("Rush EPA", .rushing, .advanced, .production, [.qb, .rb, .wr, .te], 40, "Total expected points added on rushing plays."),
-        definition("Fumble%", .rushing, .advanced, .efficiency, [.qb, .rb, .wr, .te], 50, "Fumbles per rushing opportunity.", higherIsBetter: false),
+        definition("Fumble%", .rushing, .advanced, .efficiency, [.qb, .rb, .wr, .te], 50, "Rushing fumbles divided by carries.", higherIsBetter: false),
         definition("Rush Yds", .rushing, .traditional, .production, [.qb, .rb, .wr, .te], 110, "Total rushing yards."),
         definition("Rush TD", .rushing, .traditional, .production, [.qb, .rb, .wr, .te], 120, "Total rushing touchdowns."),
         definition("Y/C", .rushing, .traditional, .efficiency, [.qb, .rb, .wr, .te], 130, "Rushing yards per carry."),
         definition("Rush 1D", .rushing, .traditional, .production, [.qb, .rb, .wr, .te], 140, "Rushing first downs."),
 
         definition("EPA/Tgt", .receiving, .advanced, .efficiency, [.rb, .wr, .te], 10, "Expected points added per target."),
-        definition("WOPR", .receiving, .advanced, .usage, [.rb, .wr, .te], 20, "Weighted opportunity rating from targets and air yards."),
-        definition("Target Share", .receiving, .advanced, .usage, [.rb, .wr, .te], 30, "Share of team pass attempts targeting the player."),
-        definition("RACR", .receiving, .advanced, .efficiency, [.rb, .wr, .te], 40, "Receiving yards per air yard."),
-        definition("Separation", .receiving, .advanced, .separation, [.rb, .wr, .te], 50, "Average separation from the nearest defender."),
-        definition("YAC+", .receiving, .advanced, .yac, [.rb, .wr, .te], 60, "Yards after catch over expectation."),
+        definition("WOPR", .receiving, .advanced, .usage, [.rb, .wr, .te], 20, "Weighted opportunity rating: 1.5 × target share plus 0.7 × air-yards share."),
+        definition("Target Share", .receiving, .advanced, .usage, [.rb, .wr, .te], 30, "Player targets as a share of the team's pass attempts."),
+        definition("RACR", .receiving, .advanced, .efficiency, [.rb, .wr, .te], 40, "Receiving yards divided by receiving air yards."),
+        definition("Separation", .receiving, .advanced, .separation, [.rb, .wr, .te], 50, "Average yards between the targeted receiver and the nearest defender at pass arrival."),
+        definition("YAC+", .receiving, .advanced, .yac, [.rb, .wr, .te], 60, "Average yards after catch gained above or below the Next Gen Stats expectation."),
         definition("Rec EPA", .receiving, .advanced, .production, [.rb, .wr, .te], 70, "Total expected points added on receiving plays."),
         definition("Rec", .receiving, .traditional, .production, [.rb, .wr, .te], 110, "Total receptions."),
         definition("Rec Yds", .receiving, .traditional, .production, [.rb, .wr, .te], 120, "Total receiving yards."),
         definition("Rec TD", .receiving, .traditional, .production, [.rb, .wr, .te], 130, "Total receiving touchdowns."),
         definition("YAC", .receiving, .traditional, .yac, [.rb, .wr, .te], 140, "Yards after catch."),
-        definition("Catch%", .receiving, .traditional, .efficiency, [.rb, .wr, .te], 150, "Share of targets caught."),
+        definition("Catch%", .receiving, .traditional, .efficiency, [.rb, .wr, .te], 150, "Receptions divided by targets."),
 
         definition("Tackles", .defense, .traditional, .production, [.defense], 110, "Total tackles."),
         definition("TFL", .defense, .traditional, .production, [.defense], 120, "Tackles for loss."),
@@ -472,6 +512,14 @@ enum FootballMetricRegistry {
 }
 
 extension Player {
+    var isDefensivePlayer: Bool {
+        playerType?.lowercased() == "def" || positionGroup == .defense
+    }
+
+    func canCompareHeadToHead(with other: Player) -> Bool {
+        isDefensivePlayer == other.isDefensivePlayer
+    }
+
     var positionGroup: PlayerPositionGroup {
         switch playerType?.lowercased() {
         case "qb": return .qb

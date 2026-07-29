@@ -56,10 +56,16 @@ struct StatsView: View {
         }
         .toolbar {
             if #available(iOS 26.0, *) {
-                ToolbarItem(placement: .topBarLeading) { seasonMenu }
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    seasonMenu
+                    phaseMenu
+                }
                     .sharedBackgroundVisibility(.hidden)
             } else {
-                ToolbarItem(placement: .topBarLeading) { seasonMenu }
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    seasonMenu
+                    phaseMenu
+                }
             }
         }
         .sheet(item: $paywallTrigger) { trigger in
@@ -96,6 +102,15 @@ struct StatsView: View {
             GridironNavPill(title: String(viewModel.selectedSeason))
         }
         .accessibilityHint("Choose which season's stats to view")
+    }
+
+    private var phaseMenu: some View {
+        SeasonPhaseMenu(
+            selected: viewModel.selectedPhase,
+            onSelect: { viewModel.selectedPhase = $0 }
+        ) {
+            GridironNavPill(title: viewModel.selectedPhase.label)
+        }
     }
 }
 

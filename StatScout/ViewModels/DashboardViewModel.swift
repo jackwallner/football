@@ -34,6 +34,7 @@ final class DashboardViewModel {
     private var userSortMetric: String?
     var sortDescending = true
     var selectedSeason: Int = StatScoutSeason.current
+    var selectedPhase: SeasonPhase = .regular
 
     var sortLabel: String { currentSortMetric ?? "Top Metric" }
 
@@ -123,14 +124,19 @@ final class DashboardViewModel {
     private var _teamScores: [String: Double] = [:]
     private var _teamsWithData: [String] = []
     private var _teamCacheSeason: Int?
+    private var _teamCachePhase: SeasonPhase?
 
     var teamScores: [String: Double] {
-        if _teamCacheSeason != selectedSeason { recomputeTeamCache() }
+        if _teamCacheSeason != selectedSeason || _teamCachePhase != selectedPhase {
+            recomputeTeamCache()
+        }
         return _teamScores
     }
 
     var teamsWithData: [String] {
-        if _teamCacheSeason != selectedSeason { recomputeTeamCache() }
+        if _teamCacheSeason != selectedSeason || _teamCachePhase != selectedPhase {
+            recomputeTeamCache()
+        }
         return _teamsWithData
     }
 
@@ -189,7 +195,9 @@ final class DashboardViewModel {
     // Returns empty when the selected season has no data so callers render an empty state
     // instead of falling back to a stale "latest snapshot" set.
     var seasonPlayers: [Player] {
-        let allSeasonPlayers = playerHistories.values.flatMap { $0 }.filter { $0.season == selectedSeason }
+        let allSeasonPlayers = playerHistories.values.flatMap { $0 }.filter {
+            $0.season == selectedSeason && $0.seasonPhase == selectedPhase
+        }
         var seenIds = Set<Int>()
         return allSeasonPlayers.filter { seenIds.insert($0.playerId).inserted }
     }
@@ -201,18 +209,22 @@ final class DashboardViewModel {
     var recentFormByWindow: [Int: [Int: RecentForm]] = [:]
     var recentFormLoadingWindows: Set<Int> = []
     var recentFormError: String?
-    private var recentFormSeason: Int?
+    private var recentFormContext: String?
     private var recentFormTasks: [Int: Task<Void, Never>] = [:]
 
     /// The window the Trends board and the trend arrows read from.
-    var recentWindow: RecentWindow = .five
+    var recentWindow: TrendWindow = .five
 
     /// True while a board is showing recent form rather than season totals.
     /// Pro-gated at the call site, free users get a blurred teaser.
     var showingRecent = false
 
-    func recentForm(for playerId: Int, window: RecentWindow? = nil) -> RecentForm? {
+    func recentForm(for playerId: Int, window: TrendWindow? = nil) -> RecentForm? {
         recentFormByWindow[(window ?? recentWindow).rawValue]?[playerId]
+    }
+
+    func recentForm(for playerId: Int, window: RecentWindow) -> RecentForm? {
+        recentFormByWindow[window.rawValue]?[playerId]
     }
 
     var isRecentFormLoading: Bool {
@@ -233,14 +245,14 @@ final class DashboardViewModel {
     /// Every row for a window, keyed by side of the ball. The Trends board
     /// ranks within one position group, so it needs the rows a per-player
     /// dictionary throws away: a two-way player has one row per player_type.
-    func recentFormRows(window: RecentWindow, playerType: String) -> [RecentForm] {
+    func recentFormRows(window: TrendWindow, playerType: String) -> [RecentForm] {
         (recentFormRowsByWindow[window.rawValue] ?? [])
             .filter { $0.playerType == playerType }
     }
 
     private var recentFormRowsByWindow: [Int: [RecentForm]] = [:]
 
-    func reloadRecentForm(window: RecentWindow? = nil) async {
+    func reloadRecentForm(window: TrendWindow? = nil) async {
         let target = window ?? recentWindow
         recentFormTasks[target.rawValue]?.cancel()
         recentFormTasks.removeValue(forKey: target.rawValue)
@@ -250,16 +262,17 @@ final class DashboardViewModel {
         await loadRecentFormIfNeeded(window: target)
     }
 
-    func loadRecentFormIfNeeded(window: RecentWindow? = nil) async {
+    func loadRecentFormIfNeeded(window: TrendWindow? = nil) async {
         let target = window ?? recentWindow
         // Season changed under us, the cache describes a different year.
-        if recentFormSeason != selectedSeason {
+        let context = "\(selectedSeason)-\(selectedPhase.rawValue)"
+        if recentFormContext != context {
             for task in recentFormTasks.values { task.cancel() }
             recentFormTasks.removeAll()
             recentFormLoadingWindows.removeAll()
             recentFormByWindow.removeAll()
             recentFormRowsByWindow.removeAll()
-            recentFormSeason = selectedSeason
+            recentFormContext = context
         }
         guard recentFormByWindow[target.rawValue] == nil else { return }
 
@@ -280,9 +293,11 @@ final class DashboardViewModel {
             do {
                 let rows = try await self.provider.fetchRecentForm(
                     season: season,
-                    windowGames: target.rawValue
+                    seasonPhase: self.selectedPhase,
+                    windowWeeks: target.rawValue
                 )
-                guard season == self.selectedSeason else { return }
+                guard season == self.selectedSeason,
+                      rows.allSatisfy({ $0.seasonPhase == self.selectedPhase }) else { return }
                 var byPlayer: [Int: RecentForm] = [:]
                 for row in rows {
                     if let existing = byPlayer[row.playerId],
@@ -302,11 +317,19 @@ final class DashboardViewModel {
         await task.value
     }
 
+    func loadRecentFormIfNeeded(window: RecentWindow) async {
+        guard let trendWindow = TrendWindow(rawValue: window.rawValue) else { return }
+        await loadRecentFormIfNeeded(window: trendWindow)
+    }
+
     /// Unique players for an arbitrary season, not just the selected one.
     /// Drill-down leaderboards opened from a player profile need the season
     /// that profile is showing, which can differ from `selectedSeason`.
-    func players(forSeason season: Int) -> [Player] {
-        let all = playerHistories.values.flatMap { $0 }.filter { $0.season == season }
+    func players(forSeason season: Int, phase: SeasonPhase? = nil) -> [Player] {
+        let targetPhase = phase ?? selectedPhase
+        let all = playerHistories.values.flatMap { $0 }.filter {
+            $0.season == season && $0.seasonPhase == targetPhase
+        }
         var seen = Set<Int>()
         return all.filter { seen.insert($0.playerId).inserted }
     }
@@ -669,6 +692,9 @@ final class DashboardViewModel {
                     if $0.season == nil && $1.season == nil { return false }
                     return $0.season != nil
                 }
+                if s1 == s2, $0.seasonPhase != $1.seasonPhase {
+                    return $0.seasonPhase == .regular
+                }
                 return s1 > s2
             }
             histories[playerId] = sortedHistory
@@ -693,7 +719,9 @@ final class DashboardViewModel {
     }
 
     private func recomputeTeamCache() {
-        let allSeasonPlayers = playerHistories.values.flatMap { $0 }.filter { $0.season == selectedSeason }
+        let allSeasonPlayers = playerHistories.values.flatMap { $0 }.filter {
+            $0.season == selectedSeason && $0.seasonPhase == selectedPhase
+        }
         var seenIds = Set<Int>()
         let uniquePlayers = allSeasonPlayers.filter { seenIds.insert($0.playerId).inserted }
 
@@ -715,6 +743,7 @@ final class DashboardViewModel {
         _teamsWithData = teams.sorted()
         _teamScores = teamScoresAccum.mapValues { Double($0.sum) / Double($0.count) }
         _teamCacheSeason = selectedSeason
+        _teamCachePhase = selectedPhase
     }
 
     private func mergePlayers(replacing replacements: [Player]) -> [Player] {

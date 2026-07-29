@@ -1,10 +1,11 @@
 """
-Per-player-per-game NFL ingest. Powers the Recent Form card (last 3/5/8 game
-windows) on the player profile.
+Per-player-per-game NFL ingest. Powers player profiles and the shared 3/5/8
+week Trends windows.
 
 Reads weekly ``load_player_stats`` rows (one row per player per game), joins
 ``load_schedules`` for the game date, and upserts one row per player per game
 into Supabase ``public.player_game_logs``.
+Regular season and postseason rows are stored separately.
 
 Metrics are stored as raw per-game counts, never pre-divided rates: pass_yards,
 attempts, carries, etc. go in as-is, not as yards-per-attempt. That's what lets
@@ -238,6 +239,7 @@ def build_game_log_rows(
         rows.append({
             "player_id": pid,
             "season": season,
+            "season_type": str(r.get("season_type") or "REG"),
             "game_date": game_date,
             "player_type": player_type or "def",
             "team": str(r.get("team") or ""),
@@ -273,7 +275,9 @@ def _upsert(client, rows: list[dict]) -> None:
         try:
             client.table("player_game_logs").upsert(
                 batch,
-                on_conflict="player_id,season,game_date,player_type",
+                on_conflict=(
+                    "player_id,season,season_type,game_date,player_type"
+                ),
             ).execute()
         except Exception:
             logger.exception("Upsert failed for batch starting at %d", i)
@@ -341,6 +345,20 @@ def run(full: bool = False, cli_season: Optional[int] = None) -> None:
         return
 
     _upsert(client, rows)
+    if full:
+        cutoff = now.isoformat()
+        response = (
+            client.table("player_game_logs")
+            .delete()
+            .eq("season", season)
+            .lt("updated_at", cutoff)
+            .execute()
+        )
+        logger.info(
+            "Pruned %d stale game-log rows for %s.",
+            len(response.data or []),
+            season,
+        )
     logger.info("Done. Upserted %d game-log rows for %s.", len(rows), season)
 
 

@@ -103,10 +103,16 @@ struct TeamsView: View {
             // Glass container or it reads as a pill inside a pill, which is
             // exactly what the upgrade CTA on the other side already avoids.
             if #available(iOS 26.0, *) {
-                ToolbarItem(placement: .topBarLeading) { seasonMenu }
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    seasonMenu
+                    phaseMenu
+                }
                     .sharedBackgroundVisibility(.hidden)
             } else {
-                ToolbarItem(placement: .topBarLeading) { seasonMenu }
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    seasonMenu
+                    phaseMenu
+                }
             }
         }
         .refreshable {
@@ -175,6 +181,15 @@ struct TeamsView: View {
             }
         ) {
             GridironNavPill(systemImage: "calendar", title: String(viewModel.selectedSeason))
+        }
+    }
+
+    private var phaseMenu: some View {
+        SeasonPhaseMenu(
+            selected: viewModel.selectedPhase,
+            onSelect: { viewModel.selectedPhase = $0 }
+        ) {
+            GridironNavPill(title: viewModel.selectedPhase.label)
         }
     }
 

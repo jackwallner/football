@@ -48,7 +48,7 @@ struct TrialPitchSheet: View {
             return [
                 Benefit(icon: "calendar.badge.clock",
                         title: "The \(year) season",
-                        detail: "Every percentile ranking, plus every year back to 2015."),
+                        detail: "Every percentile ranking, plus every year back to 2000."),
                 Benefit(icon: "arrow.left.arrow.right.circle.fill",
                         title: "Year-over-year trends",
                         detail: "Put \(year) beside any other season and see what moved."),
@@ -60,7 +60,7 @@ struct TrialPitchSheet: View {
             return [
                 Benefit(icon: "calendar.badge.clock",
                         title: "Every past season",
-                        detail: "Back to 2015, with full percentile history."),
+                        detail: "Back to 2000, with full percentile history."),
                 Benefit(icon: "arrow.left.arrow.right.circle.fill",
                         title: "Year-over-year trends",
                         detail: "Compare any two seasons side by side."),

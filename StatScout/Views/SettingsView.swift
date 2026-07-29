@@ -16,6 +16,7 @@ struct AboutView: View {
         ScrollView {
             VStack(spacing: 12) {
                 proStatusCard
+                glossaryCard
                 linkCard
                 refreshCard
                 aboutCard
@@ -31,6 +32,28 @@ struct AboutView: View {
         .sheet(item: $paywallTrigger) { trigger in
             PaywallView(trigger: trigger)
         }
+    }
+
+    private var glossaryCard: some View {
+        NavigationLink {
+            StatGlossaryView()
+        } label: {
+            VStack(spacing: 0) {
+                GridironSectionBar(title: "REFERENCE")
+                row(
+                    icon: "text.book.closed.fill",
+                    title: "Stat Glossary",
+                    subtitle: "Definitions and formulas for every stat in StatScout."
+                )
+            }
+            .background(GridironPalette.surface)
+            .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+            .overlay(
+                RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                    .stroke(GridironPalette.hairline, lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var aboutCard: some View {
@@ -268,6 +291,88 @@ struct AboutView: View {
             Spacer()
         }
         .padding(GridironGeo.padCard)
+    }
+}
+
+private struct GlossaryEntry: Identifiable {
+    let id: String
+    let label: String
+    let category: String
+    let description: String
+}
+
+struct StatGlossaryView: View {
+    @State private var searchText = ""
+
+    private let supplemental: [GlossaryEntry] = [
+        .init(id: "general-games", label: "G", category: "General", description: "Games in which the player recorded a tracked statistic."),
+        .init(id: "passing-cmp-att", label: "Cmp/Att", category: "Passing", description: "Pass completions and attempts."),
+        .init(id: "passing-cmp", label: "Cmp", category: "Passing", description: "Completed forward passes."),
+        .init(id: "passing-att", label: "Att", category: "Passing", description: "Forward pass attempts."),
+        .init(id: "rushing-car", label: "Car", category: "Rushing", description: "Rushing attempts, also called carries."),
+        .init(id: "receiving-rec-tgt", label: "Rec/Tgt", category: "Receiving", description: "Receptions and targets."),
+        .init(id: "receiving-tgt", label: "Tgt", category: "Receiving", description: "Pass attempts directed at the receiver."),
+        .init(id: "percentile", label: "Percentile", category: "General", description: "A 1–100 rank among qualifying players in the same season, season type, and stat category. Higher is always better after lower-is-better stats are inverted."),
+    ]
+
+    private var entries: [GlossaryEntry] {
+        let registry = FootballMetricRegistry.definitions.map {
+            GlossaryEntry(
+                id: "\($0.category.rawValue)-\($0.label)",
+                label: $0.label,
+                category: $0.category.rawValue,
+                description: $0.description
+            )
+        }
+        let all = (supplemental + registry).sorted {
+            $0.label.localizedCaseInsensitiveCompare($1.label) == .orderedAscending
+        }
+        guard !searchText.isEmpty else { return all }
+        return all.filter {
+            $0.label.localizedCaseInsensitiveContains(searchText)
+                || $0.category.localizedCaseInsensitiveContains(searchText)
+                || $0.description.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    private var categories: [String] {
+        let order = ["General", "Passing", "Rushing", "Receiving", "Defense"]
+        return order.filter { category in entries.contains { $0.category == category } }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                Text("Values come from nflverse player statistics and NFL Next Gen Stats. Percentiles are calculated separately for qualifying players in each season and season type.")
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
+            }
+
+            ForEach(categories, id: \.self) { category in
+                Section(category) {
+                    ForEach(entries.filter { $0.category == category }) { entry in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(entry.label)
+                                .font(GridironType.bodyBold)
+                                .foregroundStyle(GridironPalette.ink)
+                            Text(entry.description)
+                                .font(GridironType.small)
+                                .foregroundStyle(GridironPalette.inkSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+
+            Section("Sources") {
+                Link("NFL Next Gen Stats Glossary", destination: URL(string: "https://nextgenstats.nfl.com/glossary")!)
+                Link("nflreadpy Player Stats", destination: URL(string: "https://nflreadpy.nflverse.com/api/load_functions/#nflreadpy.load_player_stats")!)
+            }
+        }
+        .searchable(text: $searchText, prompt: "Search stats")
+        .navigationTitle("Stat Glossary")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

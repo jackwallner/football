@@ -67,7 +67,7 @@ enum PaywallTrigger: Identifiable, Hashable {
     var subtitle: String {
         switch self {
         case .pastSeason:
-            return "Track how every player ranked since 2015, plus the year-over-year trends behind today's leaders."
+            return "Track how every player ranked since 2000, plus the year-over-year trends behind today's leaders."
         case .lockedSeason(let year):
             return "See every player's \(year) percentile rankings, and how they stack up against any other season."
         case .yearCompare:
@@ -75,11 +75,11 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .playerComparison:
             return "Stack any two players head-to-head across every NFL metric: EPA, CPOE, YAC, RYOE, and more."
         case .onboarding:
-            return "The Trends board, recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
+            return "The Trends board, recent form, head-to-head matchups, and every season back to 2000. The full NFL picture on every player."
         case .activation:
-            return "The Trends board, recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
+            return "The Trends board, recent form, head-to-head matchups, and every season back to 2000. The full NFL picture on every player."
         case .upgrade:
-            return "The Trends board, recent form, head-to-head matchups, and every season back to 2015. The full NFL Next Gen picture on every player."
+            return "The Trends board, recent form, head-to-head matchups, and every season back to 2000. The full NFL picture on every player."
         case .pastSeasonsLoad:
             return "Load historical data to explore past seasons, year-over-year trends, and more."
         case .teamView:
@@ -123,7 +123,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         ("chart.bar.fill", "Last 3 / 5 / 8 game form on any player, team or leaderboard"),
         ("person.2.fill", "Head-to-head: any two players, every metric"),
         ("shield.lefthalf.filled", "Team scouting: advanced and standard, season or recent"),
-        ("calendar.badge.clock", "Every season back to 2015 + year-over-year trends")
+        ("calendar.badge.clock", "Every season back to 2000 + year-over-year trends")
     ]
 
     var features: [(icon: String, title: String)] {

@@ -40,8 +40,13 @@ struct ComparisonCatalog {
             seasons: viewModel.availableSeasons,
             roster: { viewModel.players(forSeason: $0).sorted { $0.name < $1.name } },
             resolve: { player, season in
-                if player.season == season { return player }
-                return viewModel.playerHistories[player.playerId]?.first { $0.season == season }
+                if player.season == season,
+                   player.seasonPhase == viewModel.selectedPhase {
+                    return player
+                }
+                return viewModel.playerHistories[player.playerId]?.first {
+                    $0.season == season && $0.seasonPhase == viewModel.selectedPhase
+                }
             },
             isSeasonLocked: { viewModel.isSeasonLocked($0) },
             isLoadingHistory: viewModel.isHistoricalLoading,
@@ -181,6 +186,7 @@ struct PlayerComparisonView: View {
                 ComparePlayerPicker(
                     players: catalog.roster(side.season ?? 0).filter {
                         $0.playerId != other.playerId
+                            && $0.canCompareHeadToHead(with: other)
                     },
                     season: side.season,
                     isLoading: catalog.isLoadingHistory

@@ -9,11 +9,14 @@ SwiftUI iOS app reading `player_snapshots` + `player_game_logs` via PostgREST.
   Supabase account — apply schema via `psql` with `SUPABASE_DB_PASSWORD`, not the CLI token).
 - Creds file: `~/.football_credentials` (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_PASSWORD).
 - Tables (already created):
-  - `player_snapshots` — same shape as baseball (id bigint, season int, PK (id, season);
-    name, team, position, handedness, image_url, player_type, source, metrics jsonb,
-    standard_stats jsonb, games jsonb).
-  - `player_game_logs` — PK (player_id, season, game_date, player_type); columns
+  - `player_snapshots` — same shape as baseball (id bigint, season int,
+    season_type `REG`/`POST`, PK (id, season, season_type); name, team, position,
+    handedness, image_url, player_type, source, metrics jsonb, standard_stats jsonb,
+    games jsonb).
+  - `player_game_logs` — PK (player_id, season, season_type, game_date, player_type); columns
     `plays` (was plate_appearances) and `touches` (was batted_ball_events), metrics jsonb.
+  - `player_recent_form` — league-anchored 3/5/8-week aggregates. PK
+    (player_id, season, season_type, player_type, window_weeks).
 
 ## Data source
 - `nflreadpy` (nflverse). Verified working in `backend/.venv` (Python 3.14):
@@ -34,7 +37,8 @@ SwiftUI iOS app reading `player_snapshots` + `player_game_logs` via PostgREST.
 
 ## player_type (snapshot + game log rows)
 Position-group based, lowercase: `"qb"`, `"rb"`, `"wr"`, `"te"`, `"def"`, `"k"`.
-Derived from `position_group`. One snapshot row per player per season.
+Derived from `position_group`. One snapshot row per player, season, and season type.
+`REG` and `POST` are ranked separately.
 
 ## Metric categories (jsonb `metrics[].category`, exact strings)
 - `"Passing"` — QBs. Metrics (id → label): pass_yards→"Pass Yds", pass_tds→"Pass TD",
@@ -56,6 +60,9 @@ Percentiles: computed within (season, category) among **qualified** players
 Defense ≥ 300 defensive snaps or ≥ 8 games). Inverted metrics: lower raw value = higher
 percentile. Percentile int 1–100. `value` is the formatted raw stat string (e.g. "4,918", "68.3%").
 A player appears in every category they qualify for (rushing QB gets Passing + Rushing metrics).
+The nflverse target field is effectively blank for 2003–2008. Those seasons use
+≥ 25 receptions (≥ 3 postseason) as the receiving qualification and omit
+target-derived metrics instead of presenting fabricated zeroes.
 
 ## metrics jsonb element shape (same as baseball)
 `{"id": "...", "label": "...", "value": "...", "percentile": 87, "category": "Passing"}`
@@ -68,18 +75,20 @@ A player appears in every category they qualify for (rushing QB gets Passing + R
 `[{"id","date","opponent","summary","percentile_delta","key_metric"}]` — may be empty [].
 
 ## player_game_logs
-One row per player per game (per side: player_type as above). `game_date` from schedule
+One row per player per game and season type (per side: player_type as above). `game_date` from schedule
 `gameday`. `plays` = pass attempts + carries + targets (offensive involvement),
 `touches` = completions + carries + receptions. `metrics` jsonb: flat dict of per-game raw
 stats (passing_yards, passing_tds, interceptions, rushing_yards, carries, receptions,
-targets, receiving_yards, epa_total, ...). Powers "Recent Form" (last 7/15/30 days windows;
-iOS side may reinterpret as last 1/3/5 games).
+targets, receiving_yards, epa_total, ...). `player_recent_form` powers Trends using
+league-anchored 3/5/8-week windows, so an inactive player does not retain a stale
+player-relative "last N games" result.
 
 ## Teams
 32 NFL abbreviations (nflverse): ARI ATL BAL BUF CAR CHI CIN CLE DAL DEN DET GB HOU IND
 JAX KC LA LAC LV MIA MIN NE NO NYG NYJ PHI PIT SEA SF TB TEN WAS.
 
 ## Free vs Pro season gating (iOS)
-- `StatScoutSeason.current = 2025`, `free = 2025`, `oldest = 2015`; historical seasons (Pro) = 2015–2024.
-- Backend backfills snapshots for seasons 2015–2025. Next Gen Stats begins in 2016, so 2015 omits NGS-only metrics instead of emitting zero values.
+- `StatScoutSeason.current = 2025`, `free = 2025`, `oldest = 2000`; historical seasons (Pro) = 2000–2024.
+- Backend backfills regular-season and postseason snapshots for seasons 2000–2025.
+  Earlier seasons omit unavailable NGS-only metrics instead of emitting zero values.
 - Historical game logs are not bulk-backfilled; Recent Form remains an active-season feed.

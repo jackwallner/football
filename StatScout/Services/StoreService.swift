@@ -44,10 +44,11 @@ enum StatScoutSeason {
     static let current = 2025
     /// The only season available without Pro. Everything older is gated.
     static let free = current
-    /// Oldest season in the dataset. NFL percentile history runs from 2015,
-    /// and the bundled players-historical.plist ships all of it, so the season
+    /// Oldest season in the dataset. nflverse player stats run back to 1999;
+    /// StatScout starts at 2000 for a clean round-number historical range.
+    /// The bundled players-historical.plist ships all of it, so the season
     /// menus can list every year without waiting on a fetch.
-    static let earliest = 2015
+    static let earliest = 2000
 }
 
 enum StatScoutLegal {
