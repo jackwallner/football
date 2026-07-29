@@ -1,43 +1,35 @@
-# Claude Design — StatScout App Store Preview Package
+# Gridiron StatScout marketing package
 
-Self-contained handoff for generating App Store preview frames. Everything Claude Design needs to produce the 8 marketing frames lives in this folder.
+This folder is the current handoff for App Store metadata, screenshots, and an optional App Preview video.
 
-## Start here
+## Authoritative files
 
-1. Read [`BRIEF.md`](./BRIEF.md) — the main spec. Covers product, brand tokens, frame-by-frame headlines, output specs, and constraints.
-2. Skim the three files in [`reference/`](./reference/) for deeper design-system context (only needed if a brand-system question comes up).
-3. Use the PNGs in [`screenshots/`](./screenshots/) as the literal source pixels for each device frame — crop only, do not retouch interior content.
+1. Read [`BRIEF.md`](./BRIEF.md) for positioning, metadata, frame order, copy, and legal constraints.
+2. Read [`SCREENSHOT_POSITIONING_SPEC.md`](./SCREENSHOT_POSITIONING_SPEC.md) before building the frames.
+3. Use only the real captures in [`screenshots-2026-07/`](./screenshots-2026-07/).
 
-## Folder layout
+The older `screenshots/` and `reference/` folders are pre-mid-July baseball carryovers. They are retained only as historical material. Do not use their copy, colors, geometry, legal guidance, screenshots, or output paths.
 
-```
-claude-design/
-├── README.md                            ← you are here
-├── BRIEF.md                             ← primary spec; read first
-├── screenshots/                         ← raw simulator captures, 1206×2622
-│   ├── raw_01_dashboard.png             ← Hitting leaders (Frame 1)
-│   ├── raw_02_teams.png                 ← Teams index (Frame 7)
-│   ├── raw_03_metrics.png               ← StatScout best/worst (Frame 3)
-│   ├── raw_04_boxscore.png              ← Standard stats (Frame 5)
-│   ├── raw_05_profile.png               ← Player profile (Frame 2)
-│   ├── raw_06_paywall.png               ← Pro upgrade (Frame 8)
-│   ├── raw_07_pitching.png              ← Pitching leaders (Frame 4)
-│   └── raw_08_team_detail.png           ← Team roster (Frame 6)
-└── reference/
-    ├── STATSCOUT_SAVANT_HANDOFF.md      ← in-app design system spec
-    ├── SAVANT_PLAYER_PAGE_REFERENCE.html← high-fidelity HTML mock
-    └── design-brief-for-claude-design.md← broader product context
-```
+## Source asset map
 
-## Deliverables expected back
+| Frame | Raw source |
+|---|---|
+| 01 | `screenshots-2026-07/raw_01_qb_leaders.png` |
+| 02 | `screenshots-2026-07/raw_02_player_profile.png` |
+| 03 | `screenshots-2026-07/raw_03_trends.png` |
+| 04 | `screenshots-2026-07/raw_04_player_compare.png` |
+| 05 | `screenshots-2026-07/raw_05_team_profile.png` |
+| 06 | `screenshots-2026-07/raw_06_year_compare.png` |
+| 07 | `screenshots-2026-07/raw_07_standard_passing.png` |
+| 08 | `screenshots-2026-07/raw_08_teams_index.png` |
 
-- 8 PNGs at **1290 × 2796** named `appstore_preview_<NN>_<slug>.png`
-- 1 contact-sheet composite at 25% scale for quick review
-- Drop into `/Users/jackwallner/baseball/Screenshots/appstore/` (overwrite existing — the current set there is stale)
+All raws are real iPhone 17 Pro Max simulator captures at 1320×2868 in light mode. They use live 2025 football data, a local simulator-only Pro entitlement, 9:41, and 100% battery. No production RevenueCat key was used.
 
-## Hard constraints (the BRIEF has the full list)
+## Expected Claude Design output
 
-- City-only team identification — never team nicknames (no "Yankees", no "Astros")
-- No MLB / team logos, headshots, or stadium imagery
-- One red emphasis word per headline, max
-- Don't touch pixels inside the screenshot — crop only
+- Eight sRGB PNG masters at 1320×2868, without alpha channels
+- Eight 1290×2796 derivatives for optional manual Media Manager placement
+- One 25% contact sheet
+- Output under `claude-design/output/`, not `fastlane/screenshots/`, until approved
+
+Never alter data or UI pixels inside the supplied screenshots. Scaling and a single full-screen crop are allowed.
