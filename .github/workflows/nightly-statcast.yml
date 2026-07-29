@@ -13,6 +13,14 @@ on:
         description: "Re-ingest per-game logs from season start (needed after a metric-set change)"
         type: boolean
         default: false
+      backfill_seasons:
+        description: "Re-ingest a season range as well, e.g. 2018-2025 (needed after adding a metric source)"
+        type: string
+        default: ""
+      rollup_all_time:
+        description: "Rebuild the All Time career rollup (season 0)"
+        type: boolean
+        default: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -25,8 +33,9 @@ jobs:
       issues: write
     # The nightly incremental path is quick. A full game-log re-ingest walks
     # the whole season's weekly stats plus the recent-form rollup and needs
-    # more headroom.
-    timeout-minutes: 60
+    # more headroom. A season backfill plus the career rollup needs far more
+    # again: the rollup alone reads every season from 2000 on.
+    timeout-minutes: 180
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -53,6 +62,44 @@ jobs:
         run: |
           set -o pipefail
           python backend/ingest.py --season-type all 2>&1 | tee ingestion.log
+
+      # Adding a metric source (PFR advanced defence, weekly CPOE) only reaches
+      # seasons that are re-ingested, so a range backfill is a manual, explicit
+      # step rather than something the nightly path does on its own.
+      - name: Backfill season range
+        if: inputs.backfill_seasons != ''
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RANGE: ${{ inputs.backfill_seasons }}
+        run: |
+          set -o pipefail
+          FIRST="${RANGE%%-*}"
+          LAST="${RANGE##*-}"
+          if ! [[ "$FIRST" =~ ^[0-9]{4}$ && "$LAST" =~ ^[0-9]{4}$ ]]; then
+            echo "backfill_seasons must look like 2018-2025 (got '$RANGE')" >&2
+            exit 1
+          fi
+          if [ "$FIRST" -gt "$LAST" ]; then
+            echo "backfill_seasons range is inverted: $RANGE" >&2
+            exit 1
+          fi
+          for season in $(seq "$FIRST" "$LAST"); do
+            echo "::group::Backfilling $season"
+            python backend/ingest.py --season "$season" --season-type all 2>&1 | tee -a backfill.log
+            echo "::endgroup::"
+          done
+
+      - name: Rebuild All Time career rollup
+        if: inputs.rollup_all_time
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -o pipefail
+          python backend/rollup_all_time.py --season-type all 2>&1 | tee all_time.log
 
       - name: Run per-game ingestion (Recent Form data)
         shell: bash

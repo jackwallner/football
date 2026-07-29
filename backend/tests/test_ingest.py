@@ -222,10 +222,154 @@ def test_build_agg_requests_only_selected_ngs_season(weekly_df):
     with patch("ingest.nfl.load_player_stats", return_value=weekly_df):
         with patch("ingest.nfl.load_nextgen_stats", return_value=empty_ngs) as load_ngs:
             with patch("ingest.load_headshots", return_value={}):
-                ingest.build_agg_for_season(2025)
+                with patch("ingest.load_pfr_defense", return_value=pd.DataFrame()):
+                    ingest.build_agg_for_season(2025)
 
     assert load_ngs.call_count == 3
     assert all(call.args[0] == [2025] for call in load_ngs.call_args_list)
+
+
+def test_build_agg_skips_pfr_defense_for_postseason(weekly_df):
+    """PFR's advanced defensive table is regular season only."""
+    with patch("ingest.nfl.load_player_stats", return_value=weekly_df):
+        with patch("ingest.nfl.load_nextgen_stats", return_value=pd.DataFrame()):
+            with patch("ingest.load_headshots", return_value={}):
+                with patch("ingest.load_pfr_defense") as load_pfr:
+                    ingest.build_agg_for_season(2025, "POST")
+
+    load_pfr.assert_not_called()
+
+
+# --------------------------------------------------------------------------- #
+# CPOE: weekly-derived, attempt-weighted, and preferred over NGS
+# --------------------------------------------------------------------------- #
+def test_cpoe_is_attempt_weighted_not_flat_mean(weekly_df):
+    """A 5-attempt week must not count as much as a 40-attempt one."""
+    df = weekly_df.copy()
+    qb = df[df["player_id"] == "00-0000001"].copy()
+    if len(qb) < 2:  # fixture has one row per player; synthesise a second week
+        second = qb.iloc[[0]].copy()
+        second["week"] = qb["week"].max() + 1
+        qb = pd.concat([qb, second], ignore_index=True)
+    qb = qb.reset_index(drop=True)
+    qb.loc[0, ["attempts", "passing_cpoe"]] = [40, 5.0]
+    qb.loc[1, ["attempts", "passing_cpoe"]] = [5, -10.0]
+
+    agg = ingest.aggregate_seasons(qb, 2025)
+
+    # Weighted: (40*5 + 5*-10) / 45 = 3.33. A flat mean would give -2.5.
+    assert round(agg.loc[1]["cpoe"], 2) == 3.33
+
+
+def test_weekly_cpoe_wins_over_ngs(weekly_df, ngs_passing_df, ngs_rushing_df, ngs_receiving_df):
+    """One CPOE definition across the whole range, so 2016 isn't a seam."""
+    df = weekly_df.copy()
+    df.loc[df["player_id"] == "00-0000001", "passing_cpoe"] = 7.5
+
+    agg = ingest.aggregate_seasons(df, 2025)
+    agg = ingest.merge_ngs(agg, ngs_passing_df, ngs_rushing_df, ngs_receiving_df, 2025)
+
+    # The NGS fixture says 3.4; the weekly feed says 7.5 and must win.
+    assert round(agg.loc[1]["cpoe"], 1) == 7.5
+    assert round(agg.loc[1]["cpoe_ngs"], 1) == 3.4
+
+
+def test_ngs_cpoe_fills_gap_when_weekly_missing(
+    weekly_df, ngs_passing_df, ngs_rushing_df, ngs_receiving_df
+):
+    agg = ingest.aggregate_seasons(weekly_df, 2025)
+    agg = ingest.merge_ngs(agg, ngs_passing_df, ngs_rushing_df, ngs_receiving_df, 2025)
+    assert round(agg.loc[1]["cpoe"], 1) == 3.4
+
+
+# --------------------------------------------------------------------------- #
+# Advanced defence (PFR)
+# --------------------------------------------------------------------------- #
+def _pfr_def_frame(**overrides):
+    base = {
+        "def_pressures": 40.0,
+        "def_hurries": 15.0,
+        "def_qb_knockdowns": 10.0,
+        "def_cmp_pct_allowed": 0.62,
+        "def_yds_per_tgt_allowed": 7.1,
+        "def_rating_allowed": 88.4,
+        "def_missed_tkl_pct": 0.09,
+        "def_targets_allowed": 60.0,
+        "def_combined_tackles": 70.0,
+    }
+    base.update(overrides)
+    return pd.DataFrame([base], index=[4])
+
+
+def test_pfr_defense_scales_fractions_to_percentages():
+    agg = pd.DataFrame(index=[4], data={"name": ["Def One"]})
+    out = ingest.merge_pfr_defense(agg, _pfr_def_frame())
+
+    assert round(out.loc[4]["def_cmp_pct_allowed"], 1) == 62.0
+    assert round(out.loc[4]["def_missed_tkl_pct"], 1) == 9.0
+    # Counting stats pass through untouched.
+    assert out.loc[4]["def_pressures"] == 40.0
+
+
+def test_low_target_coverage_rates_are_dropped():
+    """A corner thrown at three times is not a 33%-completion defender."""
+    agg = pd.DataFrame(index=[4], data={"name": ["Def One"]})
+    out = ingest.merge_pfr_defense(agg, _pfr_def_frame(def_targets_allowed=3.0))
+
+    assert pd.isna(out.loc[4]["def_cmp_pct_allowed"])
+    assert pd.isna(out.loc[4]["def_yds_per_tgt_allowed"])
+    assert pd.isna(out.loc[4]["def_rating_allowed"])
+    # Pressures are a total, not a rate, so they survive.
+    assert out.loc[4]["def_pressures"] == 40.0
+
+
+def test_low_tackle_volume_drops_missed_tackle_rate():
+    agg = pd.DataFrame(index=[4], data={"name": ["Def One"]})
+    out = ingest.merge_pfr_defense(agg, _pfr_def_frame(def_combined_tackles=5.0))
+    assert pd.isna(out.loc[4]["def_missed_tkl_pct"])
+
+
+def test_pfr_defense_merge_is_a_noop_when_empty():
+    agg = pd.DataFrame(index=[4], data={"name": ["Def One"]})
+    assert ingest.merge_pfr_defense(agg, pd.DataFrame()).equals(agg)
+
+
+# --------------------------------------------------------------------------- #
+# Career qualification
+# --------------------------------------------------------------------------- #
+def test_career_thresholds_are_higher_than_season():
+    one_season = {"attempts": 400, "carries": 200, "targets": 120, "games": 17,
+                  "targets_reliable": True}
+
+    assert ingest.qualifies(one_season, "Passing", "qb")
+    assert not ingest.qualifies(one_season, "Passing", "qb", career=True)
+
+    a_career = {"attempts": 3000, "carries": 900, "targets": 700, "games": 150,
+                "targets_reliable": True}
+    assert ingest.qualifies(a_career, "Passing", "qb", career=True)
+    assert ingest.qualifies(a_career, "Rushing", "rb", career=True)
+    assert ingest.qualifies(a_career, "Receiving", "wr", career=True)
+    assert ingest.qualifies(a_career, "Defense", "def", career=True)
+
+
+def test_career_receiving_falls_back_to_receptions_when_targets_unreliable():
+    row = {"receptions": 250, "targets": 0, "targets_reliable": False}
+    assert ingest.qualifies(row, "Receiving", "wr", career=True)
+    row["receptions"] = 60
+    assert not ingest.qualifies(row, "Receiving", "wr", career=True)
+
+
+def test_all_time_season_uses_career_thresholds(weekly_df):
+    """build_snapshot_rows switches tiers off the sentinel season alone."""
+    agg = ingest.aggregate_seasons(weekly_df, 2025)
+    agg["image_url"] = None
+
+    season_rows = ingest.build_snapshot_rows(agg, 2025, NOW)
+    career_rows = ingest.build_snapshot_rows(agg, ingest.ALL_TIME_SEASON, NOW)
+
+    assert season_rows, "fixture should qualify for a single season"
+    # The same fixture volumes are nowhere near a career, so nothing qualifies.
+    assert not career_rows
 
 
 # --------------------------------------------------------------------------- #

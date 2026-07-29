@@ -198,6 +198,74 @@ struct StandardStat: Identifiable, Codable, Hashable, Sendable {
     let value: String
 }
 
+/// Pulls the leading number out of a formatted feed value: `"6.2%"` -> 6.2,
+/// `"3,322"` -> 3322, `"+2.3"` -> 2.3.
+///
+/// Lives here, free of any actor, because it is pure string arithmetic that both
+/// the view model (main actor) and the model layer need. It used to exist only as
+/// `DashboardViewModel.rawNumeric`, which inherited the view model's
+/// `@MainActor` isolation and so couldn't be called from a plain model type at
+/// all. That method now forwards here, so there is still one implementation.
+func metricNumericValue(_ value: String) -> Double? {
+    var s = value.trimmingCharacters(in: .whitespaces)
+    // Strip thousands separators - NFL yardage ships as "3,322".
+    s = s.replacingOccurrences(of: ",", with: "")
+    if s.hasPrefix(".") { s = "0" + s }
+    if s.hasPrefix("-.") { s = "-0" + s.dropFirst() }
+    let scanner = Scanner(string: s)
+    scanner.charactersToBeSkipped = nil
+    return scanner.scanDouble()
+}
+
+/// The display shape of a metric value, read back off the feed's own strings.
+///
+/// The pipeline formats every metric server-side (`"6.2%"`, `"+2.3"`, `"3,322"`,
+/// `"0.05"`) and the app only ever passes those through. An aggregate has no
+/// such string to pass through, so it has to be rendered here - and rather than
+/// keep a second copy of the backend's format table in Swift, where the two
+/// would quietly drift the first time a metric changed precision, the format is
+/// inferred from the very values being aggregated. A column of `"6.2%"` renders
+/// its total as `"6.2%"` by construction.
+struct MetricValueFormat: Hashable, Sendable {
+    var decimals = 0
+    var isPercent = false
+    var isSigned = false
+    var hasGrouping = false
+
+    static func inferred(from samples: [String]) -> MetricValueFormat {
+        var format = MetricValueFormat()
+        for sample in samples {
+            let trimmed = sample.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasSuffix("%") { format.isPercent = true }
+            if trimmed.hasPrefix("+") { format.isSigned = true }
+            if trimmed.contains(",") { format.hasGrouping = true }
+            // Max rather than first: a column holding both "0.1" and "0.12"
+            // should render its aggregate at the finer precision, not truncate.
+            let digits = trimmed
+                .drop { $0 != "." }
+                .dropFirst()
+                .prefix { $0.isNumber }
+                .count
+            format.decimals = max(format.decimals, digits)
+        }
+        return format
+    }
+
+    func string(_ value: Double) -> String {
+        var text: String
+        if decimals == 0, hasGrouping {
+            text = Int(value.rounded()).formatted(.number.grouping(.automatic))
+        } else if decimals == 0 {
+            text = String(Int(value.rounded()))
+        } else {
+            text = String(format: "%.\(decimals)f", value)
+        }
+        if isSigned, value > 0 { text = "+" + text }
+        if isPercent { text += "%" }
+        return text
+    }
+}
+
 enum MetricDirection: String, Codable, Hashable, Sendable {
     case up
     case flat
@@ -369,7 +437,10 @@ enum PlayerPositionGroup: String, CaseIterable, Identifiable, Hashable, Sendable
         case .qb: return ["EPA/Play", "CPOE", "Rating"]
         case .rb: return ["EPA/Rush", "RYOE", "Explosive%", "Rush EPA"]
         case .wr, .te: return ["EPA/Tgt", "WOPR", "YAC+", "Rec EPA"]
-        case .defense: return []
+        // Pressures leads because it is the one advanced defensive number that
+        // exists for every defender rather than only for those targeted enough
+        // to be ranked in coverage.
+        case .defense: return ["Pressures", "Rating Allowed", "Cmp% Allowed", "Missed Tkl%"]
         }
     }
 
@@ -405,6 +476,8 @@ enum MetricFamily: String, CaseIterable, Identifiable, Hashable, Sendable {
     case production = "Production"
     case passRush = "Pass Rush"
     case turnovers = "Turnovers"
+    case coverage = "Coverage"
+    case tackling = "Tackling"
 
     var id: String { rawValue }
 }
@@ -458,6 +531,20 @@ enum FootballMetricRegistry {
         definition("YAC", .receiving, .traditional, .yac, [.rb, .wr, .te], 140, "Yards after catch."),
         definition("Catch%", .receiving, .traditional, .efficiency, [.rb, .wr, .te], 150, "Receptions divided by targets."),
 
+        // Advanced defence, from Pro-Football-Reference's advanced defensive
+        // table (2018 onward - the first season it was published). Defenders
+        // were previously the one position group with nothing but counting
+        // stats, which made the whole advanced half of the app silent on half
+        // the field. Coverage metrics describe what a defender *allowed* when
+        // targeted, so on all four of them a lower number is the better one.
+        definition("Pressures", .defense, .advanced, .passRush, [.defense], 10, "Quarterback pressures: sacks, hits and hurries credited to this defender. Pro-Football-Reference, 2018 onward."),
+        definition("Hurries", .defense, .advanced, .passRush, [.defense], 20, "Times the defender forced the quarterback to move off his spot or throw early without hitting him. 2018 onward."),
+        definition("QB KD", .defense, .advanced, .passRush, [.defense], 30, "Quarterback knockdowns: times the defender put the passer on the ground, sack or not. 2018 onward."),
+        definition("Cmp% Allowed", .defense, .advanced, .coverage, [.defense], 40, "Completion percentage on passes thrown at this defender. Needs at least 20 targets to be ranked. 2018 onward.", higherIsBetter: false),
+        definition("Yds/Tgt Allowed", .defense, .advanced, .coverage, [.defense], 50, "Yards allowed per pass thrown at this defender. Needs at least 20 targets to be ranked. 2018 onward.", higherIsBetter: false),
+        definition("Rating Allowed", .defense, .advanced, .coverage, [.defense], 60, "Passer rating on throws into this defender's coverage. Needs at least 20 targets to be ranked. 2018 onward.", higherIsBetter: false),
+        definition("Missed Tkl%", .defense, .advanced, .tackling, [.defense], 70, "Share of this defender's tackle attempts that he missed. Needs at least 20 combined tackles to be ranked. 2018 onward.", higherIsBetter: false),
+
         definition("Tackles", .defense, .traditional, .production, [.defense], 110, "Total tackles."),
         definition("TFL", .defense, .traditional, .production, [.defense], 120, "Tackles for loss."),
         definition("PD", .defense, .traditional, .production, [.defense], 130, "Passes defended."),
@@ -469,6 +556,62 @@ enum FootballMetricRegistry {
 
     static func definition(for label: String, category: MetricCategory) -> MetricDefinition? {
         definitions.first { $0.label == label && $0.category == category }
+    }
+
+    /// How a metric combines when several players are pooled into one number -
+    /// the roster aggregate the team comparison draws.
+    ///
+    /// Kept as its own table rather than a field on `MetricDefinition` because
+    /// it answers a different question from the rest of the registry (how to
+    /// *display* one player's metric vs how to *combine* many), and because the
+    /// weights below are the honest part: a rate cannot be averaged across
+    /// players without weighting it by the volume it was computed over. Ten
+    /// carries at 8.0 EPA/Rush and two hundred at 0.05 do not average to 4.0.
+    ///
+    /// Volume-weighting a per-play rate by its own denominator reproduces the
+    /// true team rate exactly for the ratio metrics (EPA/Play, Sack%, INT%,
+    /// Explosive%, Fumble%, Catch%, Cmp%, Y/A, Y/C, EPA/Rush, EPA/Tgt), because
+    /// summing numerator and denominator separately is what the weighted mean
+    /// works out to. For the Next Gen averages (Time to Throw, Separation,
+    /// YAC+, CPOE, ADOT) it is a very close approximation rather than an
+    /// identity, since we hold the per-player mean rather than the raw plays.
+    static func aggregation(for label: String, category: MetricCategory) -> MetricAggregation {
+        switch (category, label) {
+        // Passing: every rate is per attempt. Passer rating is a composite of
+        // four per-attempt rates, so it weights the same way.
+        case (.passing, "Pass Yds"), (.passing, "Pass TD"):
+            return .sum
+        case (.passing, _):
+            return .weighted(.attempts)
+
+        // Rushing: RYOE and Rush EPA are yardage/points totals, not rates.
+        case (.rushing, "Rush Yds"), (.rushing, "Rush TD"), (.rushing, "Rush 1D"),
+             (.rushing, "Rush EPA"), (.rushing, "RYOE"):
+            return .sum
+        case (.rushing, _):
+            return .weighted(.carries)
+
+        // Receiving: Target Share and WOPR are shares of a team's own passing
+        // volume, so a roster's shares genuinely do add up - summing them is
+        // right, and it is also the interesting number (how much of the offence
+        // these players account for).
+        case (.receiving, "Rec"), (.receiving, "Rec Yds"), (.receiving, "Rec TD"),
+             (.receiving, "YAC"), (.receiving, "Rec EPA"),
+             (.receiving, "Target Share"), (.receiving, "WOPR"):
+            return .sum
+        case (.receiving, _):
+            return .weighted(.targets)
+
+        // Defense: the PFR coverage and pass-rush rates are per target or per
+        // tackle attempt; the rest are counting stats.
+        case (.defense, "Cmp% Allowed"), (.defense, "Yds/Tgt Allowed"),
+             (.defense, "Rating Allowed"), (.defense, "ADOT"):
+            return .weighted(.targetsAllowed)
+        case (.defense, "Missed Tkl%"):
+            return .weighted(.games)
+        case (.defense, _):
+            return .sum
+        }
     }
 
     static func kind(for metric: Metric) -> MetricKind {
@@ -508,6 +651,59 @@ enum FootballMetricRegistry {
             priority: priority,
             description: description
         )
+    }
+}
+
+/// How several players' values for one metric collapse into a single number.
+enum MetricAggregation: Hashable, Sendable {
+    /// Counting stats and totals: add them up.
+    case sum
+    /// Rates: mean weighted by the volume each player's rate was measured over.
+    case weighted(MetricWeight)
+}
+
+/// The denominator a rate was computed against, so it can be weighted by it.
+/// Each case resolves to a number already present in the player's standard
+/// stats, so no extra feed columns are needed.
+enum MetricWeight: Hashable, Sendable {
+    case attempts
+    case carries
+    case targets
+    case targetsAllowed
+    case games
+
+    /// Pulls the weight out of a player's standard-stat line. Returns nil when
+    /// the player has no volume for it, which correctly drops them from the
+    /// weighted mean instead of contributing a zero.
+    func value(for player: Player) -> Double? {
+        switch self {
+        case .attempts: return Self.secondComponent(of: "Cmp/Att", in: player)
+        case .targets: return Self.secondComponent(of: "Rec/Tgt", in: player)
+        case .targetsAllowed: return Self.plain("Tgt Allowed", in: player)
+        case .carries: return Self.plain("Car", in: player)
+        case .games: return Self.plain("G", in: player)
+        }
+    }
+
+    private static func plain(_ label: String, in player: Player) -> Double? {
+        guard let raw = player.standardStats?.first(where: { $0.label == label })?.value,
+              let value = metricNumericValue(raw),
+              value > 0
+        else { return nil }
+        return value
+    }
+
+    /// "18/29" -> 29. The feed packs completions and attempts (and receptions
+    /// and targets) into one display string, and the denominator is the half we
+    /// want to weight by.
+    private static func secondComponent(of label: String, in player: Player) -> Double? {
+        guard let raw = player.standardStats?.first(where: { $0.label == label })?.value else { return nil }
+        let parts = raw.split(separator: "/", maxSplits: 1)
+        guard parts.count == 2,
+              let value = metricNumericValue(String(parts[1])),
+              value > 0
+        else { return nil }
+        return value
     }
 }
 

@@ -7,10 +7,18 @@ qualified players. Powers the iOS player-percentile screens.
 
 Pipeline (REG and POST are stored and ranked separately):
   1. Aggregate weekly ``load_player_stats`` rows to season totals.
-  2. Derive rate stats (cmp%, Y/A, sack%, explosive-rush%, ...).
-  3. Merge season-level Next Gen Stats (CPOE, time-to-throw, separation, ...).
-  4. Rank each metric within (season, category) among qualified players.
-  5. Upsert to Supabase ``player_snapshots`` on_conflict=(id, season, season_type).
+  2. Derive rate stats (cmp%, Y/A, sack%, explosive-rush%, CPOE, ...).
+  3. Merge season-level Next Gen Stats (time-to-throw, separation, RYOE, ...).
+  4. Merge PFR advanced defensive stats (pressures, coverage allowed, ...).
+  5. Rank each metric within (season, category) among qualified players.
+  6. Upsert to Supabase ``player_snapshots`` on_conflict=(id, season, season_type).
+
+Metric availability is bounded by the sources, not by choice - see the coverage
+table in ``handoff/NFL_CONTRACT.md``. In short: EPA and every counting stat run
+the full 2000-present range; CPOE starts 2006 (when pbp air-yards tracking
+begins); Next Gen Stats start 2016 (2018 for rushing-over-expected); PFR
+advanced defence starts 2018; and nflverse's ``targets`` column is blank for
+2003-2008, which is detected at runtime rather than hardcoded.
 
 Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. STATCAST_SEASON overrides the
 season; ``--season N`` overrides both.
@@ -43,6 +51,14 @@ DEFAULT_SEASON = _now.year if _now.month >= 9 else _now.year - 1
 MIN_SEASON = 1999
 OLDEST_SUPPORTED_SEASON = 2000
 NGS_FIRST_SEASON = 2016
+# Sentinel season for the career rollup written by rollup_all_time.py. Zero
+# rather than a future year so nothing that clamps to a maximum can mistake it
+# for a real season; the app renders it as "All Time".
+ALL_TIME_SEASON = 0
+# Pro-Football-Reference advanced defensive stats (pressures, coverage allowed,
+# missed-tackle rate). Regular season only - the PFR season table carries no
+# season_type, so there is no postseason split to merge.
+PFR_DEF_FIRST_SEASON = 2018
 SOURCE = "nflverse"
 
 # Qualification thresholds per metric category (see NFL_CONTRACT.md).
@@ -51,11 +67,28 @@ QUAL_CARRIES = 80     # Rushing
 QUAL_TARGETS = 40     # Receiving
 QUAL_RECEPTIONS = 25  # Receiving fallback when historical targets are absent
 QUAL_GAMES = 8        # Defense (>= 8 games; the contract's OR-branch, snaps not joined)
+# Defensive *rate* thresholds. These don't gate whether a defender appears at
+# all (games does that) - they gate the individual coverage and tackling rates,
+# which are noise at low volume: a corner thrown at twice who allowed one catch
+# is not a 50%-completion defender, and ranking him as one would put him
+# mid-leaderboard on a two-target sample. Below the threshold the rate is nulled,
+# so the player keeps his counting stats and simply isn't ranked on the rate.
+QUAL_DEF_TARGETS = 20   # Cmp% / Yds per target / rating allowed / ADOT
+QUAL_DEF_TACKLES = 20   # Missed tackle %
 POST_QUAL_ATTEMPTS = 20
 POST_QUAL_CARRIES = 8
 POST_QUAL_TARGETS = 4
 POST_QUAL_RECEPTIONS = 3
 POST_QUAL_GAMES = 1
+# Career thresholds for the all-time rollup, roughly three seasons as a starter.
+# The single-season cut is far too low to reuse here: 150 career attempts is one
+# month of one year, so an all-time rate board built on it would be topped by
+# backups with a hot fortnight rather than by careers.
+CAREER_QUAL_ATTEMPTS = 1500
+CAREER_QUAL_CARRIES = 500
+CAREER_QUAL_TARGETS = 300
+CAREER_QUAL_RECEPTIONS = 200
+CAREER_QUAL_GAMES = 48
 
 # Weekly counting stats summed to season totals.
 SUM_COLS = [
@@ -73,6 +106,9 @@ SUM_COLS = [
 ]
 # Weekly rate stats averaged across games.
 MEAN_COLS = ["target_share", "air_yards_share"]
+# Weekly rate stats averaged with a weight, because a plain mean of per-game
+# rates over-counts low-volume games. (col -> weight col)
+WEIGHTED_MEAN_COLS = {"passing_cpoe": "attempts"}
 
 # Metric catalog: category -> list of (id, label, agg_col, fmt, inverted).
 # ``inverted`` = lower raw value ranks higher (e.g. turnovers, sacks taken).
@@ -116,7 +152,19 @@ METRIC_DEFS: dict[str, list[tuple[str, str, str, str, bool]]] = {
         ("avg_separation", "Separation", "avg_separation", "dec1", False),
         ("avg_yac_above_expectation", "YAC+", "avg_yac_above_expectation", "signed1", False),
     ],
+    # Defence used to be traditional counting stats only, which left defenders
+    # as the one position group with no advanced view anywhere in the app. The
+    # first six rows here are PFR's advanced defensive stats (2018+): what a
+    # defender allowed in coverage, and the pressure he generated rushing - the
+    # closest thing the public data has to a defensive EPA.
     "Defense": [
+        ("def_pressures", "Pressures", "def_pressures", "int", False),
+        ("def_hurries", "Hurries", "def_hurries", "int", False),
+        ("def_qb_knockdowns", "QB KD", "def_qb_knockdowns", "int", False),
+        ("def_cmp_pct_allowed", "Cmp% Allowed", "def_cmp_pct_allowed", "pct1", True),
+        ("def_yds_per_tgt_allowed", "Yds/Tgt Allowed", "def_yds_per_tgt_allowed", "dec1", True),
+        ("def_rating_allowed", "Rating Allowed", "def_rating_allowed", "dec1", True),
+        ("def_missed_tkl_pct", "Missed Tkl%", "def_missed_tkl_pct", "pct1", True),
         ("tackles", "Tackles", "tackles", "int", False),
         ("sacks", "Sacks", "sacks", "dec1", False),
         ("def_ints", "INT", "def_ints", "int", False),
@@ -125,6 +173,20 @@ METRIC_DEFS: dict[str, list[tuple[str, str, str, str, bool]]] = {
         ("tfl", "TFL", "tfl", "int", False),
         ("qb_hits", "QB Hits", "qb_hits", "int", False),
     ],
+}
+
+# PFR advanced-defence column -> our aggregate column. PFR ships the two rate
+# columns as fractions (0.68), not percentages, so they are scaled on merge.
+PFR_DEF_COLS = {
+    "prss": "def_pressures",
+    "hrry": "def_hurries",
+    "qbkd": "def_qb_knockdowns",
+    "cmp_percent": "def_cmp_pct_allowed",
+    "yds_tgt": "def_yds_per_tgt_allowed",
+    "rat": "def_rating_allowed",
+    "m_tkl_percent": "def_missed_tkl_pct",
+    "tgt": "def_targets_allowed",
+    "comb": "def_combined_tackles",
 }
 
 POSITION_GROUP_TO_TYPE = {
@@ -236,8 +298,14 @@ def qualifies(
     category: str,
     player_type: str,
     season_type: str = "REG",
+    career: bool = False,
 ) -> bool:
-    """Whether a player clears the qualification threshold for a category."""
+    """Whether a player clears the qualification threshold for a category.
+
+    Three tiers: a full season, a postseason run (a handful of games, so the bar
+    drops), and a career (the all-time rollup, so the bar rises to roughly three
+    starting seasons).
+    """
     def _num(col: str) -> float:
         val = row.get(col)
         try:
@@ -246,25 +314,32 @@ def qualifies(
             return 0.0
 
     postseason = season_type == "POST"
+
+    def _threshold(season: float, post: float, career_value: float) -> float:
+        if career:
+            return career_value
+        return post if postseason else season
+
     if category == "Passing":
-        return _num("attempts") >= (
-            POST_QUAL_ATTEMPTS if postseason else QUAL_ATTEMPTS
+        return _num("attempts") >= _threshold(
+            QUAL_ATTEMPTS, POST_QUAL_ATTEMPTS, CAREER_QUAL_ATTEMPTS
         )
     if category == "Rushing":
-        return _num("carries") >= (
-            POST_QUAL_CARRIES if postseason else QUAL_CARRIES
+        return _num("carries") >= _threshold(
+            QUAL_CARRIES, POST_QUAL_CARRIES, CAREER_QUAL_CARRIES
         )
     if category == "Receiving":
         if not bool(row.get("targets_reliable", True)):
-            return _num("receptions") >= (
-                POST_QUAL_RECEPTIONS if postseason else QUAL_RECEPTIONS
+            return _num("receptions") >= _threshold(
+                QUAL_RECEPTIONS, POST_QUAL_RECEPTIONS, CAREER_QUAL_RECEPTIONS
             )
-        return _num("targets") >= (
-            POST_QUAL_TARGETS if postseason else QUAL_TARGETS
+        return _num("targets") >= _threshold(
+            QUAL_TARGETS, POST_QUAL_TARGETS, CAREER_QUAL_TARGETS
         )
     if category == "Defense":
-        threshold = POST_QUAL_GAMES if postseason else QUAL_GAMES
-        return player_type == "def" and _num("games") >= threshold
+        return player_type == "def" and _num("games") >= _threshold(
+            QUAL_GAMES, POST_QUAL_GAMES, CAREER_QUAL_GAMES
+        )
     return False
 
 
@@ -312,6 +387,32 @@ def aggregate_seasons(
 
     agg = sums.join(means).join(games).join(identity)
 
+    # Volume-weighted season means. CPOE is the one that matters: it arrives as a
+    # per-game rate, and a flat mean would let a 3-attempt week count as much as
+    # a 40-attempt one. Weighting by attempts reconstructs the season figure.
+    #
+    # This is also what extends CPOE back to 2006. It used to come only from the
+    # Next Gen Stats join, so it started in 2016 and simply did not exist for the
+    # ten seasons before - even though the weekly feed has carried
+    # ``passing_cpoe`` since 2006, when pbp air-yards tracking began. Deriving it
+    # here and preferring it everywhere also keeps *one* definition across the
+    # whole range: NGS's completion-percentage-above-expectation is a different
+    # model (they correlate ~0.86 and differ by ~1.6 points over a season), so
+    # splicing the two at 2016 would put a seam in the middle of every
+    # year-over-year CPOE comparison the app draws.
+    for column, weight_col in WEIGHTED_MEAN_COLS.items():
+        if column not in df.columns or weight_col not in df.columns:
+            continue
+        w = df[["pid"]].copy()
+        w["_value"] = pd.to_numeric(df[column], errors="coerce")
+        w["_weight"] = pd.to_numeric(df[weight_col], errors="coerce")
+        w = w[w["_value"].notna() & w["_weight"].notna() & (w["_weight"] > 0)]
+        if w.empty:
+            continue
+        w["_product"] = w["_value"] * w["_weight"]
+        grouped = w.groupby("pid")[["_product", "_weight"]].sum()
+        agg[column] = grouped["_product"] / grouped["_weight"].replace(0, np.nan)
+
     agg["name"] = agg["player_display_name"].astype(str)
     agg["player_type"] = [
         player_type_from_position(p, g)
@@ -336,6 +437,11 @@ def aggregate_seasons(
                 agg[column] = np.nan
 
     # Passing derived rates.
+    # `cpoe` is the metric catalog's column name; the weighted mean above lands
+    # under the feed's own name. Aliasing rather than renaming keeps the source
+    # column visible for debugging.
+    if "passing_cpoe" in agg.columns:
+        agg["cpoe"] = agg["passing_cpoe"]
     _derive(agg, "cmp_pct", ["completions", "attempts"], lambda: _safe_div(agg["completions"], agg["attempts"]) * 100)
     _derive(agg, "ypa", ["passing_yards", "attempts"], lambda: _safe_div(agg["passing_yards"], agg["attempts"]))
     _derive(agg, "int_rate", ["passing_interceptions", "attempts"], lambda: _safe_div(agg["passing_interceptions"], agg["attempts"]) * 100)
@@ -429,8 +535,13 @@ def merge_ngs(
         present = {src: dst for src, dst in cols.items() if src in d.columns}
         return d[list(present.keys())].rename(columns=present)
 
+    # NGS's completion-percentage-above-expectation lands in its own column, not
+    # straight into `cpoe`: the pbp-derived CPOE computed in `aggregate_seasons`
+    # is the preferred source because it spans 2006-present, and mixing two
+    # different expectation models inside one column would put a discontinuity at
+    # 2016. This is a fallback for the rare passer NGS has and pbp doesn't.
     pass_ngs = _season_level(ngs_passing, {
-        "completion_percentage_above_expectation": "cpoe",
+        "completion_percentage_above_expectation": "cpoe_ngs",
         "avg_time_to_throw": "avg_time_to_throw",
         "aggressiveness": "aggressiveness",
         "avg_intended_air_yards": "avg_intended_air_yards",
@@ -446,6 +557,64 @@ def merge_ngs(
     for extra in (pass_ngs, rush_ngs, rec_ngs):
         if not extra.empty:
             agg = agg.join(extra, how="left")
+
+    if "cpoe_ngs" in agg.columns:
+        if "cpoe" in agg.columns:
+            agg["cpoe"] = agg["cpoe"].fillna(agg["cpoe_ngs"])
+        else:
+            agg["cpoe"] = agg["cpoe_ngs"]
+    return agg
+
+
+def merge_pfr_defense(agg: pd.DataFrame, pfr_def: pd.DataFrame) -> pd.DataFrame:
+    """Join PFR advanced defensive stats onto ``agg`` and derive their rates.
+
+    Pure: an id-indexed PFR frame in, augmented ``agg`` out. ``pfr_def`` is
+    already remapped from ``pfr_id`` to our integer player id by the loader.
+    """
+    if pfr_def is None or pfr_def.empty:
+        return agg
+
+    present = [c for c in pfr_def.columns if c in set(PFR_DEF_COLS.values())]
+    if not present:
+        return agg
+    agg = agg.join(pfr_def[present], how="left")
+
+    # PFR ships these two as fractions; the app formats them as percentages.
+    for column in ("def_cmp_pct_allowed", "def_missed_tkl_pct"):
+        if column in agg.columns:
+            agg[column] = pd.to_numeric(agg[column], errors="coerce") * 100
+
+    return apply_def_rate_thresholds(agg)
+
+
+def apply_def_rate_thresholds(agg: pd.DataFrame) -> pd.DataFrame:
+    """Null defensive rates measured over too little volume to mean anything.
+
+    The counting stats (pressures, hurries, knockdowns) are kept whatever the
+    volume - they are totals, not rates, so a small number is simply a small
+    number rather than a misleading one. Split out from ``merge_pfr_defense`` so
+    the career rollup, which pools already-scaled rates from several seasons, can
+    apply exactly the same cut without going back through the scaling step.
+    """
+    targets = pd.to_numeric(agg.get("def_targets_allowed"), errors="coerce")
+    if targets is not None:
+        below = targets.isna() | (targets < QUAL_DEF_TARGETS)
+        for column in (
+            "def_cmp_pct_allowed",
+            "def_yds_per_tgt_allowed",
+            "def_rating_allowed",
+        ):
+            if column in agg.columns:
+                agg.loc[below, column] = np.nan
+
+    tackles = pd.to_numeric(agg.get("def_combined_tackles"), errors="coerce")
+    if tackles is not None and "def_missed_tkl_pct" in agg.columns:
+        agg.loc[
+            tackles.isna() | (tackles < QUAL_DEF_TACKLES),
+            "def_missed_tkl_pct",
+        ] = np.nan
+
     return agg
 
 
@@ -482,6 +651,12 @@ def build_standard_stats(row: Any) -> list[dict[str, str]]:
         add("Tackles", str(int(n("tackles"))))
         add("Sacks", f"{n('sacks'):.1f}")
         add("Def INT", str(int(n("def_ints"))))
+        # The volume behind the coverage rates. Emitted so the app can weight
+        # them when pooling a roster (a team's Cmp% allowed is the target-weighted
+        # mean of its defenders', not the flat average), and because "targeted 96
+        # times" is context a reader wants next to "allowed 61%".
+        if n("def_targets_allowed") > 0:
+            add("Tgt Allowed", str(int(n("def_targets_allowed"))))
 
     return stats
 
@@ -502,6 +677,9 @@ def build_snapshot_rows(
 
     now_str = now.isoformat()
     players: dict[int, dict] = {}
+    # The career rollup reuses this function wholesale - same formatting, same
+    # percentile ranking - and differs only in where the qualification bar sits.
+    career = season == ALL_TIME_SEASON
 
     def _ensure(pid: int, row: Any) -> dict:
         if pid not in players:
@@ -531,6 +709,7 @@ def build_snapshot_rows(
                 category,
                 str(row.get("player_type") or ""),
                 season_type,
+                career=career,
             )
         ]
         if not qual_ids:
@@ -588,6 +767,90 @@ def load_headshots() -> dict[int, str]:
     return lookup
 
 
+def load_pfr_id_crosswalk() -> dict[str, int]:
+    """Map PFR player id -> our integer (gsis-derived) player id.
+
+    PFR's advanced stats are keyed by their own id, so they cannot be joined to
+    the weekly feed without this. ``load_players()`` carries both.
+    """
+    players = _to_pandas(nfl.load_players())
+    lookup: dict[str, int] = {}
+    for _, row in players.iterrows():
+        pfr_id = row.get("pfr_id")
+        pid = gsis_to_id(row.get("gsis_id"))
+        if pid is not None and isinstance(pfr_id, str) and pfr_id:
+            lookup[pfr_id] = pid
+    logger.info("Loaded %d PFR id mappings", len(lookup))
+    return lookup
+
+
+def load_pfr_defense(season: int) -> pd.DataFrame:
+    """Season-level PFR advanced defensive stats, indexed by our player id.
+
+    Returns an empty frame for seasons before PFR coverage begins, so callers
+    can join unconditionally.
+    """
+    if season < PFR_DEF_FIRST_SEASON:
+        logger.info(
+            "Skipping PFR advanced defence for %s (available since %s).",
+            season,
+            PFR_DEF_FIRST_SEASON,
+        )
+        return pd.DataFrame()
+
+    raw = _to_pandas(nfl.load_pfr_advstats(seasons=[season], stat_type="def", summary_level="season"))
+    if raw is None or raw.empty:
+        logger.warning("No PFR advanced defence rows for %s.", season)
+        return pd.DataFrame()
+
+    df = raw[raw["season"] == season].copy()
+    if df.empty:
+        return pd.DataFrame()
+
+    crosswalk = load_pfr_id_crosswalk()
+    df["pid"] = df["pfr_id"].map(crosswalk)
+    unmatched = int(df["pid"].isna().sum())
+    df = df[df["pid"].notna()].copy()
+    df["pid"] = df["pid"].astype(int)
+    # A player who changed teams mid-season has one PFR row per stop. Sum the
+    # counting columns and volume-weight the rates, so his season reads as one
+    # line the way the weekly aggregate already does.
+    present = {src: dst for src, dst in PFR_DEF_COLS.items() if src in df.columns}
+    for src in present:
+        df[src] = pd.to_numeric(df[src], errors="coerce")
+
+    counting = ["prss", "hrry", "qbkd", "tgt", "comb"]
+    rate_weights = {
+        "cmp_percent": "tgt",
+        "yds_tgt": "tgt",
+        "rat": "tgt",
+        "m_tkl_percent": "comb",
+    }
+
+    out = pd.DataFrame(index=sorted(df["pid"].unique()))
+    for src in counting:
+        if src in df.columns:
+            out[PFR_DEF_COLS[src]] = df.groupby("pid")[src].sum(min_count=1)
+    for src, weight_col in rate_weights.items():
+        if src not in df.columns or weight_col not in df.columns:
+            continue
+        w = df[["pid", src, weight_col]].dropna()
+        w = w[w[weight_col] > 0]
+        if w.empty:
+            continue
+        product = (w[src] * w[weight_col]).groupby(w["pid"]).sum()
+        weight = w[weight_col].groupby(w["pid"]).sum()
+        out[PFR_DEF_COLS[src]] = product / weight.replace(0, np.nan)
+
+    logger.info(
+        "Loaded PFR advanced defence for %s: %d players (%d unmatched pfr ids).",
+        season,
+        len(out),
+        unmatched,
+    )
+    return out
+
+
 def build_agg_for_season(
     season: int,
     season_type: str = "REG",
@@ -617,6 +880,14 @@ def build_agg_for_season(
         )
     else:
         logger.info("Skipping Next Gen Stats for %s (available since %s).", season, NGS_FIRST_SEASON)
+
+    # PFR's advanced defensive table is regular season only - it carries no
+    # season_type column to split on - so the postseason board keeps the
+    # traditional defensive stats and simply has no advanced rows.
+    if season_type == "REG":
+        agg = merge_pfr_defense(agg, load_pfr_defense(season))
+    else:
+        logger.info("Skipping PFR advanced defence for %s POST (regular season only).", season)
 
     headshots = load_headshots()
     agg["image_url"] = [headshots.get(int(pid)) for pid in agg.index]

@@ -189,7 +189,22 @@ final class DashboardViewModel {
     var availableSeasons: [Int] {
         var seasons = Set(StatScoutSeason.earliest...StatScoutSeason.current)
         seasons.formUnion(playerHistories.values.flatMap { $0 }.compactMap(\.season))
-        return seasons.sorted(by: >)
+        // The career rollup sits under season 0, so a plain descending sort would
+        // bury "All Time" underneath 2000. It belongs at the top of the menu, as
+        // the widest possible frame rather than the narrowest.
+        let years = seasons.subtracting([StatScoutSeason.allTime]).sorted(by: >)
+        return [StatScoutSeason.allTime] + years
+    }
+
+    /// Seasons offered where a career rollup makes no sense.
+    ///
+    /// Trends ranks the last 3/5/8 *weeks* against the span before them, which
+    /// is a question about one season in progress. There is no such thing as the
+    /// last five weeks of all time, and the rolling-window table has no rows
+    /// under the sentinel, so offering it there would only ever produce an empty
+    /// board.
+    var seasonsExcludingAllTime: [Int] {
+        availableSeasons.filter { !StatScoutSeason.isAllTime($0) }
     }
 
     // Players filtered by selected season - pull from histories to get all years.
@@ -543,15 +558,11 @@ final class DashboardViewModel {
 
     /// Parse a leading numeric value from a metric's display string.
     /// Handles ".345", "8.2%", "98.5 mph", "28.5 ft/s", "25.3°", "-1.2".
+    /// Forwards to the actor-free `metricNumericValue` in the model layer, which
+    /// is the single implementation. Kept as a static here because a large number
+    /// of call sites already spell it this way.
     static func rawNumeric(_ value: String) -> Double? {
-        var s = value.trimmingCharacters(in: .whitespaces)
-        // Strip thousands separators - NFL yardage ships as "3,322".
-        s = s.replacingOccurrences(of: ",", with: "")
-        if s.hasPrefix(".") { s = "0" + s }
-        if s.hasPrefix("-.") { s = "-0" + s.dropFirst() }
-        let scanner = Scanner(string: s)
-        scanner.charactersToBeSkipped = nil
-        return scanner.scanDouble()
+        metricNumericValue(value)
     }
 
     static func lowerIsBetter(label: String, category: MetricCategory) -> Bool {

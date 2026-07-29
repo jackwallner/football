@@ -49,6 +49,36 @@ enum StatScoutSeason {
     /// The bundled players-historical.plist ships all of it, so the season
     /// menus can list every year without waiting on a fetch.
     static let earliest = 2000
+    /// Sentinel season for the career / all-time rollup.
+    ///
+    /// The pipeline writes one extra snapshot per player under `season = 0`,
+    /// aggregating every year from `earliest` to `current`, with percentiles
+    /// ranked inside that career cohort. Modelling it as just another season
+    /// rather than a parallel mode is what keeps it working everywhere for
+    /// free: the leaderboards, Teams, Compare and the player page all key off
+    /// `selectedSeason` and need no all-time branch of their own.
+    ///
+    /// Zero (rather than, say, 9999) because it sorts below every real year, so
+    /// nothing that clamps to a min/max can mistake it for a future season.
+    static let allTime = 0
+
+    static func isAllTime(_ season: Int) -> Bool { season == allTime }
+}
+
+/// How a season reads in the UI. One place, because the sentinel has to render
+/// as "All Time" in the menu, the nav pill, page titles and share text alike -
+/// and `String(0)` leaking into any one of them is an obvious bug.
+enum SeasonLabel {
+    static func text(_ season: Int) -> String {
+        StatScoutSeason.isAllTime(season) ? "All Time" : String(season)
+    }
+
+    /// Longer form for prose and subtitles ("2024 Regular Season").
+    static func text(_ season: Int, phase: SeasonPhase) -> String {
+        StatScoutSeason.isAllTime(season)
+            ? "All Time · " + phase.fullLabel
+            : String(season) + " " + phase.fullLabel
+    }
 }
 
 enum StatScoutLegal {

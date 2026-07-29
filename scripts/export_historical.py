@@ -12,6 +12,10 @@ SUPABASE_URL = os.environ["SUPABASE_URL"]
 KEY = os.environ["SUPABASE_ANON_KEY"]
 CURRENT_SEASON = int(os.environ.get("STATCAST_SEASON", "2025"))
 OLDEST_SUPPORTED_SEASON = 2000
+# Career rollup sentinel, written by backend/rollup_all_time.py. It ships in the
+# historical bundle so "All Time" works on first launch rather than waiting on a
+# fetch, the same as every other past season.
+ALL_TIME_SEASON = 0
 REQUIRED_TYPES = {"qb", "rb", "wr", "te", "def"}
 
 URL = f"{SUPABASE_URL}/rest/v1/player_snapshots"
@@ -78,7 +82,17 @@ def validate_export(
         teams = {player.get("team") for player in season_players if player.get("team")}
         types = {str(player.get("player_type") or "").lower() for player in season_players}
         missing_types = REQUIRED_TYPES - types
-        if len(teams) < 30 or missing_types:
+        # The 30-team floor is a real-season integrity check: a season missing a
+        # franchise means a partial ingest. It says nothing about the career
+        # rollup, whose cohort is a few hundred players carrying whichever team
+        # they last played for, so that one is checked on types and size instead.
+        if season == ALL_TIME_SEASON:
+            if missing_types or len(season_players) < 100:
+                raise RuntimeError(
+                    f"Incomplete career rollup: {len(season_players)} players, "
+                    f"missing types={sorted(missing_types)}"
+                )
+        elif len(teams) < 30 or missing_types:
             raise RuntimeError(
                 f"Incomplete {season}: {len(teams)} teams, missing types={sorted(missing_types)}"
             )
@@ -129,8 +143,12 @@ def export(
 os.makedirs("StatScout/Data", exist_ok=True)
 export(
     "players-historical",
-    [("and", f"(season.gte.{OLDEST_SUPPORTED_SEASON},season.lt.{CURRENT_SEASON})")],
-    set(range(OLDEST_SUPPORTED_SEASON, CURRENT_SEASON)),
+    [(
+        "or",
+        f"(season.eq.{ALL_TIME_SEASON},"
+        f"and(season.gte.{OLDEST_SUPPORTED_SEASON},season.lt.{CURRENT_SEASON}))",
+    )],
+    {ALL_TIME_SEASON} | set(range(OLDEST_SUPPORTED_SEASON, CURRENT_SEASON)),
 )
 export(
     "players-current",

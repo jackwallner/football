@@ -114,10 +114,10 @@ struct CompareView: View {
             return "Loading past seasons…"
         }
         if let playerA, resolvedA == nil {
-            return "No \(String(activeSeasonA)) \(phaseA.label.lowercased()) data for \(playerA.name)."
+            return "No \(SeasonLabel.text(activeSeasonA)) \(phaseA.label.lowercased()) data for \(playerA.name)."
         }
         if let playerB, resolvedB == nil {
-            return "No \(String(activeSeasonB)) \(phaseB.label.lowercased()) data for \(playerB.name)."
+            return "No \(SeasonLabel.text(activeSeasonB)) \(phaseB.label.lowercased()) data for \(playerB.name)."
         }
         if let a = resolvedA, let b = resolvedB, !a.canCompareHeadToHead(with: b) {
             return "Choose two offensive players or two defensive players."
@@ -737,7 +737,7 @@ struct CompareView: View {
                 ) {
                     GridironInlinePill(
                         systemImage: "calendar",
-                        title: String(season)
+                        title: SeasonLabel.text(season)
                     )
                 }
 
@@ -809,7 +809,7 @@ struct CompareView: View {
                         }
                     }
                 ) {
-                    GridironInlinePill(systemImage: "calendar", title: String(season))
+                    GridironInlinePill(systemImage: "calendar", title: SeasonLabel.text(season))
                 }
                 .accessibilityLabel("Season for \(player?.name ?? placeholder)")
 
@@ -1079,7 +1079,7 @@ struct ComparePlayerPicker: View {
                         } else if !searchText.isEmpty {
                             Text("Nobody matches “\(searchText)”.")
                         } else if let season {
-                            Text("No player data for the " + String(season) + " season.")
+                            Text("No player data for the " + SeasonLabel.text(season) + " season.")
                         }
                     }
                 }
@@ -1165,9 +1165,17 @@ struct TeamComparisonView: View {
         let label: String
         let aText: String
         let bText: String
+        /// Comparison values, sign-flipped for lower-is-better metrics so the
+        /// trophy always goes to the greater number. Nil means "show the value,
+        /// don't declare a winner".
         let aValue: Double?
         let bValue: Double?
     }
+
+    /// Roster aggregates that are context rather than a verdict. Both are shares
+    /// of a team's own passing volume, so summing them across a roster measures
+    /// how much of the offence we track, not how good it is.
+    private static let descriptiveOnlyLabels: Set<String> = ["Target Share", "WOPR"]
 
     private var rosterA: [Player] {
         playersA.filter {
@@ -1183,51 +1191,132 @@ struct TeamComparisonView: View {
         }
     }
 
+    /// Advanced rows come from `metrics`, standard rows from `standard_stats`,
+    /// so they are built separately and interleaved category by category. The
+    /// team card used to show only the standard half, which left the one screen
+    /// in the app that exists to answer "which of these two teams is better"
+    /// unable to reference a single advanced number - the exact thing the rest
+    /// of the app is built on.
     private var statGroups: [(title: String, rows: [StatRow])] {
-        [
-            (
-                "PASSING",
-                [
-                    pairedRow(label: "Cmp/Att", rosterA: rosterA, rosterB: rosterB),
-                    totalRow(label: "Pass Yds", rosterA: rosterA, rosterB: rosterB),
-                    totalRow(label: "Pass TD", rosterA: rosterA, rosterB: rosterB),
-                    totalRow(label: "INT", rosterA: rosterA, rosterB: rosterB),
-                ]
-            ),
-            (
-                "RUSHING",
-                [
-                    totalRow(label: "Car", rosterA: rosterA, rosterB: rosterB),
-                    totalRow(label: "Rush Yds", rosterA: rosterA, rosterB: rosterB),
-                    totalRow(label: "Rush TD", rosterA: rosterA, rosterB: rosterB),
-                ]
-            ),
-            (
-                "RECEIVING",
-                [
-                    pairedRow(label: "Rec/Tgt", rosterA: rosterA, rosterB: rosterB),
-                    totalRow(label: "Rec Yds", rosterA: rosterA, rosterB: rosterB),
-                    totalRow(label: "Rec TD", rosterA: rosterA, rosterB: rosterB),
-                ]
-            ),
-            (
-                "DEFENSE",
-                [
-                    totalRow(label: "Tackles", rosterA: rosterA, rosterB: rosterB),
-                    totalRow(label: "Sacks", rosterA: rosterA, rosterB: rosterB),
-                    totalRow(label: "Def INT", rosterA: rosterA, rosterB: rosterB),
-                ]
-            ),
-        ]
+        MetricCategory.allCases.flatMap { category -> [(title: String, rows: [StatRow])] in
+            [
+                (category.rawValue.uppercased() + " · ADVANCED", advancedRows(for: category)),
+                (category.rawValue.uppercased() + " · STANDARD", standardRows(for: category)),
+            ]
+        }
         .map { group in
-            (
-                title: group.0,
-                rows: group.1.filter {
-                    $0.aText != "-" || $0.bText != "-"
-                }
-            )
+            (title: group.title, rows: group.rows.filter { $0.aText != "-" || $0.bText != "-" })
         }
         .filter { !$0.rows.isEmpty }
+    }
+
+    /// Every advanced metric that either roster has for this category, in the
+    /// registry's own display order so the card reads like the player page.
+    private func advancedRows(for category: MetricCategory) -> [StatRow] {
+        let labels = FootballMetricRegistry.definitions
+            .filter { $0.category == category && $0.kind == .advanced }
+            .sorted { $0.priority < $1.priority }
+            .map(\.label)
+
+        return labels.compactMap { label in
+            let a = aggregate(label: label, category: category, roster: rosterA)
+            let b = aggregate(label: label, category: category, roster: rosterB)
+            guard a != nil || b != nil else { return nil }
+            let format = MetricValueFormat.inferred(
+                from: (rosterA + rosterB).compactMap { player in
+                    player.metrics.first { $0.label == label && $0.category == category }?.value
+                }
+            )
+            // Lower-is-better metrics (Sack%, INT%, Fumble%) must not hand the
+            // trophy to the bigger number. Flipping the sign of both sides is
+            // enough: the comparison is only ever "is mine greater than theirs".
+            let higherIsBetter = FootballMetricRegistry
+                .definition(for: label, category: category)?.higherIsBetter ?? true
+            let sign: Double = higherIsBetter ? 1 : -1
+            // Some aggregates describe a roster without ranking it. A team's
+            // summed Target Share is mostly a count of how many of its receivers
+            // cleared the qualification bar, so awarding a trophy for the bigger
+            // number would be scoring roster shape as if it were quality. Nil
+            // values keep the row (it is genuinely interesting context) and
+            // suppress the marker.
+            let comparable = !Self.descriptiveOnlyLabels.contains(label)
+            return StatRow(
+                id: category.rawValue + "-adv-" + label,
+                label: label,
+                aText: a.map(format.string) ?? "-",
+                bText: b.map(format.string) ?? "-",
+                aValue: comparable ? a.map { $0 * sign } : nil,
+                bValue: comparable ? b.map { $0 * sign } : nil
+            )
+        }
+    }
+
+    /// Pools one metric across a roster using the registry's aggregation rule.
+    private func aggregate(
+        label: String,
+        category: MetricCategory,
+        roster: [Player]
+    ) -> Double? {
+        let values = roster.compactMap { player -> (value: Double, weight: Double)? in
+            guard let metric = player.metrics.first(where: {
+                $0.label == label && $0.category == category
+            }), let value = DashboardViewModel.rawNumeric(metric.value) else { return nil }
+
+            switch FootballMetricRegistry.aggregation(for: label, category: category) {
+            case .sum:
+                return (value, 1)
+            case .weighted(let weight):
+                // No volume means no rate to trust: drop the player rather than
+                // let an unweighted value slide in as if it were weight 1.
+                guard let w = weight.value(for: player) else { return nil }
+                return (value, w)
+            }
+        }
+        guard !values.isEmpty else { return nil }
+
+        switch FootballMetricRegistry.aggregation(for: label, category: category) {
+        case .sum:
+            return values.reduce(0) { $0 + $1.value }
+        case .weighted:
+            let totalWeight = values.reduce(0) { $0 + $1.weight }
+            guard totalWeight > 0 else { return nil }
+            return values.reduce(0) { $0 + $1.value * $1.weight } / totalWeight
+        }
+    }
+
+    private func standardRows(for category: MetricCategory) -> [StatRow] {
+        switch category {
+        case .passing:
+            return [
+                pairedRow(label: "Cmp/Att", rosterA: rosterA, rosterB: rosterB),
+                totalRow(label: "Pass Yds", rosterA: rosterA, rosterB: rosterB),
+                totalRow(label: "Pass TD", rosterA: rosterA, rosterB: rosterB),
+                totalRow(
+                    label: "INT",
+                    rosterA: rosterA,
+                    rosterB: rosterB,
+                    higherIsBetter: false
+                ),
+            ]
+        case .rushing:
+            return [
+                totalRow(label: "Car", rosterA: rosterA, rosterB: rosterB),
+                totalRow(label: "Rush Yds", rosterA: rosterA, rosterB: rosterB),
+                totalRow(label: "Rush TD", rosterA: rosterA, rosterB: rosterB),
+            ]
+        case .receiving:
+            return [
+                pairedRow(label: "Rec/Tgt", rosterA: rosterA, rosterB: rosterB),
+                totalRow(label: "Rec Yds", rosterA: rosterA, rosterB: rosterB),
+                totalRow(label: "Rec TD", rosterA: rosterA, rosterB: rosterB),
+            ]
+        case .defense:
+            return [
+                totalRow(label: "Tackles", rosterA: rosterA, rosterB: rosterB),
+                totalRow(label: "Sacks", rosterA: rosterA, rosterB: rosterB),
+                totalRow(label: "Def INT", rosterA: rosterA, rosterB: rosterB),
+            ]
+        }
     }
 
     var body: some View {
@@ -1314,7 +1403,7 @@ struct TeamComparisonView: View {
             Text(
                 String(rosterCount)
                     + " tracked · "
-                    + String(season)
+                    + SeasonLabel.text(season)
                     + " "
                     + phase.label
             )
@@ -1378,20 +1467,26 @@ struct TeamComparisonView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// `higherIsBetter: false` flips which side gets the trophy. Interceptions
+    /// thrown was the row that needed it: as a plain total it handed the marker
+    /// to whichever offence turned the ball over *more*, which is backwards, and
+    /// on the one screen whose whole job is saying which team is better.
     private func totalRow(
         label: String,
         rosterA: [Player],
-        rosterB: [Player]
+        rosterB: [Player],
+        higherIsBetter: Bool = true
     ) -> StatRow {
         let a = total(label: label, roster: rosterA)
         let b = total(label: label, roster: rosterB)
+        let sign: Double = higherIsBetter ? 1 : -1
         return StatRow(
             id: label,
             label: label,
             aText: format(a, label: label),
             bText: format(b, label: label),
-            aValue: a,
-            bValue: b
+            aValue: a.map { $0 * sign },
+            bValue: b.map { $0 * sign }
         )
     }
 

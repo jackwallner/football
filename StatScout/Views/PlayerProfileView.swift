@@ -567,7 +567,7 @@ struct PlayerProfileView: View {
                             }
                         } label: {
                             HStack {
-                                Text(String(season))
+                                Text(SeasonLabel.text(season))
                                 if isLocked {
                                     Image(systemName: "crown.fill")
                                         .font(.system(size: 10))

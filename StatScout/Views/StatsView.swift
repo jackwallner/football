@@ -23,15 +23,6 @@ struct StatsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            SeasonPhaseFilterBar(
-                seasons: viewModel.availableSeasons,
-                selectedSeason: viewModel.selectedSeason,
-                selectedPhase: viewModel.selectedPhase,
-                isSeasonLocked: viewModel.isSeasonLocked,
-                onSelectSeason: selectSeason,
-                onSelectPhase: { viewModel.selectedPhase = $0 }
-            )
-
             switch board {
             case .advanced:
                 DashboardView(viewModel: viewModel, boardBindings: bindings)
@@ -50,6 +41,17 @@ struct StatsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(GridironPalette.canvas)
+        .modifier(
+            SeasonPhaseNavBar(
+                title: "Stats",
+                seasons: viewModel.availableSeasons,
+                selectedSeason: viewModel.selectedSeason,
+                selectedPhase: viewModel.selectedPhase,
+                isSeasonLocked: viewModel.isSeasonLocked,
+                onSelectSeason: selectSeason,
+                onSelectPhase: { viewModel.selectedPhase = $0 }
+            )
+        )
         .onChange(of: viewModel.selectedPosition) { _, next in
             let stats = StandardStatCatalog.stats(for: next)
             if !stats.contains(standardStat) {

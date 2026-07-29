@@ -42,7 +42,7 @@ struct MetricRankingView: View {
                     trailing: AnyView(
                         HStack(spacing: 12) {
                             if let season {
-                                Text(String(season))
+                                Text(SeasonLabel.text(season))
                                     .font(GridironType.micro)
                                     .foregroundStyle(GridironPalette.inkSecondary)
                             }

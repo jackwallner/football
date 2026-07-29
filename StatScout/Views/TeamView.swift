@@ -650,7 +650,7 @@ struct TeamView: View {
         ) {
             GridironNavPill(
                 systemImage: "calendar",
-                title: String(viewModel.selectedSeason)
+                title: SeasonLabel.text(viewModel.selectedSeason)
             )
         }
     }

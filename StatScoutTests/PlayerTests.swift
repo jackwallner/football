@@ -155,10 +155,44 @@ final class FootballMetricRegistryTests: XCTestCase {
         XCTAssertEqual(FootballMetricRegistry.kind(for: yards), .traditional)
     }
 
-    func testDefenseHasNoAdvancedDefinitions() {
+    /// Defence used to be traditional-only, and this test asserted that. It now
+    /// asserts the opposite, because PFR's advanced defensive table (2018+) is
+    /// merged in: pressure generated and what the defender allowed in coverage.
+    func testDefenseHasAdvancedDefinitions() {
         let defenseDefinitions = FootballMetricRegistry.definitions.filter { $0.positions.contains(.defense) }
         XCTAssertFalse(defenseDefinitions.isEmpty)
-        XCTAssertTrue(defenseDefinitions.allSatisfy { $0.kind == .traditional })
+        XCTAssertTrue(defenseDefinitions.contains { $0.kind == .advanced })
+        XCTAssertTrue(defenseDefinitions.contains { $0.kind == .traditional })
+    }
+
+    /// Coverage metrics describe what a defender gave up, so every one of them
+    /// has to rank ascending. Getting this backwards would put the worst corner
+    /// in the league at the top of the board.
+    func testCoverageMetricsAreLowerIsBetter() {
+        for label in ["Cmp% Allowed", "Yds/Tgt Allowed", "Rating Allowed", "Missed Tkl%"] {
+            let definition = FootballMetricRegistry.definition(for: label, category: .defense)
+            XCTAssertNotNil(definition, "missing \(label)")
+            XCTAssertEqual(definition?.higherIsBetter, false, "\(label) should rank lower-is-better")
+        }
+        // Pass-rush counting stats go the other way.
+        for label in ["Pressures", "Hurries", "QB KD"] {
+            XCTAssertEqual(
+                FootballMetricRegistry.definition(for: label, category: .defense)?.higherIsBetter,
+                true,
+                "\(label) should rank higher-is-better"
+            )
+        }
+    }
+
+    /// Advanced rows must sort above traditional ones inside Defense, the same
+    /// as every other category.
+    func testDefenseAdvancedMetricsLeadDisplayOrder() {
+        let order = MetricCategory.defense.metricPriorityOrder
+        guard let firstTraditional = order.firstIndex(of: "Tackles"),
+              let lastAdvanced = order.firstIndex(of: "Missed Tkl%") else {
+            return XCTFail("expected both advanced and traditional defence metrics")
+        }
+        XCTAssertLessThan(lastAdvanced, firstTraditional)
     }
 
     func testPositionHeadlinePreferences() {

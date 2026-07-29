@@ -477,7 +477,7 @@ private struct StandardDestinations: ViewModifier {
                     initialCategory: route.category,
                     season: season
                 )
-                    .navigationTitle(route.stat + " · " + String(season))
+                    .navigationTitle(route.stat + " · " + SeasonLabel.text(season))
                     .navigationBarTitleDisplayMode(.inline)
                     .modifier(GridironNavBar())
             }
