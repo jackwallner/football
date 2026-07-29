@@ -102,6 +102,17 @@ struct HotColdView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(GridironPalette.canvas)
+        .modifier(
+            SeasonPhaseNavBar(
+                title: "Trends",
+                seasons: viewModel.seasonsExcludingAllTime,
+                selectedSeason: selectedSeason,
+                selectedPhase: selectedPhase,
+                isSeasonLocked: viewModel.isSeasonLocked,
+                onSelectSeason: selectSeason,
+                onSelectPhase: { selectedPhase = $0 }
+            )
+        )
         // Keyed on entitlement as well as the window. `isPro` starts false and
         // only flips once RevenueCat answers, which on a real device is often
         // after this view is already on screen; with the window alone as the
@@ -132,15 +143,6 @@ struct HotColdView: View {
 
     private var header: some View {
         VStack(spacing: 0) {
-            SeasonPhaseFilterBar(
-                seasons: viewModel.availableSeasons,
-                selectedSeason: selectedSeason,
-                selectedPhase: selectedPhase,
-                isSeasonLocked: viewModel.isSeasonLocked,
-                onSelectSeason: selectSeason,
-                onSelectPhase: { selectedPhase = $0 }
-            )
-
             positionSelector
                 .padding(.top, 8)
 

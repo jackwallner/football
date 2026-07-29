@@ -248,18 +248,24 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertFalse(PlayerSnapshotValidator.isCompleteHistorical(missing2015))
     }
 
+    /// The career rollup leads the menu, then real years newest-first. It sits at
+    /// the top rather than sorting into place because its sentinel is 0, which
+    /// would otherwise bury "All Time" below 2000.
+    private var expectedSeasons: [Int] {
+        [StatScoutSeason.allTime]
+            + Array(StatScoutSeason.earliest...StatScoutSeason.current).reversed()
+    }
+
     @MainActor
-    func testAvailableSeasonsIncludes2000ThroughCurrent() async {
+    func testAvailableSeasonsIncludes2000ThroughCurrentPlusAllTime() async {
         let players = makeCompleteHistoricalPlayers() + makeCompleteCurrentPlayers()
         let vm = DashboardViewModel(provider: MockProvider(players: players))
         vm.isPro = true
 
         await vm.load()
 
-        XCTAssertEqual(
-            vm.availableSeasons,
-            Array(StatScoutSeason.earliest...StatScoutSeason.current).reversed()
-        )
+        XCTAssertEqual(vm.availableSeasons, expectedSeasons)
+        XCTAssertEqual(vm.availableSeasons.first, StatScoutSeason.allTime)
     }
 
     @MainActor
@@ -268,11 +274,40 @@ final class DashboardViewModelTests: XCTestCase {
 
         await vm.load()
 
-        XCTAssertEqual(
-            vm.availableSeasons,
-            Array(StatScoutSeason.earliest...StatScoutSeason.current).reversed()
-        )
+        XCTAssertEqual(vm.availableSeasons, expectedSeasons)
         XCTAssertTrue(vm.isSeasonLocked(StatScoutSeason.current - 1))
+    }
+
+    /// All Time is Pro, like every season other than the current one.
+    @MainActor
+    func testAllTimeIsLockedForFreeUsers() async {
+        let vm = DashboardViewModel(provider: MockProvider(players: makeCompleteCurrentPlayers()))
+        vm.isPro = false
+        XCTAssertTrue(vm.isSeasonLocked(StatScoutSeason.allTime))
+        vm.isPro = true
+        XCTAssertFalse(vm.isSeasonLocked(StatScoutSeason.allTime))
+    }
+
+    /// Trends ranks rolling week windows, so a career has nothing to rank.
+    @MainActor
+    func testTrendsSeasonListExcludesAllTime() async {
+        let vm = DashboardViewModel(provider: MockProvider(players: makeCompleteCurrentPlayers()))
+
+        await vm.load()
+
+        XCTAssertFalse(vm.seasonsExcludingAllTime.contains(StatScoutSeason.allTime))
+        XCTAssertEqual(vm.seasonsExcludingAllTime.count, vm.availableSeasons.count - 1)
+    }
+
+    /// The sentinel must never reach the UI as "0".
+    func testSeasonLabelRendersSentinelAsAllTime() {
+        XCTAssertEqual(SeasonLabel.text(StatScoutSeason.allTime), "All Time")
+        XCTAssertEqual(SeasonLabel.text(2024), "2024")
+        XCTAssertEqual(
+            SeasonLabel.text(StatScoutSeason.allTime, phase: .regular),
+            "All Time · Regular Season"
+        )
+        XCTAssertEqual(SeasonLabel.text(2024, phase: .playoffs), "2024 Playoffs")
     }
 
     @MainActor

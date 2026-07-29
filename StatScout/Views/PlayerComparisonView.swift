@@ -438,7 +438,7 @@ struct PlayerComparisonView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Change \(target == .a ? "first" : "second") player")
             } else if let season = player.season {
-                Text(String(season))
+                Text(SeasonLabel.text(season))
                     .font(GridironType.micro)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
@@ -474,7 +474,7 @@ struct PlayerComparisonView: View {
         } else {
             note = catalog.isLoadingHistory
                 ? "Loading past seasons…"
-                : "No \(String(season)) \(phase.label.lowercased()) data for \(current.name)."
+                : "No \(SeasonLabel.text(season)) \(phase.label.lowercased()) data for \(current.name)."
             Task { await catalog.loadHistory?() }
         }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()

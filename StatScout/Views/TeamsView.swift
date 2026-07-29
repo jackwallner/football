@@ -90,31 +90,25 @@ struct TeamsView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(GridironPalette.canvas.ignoresSafeArea())
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Teams")
-                    .font(GridironType.bodyBold)
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-            // The green pill is its own capsule; suppress the iOS 26 Liquid
-            // Glass container or it reads as a pill inside a pill, which is
-            // exactly what the upgrade CTA on the other side already avoids.
-            if #available(iOS 26.0, *) {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    seasonMenu
-                    phaseMenu
-                }
-                    .sharedBackgroundVisibility(.hidden)
-            } else {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    seasonMenu
-                    phaseMenu
-                }
-            }
-        }
+        // Same header as Stats and Trends, from the one shared modifier, so the
+        // season you are reading never moves when you change tabs.
+        .modifier(
+            SeasonPhaseNavBar(
+                title: "Teams",
+                seasons: viewModel.availableSeasons,
+                selectedSeason: viewModel.selectedSeason,
+                selectedPhase: viewModel.selectedPhase,
+                isSeasonLocked: { viewModel.isSeasonLocked($0) },
+                onSelectSeason: { season in
+                    if viewModel.isSeasonLocked(season) {
+                        showingTrial = true
+                    } else {
+                        viewModel.selectedSeason = season
+                    }
+                },
+                onSelectPhase: { viewModel.selectedPhase = $0 }
+            )
+        )
         .refreshable {
             await viewModel.load()
         }
@@ -165,32 +159,6 @@ struct TeamsView: View {
         )
         .padding(.horizontal, 12)
         .redacted(reason: .placeholder)
-    }
-
-    private var seasonMenu: some View {
-        SeasonMenu(
-            seasons: viewModel.availableSeasons,
-            selected: viewModel.selectedSeason,
-            isLocked: { viewModel.isSeasonLocked($0) },
-            onSelect: { season in
-                if viewModel.isSeasonLocked(season) {
-                    showingTrial = true
-                } else {
-                    viewModel.selectedSeason = season
-                }
-            }
-        ) {
-            GridironNavPill(systemImage: "calendar", title: String(viewModel.selectedSeason))
-        }
-    }
-
-    private var phaseMenu: some View {
-        SeasonPhaseMenu(
-            selected: viewModel.selectedPhase,
-            onSelect: { viewModel.selectedPhase = $0 }
-        ) {
-            GridironNavPill(title: viewModel.selectedPhase.label)
-        }
     }
 
     /// Logo grid replaces the old single-column list of rows. Each tile is a
@@ -248,7 +216,7 @@ struct TeamsView: View {
                     Label(noDataForSeason ? "No teams available" : "No teams found", systemImage: "magnifyingglass")
                 } description: {
                     Text(noDataForSeason
-                         ? "No teams have player data for the \(String(viewModel.selectedSeason)) season. Try selecting a different season from the Leaders tab."
+                         ? "No teams have player data for the \(SeasonLabel.text(viewModel.selectedSeason)) season. Try selecting a different season from the Leaders tab."
                          : "Try a different search term.")
                 }
                 .padding(.vertical, 48)

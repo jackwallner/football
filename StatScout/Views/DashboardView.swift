@@ -27,6 +27,7 @@ struct DashboardView: View {
                         }
                         leaderboardSection
                         if !viewModel.players.isEmpty {
+                            coverageNote
                             aboutFooter
                         }
                         // Lets the leaderboard scroll through the floating tab bar instead of
@@ -71,6 +72,28 @@ struct DashboardView: View {
         }
         .sheet(item: $paywallTrigger) { trigger in
             TrialPitchSheet(trigger: trigger)
+        }
+    }
+
+    /// Why an older season shows fewer advanced metrics. Absent for seasons with
+    /// the full set, so it never becomes furniture the eye learns to skip.
+    @ViewBuilder
+    private var coverageNote: some View {
+        if let note = MetricCoverage.note(
+            for: viewModel.selectedSeason,
+            category: viewModel.selectedPosition.primaryCategory
+        ) {
+            HStack(alignment: .top, spacing: 6) {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 10, weight: .semibold))
+                Text(note)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .font(GridironType.micro)
+            .foregroundStyle(GridironPalette.inkTertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.top, 10)
         }
     }
 
@@ -320,8 +343,8 @@ struct DashboardView: View {
                     Label(hasSeasonData ? "No matching metrics" : "No players yet", systemImage: "football")
                 } description: {
                     Text(hasSeasonData
-                         ? "No metrics are available for \(viewModel.selectedPosition.rawValue) in \(String(viewModel.selectedSeason))."
-                         : "No player data is available for the \(String(viewModel.selectedSeason)) season.")
+                         ? "No metrics are available for \(viewModel.selectedPosition.rawValue) in \(SeasonLabel.text(viewModel.selectedSeason))."
+                         : "No player data is available for the \(SeasonLabel.text(viewModel.selectedSeason)) season.")
                 }
                 .padding(.vertical, 24)
                 .frame(minHeight: 200)

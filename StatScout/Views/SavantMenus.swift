@@ -32,11 +32,11 @@ struct SeasonMenu<Trigger: View>: View {
                     // so it can pitch that specific season rather than being
                     // hidden or inert.
                     if isLocked(season) {
-                        Label(String(season), systemImage: "crown.fill")
+                        Label(SeasonLabel.text(season), systemImage: "crown.fill")
                     } else if season == selected {
-                        Label(String(season), systemImage: "checkmark")
+                        Label(SeasonLabel.text(season), systemImage: "checkmark")
                     } else {
-                        Text(String(season))
+                        Text(SeasonLabel.text(season))
                     }
                 }
             }
@@ -48,7 +48,7 @@ struct SeasonMenu<Trigger: View>: View {
         .menuOrder(.fixed)
         .gridironMenuAppearance()
         .accessibilityLabel("Season")
-        .accessibilityValue(String(selected))
+        .accessibilityValue(SeasonLabel.text(selected))
     }
 }
 
@@ -81,10 +81,23 @@ struct SeasonPhaseMenu<Trigger: View>: View {
     }
 }
 
-/// Shared top-of-screen season context. Keeping both menus in one content bar
-/// avoids the navigation bar spacing changes that occur when leading and
-/// trailing toolbar items compete with the centered title.
-struct SeasonPhaseFilterBar: View {
+/// Season + phase context in the navigation bar itself, alongside the tab's
+/// title.
+///
+/// This used to be `SeasonPhaseFilterBar`, a content row sitting directly under
+/// the nav bar - but only on Stats and Trends. Teams put the same two menus in
+/// the bar, so the app had one control in two places: the year you were looking
+/// at moved down a row when you switched tabs, and Stats/Trends each gave up
+/// ~40pt of board to repeat something the bar had room for. The bar is also
+/// where the season *belongs*: it's the context every number on the screen is
+/// read against, not a filter you set and forget.
+///
+/// Both pills live in a single `ToolbarItem` rather than a `ToolbarItemGroup`
+/// so the gap between them is ours to set and identical on all three tabs -
+/// a group lets UIKit pick its own spacing, which is what made the pair sit
+/// unevenly next to the centered title.
+struct SeasonPhaseNavBar: ViewModifier {
+    let title: String
     let seasons: [Int]
     let selectedSeason: Int
     let selectedPhase: SeasonPhase
@@ -92,18 +105,39 @@ struct SeasonPhaseFilterBar: View {
     let onSelectSeason: (Int) -> Void
     let onSelectPhase: (SeasonPhase) -> Void
 
-    var body: some View {
-        HStack(spacing: 8) {
+    func body(content: Content) -> some View {
+        content
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(title)
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                // The green pills are their own capsules; suppress the iOS 26
+                // Liquid Glass container or each reads as a pill inside a pill.
+                if #available(iOS 26.0, *) {
+                    ToolbarItem(placement: .topBarLeading) { pills }
+                        .sharedBackgroundVisibility(.hidden)
+                } else {
+                    ToolbarItem(placement: .topBarLeading) { pills }
+                }
+            }
+    }
+
+    private var pills: some View {
+        HStack(spacing: 6) {
             SeasonMenu(
                 seasons: seasons,
                 selected: selectedSeason,
                 isLocked: isSeasonLocked,
                 onSelect: onSelectSeason
             ) {
-                GridironInlinePill(
+                GridironNavPill(
                     systemImage: "calendar",
-                    title: String(selectedSeason),
-                    isLocked: isSeasonLocked(selectedSeason)
+                    title: SeasonLabel.text(selectedSeason)
                 )
             }
 
@@ -111,23 +145,9 @@ struct SeasonPhaseFilterBar: View {
                 selected: selectedPhase,
                 onSelect: onSelectPhase
             ) {
-                GridironInlinePill(
-                    systemImage: "football.fill",
-                    title: selectedPhase.label
-                )
+                GridironNavPill(title: selectedPhase.label)
             }
-
-            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(GridironPalette.surface)
-        .overlay(
-            Rectangle()
-                .fill(GridironPalette.divider)
-                .frame(height: GridironGeo.hairline),
-            alignment: .bottom
-        )
     }
 }
 

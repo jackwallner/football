@@ -36,11 +36,20 @@ struct StatcastAPI: StatcastProviding {
         return historical + current
     }
 
+    /// Everything older than the live season, plus the career rollup.
+    ///
+    /// The rollup is stored under `season = 0`, which is *below* `earliest`, so
+    /// a plain `season.gte.2000` range quietly excluded it and All Time came
+    /// back empty. Hence the `or`: the sentinel row or the real historical
+    /// range. It still sorts into the historical cache partition, since 0 is
+    /// less than the current season.
     func fetchHistoricalPlayers() async throws -> [Player] {
         try await fetchPlayers(queryItems: [
             URLQueryItem(
-                name: "and",
-                value: "(season.gte.\(StatScoutSeason.earliest),season.lt.\(StatScoutSeason.current))"
+                name: "or",
+                value: "(season.eq.\(StatScoutSeason.allTime),"
+                    + "and(season.gte.\(StatScoutSeason.earliest),"
+                    + "season.lt.\(StatScoutSeason.current)))"
             ),
         ])
     }
