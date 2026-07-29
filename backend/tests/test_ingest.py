@@ -352,6 +352,32 @@ def test_career_thresholds_are_higher_than_season():
     assert ingest.qualifies(a_career, "Defense", "def", career=True)
 
 
+def test_career_playoff_thresholds_are_games_not_seasons():
+    """Regression: reusing the regular-season career bar for playoff careers left
+    exactly one qualifying passer in league history."""
+    # Five playoff starts' worth of volume - a real playoff career, but nowhere
+    # near a regular-season career.
+    run = {"attempts": 180, "carries": 80, "targets": 55, "receptions": 35,
+           "games": 10, "targets_reliable": True}
+
+    assert ingest.qualifies(run, "Passing", "qb", "POST", career=True)
+    assert ingest.qualifies(run, "Rushing", "rb", "POST", career=True)
+    assert ingest.qualifies(run, "Receiving", "wr", "POST", career=True)
+    assert ingest.qualifies(run, "Defense", "def", "POST", career=True)
+
+    # The same volumes must still fail a regular-season career.
+    assert not ingest.qualifies(run, "Passing", "qb", "REG", career=True)
+    assert not ingest.qualifies(run, "Defense", "def", "REG", career=True)
+
+    # And one hot playoff game is still not a playoff career.
+    single = {"attempts": 40, "carries": 20, "targets": 12, "games": 1,
+              "targets_reliable": True}
+    assert not ingest.qualifies(single, "Passing", "qb", "POST", career=True)
+    assert not ingest.qualifies(single, "Defense", "def", "POST", career=True)
+    # ...though it clears the ordinary single-postseason bar.
+    assert ingest.qualifies(single, "Passing", "qb", "POST")
+
+
 def test_career_receiving_falls_back_to_receptions_when_targets_unreliable():
     row = {"receptions": 250, "targets": 0, "targets_reliable": False}
     assert ingest.qualifies(row, "Receiving", "wr", career=True)
