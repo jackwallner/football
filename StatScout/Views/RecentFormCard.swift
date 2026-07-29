@@ -179,12 +179,7 @@ struct RecentFormCard: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)
         } else if let err = loadError {
-            Text(err)
-                .font(GridironType.small)
-                .foregroundStyle(GridironPalette.inkSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, GridironGeo.padInline)
-                .padding(.vertical, 24)
+            InlineLoadError(message: err) { await load() }
         } else if let w = window {
             statsBody(window: w)
         } else {
@@ -315,7 +310,9 @@ struct RecentFormCard: View {
             let result = try await fetch(player.playerId, season)
             logs = result
         } catch {
-            loadError = "Couldn't load recent games. Pull to refresh."
+            if !isTaskCancellation(error) {
+                loadError = "Couldn't load recent games."
+            }
         }
         loading = false
     }

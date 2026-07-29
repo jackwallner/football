@@ -120,6 +120,7 @@ struct OnboardingCards: View {
 
     private var isLastPage: Bool { currentPage == pages.count - 1 }
     private var dataReady: Bool { viewModel.isReady }
+    private var showsUpsellBlock: Bool { isLastPage && !store.isPro }
 
     /// CTA label / disclosure mirror the direct-purchase pop-ups: trial copy
     /// when eligible, price-forward yearly copy otherwise. Both come from
@@ -139,18 +140,16 @@ struct OnboardingCards: View {
             VStack(spacing: 0) {
                 HStack {
                     Spacer()
-                    if !isLastPage {
-                        Button("Skip") {
-                            withAnimation { hasCompletedOnboarding = true }
-                        }
-                        .font(GridironType.bodyBold)
-                        .foregroundStyle(GridironPalette.turf)
-                        .padding(.trailing, 20)
-                        .padding(.top, 8)
-                    } else {
-                        Color.clear.frame(height: 32)
+                    Button("Skip") {
+                        withAnimation { hasCompletedOnboarding = true }
                     }
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.turf)
+                    .padding(.trailing, 20)
+                    .opacity(isLastPage ? 0 : 1)
+                    .allowsHitTesting(!isLastPage)
                 }
+                .frame(height: 32)
 
                 TabView(selection: $currentPage) {
                     ForEach(Array(pages.enumerated()), id: \.offset) { index, page in
@@ -199,8 +198,7 @@ struct OnboardingCards: View {
         // button, so the primary button is pixel-identical across all pages and
         // the thumb target never shifts between taps.
         VStack(spacing: 10) {
-            if isLastPage && !store.isPro {
-                // --- Above the primary button (grows upward, never moves it) ---
+            VStack(spacing: 10) {
                 getStartedButton(prominent: false)
 
                 // Reserved fixed-height status line: a restore/purchase result
@@ -230,6 +228,9 @@ struct OnboardingCards: View {
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
             }
+            .opacity(showsUpsellBlock ? 1 : 0)
+            .allowsHitTesting(showsUpsellBlock)
+            .accessibilityHidden(!showsUpsellBlock)
 
             // --- Primary button: identical 52pt turf slot on every page ---
             if isLastPage {
@@ -293,12 +294,11 @@ struct OnboardingCards: View {
                         // reads as a dead button. Success flips isPro, which
                         // finishes onboarding via onChange.
                         isRestoring = true
-                        trialError = nil
                         Task { @MainActor in
+                            defer { isRestoring = false }
                             await store.restorePurchases()
-                            isRestoring = false
                             if !store.isPro {
-                                trialError = store.lastError ?? "No previous purchase found on this Apple ID."
+                                trialError = store.lastError ?? "No active StatScout+ purchase was found for this Apple ID."
                             }
                         }
                     } label: {
@@ -386,27 +386,30 @@ struct OnboardingCards: View {
             bullets: [
                 BulletItem(text: "Every qualified player ranked", icon: "checkmark.circle.fill", color: GridironPalette.turf),
                 BulletItem(text: "EPA, CPOE, YAC, RYOE, and more", icon: "checkmark.circle.fill", color: GridironPalette.turf),
-                BulletItem(text: "Updated nightly — fresh data, always", icon: "checkmark.circle.fill", color: GridironPalette.turf)
+                BulletItem(text: "Updated nightly, always fresh", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "No account or sign-up", icon: "checkmark.circle.fill", color: GridironPalette.turf)
             ]
         ),
         OnboardingPage(
             icon: "chart.bar.fill",
             title: "Find Insights\nFast",
-            description: "Three tabs cover every angle of the game. See what's happening across the league in seconds.",
+            description: "Four tabs cover every angle of the game. See what's happening across the league in seconds.",
             bullets: [
-                BulletItem(text: "Stats — sort the league, leaders, best & worst", icon: "checkmark.circle.fill", color: GridironPalette.turf),
-                BulletItem(text: "Teams — browse any roster, see who's hot", icon: "checkmark.circle.fill", color: GridironPalette.turf),
-                BulletItem(text: "Compare — stack two players head-to-head", icon: "checkmark.circle.fill", color: GridironPalette.turf)
+                BulletItem(text: "Stats: sort the league, leaders, best and worst", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Trends: who's heating up and cooling off", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Teams: browse any roster, see who's hot", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Compare: stack two players head-to-head", icon: "checkmark.circle.fill", color: GridironPalette.turf)
             ]
         ),
         OnboardingPage(
             icon: "crown.fill",
             title: "Go Deeper\nwith StatScout+",
-            description: "Recent form, every roster player, head-to-head matchups, and seasons back to 2015 — the full scouting toolkit.",
+            description: "Season numbers tell you who's good. StatScout+ tells you who's good right now, and lets you prove it.",
             bullets: [
-                BulletItem(text: "Last 1 / 3 / 5 game form on any player or team", icon: "flame.fill", color: GridironPalette.turf),
-                BulletItem(text: "Head-to-head comparisons across every metric", icon: "person.2.fill", color: GridironPalette.turf),
-                BulletItem(text: "Year-over-year trends and every past season", icon: "calendar.badge.clock", color: GridironPalette.turf)
+                BulletItem(text: "The Trends board: the league ranked by who's moving", icon: "flame.fill", color: GridironPalette.turf),
+                BulletItem(text: "Last 3 / 5 / 8 game form on any player or team", icon: "chart.bar.fill", color: GridironPalette.turf),
+                BulletItem(text: "Head-to-head matchups across every percentile", icon: "person.2.fill", color: GridironPalette.turf),
+                BulletItem(text: "Every season back to 2020, and year-over-year", icon: "calendar.badge.clock", color: GridironPalette.turf)
             ]
         )
     ]

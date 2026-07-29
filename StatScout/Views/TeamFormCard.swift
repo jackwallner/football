@@ -49,8 +49,9 @@ struct TeamRankingsCard: View {
     }
 
     enum Mode: String, CaseIterable, Identifiable {
-        case season = "Season", recent = "Recent"
+        case season = "Season", recent = "Recent", both = "Both"
         var id: String { rawValue }
+        var usesRecent: Bool { self != .season }
     }
 
     /// Smallest team-window play count we'll treat as trustworthy — below this we
@@ -64,25 +65,26 @@ struct TeamRankingsCard: View {
     var body: some View {
         VStack(spacing: 0) {
             GridironSectionBar(
-                title: "TEAM PERCENTILE RANKINGS",
+                title: "TEAM ADVANCED STATS",
                 trailing: store.isPro ? nil : AnyView(proBadge)
             )
 
-            sidePicker
-                .padding(.horizontal, GridironGeo.padInline)
-                .padding(.vertical, 8)
-                .background(GridironPalette.surfaceAlt)
+            GridironPickerRow {
+                sidePicker.segmentCount(Side.allCases.count)
+                modePicker.segmentCount(Mode.allCases.count)
+            }
+            .padding(.horizontal, GridironGeo.padInline)
+            .padding(.vertical, 8)
+            .background(GridironPalette.surfaceAlt)
 
-            modePicker
-
-            if mode == .recent {
+            if mode.usesRecent {
                 windowPicker
             }
 
-            if mode == .season {
-                seasonBars
-            } else {
-                recentSection
+            switch mode {
+            case .season: seasonBars
+            case .recent: recentSection
+            case .both: bothSection
             }
         }
         .background(GridironPalette.surface)
@@ -92,7 +94,7 @@ struct TeamRankingsCard: View {
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .task(id: "\(team)-\(season)-\(mode.rawValue)-\(store.isPro)") {
-            if mode == .recent, store.isPro { await load() }
+            if mode.usesRecent, store.isPro { await load() }
         }
         .onAppear { rebuildCurves() }
         .onChange(of: leaguePlayers.count) { _, _ in rebuildCurves() }
@@ -116,52 +118,73 @@ struct TeamRankingsCard: View {
     // MARK: - Pickers
 
     private var sidePicker: some View {
-        HStack(spacing: 0) {
-            ForEach(Side.allCases) { s in
-                Button {
-                    side = s
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    Text(s.label)
-                        .font(GridironType.smallBold)
-                        .foregroundStyle(side == s ? GridironPalette.ink : GridironPalette.inkSecondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .overlay(
-                            Rectangle()
-                                .fill(side == s ? GridironPalette.turf : Color.clear)
-                                .frame(height: 2)
-                                .padding(.top, 32),
-                            alignment: .bottom
-                        )
+        GridironSegmented(
+            segments: Side.allCases.map { .init(value: $0, label: $0.label) },
+            selection: $side
+        )
+    }
+
+    private var modePicker: some View {
+        GridironSegmented(
+            segments: Mode.allCases.map {
+                .init(
+                    value: $0,
+                    label: $0.rawValue,
+                    isLocked: !store.isPro && $0 != .season
+                )
+            },
+            selection: $mode,
+            onLockedTap: { _ in onUpgradeTap() }
+        )
+    }
+
+    private var bothSection: some View {
+        let seasonRows = aggregateSeasonRows()
+        let recentRows: [String: Metric] = {
+            guard let window = recentWindow else { return [:] }
+            let pairs = seasonRows.compactMap { row -> (String, Metric)? in
+                guard let recent = recentMetric(
+                    forSeasonLabel: row.label,
+                    window: window
+                ) else { return nil }
+                return (row.label, recent)
+            }
+            return Dictionary(pairs, uniquingKeysWith: { first, _ in first })
+        }()
+
+        return VStack(spacing: 0) {
+            if loading {
+                loadingRow
+            } else if let loadError {
+                InlineLoadError(message: loadError) { await load() }
+            } else {
+                ForEach(Array(seasonRows.enumerated()), id: \.element.id) { index, metric in
+                    DualMetricBar(
+                        season: metric,
+                        recent: recentRows[metric.label],
+                        recentCaption: "Last \(windowGames)G"
+                    )
+                    .padding(.horizontal, GridironGeo.padCard)
+                    .padding(.vertical, 10)
+                    .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
+                    .overlay(
+                        Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
+                        alignment: .bottom
+                    )
                 }
-                .buttonStyle(.plain)
             }
         }
     }
 
-    private var modePicker: some View {
-        HStack(spacing: 6) {
-            ForEach(Mode.allCases) { m in
-                Button {
-                    mode = m
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    Text(m.rawValue)
-                        .font(GridironType.smallBold)
-                        .foregroundStyle(mode == m ? .white : GridironPalette.inkSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 30)
-                        .background(mode == m ? GridironPalette.turf : GridironPalette.surface)
-                        .clipShape(Capsule())
-                        .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
-                }
-                .buttonStyle(.plain)
-            }
+    private var loadingRow: some View {
+        HStack(spacing: 10) {
+            ProgressView().scaleEffect(0.75)
+            Text("Loading recent games…")
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
         }
-        .padding(.horizontal, GridironGeo.padInline)
-        .padding(.vertical, 10)
-        .background(GridironPalette.surfaceAlt)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
     }
 
     private var windowPicker: some View {
@@ -332,21 +355,9 @@ struct TeamRankingsCard: View {
     @ViewBuilder
     private var recentBars: some View {
         if loading {
-            HStack(spacing: 10) {
-                ProgressView().progressViewStyle(.circular).scaleEffect(0.75)
-                Text("Loading recent games…")
-                    .font(GridironType.small)
-                    .foregroundStyle(GridironPalette.inkSecondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 24)
+            loadingRow
         } else if let err = loadError {
-            Text(err)
-                .font(GridironType.small)
-                .foregroundStyle(GridironPalette.inkSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, GridironGeo.padInline)
-                .padding(.vertical, 24)
+            InlineLoadError(message: err) { await load() }
         } else if let w = recentWindow {
             recentSummaryRow(w)
             let rows = recentDisplayRows(window: w)
@@ -484,7 +495,9 @@ struct TeamRankingsCard: View {
             let since = Calendar.current.date(byAdding: .day, value: -120, to: .now) ?? .now
             logs = try await fetch(team, season, since)
         } catch {
-            loadError = "Couldn't load team form. Pull to refresh."
+            if !isTaskCancellation(error) {
+                loadError = "Couldn't load team form. Check your connection and try again."
+            }
         }
         loading = false
     }

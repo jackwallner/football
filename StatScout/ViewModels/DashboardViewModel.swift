@@ -51,6 +51,18 @@ final class DashboardViewModel {
             .map(\.label)
     }
 
+    var availableAdvancedSortMetrics: [String] {
+        availableSortMetrics.filter { label in
+            eligibleMetrics.contains { metric in
+                metric.label == label
+                    && FootballMetricRegistry.definition(
+                        for: metric.label,
+                        category: metric.category
+                    )?.kind == .advanced
+            }
+        }
+    }
+
     func setUserSortMetric(_ label: String?) {
         userSortMetric = label
         applyDefaultSortDirection()
@@ -190,6 +202,7 @@ final class DashboardViewModel {
     var recentFormLoadingWindows: Set<Int> = []
     var recentFormError: String?
     private var recentFormSeason: Int?
+    private var recentFormTasks: [Int: Task<Void, Never>] = [:]
 
     /// The window the Trends board and the trend arrows read from.
     var recentWindow: RecentWindow = .five
@@ -227,38 +240,66 @@ final class DashboardViewModel {
 
     private var recentFormRowsByWindow: [Int: [RecentForm]] = [:]
 
+    func reloadRecentForm(window: RecentWindow? = nil) async {
+        let target = window ?? recentWindow
+        recentFormTasks[target.rawValue]?.cancel()
+        recentFormTasks.removeValue(forKey: target.rawValue)
+        recentFormByWindow.removeValue(forKey: target.rawValue)
+        recentFormRowsByWindow.removeValue(forKey: target.rawValue)
+        recentFormError = nil
+        await loadRecentFormIfNeeded(window: target)
+    }
+
     func loadRecentFormIfNeeded(window: RecentWindow? = nil) async {
         let target = window ?? recentWindow
         // Season changed under us, the cache describes a different year.
         if recentFormSeason != selectedSeason {
+            for task in recentFormTasks.values { task.cancel() }
+            recentFormTasks.removeAll()
+            recentFormLoadingWindows.removeAll()
             recentFormByWindow.removeAll()
             recentFormRowsByWindow.removeAll()
             recentFormSeason = selectedSeason
         }
-        guard recentFormByWindow[target.rawValue] == nil,
-              !recentFormLoadingWindows.contains(target.rawValue) else { return }
+        guard recentFormByWindow[target.rawValue] == nil else { return }
+
+        if let inFlight = recentFormTasks[target.rawValue] {
+            await inFlight.value
+            return
+        }
 
         recentFormLoadingWindows.insert(target.rawValue)
         recentFormError = nil
-        do {
-            let rows = try await provider.fetchRecentForm(
-                season: selectedSeason,
-                windowGames: target.rawValue
-            )
-            // A player who both runs and catches has a row per side; the
-            // per-player lookup keys by player, so keep whichever side carries
-            // the larger sample.
-            var byPlayer: [Int: RecentForm] = [:]
-            for row in rows {
-                if let existing = byPlayer[row.playerId], existing.plays >= row.plays { continue }
-                byPlayer[row.playerId] = row
+        let season = selectedSeason
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer {
+                self.recentFormLoadingWindows.remove(target.rawValue)
+                self.recentFormTasks.removeValue(forKey: target.rawValue)
             }
-            recentFormByWindow[target.rawValue] = byPlayer
-            recentFormRowsByWindow[target.rawValue] = rows
-        } catch {
-            recentFormError = "Couldn't load recent form. Pull to refresh."
+            do {
+                let rows = try await self.provider.fetchRecentForm(
+                    season: season,
+                    windowGames: target.rawValue
+                )
+                guard season == self.selectedSeason else { return }
+                var byPlayer: [Int: RecentForm] = [:]
+                for row in rows {
+                    if let existing = byPlayer[row.playerId],
+                       existing.plays >= row.plays { continue }
+                    byPlayer[row.playerId] = row
+                }
+                guard !byPlayer.isEmpty else { return }
+                self.recentFormByWindow[target.rawValue] = byPlayer
+                self.recentFormRowsByWindow[target.rawValue] = rows
+            } catch {
+                if !isTaskCancellation(error) {
+                    self.recentFormError = "Couldn't load recent form."
+                }
+            }
         }
-        recentFormLoadingWindows.remove(target.rawValue)
+        recentFormTasks[target.rawValue] = task
+        await task.value
     }
 
     /// Unique players for an arbitrary season, not just the selected one.
@@ -359,34 +400,66 @@ final class DashboardViewModel {
         return Int(stat.value.filter { $0.isNumber }) ?? 0
     }
 
-    // Sort by the raw stat value, not the percentile — percentile-sorting
-    // produced ties (two players at 95) and made the "PCTL" header look
-    // disconnected from the xwOBA values shown per row. Players missing the
-    // exact metric are partitioned to the end so blank-value rows never
-    // interleave above genuinely-ranked players.
     var leaderboard: [Player] {
         guard let label = currentSortMetric,
               let referenceMetric = eligibleMetrics.first(where: { $0.label == label }) else {
             return filteredPlayers.sorted { $0.name < $1.name }
         }
-        let category = referenceMetric.category
+        return filteredPlayers.sorted(
+            by: Self.metricComparator(
+                label: label,
+                category: referenceMetric.category,
+                descending: sortDescending
+            )
+        )
+    }
 
-        func rawValue(_ p: Player) -> Double? {
-            guard let m = p.metrics.first(where: { $0.label == label && $0.category == category }) else { return nil }
-            return Self.rawNumeric(m.value)
+    /// Rank by the backend's direction-correct percentile, then use the raw
+    /// number only to break a tied percentile bucket. Percentile-only metrics
+    /// remain rankable instead of being swept below every printable value.
+    static func metricComparator(
+        label: String,
+        category: MetricCategory,
+        descending: Bool
+    ) -> (Player, Player) -> Bool {
+        let percentileDescending = descending != lowerIsBetter(
+            label: label,
+            category: category
+        )
+        return { first, second in
+            let firstMetric = first.metrics.first {
+                $0.label == label && $0.category == category
+            }
+            let secondMetric = second.metrics.first {
+                $0.label == label && $0.category == category
+            }
+
+            switch (firstMetric, secondMetric) {
+            case (nil, nil):
+                return first.name < second.name
+            case (nil, _):
+                return false
+            case (_, nil):
+                return true
+            default:
+                break
+            }
+
+            guard let firstMetric, let secondMetric else { return false }
+            if firstMetric.percentile != secondMetric.percentile {
+                return percentileDescending
+                    ? firstMetric.percentile > secondMetric.percentile
+                    : firstMetric.percentile < secondMetric.percentile
+            }
+            if let firstValue = rawNumeric(firstMetric.value),
+               let secondValue = rawNumeric(secondMetric.value),
+               firstValue != secondValue {
+                return descending
+                    ? firstValue > secondValue
+                    : firstValue < secondValue
+            }
+            return first.name < second.name
         }
-
-        let ranked = filteredPlayers.filter { rawValue($0) != nil }
-            .sorted { p1, p2 in
-                let v1 = rawValue(p1) ?? 0
-                let v2 = rawValue(p2) ?? 0
-                return sortDescending ? v1 > v2 : v1 < v2
-            }
-        let tail = filteredPlayers.filter { rawValue($0) == nil }
-            .sorted { (p1, p2) in
-                (p1.percentile(for: category) ?? 0) > (p2.percentile(for: category) ?? 0)
-            }
-        return ranked + tail
     }
 
     /// Parse a leading numeric value from a metric's display string.

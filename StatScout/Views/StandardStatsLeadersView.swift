@@ -14,170 +14,150 @@ enum StandardStatCategory: String, CaseIterable {
         case .defense: return .defense
         }
     }
+
+    var defaultPosition: PlayerPositionGroup {
+        switch self {
+        case .passing: return .qb
+        case .rushing: return .rb
+        case .receiving: return .wr
+        case .defense: return .defense
+        }
+    }
 }
 
+/// Traditional leaderboard with the same position tabs and control vocabulary
+/// as the Advanced board.
 struct StandardStatsLeadersView: View {
-    @EnvironmentObject private var store: StoreService
     let players: [Player]
-    /// Set when arrived at by tapping a specific stat on a player profile, so
-    /// the leaderboard opens on the stat that was tapped rather than Pass Yds.
+    @Binding var selectedStat: String
+    @Binding var selectedPosition: PlayerPositionGroup
+    @Binding var sortDescending: Bool
     var season: Int? = nil
-    @State private var selectedCategory: StandardStatCategory
-    @State private var selectedStat: String
-    @State private var sortDescending = true
+    var boardBindings: StatsBoardBindings? = nil
+    var viewModel: DashboardViewModel? = nil
 
-    init(
-        players: [Player],
-        initialStat: String = "Pass Yds",
-        initialCategory: StandardStatCategory = .passing,
-        season: Int? = nil
-    ) {
-        self.players = players
-        self.season = season
-        _selectedCategory = State(initialValue: initialCategory)
-        _selectedStat = State(initialValue: initialStat)
+    private var availableStats: [String] {
+        StandardStatCatalog.stats(for: selectedPosition)
     }
 
-    /// Stats where lower is the better outcome — sort defaults to ascending so the
-    /// leader sits at the top.
-    private static let lowerIsBetter: Set<String> = ["INT"]
-
-    private func defaultDescending(for stat: String) -> Bool {
-        !Self.lowerIsBetter.contains(stat)
-    }
-
-    // Available (numeric) stats per category — labels match the backend
-    // standard_stats jsonb exactly.
-    var availableStats: [String] {
-        switch selectedCategory {
-        case .passing:
-            return ["Pass Yds", "Pass TD", "INT", "G"]
-        case .rushing:
-            return ["Rush Yds", "Rush TD", "Car", "G"]
-        case .receiving:
-            return ["Rec Yds", "Rec TD", "G"]
-        case .defense:
-            return ["Tackles", "Sacks", "Def INT", "G"]
-        }
-    }
-
-    // Filter players who have the selected stat
-    var filteredPlayers: [Player] {
+    private var filteredPlayers: [Player] {
         players.filter { player in
-            guard let stats = player.standardStats else { return false }
-            guard matchesPlayerType(player: player) else { return false }
-            return stats.contains { $0.label == selectedStat }
+            player.positionGroup == selectedPosition
+                && numericStat(for: player) != nil
         }
     }
 
-    private func matchesPlayerType(player: Player) -> Bool {
-        // Require a percentile in the matching category — that's the pipeline's
-        // qualification signal — so the board shows genuine contributors rather
-        // than anyone who happens to carry a shared standard-stat label.
-        if selectedCategory == .defense {
-            return player.playerType?.lowercased() == "def"
-        }
-        return player.metrics.contains { $0.category == selectedCategory.metricCategory }
-    }
-
-    // Sort players by the selected stat value
-    var sortedPlayers: [Player] {
-        filteredPlayers.sorted { p1, p2 in
-            let v1 = statValue(for: p1)
-            let v2 = statValue(for: p2)
-            return sortDescending ? v1 > v2 : v1 < v2
+    private var sortedPlayers: [Player] {
+        filteredPlayers.sorted { first, second in
+            let firstValue = numericStat(for: first) ?? 0
+            let secondValue = numericStat(for: second) ?? 0
+            if firstValue != secondValue {
+                return sortDescending
+                    ? firstValue > secondValue
+                    : firstValue < secondValue
+            }
+            return games(for: first) > games(for: second)
         }
     }
 
-    // Get numeric value for sorting
-    private func statValue(for player: Player) -> Double {
-        guard let stats = player.standardStats,
-              let stat = stats.first(where: { $0.label == selectedStat }) else {
-            return 0
-        }
-        return DashboardViewModel.rawNumeric(stat.value) ?? 0
-    }
-    
-    // Get formatted stat value for display
-    private func statDisplay(for player: Player) -> String {
-        guard let stats = player.standardStats,
-              let stat = stats.first(where: { $0.label == selectedStat }) else {
-            return "—"
-        }
-        return stat.value
-    }
-    
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                // Category selector
-                categorySelector
-
-                // Stat selector
-                statSelector
-
-                // Leaders list
+            VStack(spacing: 0) {
+                positionSelector
+                controlRow
                 leadersList
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
+                Color.clear.frame(height: 88)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
-    }
-    
-    private var categorySelector: some View {
-        HStack(spacing: 8) {
-            ForEach(StandardStatCategory.allCases, id: \.self) { category in
-                Button(action: {
-                    selectedCategory = category
-                    let stat = availableStats.first ?? "AVG"
-                    selectedStat = stat
-                    sortDescending = defaultDescending(for: stat)
-                    let generator = UIImpactFeedbackGenerator(style: .light)
-                    generator.impactOccurred()
-                }) {
-                    Text(category.rawValue)
-                        .font(GridironType.bodyBold)
-                        .foregroundStyle(selectedCategory == category ? .white : GridironPalette.ink)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(selectedCategory == category ? GridironPalette.turf : GridironPalette.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
-                }
-                .buttonStyle(.plain)
+        .onChange(of: selectedPosition) { _, next in
+            guard !StandardStatCatalog.stats(for: next).contains(selectedStat) else {
+                return
             }
+            selectedStat = StandardStatCatalog.defaultStat(for: next)
+            sortDescending = StandardStatCatalog.defaultDescending(
+                for: selectedStat,
+                position: next
+            )
         }
     }
-    
-    private var statSelector: some View {
+
+    private var positionSelector: some View {
+        GridironTabs(
+            tabs: PlayerPositionGroup.allCases.map(\.rawValue),
+            selected: Binding(
+                get: { selectedPosition.rawValue },
+                set: { rawValue in
+                    guard let position = PlayerPositionGroup.allCases.first(where: {
+                        $0.rawValue == rawValue
+                    }) else { return }
+                    selectedPosition = position
+                }
+            )
+        )
+        .padding(.top, 8)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Position")
+    }
+
+    private var controlRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(availableStats, id: \.self) { stat in
-                    Button(action: {
-                        selectedStat = stat
-                        sortDescending = defaultDescending(for: stat)
-                        let generator = UIImpactFeedbackGenerator(style: .light)
-                        generator.impactOccurred()
-                    }) {
-                        Text(stat)
-                            .font(GridironType.body)
-                            .foregroundStyle(selectedStat == stat ? .white : GridironPalette.ink)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(selectedStat == stat ? GridironPalette.midnight : GridironPalette.surface)
-                            .clipShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
+                if let boardBindings, let viewModel {
+                    StatsBoardStatPicker(
+                        viewModel: viewModel,
+                        bindings: boardBindings
+                    )
+                } else {
+                    statMenu
+                }
+
+                SortDirectionButton(
+                    descending: sortDescending,
+                    statLabel: selectedStat
+                ) {
+                    sortDescending.toggle()
+                }
+
+                if let boardBindings, let viewModel {
+                    StatsViewMenu(
+                        viewModel: viewModel,
+                        board: boardBindings.$board
+                    )
                 }
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 1)
         }
+        .scrollBounceBehavior(.basedOnSize)
+        .scrollClipDisabled()
+        .frame(height: GridironControl.height + 2)
+        .padding(.top, 8)
     }
-    
+
+    private var statMenu: some View {
+        StatPickerMenu(
+            standard: availableStats.map {
+                .init(id: $0, label: $0, isSelected: $0 == selectedStat)
+            },
+            activeLabel: selectedStat,
+            onSelectStandard: { option in
+                selectedStat = option.id
+                sortDescending = StandardStatCatalog.defaultDescending(
+                    for: option.id,
+                    position: selectedPosition
+                )
+            }
+        )
+    }
+
     private var leadersList: some View {
         VStack(spacing: 0) {
-            // Header - tap stat column to toggle sort direction
             Button {
                 sortDescending.toggle()
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -187,21 +167,20 @@ struct StandardStatsLeadersView: View {
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(width: 42, alignment: .leading)
-
                     Text("PLAYER")
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-
                     Text("TEAM")
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(width: 44, alignment: .leading)
-
                     HStack(spacing: 4) {
                         Text(selectedStat.uppercased())
                             .font(GridironType.micro)
                             .foregroundStyle(GridironPalette.turf)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                         Image(systemName: sortDescending ? "arrow.down" : "arrow.up")
                             .font(.system(size: 8, weight: .bold))
                             .foregroundStyle(GridironPalette.turf)
@@ -211,21 +190,28 @@ struct StandardStatsLeadersView: View {
                 .frame(height: GridironGeo.rowHeightHeader)
                 .padding(.horizontal, GridironGeo.padInline)
                 .background(GridironPalette.surfaceAlt)
-                .overlay(Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline), alignment: .bottom)
+                .overlay(
+                    Rectangle()
+                        .fill(GridironPalette.divider)
+                        .frame(height: GridironGeo.hairline),
+                    alignment: .bottom
+                )
             }
             .buttonStyle(.plain)
-            
-            // Players
+
             if sortedPlayers.isEmpty {
                 ContentUnavailableView {
                     Label("No data available", systemImage: "chart.bar")
                 } description: {
-                    Text("No players have \(selectedStat) data for the current season.")
+                    Text("No \(selectedPosition.rawValue) players have \(selectedStat) data for this season.")
                 }
                 .padding(.vertical, 48)
                 .background(GridironPalette.surface)
             } else {
-                ForEach(Array(sortedPlayers.prefix(50).enumerated()), id: \.element.id) { index, player in
+                ForEach(
+                    Array(sortedPlayers.prefix(50).enumerated()),
+                    id: \.element.id
+                ) { index, player in
                     playerRow(rank: index + 1, player: player)
                 }
             }
@@ -237,20 +223,21 @@ struct StandardStatsLeadersView: View {
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
     }
-    
+
     private func playerRow(rank: Int, player: Player) -> some View {
         NavigationLink(value: player) {
             HStack(spacing: 0) {
-                // Rank
                 Text("\(rank)")
                     .font(GridironType.statSmall)
                     .foregroundStyle(GridironPalette.inkSecondary)
                     .frame(width: 36, alignment: .leading)
-                    .monospacedDigit()
 
-                // Player info
                 HStack(spacing: 10) {
-                    PlayerHeadshot(team: player.team, initials: player.initials, size: 36)
+                    PlayerHeadshot(
+                        team: player.team,
+                        initials: player.initials,
+                        size: 36
+                    )
                     VStack(alignment: .leading, spacing: 2) {
                         Text(player.name)
                             .font(GridironType.bodyBold)
@@ -265,7 +252,6 @@ struct StandardStatsLeadersView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Team with color dot
                 HStack(spacing: 4) {
                     TeamColorDot(abbr: player.team, size: 6)
                     Text(displayTeamAbbr(player.team))
@@ -274,7 +260,6 @@ struct StandardStatsLeadersView: View {
                 }
                 .frame(width: 44, alignment: .leading)
 
-                // Stat value
                 Text(statDisplay(for: player))
                     .font(GridironType.statMed)
                     .foregroundStyle(GridironPalette.turf)
@@ -283,7 +268,11 @@ struct StandardStatsLeadersView: View {
             }
             .frame(height: GridironGeo.rowHeight)
             .padding(.horizontal, GridironGeo.padInline)
-            .background(rank % 2 == 1 ? GridironPalette.surface : GridironPalette.surfaceAlt)
+            .background(
+                rank.isMultiple(of: 2)
+                    ? GridironPalette.surfaceAlt
+                    : GridironPalette.surface
+            )
             .overlay(
                 Rectangle()
                     .fill(GridironPalette.divider)
@@ -293,12 +282,83 @@ struct StandardStatsLeadersView: View {
         }
         .buttonStyle(.plain)
     }
+
+    private func numericStat(for player: Player) -> Double? {
+        guard let stat = player.standardStats?.first(where: {
+            $0.label == selectedStat
+        }) else { return nil }
+        return DashboardViewModel.rawNumeric(stat.value)
+    }
+
+    private func statDisplay(for player: Player) -> String {
+        player.standardStats?.first(where: {
+            $0.label == selectedStat
+        })?.value ?? "—"
+    }
+
+    private func games(for player: Player) -> Double {
+        guard let value = player.standardStats?.first(where: {
+            $0.label == "G"
+        })?.value else { return 0 }
+        return DashboardViewModel.rawNumeric(value) ?? 0
+    }
+}
+
+/// Standalone traditional-stat drill-down reached from a player or team page.
+struct StandardStatsLeaderboardScreen: View {
+    let players: [Player]
+    var season: Int? = nil
+    @State private var stat: String
+    @State private var position: PlayerPositionGroup
+    @State private var sortDescending: Bool
+
+    init(
+        players: [Player],
+        initialStat: String = "Pass Yds",
+        initialPosition: PlayerPositionGroup = .qb,
+        season: Int? = nil
+    ) {
+        self.players = players
+        self.season = season
+        _stat = State(initialValue: initialStat)
+        _position = State(initialValue: initialPosition)
+        _sortDescending = State(
+            initialValue: StandardStatCatalog.defaultDescending(
+                for: initialStat,
+                position: initialPosition
+            )
+        )
+    }
+
+    init(
+        players: [Player],
+        initialStat: String,
+        initialCategory: StandardStatCategory,
+        season: Int? = nil
+    ) {
+        self.init(
+            players: players,
+            initialStat: initialStat,
+            initialPosition: initialCategory.defaultPosition,
+            season: season
+        )
+    }
+
+    var body: some View {
+        StandardStatsLeadersView(
+            players: players,
+            selectedStat: $stat,
+            selectedPosition: $position,
+            sortDescending: $sortDescending,
+            season: season
+        )
+    }
 }
 
 #if DEBUG
 #Preview {
     NavigationStack {
-        StandardStatsLeadersView(players: SampleData.players)
+        StandardStatsLeaderboardScreen(players: SampleData.players)
             .environmentObject(StoreService.shared)
             .navigationTitle("Standard Stats")
     }

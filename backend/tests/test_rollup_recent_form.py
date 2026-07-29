@@ -10,7 +10,7 @@ left out rather than reported as a misleading 0.
 
 import pytest
 
-from rollup_recent_form import _aggregate, _delta, build_rows
+from rollup_recent_form import _aggregate, _delta, _routable_logs, build_rows
 
 
 def _log(game_date, week, metrics, player_id=1, player_type="qb", team="KC", plays=None, touches=None):
@@ -235,6 +235,14 @@ def test_players_and_sides_stay_independent():
     by_key = {(r["player_id"], r["player_type"], r["window_games"]): r for r in rows}
     assert by_key[(1, "qb", 3)]["metrics"]["attempts"] == 30
     assert by_key[(2, "def", 3)]["metrics"]["tackles"] == 6
+
+
+def test_unroutable_players_are_excluded_before_rollup():
+    logs = [
+        _log("2025-09-08", 1, {"attempts": 30}, player_id=1),
+        _log("2025-09-08", 1, {"attempts": 20}, player_id=2),
+    ]
+    assert [row["player_id"] for row in _routable_logs(logs, {2})] == [2]
 
 
 def test_games_plays_touches_and_team_recorded():

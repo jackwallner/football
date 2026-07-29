@@ -170,6 +170,25 @@ enum MetricCategory: String, Codable, CaseIterable, Hashable, Sendable {
     case receiving = "Receiving"
     case defense = "Defense"
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        guard let category = Self.allCases.first(where: {
+            $0.rawValue.caseInsensitiveCompare(value) == .orderedSame
+        }) else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Unknown metric category: \(value)"
+            )
+        }
+        self = category
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+
     /// Registry-driven display order. Advanced metrics lead within each category,
     /// followed by traditional production metrics.
     var metricPriorityOrder: [String] {

@@ -15,16 +15,17 @@ struct AboutView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
-                aboutCard
                 proStatusCard
-                refreshCard
                 linkCard
+                refreshCard
+                aboutCard
                 versionCard
                 disclaimerCard
             }
             .padding(.horizontal, 12)
             .padding(.top, 12)
             .padding(.bottom, 12)
+            Color.clear.frame(height: 88)
         }
         .background(GridironPalette.canvas.ignoresSafeArea())
         .sheet(item: $paywallTrigger) { trigger in
@@ -77,7 +78,7 @@ struct AboutView: View {
                     }
                     Spacer()
                     if !store.isPro {
-                        Button(store.isLapsed ? "Renew" : "Upgrade") {
+                        Button(store.isLapsed ? "Renew" : store.upgradeCTALabel) {
                             paywallTrigger = store.defaultUpgradeTrigger
                         }
                         .buttonStyle(.borderedProminent)

@@ -1,5 +1,13 @@
 import Foundation
 
+/// Returns true when a fetch ended only because its Swift task was superseded.
+/// URLSession reports task cancellation as `URLError.cancelled`.
+func isTaskCancellation(_ error: Error) -> Bool {
+    if error is CancellationError { return true }
+    if let urlError = error as? URLError, urlError.code == .cancelled { return true }
+    return false
+}
+
 protocol StatcastProviding: Sendable {
     func fetchPlayers() async throws -> [Player]
     func fetchHistoricalPlayers() async throws -> [Player]

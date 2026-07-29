@@ -6,22 +6,80 @@ struct ComparisonRoute: Hashable, Identifiable {
     var id: String { "\(playerA.id)-vs-\(playerB.id)" }
 }
 
+struct ComparisonCatalog {
+    var seasons: [Int] = []
+    var roster: (Int) -> [Player] = { _ in [] }
+    var resolve: (Player, Int) -> Player? = { player, season in
+        player.season == season ? player : nil
+    }
+    var isSeasonLocked: (Int) -> Bool = { _ in false }
+    var isLoadingHistory: Bool = false
+    var loadHistory: (() async -> Void)? = nil
+
+    init(
+        seasons: [Int] = [],
+        roster: @escaping (Int) -> [Player] = { _ in [] },
+        resolve: @escaping (Player, Int) -> Player? = { player, season in
+            player.season == season ? player : nil
+        },
+        isSeasonLocked: @escaping (Int) -> Bool = { _ in false },
+        isLoadingHistory: Bool = false,
+        loadHistory: (() async -> Void)? = nil
+    ) {
+        self.seasons = seasons
+        self.roster = roster
+        self.resolve = resolve
+        self.isSeasonLocked = isSeasonLocked
+        self.isLoadingHistory = isLoadingHistory
+        self.loadHistory = loadHistory
+    }
+
+    @MainActor
+    init(viewModel: DashboardViewModel) {
+        self.init(
+            seasons: viewModel.availableSeasons,
+            roster: { viewModel.players(forSeason: $0).sorted { $0.name < $1.name } },
+            resolve: { player, season in
+                if player.season == season { return player }
+                return viewModel.playerHistories[player.playerId]?.first { $0.season == season }
+            },
+            isSeasonLocked: { viewModel.isSeasonLocked($0) },
+            isLoadingHistory: viewModel.isHistoricalLoading,
+            loadHistory: { await viewModel.loadHistoricalIfNeeded() }
+        )
+    }
+}
+
 struct PlayerComparisonView: View {
     @EnvironmentObject private var store: StoreService
     let playerA: Player
     let playerB: Player
+    var catalog: ComparisonCatalog? = nil
+
+    private enum PickerTarget: Identifiable {
+        case a, b
+        var id: Int { hashValue }
+    }
+
     @State private var showingTrial = false
+    @State private var overrideA: Player?
+    @State private var overrideB: Player?
+    @State private var picker: PickerTarget?
+    @State private var note: String?
+
+    private var a: Player { overrideA ?? playerA }
+    private var b: Player { overrideB ?? playerB }
 
     private var comparisonMetrics: [(label: String, category: MetricCategory, a: Metric?, b: Metric?)] {
         var seen = Set<String>()
         var result: [(label: String, category: MetricCategory, a: Metric?, b: Metric?)] = []
-        let allMetrics = playerA.metrics + playerB.metrics
+        let allMetrics = a.metrics + b.metrics
         for metric in allMetrics {
             let key = "\(metric.label)|\(metric.category.rawValue)"
             guard seen.insert(key).inserted else { continue }
-            let a = playerA.metrics.first { $0.label == metric.label && $0.category == metric.category }
-            let b = playerB.metrics.first { $0.label == metric.label && $0.category == metric.category }
-            result.append((metric.label, metric.category, a, b))
+            let left = a.metrics.first { $0.label == metric.label && $0.category == metric.category }
+            let right = b.metrics.first { $0.label == metric.label && $0.category == metric.category }
+            result.append((metric.label, metric.category, left, right))
         }
         return result.sorted { $0.category == $1.category
             ? $0.category.sortMetrics($0.label, $1.label)
@@ -65,7 +123,7 @@ struct PlayerComparisonView: View {
                             .font(GridironType.cardTitle)
                             .foregroundStyle(GridironPalette.ink)
 
-                        Text("StatScout+ unlocks side-by-side player comparisons across every metric. See who leads in xwOBA, Barrel%, Sprint Speed, and more.")
+                        Text("StatScout+ unlocks side-by-side player comparisons across every metric. See who leads in EPA, passing efficiency, separation, and more.")
                             .font(GridironType.small)
                             .foregroundStyle(GridironPalette.inkSecondary)
                             .multilineTextAlignment(.center)
@@ -116,6 +174,26 @@ struct PlayerComparisonView: View {
                 ReviewPromptTracker.recordPositiveMoment()
             }
         }
+        .sheet(item: $picker) { target in
+            if let catalog {
+                let side = target == .a ? a : b
+                let other = target == .a ? b : a
+                ComparePlayerPicker(
+                    players: catalog.roster(side.season ?? 0).filter {
+                        $0.playerId != other.playerId
+                    },
+                    season: side.season,
+                    isLoading: catalog.isLoadingHistory
+                ) { selected in
+                    note = nil
+                    if target == .a {
+                        overrideA = selected
+                    } else {
+                        overrideB = selected
+                    }
+                }
+            }
+        }
     }
 
     private var comparisonContent: some View {
@@ -124,6 +202,15 @@ struct PlayerComparisonView: View {
                 playerHeadlines
                     .padding(.horizontal, 12)
                     .padding(.top, 12)
+
+                if let note {
+                    Text(note)
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.turf)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 12)
+                }
 
                 if comparisonMetrics.isEmpty {
                     ContentUnavailableView {
@@ -140,6 +227,7 @@ struct PlayerComparisonView: View {
                 }
             }
             .padding(.bottom, 12)
+            Color.clear.frame(height: 88)
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(GridironPalette.canvas.ignoresSafeArea())
@@ -148,23 +236,90 @@ struct PlayerComparisonView: View {
     }
 
     private var playerHeadlines: some View {
-        HStack(spacing: 12) {
-            playerSummaryCard(player: playerA, label: "A")
-            playerSummaryCard(player: playerB, label: "B")
+        HStack(alignment: .top, spacing: 8) {
+            playerSummaryCard(player: a, target: .a)
+            if catalog != nil {
+                Button {
+                    let left = a
+                    let right = b
+                    overrideA = right
+                    overrideB = left
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } label: {
+                    Image(systemName: "arrow.left.arrow.right")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(GridironPalette.inkSecondary)
+                        .frame(width: 32, height: 32)
+                        .background(GridironPalette.surface)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(GridironPalette.hairline, lineWidth: 0.5))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 44)
+                .accessibilityLabel("Swap sides")
+            }
+            playerSummaryCard(player: b, target: .b)
         }
     }
 
-    private func playerSummaryCard(player: Player, label: String) -> some View {
+    private func playerSummaryCard(player: Player, target: PickerTarget) -> some View {
         VStack(spacing: 8) {
-            PlayerHeadshot(team: player.team, initials: player.initials, size: 56)
-            Text(player.name)
-                .font(GridironType.smallBold)
-                .foregroundStyle(GridironPalette.ink)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            Text("\(player.team) · \(player.displayPosition)")
-                .font(GridironType.micro)
-                .foregroundStyle(GridironPalette.inkTertiary)
+            NavigationLink(value: player) {
+                VStack(spacing: 6) {
+                    PlayerHeadshot(team: player.team, initials: player.initials, size: 56)
+                    Text(player.name)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text("\(displayTeamAbbr(player.team)) · \(player.displayPosition)")
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens \(player.name)'s page")
+
+            if let catalog {
+                SeasonMenu(
+                    seasons: catalog.seasons,
+                    selected: player.season ?? 0,
+                    isLocked: { catalog.isSeasonLocked($0) },
+                    onSelect: { season in
+                        if catalog.isSeasonLocked(season) {
+                            showingTrial = true
+                        } else {
+                            move(target, to: season, catalog: catalog)
+                        }
+                    }
+                ) {
+                    GridironInlinePill(
+                        systemImage: "calendar",
+                        title: player.season.map(String.init) ?? "-"
+                    )
+                }
+                .accessibilityLabel("Season for \(player.name)")
+
+                Button {
+                    picker = target
+                } label: {
+                    GridironInlinePill(
+                        systemImage: "arrow.triangle.2.circlepath",
+                        title: "Change"
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Change \(target == .a ? "first" : "second") player")
+            } else if let season = player.season {
+                Text(String(season))
+                    .font(GridironType.micro)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(GridironPalette.midnight)
+                    .clipShape(Capsule())
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
@@ -176,6 +331,24 @@ struct PlayerComparisonView: View {
         )
     }
 
+    private func move(_ target: PickerTarget, to season: Int, catalog: ComparisonCatalog) {
+        let current = target == .a ? a : b
+        if let resolved = catalog.resolve(current, season) {
+            if target == .a {
+                overrideA = resolved
+            } else {
+                overrideB = resolved
+            }
+            note = nil
+        } else {
+            note = catalog.isLoadingHistory
+                ? "Loading past seasons…"
+                : "No \(season) data for \(current.name)."
+            Task { await catalog.loadHistory?() }
+        }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
     private func categoryCard(category: MetricCategory, metrics: [(label: String, a: Metric?, b: Metric?)]) -> some View {
         VStack(spacing: 0) {
             GridironSectionBar(title: category.rawValue.uppercased())
@@ -185,11 +358,11 @@ struct PlayerComparisonView: View {
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(width: 72, alignment: .leading)
-                Text(playerA.name.split(separator: " ").last.map(String.init) ?? "A")
+                Text(a.name.split(separator: " ").last.map(String.init) ?? "A")
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
-                Text(playerB.name.split(separator: " ").last.map(String.init) ?? "B")
+                Text(b.name.split(separator: " ").last.map(String.init) ?? "B")
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -212,7 +385,7 @@ struct PlayerComparisonView: View {
                     metricValueCell(metric: item.a, other: item.b)
                     metricValueCell(metric: item.b, other: item.a)
                 }
-                .frame(height: 56)
+                .frame(height: 60)
                 .padding(.horizontal, GridironGeo.padInline)
                 .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
                 .overlay(
@@ -231,25 +404,29 @@ struct PlayerComparisonView: View {
 
     private func metricValueCell(metric: Metric?, other: Metric?) -> some View {
         Group {
-            if let m = metric {
-                let isWinner = (other.map { m.percentile > $0.percentile }) ?? false
+            if let m = metric, m.percentile > 0 || !m.value.isEmpty {
+                let hasValue = !m.value.isEmpty
+                let comparable = other.map { $0.percentile > 0 || !$0.value.isEmpty } ?? false
+                let isWinner = comparable && (other.map { m.percentile > $0.percentile } ?? false)
                 let pctColor = GridironPalette.color(forPercentile: m.percentile)
-                // Raw value only — the colored bar conveys percentile. Tinting
-                // the value text by percentile keeps the "who's better" cue
-                // without doubling up the number.
-                VStack(spacing: 6) {
+                let pctTextColor = GridironPalette.textColor(forPercentile: m.percentile)
+                VStack(spacing: 4) {
                     HStack(spacing: 4) {
                         if isWinner {
                             Image(systemName: "trophy.fill")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(Color.yellow)
                         }
-                        Text(m.value.isEmpty ? "—" : m.value)
+                        Text(hasValue ? m.value : "\(m.percentile)")
                             .font(GridironType.statMed)
-                            .foregroundStyle(pctColor)
+                            .foregroundStyle(pctTextColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
+                    Text(hasValue ? "" : "PERCENTILE")
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                        .frame(height: 10)
                     RoundedRectangle(cornerRadius: 2)
                         .fill(pctColor)
                         .frame(width: max(8, CGFloat(m.percentile) * 0.6), height: 4)

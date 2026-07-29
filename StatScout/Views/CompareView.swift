@@ -38,9 +38,36 @@ struct CompareView: View {
     @State private var showingTrial = false
     @State private var showingFollowSheet = false
     @State private var favorites = FavoritesStore.shared
+    @State private var seasonA: Int?
+    @State private var seasonB: Int?
 
-    private var players: [Player] {
-        viewModel.seasonPlayers.sorted { $0.name < $1.name }
+    private var activeSeasonA: Int { seasonA ?? viewModel.selectedSeason }
+    private var activeSeasonB: Int { seasonB ?? viewModel.selectedSeason }
+
+    private func players(forSeason season: Int) -> [Player] {
+        viewModel.players(forSeason: season).sorted { $0.name < $1.name }
+    }
+
+    private func resolved(_ player: Player?, season: Int) -> Player? {
+        guard let player else { return nil }
+        if player.season == season { return player }
+        return viewModel.playerHistories[player.playerId]?.first { $0.season == season }
+    }
+
+    private var resolvedA: Player? { resolved(playerA, season: activeSeasonA) }
+    private var resolvedB: Player? { resolved(playerB, season: activeSeasonB) }
+
+    private var slotWarning: String? {
+        if viewModel.isHistoricalLoading, resolvedA == nil || resolvedB == nil {
+            return "Loading past seasons…"
+        }
+        if let playerA, resolvedA == nil {
+            return "No \(activeSeasonA) data for \(playerA.name)."
+        }
+        if let playerB, resolvedB == nil {
+            return "No \(activeSeasonB) data for \(playerB.name)."
+        }
+        return nil
     }
 
     /// The followed players that exist in the selected season, in the order
@@ -98,15 +125,32 @@ struct CompareView: View {
                 Task { await viewModel.loadHistoricalIfNeeded() }
             }
         }
+        .task(id: "\(activeSeasonA)-\(activeSeasonB)") {
+            guard store.isPro,
+                  activeSeasonA != viewModel.selectedSeason
+                    || activeSeasonB != viewModel.selectedSeason
+            else { return }
+            await viewModel.loadHistoricalIfNeeded()
+        }
         .sheet(item: $picker) { target in
-            // Hide the other slot's pick so a player can't be compared to themselves.
-            ComparePlayerPicker(players: players.filter { candidate in
+            let season: Int = {
                 switch target {
-                case .playerA: return candidate.playerId != playerB?.playerId
-                case .playerB: return candidate.playerId != playerA?.playerId
-                case .yearPlayer: return true
+                case .playerA: return activeSeasonA
+                case .playerB: return activeSeasonB
+                case .yearPlayer: return viewModel.selectedSeason
                 }
-            }) { selected in
+            }()
+            ComparePlayerPicker(
+                players: players(forSeason: season).filter { candidate in
+                    switch target {
+                    case .playerA: return candidate.playerId != playerB?.playerId
+                    case .playerB: return candidate.playerId != playerA?.playerId
+                    case .yearPlayer: return true
+                    }
+                },
+                season: season,
+                isLoading: viewModel.isHistoricalLoading
+            ) { selected in
                 switch target {
                 case .playerA: playerA = selected
                 case .playerB: playerB = selected
@@ -119,12 +163,21 @@ struct CompareView: View {
         .sheet(isPresented: $showingTrial) {
             TrialPitchSheet(trigger: .playerComparison)
         }
+        .modifier(PlayerProfileDestination(viewModel: viewModel))
         .navigationDestination(item: $comparisonRoute) { route in
-            PlayerComparisonView(playerA: route.playerA, playerB: route.playerB)
+            PlayerComparisonView(
+                playerA: route.playerA,
+                playerB: route.playerB,
+                catalog: ComparisonCatalog(viewModel: viewModel)
+            )
                 .modifier(GridironNavBarPublic())
         }
         .navigationDestination(item: $yearRoute) { route in
-            YearCompareDestination(route: route, viewModel: viewModel)
+            YearCompareDestination(
+                route: route,
+                viewModel: viewModel,
+                onChangePlayer: { picker = .yearPlayer }
+            )
                 .modifier(GridironNavBarPublic())
         }
     }
@@ -323,16 +376,37 @@ struct CompareView: View {
             GridironSectionBar(title: "PLAYER VS PLAYER")
 
             VStack(spacing: 12) {
-                HStack(spacing: 10) {
-                    playerSlot(player: playerA, placeholder: "Player A") { picker = .playerA }
+                HStack(alignment: .top, spacing: 10) {
+                    slotColumn(
+                        player: playerA,
+                        placeholder: "Player A",
+                        season: activeSeasonA,
+                        onPickPlayer: { picker = .playerA },
+                        onPickSeason: { seasonA = $0 }
+                    )
                     Text("vs")
                         .font(GridironType.smallBold)
                         .foregroundStyle(GridironPalette.inkTertiary)
-                    playerSlot(player: playerB, placeholder: "Player B") { picker = .playerB }
+                        .padding(.top, 40)
+                    slotColumn(
+                        player: playerB,
+                        placeholder: "Player B",
+                        season: activeSeasonB,
+                        onPickPlayer: { picker = .playerB },
+                        onPickSeason: { seasonB = $0 }
+                    )
+                }
+
+                if let slotWarning {
+                    Text(slotWarning)
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
                 }
 
                 Button {
-                    if let a = playerA, let b = playerB {
+                    if let a = resolvedA, let b = resolvedB {
                         comparisonRoute = ComparisonRoute(playerA: a, playerB: b)
                     }
                 } label: {
@@ -341,13 +415,13 @@ struct CompareView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 46)
-                        .background(playerA != nil && playerB != nil
+                        .background(resolvedA != nil && resolvedB != nil
                                     ? GridironPalette.turf
                                     : GridironPalette.inkTertiary)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
-                .disabled(playerA == nil || playerB == nil)
+                .disabled(resolvedA == nil || resolvedB == nil)
             }
             .padding(16)
         }
@@ -395,6 +469,35 @@ struct CompareView: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
+    }
+
+    private func slotColumn(
+        player: Player?,
+        placeholder: String,
+        season: Int,
+        onPickPlayer: @escaping () -> Void,
+        onPickSeason: @escaping (Int) -> Void
+    ) -> some View {
+        VStack(spacing: 6) {
+            playerSlot(player: player, placeholder: placeholder, action: onPickPlayer)
+
+            SeasonMenu(
+                seasons: viewModel.availableSeasons,
+                selected: season,
+                isLocked: { viewModel.isSeasonLocked($0) },
+                onSelect: { picked in
+                    if viewModel.isSeasonLocked(picked) {
+                        showingTrial = true
+                    } else {
+                        onPickSeason(picked)
+                    }
+                }
+            ) {
+                GridironInlinePill(systemImage: "calendar", title: String(season))
+            }
+            .accessibilityLabel("Season for \(player?.name ?? placeholder)")
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func playerSlot(player: Player?, placeholder: String, action: @escaping () -> Void) -> some View {
@@ -507,24 +610,85 @@ struct CompareView: View {
 private struct YearCompareDestination: View {
     let route: YearCompareRoute
     let viewModel: DashboardViewModel
+    var onChangePlayer: (() -> Void)? = nil
 
     private var history: [Player] {
         viewModel.playerHistories[route.playerId] ?? []
     }
 
+    private var latest: Player? {
+        history.max { ($0.season ?? 0) < ($1.season ?? 0) }
+    }
+
+    @ViewBuilder
+    private var playerBar: some View {
+        HStack(spacing: 10) {
+            if let latest {
+                NavigationLink(value: latest) {
+                    HStack(spacing: 10) {
+                        PlayerHeadshot(team: latest.team, initials: latest.initials, size: 34)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(route.playerName)
+                                .font(GridironType.bodyBold)
+                                .foregroundStyle(GridironPalette.ink)
+                                .lineLimit(1)
+                            Text("\(displayTeamAbbr(latest.team)) · \(latest.displayPosition)")
+                                .font(GridironType.micro)
+                                .foregroundStyle(GridironPalette.inkTertiary)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens \(route.playerName)'s page")
+            } else {
+                Text(route.playerName)
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
+            }
+
+            Spacer(minLength: 0)
+
+            if let onChangePlayer {
+                Button(action: onChangePlayer) {
+                    GridironInlinePill(
+                        systemImage: "arrow.triangle.2.circlepath",
+                        title: "Change"
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Compare a different player's seasons")
+            }
+        }
+        .padding(.horizontal, GridironGeo.padInline)
+        .padding(.vertical, 10)
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+    }
+
     var body: some View {
         ScrollView {
-            if history.count < 2 {
-                ContentUnavailableView {
-                    Label("Not enough history", systemImage: "calendar.badge.clock")
-                } description: {
-                    Text(viewModel.isHistoricalLoading
-                         ? "Loading past seasons for \(route.playerName)…"
-                         : "\(route.playerName) doesn't have multiple seasons of data to compare.")
+            VStack(spacing: 0) {
+                playerBar
+                if history.count < 2 {
+                    ContentUnavailableView {
+                        Label("Not enough history", systemImage: "calendar.badge.clock")
+                    } description: {
+                        Text(viewModel.isHistoricalLoading
+                             ? "Loading past seasons for \(route.playerName)…"
+                             : "\(route.playerName) doesn't have multiple seasons of data to compare.")
+                    }
+                    .padding(.vertical, 64)
+                } else {
+                    YearComparisonView(history: history)
                 }
-                .padding(.vertical, 64)
-            } else {
-                YearComparisonView(history: history)
+                Color.clear.frame(height: 88)
             }
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -536,8 +700,10 @@ private struct YearCompareDestination: View {
 
 /// Lightweight, self-contained player picker (the profile screen's picker is
 /// private to that file).
-private struct ComparePlayerPicker: View {
+struct ComparePlayerPicker: View {
     let players: [Player]
+    var season: Int? = nil
+    var isLoading: Bool = false
     var onSelect: (Player) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
@@ -571,8 +737,26 @@ private struct ComparePlayerPicker: View {
                     .padding(.vertical, 4)
                 }
             }
+            .overlay {
+                if filtered.isEmpty {
+                    ContentUnavailableView {
+                        Label(
+                            isLoading ? "Loading players…" : "No players",
+                            systemImage: "person.slash"
+                        )
+                    } description: {
+                        if isLoading {
+                            Text("Pulling the \(season.map(String.init) ?? "") roster.")
+                        } else if !searchText.isEmpty {
+                            Text("Nobody matches “\(searchText)”.")
+                        } else if let season {
+                            Text("No player data for the " + String(season) + " season.")
+                        }
+                    }
+                }
+            }
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search players")
-            .navigationTitle("Select Player")
+            .navigationTitle(season.map { "Select Player · " + String($0) } ?? "Select Player")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

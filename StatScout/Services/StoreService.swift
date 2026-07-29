@@ -287,16 +287,44 @@ final class StoreService: NSObject, ObservableObject {
     /// Compare). Leads with the yearly free-trial offer when available so the
     /// upsell emphasizes the low-friction option instead of the lifetime price.
     var paywallBlurCTA: String {
-        if let yearly = products.first(where: { $0.productKind == .yearly }) {
-            if isEligibleForIntroOffer(yearly), let trial = yearly.introOfferLabel {
+        directCTALabel(for: .upgrade)
+    }
+
+    /// The short label every upgrade entry point uses. The pure helper keeps
+    /// the trial branch testable without configuring RevenueCat in Simulator.
+    nonisolated static func upgradeCTALabel(trialAvailable: Bool) -> String {
+        trialAvailable ? "Try Free" : "Upgrade"
+    }
+
+    var isYearlyTrialAvailable: Bool {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["STATSCOUT_FORCE_TRIAL_CTA"] == "1" {
+            return true
+        }
+        #endif
+        guard let yearly = yearlyPackage else { return false }
+        return isEligibleForIntroOffer(yearly) && yearly.introOfferLabel != nil
+    }
+
+    var upgradeCTALabel: String {
+        Self.upgradeCTALabel(trialAvailable: isYearlyTrialAvailable)
+    }
+
+    func directCTALabel(for trigger: PaywallTrigger) -> String {
+        if let yearly = yearlyPackage {
+            if trigger != .winback,
+               isEligibleForIntroOffer(yearly),
+               let trial = yearly.introOfferLabel {
                 return "Start \(trial)"
             }
-            return "Try StatScout+ for \(yearly.priceLabel)"
+            let verb = trigger == .winback ? "Restart" : "Try"
+            return "\(verb) StatScout+ for \(yearly.priceLabel)"
         }
         if let price = proPrice {
-            return "Unlock StatScout+ for \(price)"
+            let verb = trigger == .winback ? "Restart" : "Unlock"
+            return "\(verb) StatScout+ for \(price)"
         }
-        return "Unlock StatScout+"
+        return trigger == .winback ? "Restart StatScout+" : "Unlock StatScout+"
     }
 
     /// One-line secondary caption shown under the CTA when a trial is offered,

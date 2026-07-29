@@ -92,15 +92,22 @@ struct TeamsView: View {
         .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Teams")
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
             // The green pill is its own capsule; suppress the iOS 26 Liquid
-                // Glass container or it reads as a pill inside a pill, which is
-                // exactly what the upgrade CTA on the other side already avoids.
-                if #available(iOS 26.0, *) {
-                    ToolbarItem(placement: .topBarLeading) { seasonMenu }
-                        .sharedBackgroundVisibility(.hidden)
-                } else {
-                    ToolbarItem(placement: .topBarLeading) { seasonMenu }
-                }
+            // Glass container or it reads as a pill inside a pill, which is
+            // exactly what the upgrade CTA on the other side already avoids.
+            if #available(iOS 26.0, *) {
+                ToolbarItem(placement: .topBarLeading) { seasonMenu }
+                    .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .topBarLeading) { seasonMenu }
+            }
         }
         .refreshable {
             await viewModel.load()
@@ -154,64 +161,21 @@ struct TeamsView: View {
         .redacted(reason: .placeholder)
     }
 
-    // Navigation-bar season selector matches the Stats tab: a compact turf pill
-    // with calendar and year on the midnight bar. Replaces the old in-content
-    // season header card so Teams and Stats read the same.
     private var seasonMenu: some View {
-        Menu {
-            if viewModel.isHistoricalLoading {
-                Label("Loading past seasons…", systemImage: "hourglass")
-            } else if !viewModel.hasLoadedHistorical {
-                Button {
-                    if store.isPro {
-                        Task { await viewModel.loadHistoricalIfNeeded() }
-                    } else {
-                        // Explicit tap — always answer it; the gate only caps
-                        // automatic pop-ups.
-                        showingTrial = true
-                    }
-                } label: {
-                    Label(store.isPro ? "Load past seasons" : "Past seasons require StatScout+",
-                          systemImage: store.isPro ? "clock.arrow.circlepath" : "crown.fill")
+        SeasonMenu(
+            seasons: viewModel.availableSeasons,
+            selected: viewModel.selectedSeason,
+            isLocked: { viewModel.isSeasonLocked($0) },
+            onSelect: { season in
+                if viewModel.isSeasonLocked(season) {
+                    showingTrial = true
+                } else {
+                    viewModel.selectedSeason = season
                 }
             }
-            ForEach(viewModel.availableSeasons, id: \.self) { season in
-                let isLocked = viewModel.isSeasonLocked(season)
-                Button {
-                    if isLocked {
-                        showingTrial = true
-                    } else {
-                        viewModel.selectedSeason = season
-                    }
-                } label: {
-                    HStack {
-                        Text(String(season))
-                        if isLocked {
-                            Image(systemName: "crown.fill")
-                                .font(.system(size: 10))
-                                .foregroundStyle(GridironPalette.inkTertiary)
-                        }
-                    }
-                }
-            }
-        } label: {
-            HStack(spacing: 5) {
-                Image(systemName: "calendar")
-                    .font(.system(size: 11, weight: .semibold))
-                Text(String(viewModel.selectedSeason))
-                    .font(GridironType.smallBold)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 9, weight: .bold))
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(GridironPalette.turf)
-            .clipShape(Capsule())
+        ) {
+            GridironNavPill(systemImage: "calendar", title: String(viewModel.selectedSeason))
         }
-        .menuOrder(.fixed)
-        .accessibilityLabel("Season")
-        .accessibilityValue(String(viewModel.selectedSeason))
     }
 
     /// Logo grid replaces the old single-column list of rows. Each tile is a
