@@ -14,7 +14,11 @@ protocol StatcastProviding: Sendable {
     func fetchCurrentPlayers() async throws -> [Player]
     func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog]
     func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog]
-    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm]
+    func fetchRecentForm(
+        season: Int,
+        seasonPhase: SeasonPhase,
+        windowWeeks: Int
+    ) async throws -> [RecentForm]
 }
 
 struct StatcastAPI: StatcastProviding {
@@ -120,7 +124,11 @@ struct StatcastAPI: StatcastProviding {
     /// nightly rewrites these rows in place, and a stale window is worse than a
     /// slow one. The element decoder is lossy so a single malformed row can't
     /// empty the board.
-    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm] {
+    func fetchRecentForm(
+        season: Int,
+        seasonPhase: SeasonPhase,
+        windowWeeks: Int
+    ) async throws -> [RecentForm] {
         var all: [RecentForm] = []
         let pageSize = 1000
         var offset = 0
@@ -130,7 +138,8 @@ struct StatcastAPI: StatcastProviding {
                 .appending(queryItems: [
                     URLQueryItem(name: "select", value: "*"),
                     URLQueryItem(name: "season", value: "eq.\(season)"),
-                    URLQueryItem(name: "window_games", value: "eq.\(windowGames)"),
+                    URLQueryItem(name: "season_type", value: "eq.\(seasonPhase.rawValue)"),
+                    URLQueryItem(name: "window_weeks", value: "eq.\(windowWeeks)"),
                     URLQueryItem(name: "order", value: "player_id.asc"),
                     URLQueryItem(name: "limit", value: String(pageSize)),
                     URLQueryItem(name: "offset", value: String(offset)),
@@ -163,7 +172,10 @@ struct StatcastAPI: StatcastProviding {
                 URLQueryItem(name: "select", value: "*"),
                 // Stable key so offset paging can't skip/duplicate rows when
                 // updated_at changes mid-fetch.
-                URLQueryItem(name: "order", value: "season.asc,id.asc"),
+                URLQueryItem(
+                    name: "order",
+                    value: "season.asc,season_type.asc,id.asc"
+                ),
                 URLQueryItem(name: "limit", value: String(pageSize)),
                 URLQueryItem(name: "offset", value: String(offset)),
             ] + filters
@@ -215,7 +227,11 @@ struct OfflineStatcastAPI: StatcastProviding {
     func fetchCurrentPlayers() async throws -> [Player] { [] }
     func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog] { [] }
     func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog] { [] }
-    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm] { [] }
+    func fetchRecentForm(
+        season: Int,
+        seasonPhase: SeasonPhase,
+        windowWeeks: Int
+    ) async throws -> [RecentForm] { [] }
 }
 
 #if DEBUG
@@ -240,7 +256,11 @@ struct PreviewStatcastAPI: StatcastProviding {
         []
     }
 
-    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm] {
+    func fetchRecentForm(
+        season: Int,
+        seasonPhase: SeasonPhase,
+        windowWeeks: Int
+    ) async throws -> [RecentForm] {
         []
     }
 }

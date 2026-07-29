@@ -1,9 +1,9 @@
-"""Rolling last-N-games rollup tests.
+"""Rolling last-N-weeks rollup tests.
 
 The claim worth pinning down is exactness: game logs store raw counts, so a
 window's rate has to equal a from-scratch recompute over the summed counts,
 not an average of already-averaged per-game rates. The other load-bearing
-behaviors are last-N-games windowing (not calendar days), a prior window that
+behaviors are shared week windowing (not calendar days), a prior window that
 doesn't overlap the current one, and metrics with a zero denominator being
 left out rather than reported as a misleading 0.
 """
@@ -155,16 +155,16 @@ def test_ngs_metric_absent_when_game_logs_never_had_it():
 
 
 # --------------------------------------------------------------------------- #
-# Last-N-games windowing (not calendar days)
+# League-anchored week windowing
 # --------------------------------------------------------------------------- #
-def test_window_takes_the_players_most_recent_n_games():
+def test_window_takes_games_in_the_leagues_latest_n_weeks():
     logs = [
         _log("2025-09-08", 1, {"attempts": 10}),
         _log("2025-09-15", 2, {"attempts": 20}),
         _log("2025-09-22", 3, {"attempts": 30}),
         _log("2025-09-29", 4, {"attempts": 40}),
     ]
-    rows = {r["window_games"]: r for r in build_rows(logs)}
+    rows = {r["window_weeks"]: r for r in build_rows(logs)}
     three = rows[3]
     assert three["games"] == 3
     assert three["metrics"]["attempts"] == 90  # weeks 2, 3, 4
@@ -179,20 +179,20 @@ def test_player_with_fewer_than_n_games_still_gets_a_row():
         _log("2025-09-08", 1, {"attempts": 10}),
         _log("2025-09-15", 2, {"attempts": 20}),
     ]
-    rows = {r["window_games"]: r for r in build_rows(logs)}
+    rows = {r["window_weeks"]: r for r in build_rows(logs)}
     assert set(rows.keys()) == {3, 5, 8}
     assert rows[5]["games"] == 2
     assert rows[5]["metrics"]["attempts"] == 30
     assert rows[8]["games"] == 2
 
 
-def test_prior_window_is_the_n_games_immediately_before_current():
+def test_prior_window_is_the_n_weeks_immediately_before_current():
     dates = [
         "2025-09-08", "2025-09-15", "2025-09-22", "2025-09-29",
         "2025-10-06", "2025-10-13", "2025-10-20",
     ]
     logs = [_log(dates[wk - 1], wk, {"attempts": wk * 10}) for wk in range(1, 8)]
-    rows = {r["window_games"]: r for r in build_rows(logs)}
+    rows = {r["window_weeks"]: r for r in build_rows(logs)}
     three = rows[3]
     # Current = weeks 5,6,7 (most recent 3); prior = weeks 2,3,4.
     assert three["metrics"]["attempts"] == (5 + 6 + 7) * 10
@@ -208,22 +208,28 @@ def test_prior_window_shorter_than_n_still_aggregates_whats_there():
         _log("2025-09-22", 4, {"attempts": 40}),
         _log("2025-09-29", 5, {"attempts": 50}),
     ]
-    rows = {r["window_games"]: r for r in build_rows(logs)}
+    rows = {r["window_weeks"]: r for r in build_rows(logs)}
     three = rows[3]
     assert three["games"] == 3
     assert three["metrics"]["attempts"] == 40 + 50 + 30  # weeks 3,4,5
     assert three["prior_metrics"]["attempts"] == 10 + 20  # only weeks 1,2 remain
 
 
-def test_no_recency_filter_a_player_inactive_since_week_3_still_gets_a_row():
+def test_player_inactive_before_current_window_is_excluded():
     logs = [
         _log("2025-09-01", 1, {"attempts": 10}),
         _log("2025-09-08", 2, {"attempts": 20}),
         _log("2025-09-15", 3, {"attempts": 30}),
+        _log(
+            "2025-10-20",
+            8,
+            {"attempts": 30},
+            player_id=2,
+        ),
     ]
     rows = build_rows(logs)
-    assert len(rows) == 3  # one row per window, none skipped for staleness
-    assert all(r["as_of"] == "2025-09-15" for r in rows)
+    player_one = [row for row in rows if row["player_id"] == 1]
+    assert all(row["window_weeks"] != 3 for row in player_one)
 
 
 def test_players_and_sides_stay_independent():
@@ -232,7 +238,10 @@ def test_players_and_sides_stay_independent():
         _log("2025-09-08", 1, {"def_tackles_solo": 5, "def_tackle_assists": 1}, player_id=2, player_type="def"),
     ]
     rows = build_rows(logs)
-    by_key = {(r["player_id"], r["player_type"], r["window_games"]): r for r in rows}
+    by_key = {
+        (r["player_id"], r["player_type"], r["window_weeks"]): r
+        for r in rows
+    }
     assert by_key[(1, "qb", 3)]["metrics"]["attempts"] == 30
     assert by_key[(2, "def", 3)]["metrics"]["tackles"] == 6
 
@@ -250,7 +259,7 @@ def test_games_plays_touches_and_team_recorded():
         _log("2025-09-08", 1, {"attempts": 30}, plays=32, touches=25, team="KC"),
         _log("2025-09-15", 2, {"attempts": 20}, plays=22, touches=18, team="KC"),
     ]
-    row = next(r for r in build_rows(logs) if r["window_games"] == 3)
+    row = next(r for r in build_rows(logs) if r["window_weeks"] == 3)
     assert row["games"] == 2
     assert row["plays"] == 54
     assert row["touches"] == 43
@@ -276,7 +285,7 @@ def test_delta_reflects_current_minus_prior_window():
         _log("2025-09-29", 5, {"attempts": 20, "completions": 15}),
         _log("2025-10-06", 6, {"attempts": 20, "completions": 15}),
     ]
-    row = next(r for r in build_rows(logs) if r["window_games"] == 3)
+    row = next(r for r in build_rows(logs) if r["window_weeks"] == 3)
     assert row["metrics"]["cmp_pct"] == pytest.approx(75.0)
     assert row["prior_metrics"]["cmp_pct"] == pytest.approx(50.0)
     assert row["delta"]["cmp_pct"] == pytest.approx(25.0)

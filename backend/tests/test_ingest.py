@@ -113,6 +113,20 @@ def test_qualifies():
     assert not ingest.qualifies({"games": 7}, "Defense", "def")
 
 
+def test_postseason_uses_phase_appropriate_qualification_floors():
+    assert ingest.qualifies({"attempts": 20}, "Passing", "qb", "POST")
+    assert ingest.qualifies({"carries": 8}, "Rushing", "rb", "POST")
+    assert ingest.qualifies({"targets": 4}, "Receiving", "wr", "POST")
+    assert ingest.qualifies({"games": 1}, "Defense", "def", "POST")
+    assert not ingest.qualifies({"attempts": 19}, "Passing", "qb", "POST")
+
+
+def test_receiving_qualification_falls_back_when_targets_are_unreliable():
+    row = {"targets": 0, "receptions": 25, "targets_reliable": False}
+    assert ingest.qualifies(row, "Receiving", "wr")
+    assert not ingest.qualifies({**row, "receptions": 24}, "Receiving", "wr")
+
+
 # --------------------------------------------------------------------------- #
 # Aggregation from a synthetic weekly DataFrame
 # --------------------------------------------------------------------------- #
@@ -122,6 +136,13 @@ def test_aggregate_excludes_postseason(weekly_df):
     # 4 REG games of 40 attempts = 160; the POST game (50 att) is excluded.
     assert qb["attempts"] == 160
     assert qb["games"] == 4
+
+
+def test_aggregate_can_select_postseason(weekly_df):
+    agg = ingest.aggregate_seasons(weekly_df, 2025, "POST")
+    qb = agg.loc[1]
+    assert qb["attempts"] == 50
+    assert qb["games"] == 1
 
 
 def test_aggregate_derived_rates(weekly_df):

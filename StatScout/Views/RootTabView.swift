@@ -396,7 +396,10 @@ struct PlayerProfileDestination: ViewModifier {
         content
             .navigationDestination(for: Player.self) { player in
                 let history = viewModel.playerHistories[player.playerId] ?? []
-                let seasonPlayer = history.first { $0.season == viewModel.selectedSeason } ?? player
+                let seasonPlayer = history.first {
+                    $0.season == viewModel.selectedSeason
+                        && $0.seasonPhase == viewModel.selectedPhase
+                } ?? player
                 PlayerProfileView(
                     player: seasonPlayer,
                     history: history,

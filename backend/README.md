@@ -18,10 +18,10 @@ cp backend/.env.example backend/.env   # fill in SUPABASE_URL + SUPABASE_SERVICE
 Run a season snapshot ingest:
 
 ```bash
-python backend/ingest.py --season 2025    # or set STATCAST_SEASON; defaults to current season
+python backend/ingest.py --season 2025 --season-type all
 ```
 
-Backfill and validate every supported snapshot season (2015 through current):
+Backfill and validate every supported snapshot season (2000 through current):
 
 ```bash
 python scripts/backfill_historical.py
@@ -44,9 +44,11 @@ NFL season label = starting year. `season = year if month >= 9 else year - 1`
 
 ## Data contract
 
-The iOS app reads `player_snapshots` via Supabase REST. Each row (PK `(id, season)`):
+The iOS app reads `player_snapshots` via Supabase REST. Each row has
+PK `(id, season, season_type)`:
 
 - `id`: bigint from the nflverse GSIS id (`"00-0034796"` -> `34796`)
+- `season_type`: `REG` or `POST`; each phase is aggregated and ranked separately
 - `name`, `team`, `position`, `player_type` (`qb`/`rb`/`wr`/`te`/`def`/`k`)
 - `handedness` (always `""` for NFL), `image_url` (nflverse headshot)
 - `metrics`: JSON array of `{id, label, value, percentile, category}` where
@@ -54,18 +56,21 @@ The iOS app reads `player_snapshots` via Supabase REST. Each row (PK `(id, seaso
 - `standard_stats`: JSON array of `{id, label, value}` counting totals
 - `games`: JSON array (currently empty `[]`)
 
-Percentiles are computed within `(season, category)` among **qualified**
+Percentiles are computed within `(season, season_type, category)` among **qualified**
 players (Passing >= 150 attempts, Rushing >= 80 carries, Receiving >= 40
 targets, Defense >= 8 games). Inverted metrics (INT%, Sack%, Fumble%) rank
-lower raw values higher.
+lower raw values higher. Postseason uses smaller phase-appropriate qualification
+floors. For 2003 through 2008, nflverse targets are unavailable, so receiving
+qualification falls back to receptions and target-derived metrics are omitted.
 
-`player_game_logs` (PK `(player_id, season, game_date, player_type)`) holds one
+`player_game_logs` (PK `(player_id, season, season_type, game_date, player_type)`) holds one
 row per player per game with `plays`, `touches`, and a flat `metrics` jsonb of
-per-game raw stats. It powers the Recent Form card.
+per-game raw stats. `player_recent_form` stores league-anchored 3/5/8-week
+aggregates for Trends.
 
 ## Data sources (nflreadpy)
 
-- `load_player_stats([season])` — weekly box-score rows (REG only used).
+- `load_player_stats([season])` — weekly box-score rows, split into REG and POST.
 - `load_nextgen_stats(stat_type=...)` — season-level Next Gen Stats (week 0
   rows): CPOE, time-to-throw, aggressiveness, RYOE, separation, YAC+.
 - `load_schedules([season])` — `game_id` -> `gameday` for per-game dates.

@@ -70,6 +70,29 @@ final class PlayerTests: XCTestCase {
         XCTAssertEqual(player.season, 2025)
         XCTAssertEqual(player.playerType, "qb")
         XCTAssertEqual(player.source, "nflreadpy")
+        XCTAssertEqual(player.seasonPhase, .regular)
+    }
+
+    func testPlayerComparisonDoesNotCrossSidesOfBall() {
+        let quarterback = Player(
+            playerId: 1, name: "Quarterback", team: "KC", position: "QB",
+            handedness: "", updatedAt: Date(), playerType: "qb",
+            metrics: [], standardStats: [], games: []
+        )
+        let receiver = Player(
+            playerId: 2, name: "Receiver", team: "KC", position: "WR",
+            handedness: "", updatedAt: Date(), playerType: "wr",
+            metrics: [], standardStats: [], games: []
+        )
+        let defender = Player(
+            playerId: 3, name: "Defender", team: "DEN", position: "LB",
+            handedness: "", updatedAt: Date(), playerType: "def",
+            metrics: [], standardStats: [], games: []
+        )
+
+        XCTAssertTrue(quarterback.canCompareHeadToHead(with: receiver))
+        XCTAssertTrue(defender.canCompareHeadToHead(with: defender))
+        XCTAssertFalse(quarterback.canCompareHeadToHead(with: defender))
     }
 
     func testInitialsHandleSuffixes() {

@@ -164,6 +164,7 @@ enum PlayerSnapshotValidator {
         let grouped = Dictionary(grouping: players.filter {
             guard let season = $0.season else { return false }
             return expectedSeasons.contains(season)
+                && $0.seasonPhase == .regular
         }, by: { $0.season! })
 
         guard Set(grouped.keys) == expectedSeasons else { return false }
@@ -177,7 +178,10 @@ enum PlayerSnapshotValidator {
     }
 
     static func isCompleteCurrent(_ players: [Player]) -> Bool {
-        let current = players.filter { $0.season == StatScoutSeason.current }
+        let current = players.filter {
+            $0.season == StatScoutSeason.current
+                && $0.seasonPhase == .regular
+        }
         let teams = Set(current.map { normalizedTeamAbbreviation($0.team) })
         let types = Set(current.compactMap(\.playerType).map { $0.lowercased() })
         let metricLabels = Set(current.flatMap(\.metrics).map(\.label))

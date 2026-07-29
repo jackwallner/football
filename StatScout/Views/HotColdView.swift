@@ -92,7 +92,9 @@ struct HotColdView: View {
         // league leader, and a fabricated one would be a lie in the one place
         // we're asking to be trusted. It's a single request against the
         // pre-aggregated rollup table, the same one Pro reads.
-        .task(id: "\(viewModel.recentWindow.rawValue)-\(viewModel.selectedSeason)") {
+        .task(
+            id: "\(viewModel.recentWindow.rawValue)-\(viewModel.selectedSeason)-\(viewModel.selectedPhase.rawValue)"
+        ) {
             await viewModel.loadRecentFormIfNeeded()
         }
         .onChange(of: side) { _, _ in
@@ -128,15 +130,11 @@ struct HotColdView: View {
                 )
 
                 GridironSegmented(
-                    segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
+                    segments: TrendWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
                     selection: $viewModel.recentWindow
                 )
 
-                // The window is games the player actually appeared in, not
-                // weeks elapsed: a bye or a missed game shifts the window back
-                // rather than shrinking it. The per-row week range is what
-                // says when.
-                Text("Games played, against the same number before them. Each row shows the weeks it covers.")
+                Text("League weeks, compared with the same span before them. Players inactive for the current span are excluded.")
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -344,7 +342,7 @@ struct HotColdView: View {
         let now = form.metrics[metric.key]
         let then = form.priorMetrics[metric.key]
 
-        HStack(spacing: 10) {
+        let rowContent = HStack(spacing: 10) {
             if let rank {
                 Text("\(rank)")
                     .font(GridironType.statSmall)
@@ -397,10 +395,16 @@ struct HotColdView: View {
             alignment: .bottom
         )
         .contentShape(Rectangle())
-        .overlay {
+
+        Group {
             if let player {
-                NavigationLink(value: player) { Color.clear }
-                    .buttonStyle(.plain)
+                NavigationLink(value: player) {
+                    rowContent
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens \(player.name)'s profile")
+            } else {
+                rowContent
             }
         }
         // Following straight off the board, so a name you spot here can be

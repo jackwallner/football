@@ -92,7 +92,7 @@ print(f"Detected text (first 500 chars): {text2[:500]}")
 
 # Check if menu is open (should show year options)
 years_found = []
-for year in range(2015, 2027):
+for year in range(2000, 2027):
     if str(year) in text2:
         years_found.append(year)
 

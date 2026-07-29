@@ -106,36 +106,51 @@ struct StandardStatsLeadersView: View {
     }
 
     private var controlRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                if let boardBindings, let viewModel {
-                    StatsBoardStatPicker(
-                        viewModel: viewModel,
-                        bindings: boardBindings
-                    )
-                } else {
-                    statMenu
-                }
+        HStack(spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    if let boardBindings, let viewModel {
+                        StatsBoardStatPicker(
+                            viewModel: viewModel,
+                            bindings: boardBindings
+                        )
+                    } else {
+                        statMenu
+                    }
 
-                SortDirectionButton(
-                    descending: sortDescending,
-                    statLabel: selectedStat
-                ) {
-                    sortDescending.toggle()
+                    SortDirectionButton(
+                        descending: sortDescending,
+                        statLabel: selectedStat
+                    ) {
+                        sortDescending.toggle()
+                    }
                 }
-
-                if let boardBindings, let viewModel {
-                    StatsViewMenu(
-                        viewModel: viewModel,
-                        board: boardBindings.$board
-                    )
-                }
+                .padding(.leading, 12)
+                .padding(.trailing, 2)
+                .padding(.vertical, 1)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 1)
+            .scrollBounceBehavior(.basedOnSize)
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .black, location: 0),
+                        .init(color: .black, location: 0.88),
+                        .init(color: .clear, location: 1),
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+
+            if let boardBindings, let viewModel {
+                StatsViewMenu(
+                    viewModel: viewModel,
+                    board: boardBindings.$board
+                )
+                .fixedSize()
+            }
         }
-        .scrollBounceBehavior(.basedOnSize)
-        .scrollClipDisabled()
+        .padding(.trailing, 12)
         .frame(height: GridironControl.height + 2)
         .padding(.top, 8)
     }

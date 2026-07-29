@@ -128,7 +128,7 @@ Each frame uses one raw screenshot, listed in priority order. Frames 1–3 are m
 
 ### Frame 8 — Pro Upgrade (optional)
 - **Asset:** `raw_06_paywall.png`
-- **Headline:** `Unlock every season` / `back to 2015.`
+- **Headline:** `Unlock every season` / `back to 2000.`
 - **Sub-copy:** `Compare any two players, side-by-side.`
 - **Emphasis:** "every season" in `savantRed`.
 - **Layout:** This screenshot already contains its own marketing copy. **Do not add a second headline band.** Instead, render the screenshot inside the device frame on a clean `canvas` background with a small top-aligned StatScout wordmark in `savantNavy` — that's it.

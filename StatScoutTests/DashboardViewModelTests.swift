@@ -135,7 +135,7 @@ final class DashboardViewModelTests: XCTestCase {
         let cache = InMemoryPlayerCache(seed: cached)
         let vm = DashboardViewModel(provider: MockProvider(error: URLError(.notConnectedToInternet)), cache: cache)
         await vm.load()
-        XCTAssertEqual(vm.players.map { $0.id }, ["99-0"], "Cached players should be shown even when refresh fails")
+        XCTAssertEqual(vm.players.map { $0.id }, ["99-0-REG"], "Cached players should be shown even when refresh fails")
     }
 
     @MainActor
@@ -214,7 +214,7 @@ final class DashboardViewModelTests: XCTestCase {
     }
 
     @MainActor
-    func testAvailableSeasonsIncludes2015ThroughCurrent() async {
+    func testAvailableSeasonsIncludes2000ThroughCurrent() async {
         let players = makeCompleteHistoricalPlayers() + makeCompleteCurrentPlayers()
         let vm = DashboardViewModel(provider: MockProvider(players: players))
         vm.isPro = true
@@ -388,7 +388,11 @@ struct MockProvider: StatcastProviding, @unchecked Sendable {
         return []
     }
 
-    func fetchRecentForm(season: Int, windowGames: Int) async throws -> [RecentForm] {
+    func fetchRecentForm(
+        season: Int,
+        seasonPhase: SeasonPhase,
+        windowWeeks: Int
+    ) async throws -> [RecentForm] {
         if let error { throw error }
         return []
     }

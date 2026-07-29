@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Backfill and validate Gridiron StatScout season snapshots from 2015 onward."""
+"""Backfill and validate Gridiron StatScout season snapshots from 2000 onward."""
 
 import argparse
 import os
@@ -10,7 +10,7 @@ from typing import Any
 
 from supabase import create_client
 
-OLDEST_SUPPORTED_SEASON = 2015
+OLDEST_SUPPORTED_SEASON = 2000
 DEFAULT_CURRENT_SEASON = 2025
 REQUIRED_TYPES = {"qb", "rb", "wr", "te", "def"}
 MINIMUM_TEAMS = 30
@@ -18,14 +18,24 @@ MINIMUM_ROWS = 150
 
 
 def fetch_season(client: Any, season: int) -> list[dict]:
-    return (
-        client.table("player_snapshots")
-        .select("id,season,team,player_type,metrics")
-        .eq("season", season)
-        .order("id")
-        .execute()
-        .data
-    )
+    rows: list[dict] = []
+    page_size = 1000
+    offset = 0
+    while True:
+        page = (
+            client.table("player_snapshots")
+            .select("id,season,season_type,team,player_type,metrics")
+            .eq("season", season)
+            .order("id")
+            .order("season_type")
+            .range(offset, offset + page_size - 1)
+            .execute()
+            .data
+        )
+        rows.extend(page)
+        if len(page) < page_size:
+            return rows
+        offset += page_size
 
 
 def validate_season(rows: list[dict], season: int) -> list[str]:
@@ -37,15 +47,22 @@ def validate_season(rows: list[dict], season: int) -> list[str]:
     if seasons != {season}:
         errors.append(f"unexpected season values: {sorted(seasons, key=str)}")
 
-    keys = [(row.get("id"), row.get("season")) for row in rows]
+    keys = [
+        (row.get("id"), row.get("season"), row.get("season_type"))
+        for row in rows
+    ]
     if len(keys) != len(set(keys)):
         errors.append("duplicate player-season keys")
 
-    teams = {row.get("team") for row in rows if row.get("team")}
+    regular = [row for row in rows if row.get("season_type", "REG") == "REG"]
+    teams = {row.get("team") for row in regular if row.get("team")}
     if len(teams) < MINIMUM_TEAMS:
         errors.append(f"only {len(teams)} teams")
 
-    player_types = {str(row.get("player_type") or "").lower() for row in rows}
+    player_types = {
+        str(row.get("player_type") or "").lower()
+        for row in regular
+    }
     missing_types = REQUIRED_TYPES - player_types
     if missing_types:
         errors.append(f"missing player types: {sorted(missing_types)}")
@@ -101,7 +118,14 @@ def main() -> None:
         print(f"\n=== {season} ===", flush=True)
         if not args.validate_only:
             subprocess.run(
-                [sys.executable, backend_ingest, "--season", str(season)],
+                [
+                    sys.executable,
+                    backend_ingest,
+                    "--season",
+                    str(season),
+                    "--season-type",
+                    "all",
+                ],
                 check=True,
             )
 

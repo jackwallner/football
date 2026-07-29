@@ -11,7 +11,7 @@ from collections import Counter
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 KEY = os.environ["SUPABASE_ANON_KEY"]
 CURRENT_SEASON = int(os.environ.get("STATCAST_SEASON", "2025"))
-OLDEST_SUPPORTED_SEASON = 2015
+OLDEST_SUPPORTED_SEASON = 2000
 REQUIRED_TYPES = {"qb", "rb", "wr", "te", "def"}
 
 URL = f"{SUPABASE_URL}/rest/v1/player_snapshots"
@@ -32,7 +32,7 @@ def fetch_all(query_filters: list[tuple[str, str]]) -> list[dict]:
         query = urllib.parse.urlencode([
             ("select", "*"),
             *query_filters,
-            ("order", "season.asc,id.asc"),
+            ("order", "season.asc,season_type.asc,id.asc"),
             ("limit", str(page_size)),
             ("offset", str(offset)),
         ])
@@ -58,12 +58,23 @@ def validate_export(
     if seasons != expected_seasons:
         raise RuntimeError(f"Unexpected seasons: {sorted(seasons, key=str)}")
 
-    keys = [(player.get("id"), player.get("season")) for player in players]
+    keys = [
+        (
+            player.get("id"),
+            player.get("season"),
+            player.get("season_type", "REG"),
+        )
+        for player in players
+    ]
     if len(keys) != len(set(keys)):
         raise RuntimeError("Duplicate player-season keys in export")
 
     for season in sorted(expected_seasons):
-        season_players = [player for player in players if player.get("season") == season]
+        season_players = [
+            player for player in players
+            if player.get("season") == season
+            and player.get("season_type", "REG") == "REG"
+        ]
         teams = {player.get("team") for player in season_players if player.get("team")}
         types = {str(player.get("player_type") or "").lower() for player in season_players}
         missing_types = REQUIRED_TYPES - types

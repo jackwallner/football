@@ -52,6 +52,35 @@ struct SeasonMenu<Trigger: View>: View {
     }
 }
 
+struct SeasonPhaseMenu<Trigger: View>: View {
+    let selected: SeasonPhase
+    let onSelect: (SeasonPhase) -> Void
+    @ViewBuilder let label: () -> Trigger
+
+    var body: some View {
+        Menu {
+            ForEach(SeasonPhase.allCases) { phase in
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    onSelect(phase)
+                } label: {
+                    if phase == selected {
+                        Label(phase.fullLabel, systemImage: "checkmark")
+                    } else {
+                        Text(phase.fullLabel)
+                    }
+                }
+            }
+        } label: {
+            label()
+        }
+        .menuOrder(.fixed)
+        .gridironMenuAppearance()
+        .accessibilityLabel("Season type")
+        .accessibilityValue(selected.fullLabel)
+    }
+}
+
 extension View {
     /// Pins a `Menu` to the light popup the rest of the app draws.
     ///

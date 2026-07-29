@@ -50,7 +50,7 @@ struct PlayerProfileView: View {
     }
 
     private var availablePercentileSeasons: [Int] {
-        let fromHistory = history.compactMap(\.season)
+        let fromHistory = phaseHistory.compactMap(\.season)
         var set = Set(fromHistory)
         if let s = player.season { set.insert(s) }
         return Array(set).sorted(by: >)
@@ -62,7 +62,11 @@ struct PlayerProfileView: View {
 
     private var displayedPlayer: Player {
         guard let season = activeSeason else { return player }
-        return history.first { $0.season == season } ?? player
+        return phaseHistory.first { $0.season == season } ?? player
+    }
+
+    private var phaseHistory: [Player] {
+        history.filter { $0.seasonPhase == player.seasonPhase }
     }
 
     private var seasonLabel: String {
@@ -463,7 +467,7 @@ struct PlayerProfileView: View {
                 }
                 .padding(.vertical, 48)
             } else {
-                YearComparisonView(history: history)
+                YearComparisonView(history: phaseHistory)
             }
         } else {
             YearComparePreview(playerName: player.name) {

@@ -1,23 +1,21 @@
 import Foundation
 
-/// One player's rolling window, as stored in `public.player_recent_form`.
+/// One player's league-anchored weekly window, as stored in
+/// `public.player_recent_form`.
 ///
 /// Mirrors the rolling-leaderboard shape the baseball app uses: the current
 /// window, the equal-length window immediately before it, and the change
 /// between them. The delta is the interesting column, a 9.1 Y/A means more when
 /// you can see it was 6.2 over the three games before that.
 ///
-/// The one structural difference from baseball is the window unit. MLB plays
-/// daily, so a calendar window is the natural slice; the NFL plays weekly, with
-/// byes, and a postseason where only two clubs play the final game. A window of
-/// days would either be empty or misdated for most of the league, so a window
-/// here is the player's own last N games, and `asOf` / `startWeek` / `endWeek`
-/// report which games those actually were.
+/// MLB uses calendar days. NFL uses shared week ranges, so an injured player
+/// who has not appeared recently does not surface on a current Trends board.
 struct RecentForm: Codable, Hashable, Sendable, Identifiable {
     let playerId: Int
     let season: Int
+    let seasonPhase: SeasonPhase
     let playerType: String
-    let windowGames: Int
+    let windowWeeks: Int
     /// Date of the last game in the window. Lets the UI say "through Feb 8"
     /// rather than implying the window runs to today.
     let asOf: Date?
@@ -35,13 +33,17 @@ struct RecentForm: Codable, Hashable, Sendable, Identifiable {
     let priorMetrics: [String: Double]
     let delta: [String: Double]
 
-    var id: String { "\(playerId)-\(playerType)-\(windowGames)" }
+    var id: String {
+        "\(playerId)-\(seasonPhase.rawValue)-\(playerType)-\(windowWeeks)"
+    }
 
     enum CodingKeys: String, CodingKey {
         case playerId = "player_id"
         case season
+        case seasonPhase = "season_type"
         case playerType = "player_type"
-        case windowGames = "window_games"
+        case windowWeeks = "window_weeks"
+        case legacyWindowGames = "window_games"
         case asOf = "as_of"
         case startWeek = "start_week"
         case endWeek = "end_week"
@@ -58,8 +60,10 @@ struct RecentForm: Codable, Hashable, Sendable, Identifiable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         playerId = try c.decode(Int.self, forKey: .playerId)
         season = try c.decode(Int.self, forKey: .season)
+        seasonPhase = try c.decodeIfPresent(SeasonPhase.self, forKey: .seasonPhase) ?? .regular
         playerType = try c.decode(String.self, forKey: .playerType)
-        windowGames = try c.decode(Int.self, forKey: .windowGames)
+        windowWeeks = try c.decodeIfPresent(Int.self, forKey: .windowWeeks)
+            ?? c.decode(Int.self, forKey: .legacyWindowGames)
         team = try c.decodeIfPresent(String.self, forKey: .team)
         games = try c.decodeIfPresent(Int.self, forKey: .games) ?? 0
         plays = try c.decodeIfPresent(Int.self, forKey: .plays) ?? 0
@@ -97,8 +101,9 @@ struct RecentForm: Codable, Hashable, Sendable, Identifiable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(playerId, forKey: .playerId)
         try c.encode(season, forKey: .season)
+        try c.encode(seasonPhase, forKey: .seasonPhase)
         try c.encode(playerType, forKey: .playerType)
-        try c.encode(windowGames, forKey: .windowGames)
+        try c.encode(windowWeeks, forKey: .windowWeeks)
         try c.encodeIfPresent(team, forKey: .team)
         try c.encode(games, forKey: .games)
         try c.encode(plays, forKey: .plays)
@@ -222,23 +227,25 @@ enum RecentMetricKey {
     }
 }
 
-/// Which rolling window is on screen. Mirrors `RecentFormWindow.windows` so the
-/// per-player card and the league leaderboard offer the same choices.
-///
-/// Games, not days. Eight is about half a regular season, three is "the last
-/// few weeks", and five sits where most people's sense of "lately" does.
+/// Per-player and per-team game-count windows.
 enum RecentWindow: Int, CaseIterable, Identifiable, Sendable {
     case three = 3
     case five = 5
     case eight = 8
 
     var id: Int { rawValue }
-    /// Always says "games". A bare "Last 5" beside a row that also reports a
-    /// week range reads as five *weeks* to everyone who wasn't the person who
-    /// wrote it.
     var label: String { "Last \(rawValue) games" }
-    /// Segment-width version of the same wording: still explicit about the
-    /// unit, short enough for three of them across a phone.
     var segmentLabel: String { "\(rawValue) games" }
     var shortLabel: String { "\(rawValue)G" }
+}
+
+/// League-anchored windows used only by Trends.
+enum TrendWindow: Int, CaseIterable, Identifiable, Sendable {
+    case three = 3
+    case five = 5
+    case eight = 8
+
+    var id: Int { rawValue }
+    var label: String { "Last \(rawValue) weeks" }
+    var segmentLabel: String { "\(rawValue) weeks" }
 }

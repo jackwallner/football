@@ -5,12 +5,12 @@ Builds one ``player_snapshots`` row per player per season from the nflverse
 data mirror (via ``nflreadpy``), computing within-category percentiles among
 qualified players. Powers the iOS player-percentile screens.
 
-Pipeline (all REG-season only):
+Pipeline (REG and POST are stored and ranked separately):
   1. Aggregate weekly ``load_player_stats`` rows to season totals.
   2. Derive rate stats (cmp%, Y/A, sack%, explosive-rush%, ...).
   3. Merge season-level Next Gen Stats (CPOE, time-to-throw, separation, ...).
   4. Rank each metric within (season, category) among qualified players.
-  5. Upsert to Supabase ``player_snapshots`` on_conflict=(id, season).
+  5. Upsert to Supabase ``player_snapshots`` on_conflict=(id, season, season_type).
 
 Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. STATCAST_SEASON overrides the
 season; ``--season N`` overrides both.
@@ -41,7 +41,7 @@ SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 _now = datetime.now(UTC)
 DEFAULT_SEASON = _now.year if _now.month >= 9 else _now.year - 1
 MIN_SEASON = 1999
-OLDEST_SUPPORTED_SEASON = 2015
+OLDEST_SUPPORTED_SEASON = 2000
 NGS_FIRST_SEASON = 2016
 SOURCE = "nflverse"
 
@@ -49,7 +49,13 @@ SOURCE = "nflverse"
 QUAL_ATTEMPTS = 150   # Passing
 QUAL_CARRIES = 80     # Rushing
 QUAL_TARGETS = 40     # Receiving
+QUAL_RECEPTIONS = 25  # Receiving fallback when historical targets are absent
 QUAL_GAMES = 8        # Defense (>= 8 games; the contract's OR-branch, snaps not joined)
+POST_QUAL_ATTEMPTS = 20
+POST_QUAL_CARRIES = 8
+POST_QUAL_TARGETS = 4
+POST_QUAL_RECEPTIONS = 3
+POST_QUAL_GAMES = 1
 
 # Weekly counting stats summed to season totals.
 SUM_COLS = [
@@ -225,7 +231,12 @@ def rank_percentiles(series: pd.Series, inverted: bool) -> dict[int, int]:
     return {int(pid): max(1, min(100, int(round(pct * 100)))) for pid, pct in ranks.items()}
 
 
-def qualifies(row: Any, category: str, player_type: str) -> bool:
+def qualifies(
+    row: Any,
+    category: str,
+    player_type: str,
+    season_type: str = "REG",
+) -> bool:
     """Whether a player clears the qualification threshold for a category."""
     def _num(col: str) -> float:
         val = row.get(col)
@@ -234,14 +245,26 @@ def qualifies(row: Any, category: str, player_type: str) -> bool:
         except (ValueError, TypeError):
             return 0.0
 
+    postseason = season_type == "POST"
     if category == "Passing":
-        return _num("attempts") >= QUAL_ATTEMPTS
+        return _num("attempts") >= (
+            POST_QUAL_ATTEMPTS if postseason else QUAL_ATTEMPTS
+        )
     if category == "Rushing":
-        return _num("carries") >= QUAL_CARRIES
+        return _num("carries") >= (
+            POST_QUAL_CARRIES if postseason else QUAL_CARRIES
+        )
     if category == "Receiving":
-        return _num("targets") >= QUAL_TARGETS
+        if not bool(row.get("targets_reliable", True)):
+            return _num("receptions") >= (
+                POST_QUAL_RECEPTIONS if postseason else QUAL_RECEPTIONS
+            )
+        return _num("targets") >= (
+            POST_QUAL_TARGETS if postseason else QUAL_TARGETS
+        )
     if category == "Defense":
-        return player_type == "def" and _num("games") >= QUAL_GAMES
+        threshold = POST_QUAL_GAMES if postseason else QUAL_GAMES
+        return player_type == "def" and _num("games") >= threshold
     return False
 
 
@@ -255,13 +278,20 @@ def _derive(agg: pd.DataFrame, output: str, required: list[str], calculation: An
         agg[output] = calculation()
 
 
-def aggregate_seasons(weekly: pd.DataFrame, season: int) -> pd.DataFrame:
-    """Aggregate weekly REG rows to one season-total row per player (indexed by id).
+def aggregate_seasons(
+    weekly: pd.DataFrame,
+    season: int,
+    season_type: str = "REG",
+) -> pd.DataFrame:
+    """Aggregate one season phase to one total row per player (indexed by id).
 
     Pure: takes a DataFrame, returns a DataFrame with all counting totals,
     derived rate columns, and identity columns. No NGS, no network.
     """
-    df = weekly[(weekly["season"] == season) & (weekly["season_type"] == "REG")].copy()
+    df = weekly[
+        (weekly["season"] == season)
+        & (weekly["season_type"] == season_type)
+    ].copy()
     if df.empty:
         return pd.DataFrame()
 
@@ -287,6 +317,23 @@ def aggregate_seasons(weekly: pd.DataFrame, season: int) -> pd.DataFrame:
         player_type_from_position(p, g)
         for p, g in zip(agg["position"], agg["position_group"])
     ]
+
+    # nflverse has complete receptions and yards back to 1999, but targets are
+    # effectively blank for 2003-2008. Detect that at the phase level. Those
+    # seasons qualify receivers by receptions and omit target-derived metrics.
+    targets_total = pd.to_numeric(agg.get("targets"), errors="coerce").sum()
+    receptions_total = pd.to_numeric(agg.get("receptions"), errors="coerce").sum()
+    targets_reliable = targets_total >= receptions_total
+    agg["targets_reliable"] = targets_reliable
+    if not targets_reliable:
+        for column in [
+            "targets",
+            "target_share",
+            "air_yards_share",
+            "receiving_air_yards",
+        ]:
+            if column in agg.columns:
+                agg[column] = np.nan
 
     # Passing derived rates.
     _derive(agg, "cmp_pct", ["completions", "attempts"], lambda: _safe_div(agg["completions"], agg["attempts"]) * 100)
@@ -359,8 +406,9 @@ def merge_ngs(
     ngs_rushing: pd.DataFrame,
     ngs_receiving: pd.DataFrame,
     season: int,
+    season_type: str = "REG",
 ) -> pd.DataFrame:
-    """Join season-level (week 0, REG) Next Gen Stats columns onto ``agg``.
+    """Join season-level Next Gen Stats columns onto ``agg``.
 
     Pure: NGS DataFrames in, augmented ``agg`` out.
     """
@@ -369,7 +417,7 @@ def merge_ngs(
             return pd.DataFrame(columns=list(cols.values()))
         d = ngs[
             (ngs["season"] == season)
-            & (ngs["season_type"] == "REG")
+            & (ngs["season_type"] == season_type)
             & (ngs["week"] == 0)
         ].copy()
         if d.empty:
@@ -438,7 +486,12 @@ def build_standard_stats(row: Any) -> list[dict[str, str]]:
     return stats
 
 
-def build_snapshot_rows(agg: pd.DataFrame, season: int, now: datetime) -> list[dict]:
+def build_snapshot_rows(
+    agg: pd.DataFrame,
+    season: int,
+    now: datetime,
+    season_type: str = "REG",
+) -> list[dict]:
     """Build player_snapshots rows from an aggregated (id-indexed) DataFrame.
 
     Percentiles are computed per (category) among qualified players only, and
@@ -461,6 +514,7 @@ def build_snapshot_rows(agg: pd.DataFrame, season: int, now: datetime) -> list[d
                 "image_url": row.get("image_url") if pd.notna(row.get("image_url")) else None,
                 "player_type": row.get("player_type") or "",
                 "season": season,
+                "season_type": season_type,
                 "source": SOURCE,
                 "metrics": [],
                 "standard_stats": build_standard_stats(row),
@@ -472,7 +526,12 @@ def build_snapshot_rows(agg: pd.DataFrame, season: int, now: datetime) -> list[d
     for category, defs in METRIC_DEFS.items():
         qual_ids = [
             int(pid) for pid, row in agg.iterrows()
-            if qualifies(row, category, str(row.get("player_type") or ""))
+            if qualifies(
+                row,
+                category,
+                str(row.get("player_type") or ""),
+                season_type,
+            )
         ]
         if not qual_ids:
             continue
@@ -529,13 +588,16 @@ def load_headshots() -> dict[int, str]:
     return lookup
 
 
-def build_agg_for_season(season: int) -> pd.DataFrame:
+def build_agg_for_season(
+    season: int,
+    season_type: str = "REG",
+) -> pd.DataFrame:
     """Fetch nflverse data and produce the fully-merged aggregate DataFrame."""
     logger.info("Loading weekly player stats for %s...", season)
     weekly = _to_pandas(nfl.load_player_stats([season]))
     logger.info("Weekly rows: %d", len(weekly))
 
-    agg = aggregate_seasons(weekly, season)
+    agg = aggregate_seasons(weekly, season, season_type)
     if agg.empty:
         return agg
     logger.info("Aggregated to %d players", len(agg))
@@ -545,7 +607,14 @@ def build_agg_for_season(season: int) -> pd.DataFrame:
         ngs_pass = _to_pandas(nfl.load_nextgen_stats([season], stat_type="passing"))
         ngs_rush = _to_pandas(nfl.load_nextgen_stats([season], stat_type="rushing"))
         ngs_rec = _to_pandas(nfl.load_nextgen_stats([season], stat_type="receiving"))
-        agg = merge_ngs(agg, ngs_pass, ngs_rush, ngs_rec, season)
+        agg = merge_ngs(
+            agg,
+            ngs_pass,
+            ngs_rush,
+            ngs_rec,
+            season,
+            season_type,
+        )
     else:
         logger.info("Skipping Next Gen Stats for %s (available since %s).", season, NGS_FIRST_SEASON)
 
@@ -565,6 +634,12 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--season", type=int, default=None, help="Season (starting year) to ingest.")
+    parser.add_argument(
+        "--season-type",
+        choices=("REG", "POST", "all"),
+        default="REG",
+        help="Season phase to ingest. Nightly refresh uses all.",
+    )
     args = parser.parse_args()
 
     url = SUPABASE_URL or os.environ.get("SUPABASE_URL", "")
@@ -577,42 +652,89 @@ def main() -> None:
     season = resolve_season(args.season)
     now = datetime.now(UTC)
 
-    logger.info("=== Ingesting NFL season %s ===", season)
+    phases = ("REG", "POST") if args.season_type == "all" else (args.season_type,)
+    logger.info("=== Ingesting NFL season %s (%s) ===", season, ", ".join(phases))
     try:
-        agg = build_agg_for_season(season)
-        rows = build_snapshot_rows(agg, season, now)
-        if not rows:
-            logger.error("No rows to upsert for %s.", season)
-            sys.exit(1)
+        any_rows = False
+        for phase in phases:
+            agg = build_agg_for_season(season, phase)
+            rows = build_snapshot_rows(agg, season, now, phase)
+            if not rows:
+                if phase == "POST":
+                    logger.info("No postseason rows for %s yet.", season)
+                    continue
+                logger.error("No rows to upsert for %s %s.", season, phase)
+                sys.exit(1)
+            any_rows = True
 
-        by_type: dict[str, int] = {}
-        for r in rows:
-            by_type[r["player_type"]] = by_type.get(r["player_type"], 0) + 1
-        logger.info("Built %d snapshots by type: %s", len(rows), by_type)
-
-        batch_size = 150
-        for i, batch in enumerate(chunks(rows, batch_size)):
-            logger.info("Upserting batch %d (%d rows) for %s...", i + 1, len(batch), season)
-            client.table("player_snapshots").upsert(batch, on_conflict="id,season").execute()
-
-        logger.info("Upserted %d player snapshots for %s.", len(rows), season)
-
-        # Prune rows no longer qualified, guarded by a sanity floor.
-        if len(rows) >= 150:
-            kept = {r["id"] for r in rows}
-            existing = (
-                client.table("player_snapshots")
-                .select("id")
-                .eq("season", season)
-                .execute()
-                .data
+            by_type: dict[str, int] = {}
+            for row in rows:
+                player_type = row["player_type"]
+                by_type[player_type] = by_type.get(player_type, 0) + 1
+            logger.info(
+                "Built %d %s snapshots by type: %s",
+                len(rows),
+                phase,
+                by_type,
             )
-            orphans = [r["id"] for r in existing if r["id"] not in kept]
-            for batch in chunks(orphans, 100):
-                client.table("player_snapshots").delete().in_("id", batch).eq("season", season).execute()
-            logger.info("Pruned %d stale/unqualified rows for %s.", len(orphans), season)
-        else:
-            logger.warning("Only %d rows built — skipping prune (sanity floor).", len(rows))
+
+            batch_size = 150
+            for i, batch in enumerate(chunks(rows, batch_size)):
+                logger.info(
+                    "Upserting batch %d (%d rows) for %s %s...",
+                    i + 1,
+                    len(batch),
+                    season,
+                    phase,
+                )
+                client.table("player_snapshots").upsert(
+                    batch,
+                    on_conflict="id,season,season_type",
+                ).execute()
+
+            logger.info(
+                "Upserted %d player snapshots for %s %s.",
+                len(rows),
+                season,
+                phase,
+            )
+
+            sanity_floor = 20 if phase == "POST" else 150
+            if len(rows) >= sanity_floor:
+                kept = {row["id"] for row in rows}
+                existing = (
+                    client.table("player_snapshots")
+                    .select("id")
+                    .eq("season", season)
+                    .eq("season_type", phase)
+                    .execute()
+                    .data
+                )
+                orphans = [row["id"] for row in existing if row["id"] not in kept]
+                for batch in chunks(orphans, 100):
+                    (
+                        client.table("player_snapshots")
+                        .delete()
+                        .in_("id", batch)
+                        .eq("season", season)
+                        .eq("season_type", phase)
+                        .execute()
+                    )
+                logger.info(
+                    "Pruned %d stale/unqualified rows for %s %s.",
+                    len(orphans),
+                    season,
+                    phase,
+                )
+            else:
+                logger.warning(
+                    "Only %d %s rows built — skipping prune.",
+                    len(rows),
+                    phase,
+                )
+        if not any_rows:
+            logger.error("No snapshots built for %s.", season)
+            sys.exit(1)
     except Exception:
         logger.exception("Failed to process season %s", season)
         sys.exit(1)
