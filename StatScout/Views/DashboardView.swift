@@ -3,6 +3,7 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject private var store: StoreService
     @Bindable var viewModel: DashboardViewModel
+    var boardBindings: StatsBoardBindings? = nil
     @State private var showingAbout = false
     @State private var paywallTrigger: PaywallTrigger?
     @State private var isSearching = false
@@ -17,9 +18,6 @@ struct DashboardView: View {
                         if isSearching || !viewModel.searchText.isEmpty {
                             searchRow
                             teamResults
-                        }
-                        if viewModel.showingRecent {
-                            recentWindowRow
                         }
                     }
                     leaderboardSection
@@ -66,7 +64,7 @@ struct DashboardView: View {
             .presentationDragIndicator(.visible)
         }
         .sheet(item: $paywallTrigger) { trigger in
-            PaywallView(trigger: trigger)
+            TrialPitchSheet(trigger: trigger)
         }
     }
 
@@ -77,7 +75,7 @@ struct DashboardView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "crown.fill")
                             .font(.system(size: 10))
-                        Text("Unlock StatScout+")
+                        Text(store.upgradeCTALabel)
                             .font(GridironType.micro)
                     }
                     .foregroundStyle(.white)
@@ -100,7 +98,7 @@ struct DashboardView: View {
     }
 
     private var unifiedControlBar: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             if (viewModel.isLoading || viewModel.isHistoricalLoading) && !viewModel.players.isEmpty {
                 loadingStatusBar
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -134,119 +132,50 @@ struct DashboardView: View {
         .accessibilityLabel("Position")
     }
 
-    // Qualification is the only secondary filter left in the toolbar. Metric
-    // selection and sort direction live in the leaderboard column header.
-    private var filtersMenu: some View {
-        Menu {
-            Section("Qualifier") {
-                ForEach(DashboardViewModel.QualifierLevel.allCases) { level in
-                    Button {
-                        viewModel.qualifierLevel = level
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    } label: {
-                        if level == viewModel.qualifierLevel {
-                            Label("\(level.rawValue) · \(level.description)", systemImage: "checkmark")
-                        } else {
-                            Text("\(level.rawValue) · \(level.description)")
-                        }
-                    }
-                }
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "line.3.horizontal.decrease.circle")
-                    .font(.system(size: 11, weight: .semibold))
-                Text(viewModel.qualifierLevel.rawValue)
-                    .font(GridironType.micro)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 9, weight: .bold))
-            }
-            .foregroundStyle(GridironPalette.inkSecondary)
-            .padding(.horizontal, 10)
-            .frame(height: 30)
-            .background(GridironPalette.surface)
-            .clipShape(Capsule())
-            .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
-        }
-        .menuOrder(.fixed)
-        .accessibilityLabel("Qualifier")
-        .accessibilityValue(viewModel.qualifierLevel.rawValue)
-    }
-
-    /// This player's rolling-window figure for the sorted metric, when the
-    /// board is in Recent mode and the rollup has one. Metrics the rollup has
-    /// no column for (the Next Gen aggregates) simply keep their season number.
-    private func recentValue(for player: Player, metric label: String?) -> String? {
-        guard viewModel.showingRecent, store.isPro,
-              let label,
-              let key = RecentMetricKey.key(for: label),
-              let value = viewModel.recentForm(for: player.playerId)?.metrics[key]
-        else { return nil }
-        return RecentMetricKey.format(value, label: label)
-    }
-
     private var activeSortChip: some View {
         HStack(spacing: 8) {
-            Text("LEAGUE LEADERS")
-                .font(GridironType.sectionTitle)
-                .foregroundStyle(GridironPalette.ink)
-            Spacer(minLength: 0)
-            recentChip
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    if let boardBindings {
+                        StatsBoardStatPicker(
+                            viewModel: viewModel,
+                            bindings: boardBindings
+                        )
+                    }
+                    SortDirectionButton(
+                        descending: viewModel.sortDescending,
+                        statLabel: viewModel.currentSortMetric ?? viewModel.sortLabel
+                    ) {
+                        viewModel.toggleSortDirection()
+                    }
+                }
+                .padding(.leading, 12)
+                .padding(.trailing, 2)
+                .padding(.vertical, 1)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .black, location: 0),
+                        .init(color: .black, location: 0.88),
+                        .init(color: .clear, location: 1),
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
             searchToggle
-            filtersMenu
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 8)
-    }
-
-    /// Swaps the board from season totals to the rolling window.
-    ///
-    /// Locked rather than hidden, so a free user can see the feature exists.
-    /// The label carries the window's own wording ("Last 5 games"), the same
-    /// phrase the picker below it and every other screen use.
-    private var recentChip: some View {
-        Button {
-            if store.isPro {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    viewModel.showingRecent.toggle()
-                }
-                if viewModel.showingRecent {
-                    Task { await viewModel.loadRecentFormIfNeeded() }
-                }
-            } else {
-                paywallTrigger = .recentForm
-            }
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        } label: {
-            GridironChip(
-                title: viewModel.showingRecent ? viewModel.recentWindow.label : "Recent",
-                systemImage: "flame.fill",
-                isActive: viewModel.showingRecent,
-                isLocked: !store.isPro
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Recent form")
-        .accessibilityValue(viewModel.showingRecent ? viewModel.recentWindow.label : "off")
-    }
-
-    /// Window lengths, shown only while Recent is on: a picker for a mode
-    /// you're not in is just noise in the header.
-    private var recentWindowRow: some View {
-        HStack(spacing: 6) {
-            GridironSegmented(
-                segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
-                selection: $viewModel.recentWindow
-            )
-            if viewModel.isRecentFormLoading {
-                ProgressView().scaleEffect(0.6).frame(width: 20)
+            if let boardBindings {
+                StatsViewMenu(
+                    viewModel: viewModel,
+                    board: boardBindings.$board
+                )
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.trailing, 12)
+        .frame(height: GridironControl.height + 2)
         .padding(.top, 8)
-        .onChange(of: viewModel.recentWindow) { _, _ in
-            Task { await viewModel.loadRecentFormIfNeeded() }
-        }
     }
 
     /// True while the search row is open or a query is still applied, so the
@@ -285,19 +214,16 @@ struct DashboardView: View {
     }
 
     private var sortHeader: some View {
-        LeaderboardTableHeader(
-            sortDescending: viewModel.sortDescending,
-            sortLabel: viewModel.currentSortMetric ?? viewModel.sortLabel,
-            metrics: viewModel.availableSortMetrics,
-            onSelectMetric: { metric in
-                viewModel.setUserSortMetric(metric)
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            },
-            onToggleDirection: {
-                viewModel.toggleSortDirection()
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            }
-        )
+        Button {
+            viewModel.toggleSortDirection()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        } label: {
+            LeaderboardTableHeader(
+                sortDescending: viewModel.sortDescending,
+                sortLabel: viewModel.currentSortMetric ?? viewModel.sortLabel
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     /// Clubs matching the search, above the filtered player rows.
@@ -403,8 +329,7 @@ struct DashboardView: View {
                                 rank: index + 1,
                                 player: player,
                                 metricLabel: sortMetric.label,
-                                metricCategory: sortMetric.category,
-                                valueOverride: recentValue(for: player, metric: sortMetric.label)
+                                metricCategory: sortMetric.category
                             )
                         }
                         .buttonStyle(.plain)

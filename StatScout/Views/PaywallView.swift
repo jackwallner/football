@@ -25,6 +25,8 @@ enum PaywallTrigger: Identifiable, Hashable {
     case playerScouting
     /// Soft pitch from the blurred Recent Form teaser on the leaderboard.
     case recentForm
+    /// Best & Worst, reached from the Stats tab's View menu.
+    case bestWorst
 
     var icon: String {
         switch self {
@@ -40,6 +42,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .winback:           return "arrow.counterclockwise.circle.fill"
         case .playerScouting:    return "binoculars.fill"
         case .recentForm:        return "flame.fill"
+        case .bestWorst:         return "arrow.up.arrow.down"
         }
     }
 
@@ -57,6 +60,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .winback:           return "Welcome Back"
         case .playerScouting:    return "Full Player Scouting"
         case .recentForm:        return "Recent Form"
+        case .bestWorst:         return "Best & Worst"
         }
     }
 
@@ -86,6 +90,8 @@ enum PaywallTrigger: Identifiable, Hashable {
             return "Last 3 / 5 / 8 game form, head-to-head matchups, every roster. The full picture, not just season totals."
         case .recentForm:
             return "Every player's last 3 / 5 / 8 game form. Catch hot streaks and slumps before the season totals catch up."
+        case .bestWorst:
+            return "The league leader and the league trailer on every NFL metric, side by side, in one board."
         }
     }
 
@@ -104,6 +110,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .winback:           return "statscout_paywall_winback"
         case .playerScouting:    return "statscout_paywall_player_scouting"
         case .recentForm:        return "statscout_paywall_recent_form"
+        case .bestWorst:         return "statscout_paywall_best_worst"
         }
     }
 

@@ -544,11 +544,35 @@ struct LeaderboardTableHeader: View {
     }
 }
 
+struct InlineLoadError: View {
+    let message: String
+    let retry: () async -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Text(message)
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
+                .multilineTextAlignment(.center)
+            Button("Try Again") {
+                Task { await retry() }
+            }
+            .font(GridironType.smallBold)
+            .foregroundStyle(GridironPalette.turf)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, GridironGeo.padInline)
+        .padding(.vertical, 24)
+    }
+}
+
 struct LeaderboardTableRow: View {
     let rank: Int
     let player: Player
     var metricLabel: String? = nil
     var metricCategory: MetricCategory? = nil
+    var trendDelta: Double? = nil
+    var trendDecimals: Int = 3
     /// The rolling-window value, shown in place of the season number when the
     /// list is ranking by recent form. Uncoloured: the season percentile is the
     /// wrong ruler for five games' worth of numbers, and there is no window
@@ -575,10 +599,15 @@ struct LeaderboardTableRow: View {
     // duplicates that signal and reads as "the stat value" at a glance.
     private var displayValueText: String {
         if let valueOverride { return valueOverride }
-        if let metric = displayMetric, !metric.value.isEmpty {
-            return metric.value
-        }
-        return "—"
+        guard let metric = displayMetric else { return "-" }
+        if !metric.value.isEmpty { return metric.value }
+        return metric.percentile.ordinal
+    }
+
+    private var displayValueColor: Color {
+        valueOverride == nil
+            ? GridironPalette.textColor(forPercentile: displayPercentile)
+            : GridironPalette.ink
     }
 
     var body: some View {
@@ -627,9 +656,7 @@ struct LeaderboardTableRow: View {
                     }
                     Text(displayValueText)
                         .font(GridironType.statSmall)
-                        .foregroundStyle(valueOverride == nil
-                                         ? GridironPalette.color(forPercentile: displayPercentile)
-                                         : GridironPalette.ink)
+                        .foregroundStyle(displayValueColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                         .frame(width: 48, alignment: .trailing)
@@ -642,7 +669,12 @@ struct LeaderboardTableRow: View {
                         .monospacedDigit()
                 }
             }
-            .frame(width: 104, alignment: .trailing)
+            .frame(width: trendDelta == nil ? 92 : 56, alignment: .trailing)
+
+            if let trendDelta {
+                TrendArrow(delta: trendDelta, decimals: trendDecimals)
+                    .frame(width: 46, alignment: .trailing)
+            }
         }
         .frame(height: GridironGeo.rowHeight)
         .padding(.horizontal, GridironGeo.padInline)

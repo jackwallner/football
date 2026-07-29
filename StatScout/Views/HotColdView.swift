@@ -23,15 +23,10 @@ struct HotColdView: View {
     @State private var favorites = FavoritesStore.shared
     @State private var showingCold = false
     @State private var side: TrendSide = .qb
-    @State private var statMode: TrendStatMode = .advanced
     @State private var metric: TrendMetric = TrendMetric.qbAdvanced[0]
 
-    /// The metrics the picker offers, narrowed by the Advanced / Standard
-    /// switch. Every other board in the app splits its stats this way (the
-    /// player page, the team page, the Stats tab), and Trends was the one place
-    /// where the two vocabularies were mixed into a single long menu.
     private var metricOptions: [TrendMetric] {
-        TrendMetric.list(for: side, mode: statMode)
+        TrendMetric.advanced(for: side) + TrendMetric.standard(for: side)
     }
 
     private var forms: [RecentForm] {
@@ -97,17 +92,10 @@ struct HotColdView: View {
         // league leader, and a fabricated one would be a lie in the one place
         // we're asking to be trusted. It's a single request against the
         // pre-aggregated rollup table, the same one Pro reads.
-        .task(id: "\(viewModel.recentWindow.rawValue)-\(store.isPro)") {
+        .task(id: "\(viewModel.recentWindow.rawValue)-\(viewModel.selectedSeason)") {
             await viewModel.loadRecentFormIfNeeded()
         }
-        .onChange(of: side) { _, newSide in
-            // Keys don't carry across position groups, so land on that group's
-            // headline metric rather than an empty board. Defence has no
-            // advanced list, so the mode falls back with it.
-            if !newSide.hasAdvancedMetrics { statMode = .standard }
-            metric = metricOptions[0]
-        }
-        .onChange(of: statMode) { _, _ in
+        .onChange(of: side) { _, _ in
             metric = metricOptions[0]
         }
     }
@@ -122,16 +110,8 @@ struct HotColdView: View {
             // legible size, so the group is a menu and the mode keeps the
             // segments, which also puts the wider control on the wider half of
             // the row.
-            HStack(spacing: 8) {
-                sideMenu
-                if side.hasAdvancedMetrics {
-                    GridironSegmented(
-                        segments: TrendStatMode.allCases.map { .init(value: $0, label: $0.label) },
-                        selection: $statMode
-                    )
-                }
-                Spacer(minLength: 0)
-            }
+            sideMenu
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 8) {
                 metricPicker
@@ -207,32 +187,23 @@ struct HotColdView: View {
         .accessibilityValue(side.label)
     }
 
-    /// Same shape as the group picker, listing whichever family the Advanced /
-    /// Standard switch above has selected.
     private var metricPicker: some View {
-        Menu {
-            metricButtons(metricOptions)
-        } label: {
-            GridironInlinePill(systemImage: "chart.bar.fill", title: metric.label)
-        }
-        .menuOrder(.fixed)
-        .accessibilityLabel("Metric")
-        .accessibilityValue(metric.label)
+        StatPickerMenu(
+            advanced: pickerOptions(TrendMetric.advanced(for: side)),
+            standard: pickerOptions(TrendMetric.standard(for: side)),
+            activeLabel: metric.label,
+            onSelectAdvanced: { select($0, from: TrendMetric.advanced(for: side)) },
+            onSelectStandard: { select($0, from: TrendMetric.standard(for: side)) }
+        )
     }
 
-    private func metricButtons(_ list: [TrendMetric]) -> some View {
-        ForEach(list) { option in
-            Button {
-                metric = option
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            } label: {
-                if option.key == metric.key {
-                    Label(option.label, systemImage: "checkmark")
-                } else {
-                    Text(option.label)
-                }
-            }
-        }
+    private func pickerOptions(_ list: [TrendMetric]) -> [StatPickerMenu.Option] {
+        list.map { .init(id: $0.key, label: $0.label, isSelected: $0.key == metric.key) }
+    }
+
+    private func select(_ option: StatPickerMenu.Option, from list: [TrendMetric]) {
+        guard let picked = list.first(where: { $0.key == option.id }) else { return }
+        metric = picked
     }
 
     @ViewBuilder
@@ -246,6 +217,12 @@ struct HotColdView: View {
                 Label("Couldn't load recent form", systemImage: "exclamationmark.triangle")
             } description: {
                 Text(error)
+            } actions: {
+                Button("Try Again") {
+                    Task { await viewModel.reloadRecentForm() }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(GridironPalette.turf)
             }
             .padding(.vertical, 32)
         } else if ranked.isEmpty {
@@ -317,7 +294,7 @@ struct HotColdView: View {
         // not the screen edge, so this is the pill's height above the inset
         // plus a hair; the page doesn't scroll, so unlike every other screen
         // there's nothing to gain from running underneath it.
-        .padding(.bottom, 46)
+        .padding(.bottom, 56)
     }
 
     /// Row one of the locked board: the genuine leader once the rollup lands,

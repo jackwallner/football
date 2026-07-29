@@ -128,6 +128,10 @@ struct RootTabView: View {
             floatingTabBar
         }
         .ignoresSafeArea(edges: .bottom)
+        .onChange(of: selection) { _, tab in
+            guard tab == Tab.trends.rawValue else { return }
+            Task { await viewModel.loadRecentFormIfNeeded() }
+        }
     }
 
     private enum Tab: Int, CaseIterable, Identifiable {
@@ -178,8 +182,8 @@ struct RootTabView: View {
                 }
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
         .background(.ultraThinMaterial.opacity(0.8), in: Capsule())
         .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
         .shadow(color: .black.opacity(0.10), radius: 12, y: 4)
@@ -246,14 +250,14 @@ private struct TabBarButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 3) {
+            VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                 Text(label)
-                    .font(GridironType.micro)
+                    .font(GridironType.smallBold)
             }
             .foregroundStyle(isSelected ? GridironPalette.turf : GridironPalette.inkSecondary)
-            .frame(width: 70, height: 44)
+            .frame(width: 78, height: 52)
             .background(
                 isSelected ? GridironPalette.turf.opacity(0.12) : .clear,
                 in: Capsule()
@@ -296,14 +300,7 @@ private struct HomeTabToolbar: ViewModifier {
     /// button, tap-through rates were correspondingly weak. The verb makes
     /// the CTA unambiguous, and the trial-aware label appears when an intro
     /// offer is available.
-    private var ctaLabel: String {
-        if let yearly = store.products.first(where: { $0.productKind == .yearly }),
-           store.isEligibleForIntroOffer(yearly),
-           yearly.introOfferLabel != nil {
-            return "Try Free"
-        }
-        return "Upgrade"
-    }
+    private var ctaLabel: String { store.upgradeCTALabel }
 
     private var upgradeButton: some View {
         Button {
@@ -417,7 +414,8 @@ struct PlayerProfileDestination: ViewModifier {
                     },
                     loadRecentForm: { window in
                         await viewModel.loadRecentFormIfNeeded(window: window)
-                    }
+                    },
+                    comparisonCatalog: ComparisonCatalog(viewModel: viewModel)
                 )
                     .modifier(GridironNavBar())
             }
@@ -454,18 +452,22 @@ private struct StandardDestinations: ViewModifier {
             }
             .navigationDestination(for: StandardStatRoute.self) { route in
                 let season = route.season ?? viewModel.selectedSeason
-                StandardStatsLeadersView(
+                StandardStatsLeaderboardScreen(
                     players: viewModel.players(forSeason: season),
                     initialStat: route.stat,
                     initialCategory: route.category,
                     season: season
                 )
-                    .navigationTitle("\(route.stat) · \(season)")
+                    .navigationTitle(route.stat + " · " + String(season))
                     .navigationBarTitleDisplayMode(.inline)
                     .modifier(GridironNavBar())
             }
             .navigationDestination(for: ComparisonRoute.self) { route in
-                PlayerComparisonView(playerA: route.playerA, playerB: route.playerB)
+                PlayerComparisonView(
+                    playerA: route.playerA,
+                    playerB: route.playerB,
+                    catalog: ComparisonCatalog(viewModel: viewModel)
+                )
                     .modifier(GridironNavBar())
             }
     }

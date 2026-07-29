@@ -321,6 +321,32 @@ def _fetch_logs(client, season: int) -> list[dict]:
     return rows
 
 
+def _fetch_snapshot_player_ids(client, season: int) -> set[int]:
+    """Player ids the app can resolve into a profile for this season."""
+    rows: list[dict] = []
+    page_size = 1000
+    offset = 0
+    while True:
+        resp = (
+            client.table("player_snapshots")
+            .select("id")
+            .eq("season", season)
+            .range(offset, offset + page_size - 1)
+            .execute()
+        )
+        page = resp.data or []
+        rows.extend(page)
+        if len(page) < page_size:
+            break
+        offset += page_size
+    return {int(row["id"]) for row in rows}
+
+
+def _routable_logs(logs: list[dict], snapshot_ids: set[int]) -> list[dict]:
+    """Drop feed rows that cannot resolve to a player profile in the app."""
+    return [row for row in logs if int(row["player_id"]) in snapshot_ids]
+
+
 def _upsert(client, rows: list[dict]) -> None:
     if not rows:
         return
@@ -378,6 +404,10 @@ def run(season: Optional[int] = None) -> None:
     if not logs:
         logger.warning("No game logs for %d — nothing to roll up.", season)
         return
+
+    snapshot_ids = _fetch_snapshot_player_ids(client, season)
+    logs = _routable_logs(logs, snapshot_ids)
+    logger.info("  %d routable game-log rows", len(logs))
 
     rows = build_rows(logs)
     logger.info("Built %d recent-form rows", len(rows))

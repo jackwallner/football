@@ -19,15 +19,19 @@ struct MetricRankingView: View {
     }
 
     private var rankedPlayers: [Player] {
-        players.filter { player in
-            guard let m = player.metrics.first(where: { $0.label == metricLabel && $0.category == metricCategory }) else { return false }
-            return DashboardViewModel.rawNumeric(m.value) != nil
-        }
-        .sorted {
-            let v1 = rawValue(for: $0) ?? 0
-            let v2 = rawValue(for: $1) ?? 0
-            return sortDescending ? v1 > v2 : v1 < v2
-        }
+        players
+            .filter { player in
+                player.metrics.contains {
+                    $0.label == metricLabel && $0.category == metricCategory
+                }
+            }
+            .sorted(
+                by: DashboardViewModel.metricComparator(
+                    label: metricLabel,
+                    category: metricCategory,
+                    descending: sortDescending
+                )
+            )
     }
 
     var body: some View {
@@ -90,6 +94,7 @@ struct MetricRankingView: View {
             )
             .padding(.horizontal, 12)
             .padding(.top, 12)
+            Color.clear.frame(height: 88)
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(GridironPalette.canvas.ignoresSafeArea())
@@ -101,10 +106,6 @@ struct MetricRankingView: View {
         player.metrics.first { $0.label == metricLabel && $0.category == metricCategory }?.percentile ?? 0
     }
 
-    private func rawValue(for player: Player) -> Double? {
-        guard let m = player.metrics.first(where: { $0.label == metricLabel && $0.category == metricCategory }) else { return nil }
-        return DashboardViewModel.rawNumeric(m.value)
-    }
 }
 
 #if DEBUG

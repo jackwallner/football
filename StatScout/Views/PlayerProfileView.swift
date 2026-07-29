@@ -14,6 +14,7 @@ struct PlayerProfileView: View {
     /// Pre-aggregated rolling window for this player, when one is loaded.
     var recentFormLookup: ((Int, RecentWindow) -> RecentForm?)?
     var loadRecentForm: ((RecentWindow) async -> Void)?
+    var comparisonCatalog: ComparisonCatalog?
     @State private var showPercentileInfo = false
     @State private var selectedTab: PlayerStatTab = .statcast
     @State private var selectedPercentileSeason: Int? = nil
@@ -107,7 +108,20 @@ struct PlayerProfileView: View {
             VStack(spacing: 0) {
                 PlayerIdentityStrip(player: player)
 
-                statcastContent
+                tabSelector
+                    .padding(.horizontal, 12)
+                    .padding(.top, 12)
+
+                switch selectedTab {
+                case .statcast:
+                    statcastContent
+                case .standard:
+                    standardContent
+                case .yearCompare:
+                    yearCompareContent
+                }
+
+                Color.clear.frame(height: 88)
             }
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -121,14 +135,21 @@ struct PlayerProfileView: View {
         .navigationTitle(player.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) { favoriteButton }
-            ToolbarItem(placement: .topBarTrailing) { compareButton }
+            if #available(iOS 26.0, *) {
+                ToolbarItem(placement: .topBarTrailing) { favoriteButton }
+                    .sharedBackgroundVisibility(.hidden)
+                ToolbarItem(placement: .topBarTrailing) { compareButton }
+                    .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .topBarTrailing) { favoriteButton }
+                ToolbarItem(placement: .topBarTrailing) { compareButton }
+            }
         }
         .sheet(isPresented: $showPercentileInfo) {
             PercentileInfoSheet()
         }
         .sheet(item: $paywallTrigger) { trigger in
-            PaywallView(trigger: trigger)
+            TrialPitchSheet(trigger: trigger)
         }
         .sheet(isPresented: $showingPlayerPicker) {
             PlayerPickerSheet(players: comparablePlayers) { selected in
@@ -137,11 +158,13 @@ struct PlayerProfileView: View {
         }
         .sheet(item: $trialPitchTrigger) { trigger in
             TrialPitchSheet(trigger: trigger)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
         }
         .navigationDestination(item: $comparisonRoute) { route in
-            PlayerComparisonView(playerA: route.playerA, playerB: route.playerB)
+            PlayerComparisonView(
+                playerA: route.playerA,
+                playerB: route.playerB,
+                catalog: comparisonCatalog
+            )
         }
         .onAppear {
             // Defer the first-impression pitch: a user verifying one stat from a
@@ -264,8 +287,6 @@ struct PlayerProfileView: View {
         VStack(spacing: 12) {
             headlineCard
             percentileRankingsCard
-            standardStatsGridCard
-            yearCompareSection
 
             if !store.isPro {
                 RecentFormCard(

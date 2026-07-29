@@ -205,7 +205,7 @@ struct TeamStandardCard: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)
         } else if let loadError {
-            emptyState(loadError)
+            InlineLoadError(message: loadError) { await load() }
         } else {
             let totals = windowTotals()
             if totals.isEmpty {

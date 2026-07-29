@@ -34,6 +34,7 @@ struct MetricLeadersView: View {
                     .padding(.top, 12)
                     .padding(.bottom, 12)
                 }
+                Color.clear.frame(height: 88)
             }
         }
         .scrollBounceBehavior(.basedOnSize)

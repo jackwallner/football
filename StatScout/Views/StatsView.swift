@@ -1,99 +1,137 @@
 import SwiftUI
 
-/// Position-first home for league-wide NFL statistics. The dashboard owns the
-/// position, metric, qualifier, and sort controls; the season remains in the
-/// navigation bar so it applies to the whole surface.
+/// Single home for every league-wide statistic. The position tabs and control
+/// row stay fixed while the chosen statistic selects Advanced or Standard.
 struct StatsView: View {
     let viewModel: DashboardViewModel
     @EnvironmentObject private var store: StoreService
 
+    @State private var board: StatsBoard = .advanced
+    @State private var standardStat = "Pass Yds"
+    @State private var standardSortDescending = true
     @State private var paywallTrigger: PaywallTrigger?
 
+    private var position: PlayerPositionGroup { viewModel.selectedPosition }
+
+    private var bindings: StatsBoardBindings {
+        StatsBoardBindings(
+            board: $board,
+            standardStat: $standardStat,
+            standardSortDescending: $standardSortDescending
+        )
+    }
+
     var body: some View {
-        DashboardView(viewModel: viewModel)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(GridironPalette.canvas)
-        .toolbar {
-            // The green pill is its own capsule; suppress the iOS 26 Liquid
-                // Glass container or it reads as a pill inside a pill, which is
-                // exactly what the upgrade CTA on the other side already avoids.
-                if #available(iOS 26.0, *) {
-                    ToolbarItem(placement: .topBarLeading) { seasonMenu }
-                        .sharedBackgroundVisibility(.hidden)
-                } else {
-                    ToolbarItem(placement: .topBarLeading) { seasonMenu }
-                }
-            ToolbarItem(placement: .principal) {
-                Text("Stats")
-                    .font(GridironType.bodyBold)
-                    .foregroundStyle(.white)
+        VStack(spacing: 0) {
+            switch board {
+            case .advanced:
+                DashboardView(viewModel: viewModel, boardBindings: bindings)
+            case .standard:
+                StandardStatsLeadersView(
+                    players: standardBoardPlayers,
+                    selectedStat: $standardStat,
+                    selectedPosition: selectedPositionBinding,
+                    sortDescending: $standardSortDescending,
+                    boardBindings: bindings,
+                    viewModel: viewModel
+                )
+            case .bestWorst:
+                BestWorstBoard(viewModel: viewModel, bindings: bindings)
             }
         }
-        // Contextual past-season pitches route through the low-friction
-        // TrialPitchSheet (its CTA starts the yearly trial directly), not the
-        // full multi-plan PaywallView.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(GridironPalette.canvas)
+        .onChange(of: viewModel.selectedPosition) { _, next in
+            let stats = StandardStatCatalog.stats(for: next)
+            if !stats.contains(standardStat) {
+                standardStat = StandardStatCatalog.defaultStat(for: next)
+                standardSortDescending = StandardStatCatalog.defaultDescending(
+                    for: standardStat,
+                    position: next
+                )
+            }
+            if viewModel.availableAdvancedSortMetrics.isEmpty, board == .advanced {
+                board = .standard
+            }
+        }
+        .toolbar {
+            if #available(iOS 26.0, *) {
+                ToolbarItem(placement: .topBarLeading) { seasonMenu }
+                    .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .topBarLeading) { seasonMenu }
+            }
+        }
         .sheet(item: $paywallTrigger) { trigger in
             TrialPitchSheet(trigger: trigger)
         }
     }
 
-    // Compact season selector for the leading toolbar slot. It sits on the
-    // midnight navigation bar as a turf-green year pill.
-    private var seasonMenu: some View {
-        Menu {
-            if viewModel.isHistoricalLoading {
-                Label("Loading past seasons…", systemImage: "hourglass")
-            } else if !viewModel.hasLoadedHistorical {
-                Button {
-                    if store.isPro {
-                        Task { await viewModel.loadHistoricalIfNeeded() }
-                    } else {
-                        // Explicit tap — always answer it; the gate only caps
-                        // automatic pop-ups.
-                        paywallTrigger = .pastSeasonsLoad
-                    }
-                } label: {
-                    Label(store.isPro ? "Load past seasons" : "Past seasons require StatScout+", systemImage: store.isPro ? "clock.arrow.circlepath" : "crown.fill")
-                }
-            }
-            ForEach(viewModel.availableSeasons, id: \.self) { season in
-                let isLocked = viewModel.isSeasonLocked(season)
-                Button {
-                    if isLocked {
-                        paywallTrigger = .pastSeason
-                    } else {
-                        viewModel.selectedSeason = season
-                    }
-                } label: {
-                    HStack {
-                        Text(String(season))
-                        if isLocked {
-                            Image(systemName: "crown.fill")
-                                .font(.system(size: 10))
-                                .foregroundStyle(GridironPalette.inkTertiary)
-                        }
-                    }
-                }
-            }
-        } label: {
-            HStack(spacing: 5) {
-                Image(systemName: "calendar")
-                    .font(.system(size: 11, weight: .semibold))
-                Text(String(viewModel.selectedSeason))
-                    .font(GridironType.smallBold)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 9, weight: .bold))
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(GridironPalette.turf)
-            .clipShape(Capsule())
+    private var standardBoardPlayers: [Player] {
+        viewModel.qualifiedSeasonPlayers.filter {
+            $0.positionGroup == viewModel.selectedPosition
         }
-        .menuOrder(.fixed)
-        .accessibilityLabel("Season")
-        .accessibilityValue(String(viewModel.selectedSeason))
+    }
+
+    private var selectedPositionBinding: Binding<PlayerPositionGroup> {
+        Binding(
+            get: { viewModel.selectedPosition },
+            set: { viewModel.selectedPosition = $0 }
+        )
+    }
+
+    private var seasonMenu: some View {
+        SeasonMenu(
+            seasons: viewModel.availableSeasons,
+            selected: viewModel.selectedSeason,
+            isLocked: { viewModel.isSeasonLocked($0) },
+            onSelect: { season in
+                if viewModel.isSeasonLocked(season) {
+                    paywallTrigger = .lockedSeason(season)
+                } else {
+                    viewModel.selectedSeason = season
+                }
+            }
+        ) {
+            GridironNavPill(title: String(viewModel.selectedSeason))
+        }
         .accessibilityHint("Choose which season's stats to view")
+    }
+}
+
+private struct BestWorstBoard: View {
+    @EnvironmentObject private var store: StoreService
+    let viewModel: DashboardViewModel
+    let bindings: StatsBoardBindings
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                StatsViewMenu(
+                    viewModel: viewModel,
+                    board: bindings.$board
+                )
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+
+            if store.isPro {
+                MetricLeadersView(metrics: viewModel.allMetrics)
+            } else {
+                ZStack(alignment: .bottom) {
+                    MetricLeadersView(metrics: viewModel.allMetrics)
+                        .blur(radius: 8)
+                        .allowsHitTesting(false)
+                    BlurGateUnlock(
+                        headline: "See who leads and who trails on every metric in the league",
+                        trigger: .bestWorst
+                    )
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 100)
+                }
+            }
+        }
     }
 }
 
