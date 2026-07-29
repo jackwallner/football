@@ -141,10 +141,8 @@ enum TrendStatMode: String, CaseIterable, Identifiable, Sendable {
 
 /// Which position group the Trends board is ranking.
 ///
-/// Baseball splits on hitting versus pitching, two inline segments. Football
-/// has five groups, which is past what a segmented control can hold, so this
-/// drives a menu instead. Mixing groups was never an option: Y/A means nothing
-/// to a safety, and a receiver's Catch% is not a quarterback's.
+/// Mixing groups is not an option: Y/A means nothing to a safety, and a
+/// receiver's Catch% is not a quarterback's.
 enum TrendSide: String, CaseIterable, Identifiable, Sendable {
     case qb
     case rb
@@ -164,8 +162,7 @@ enum TrendSide: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Short form for the chip that opens the menu, where the full name would
-    /// crowd out the metric picker beside it.
+    /// Compact label for the five equal-width position tabs.
     var shortLabel: String {
         switch self {
         case .qb:  return "QB"
