@@ -153,17 +153,17 @@ struct TeamView: View {
                 || $0.displayPosition.localizedCaseInsensitiveContains(searchText)
         }
         let bySide = bySearch.filter { rosterSide.matches($0) }
-        let byQualifier = bySide.filter { isQualified($0) }
+        let byCategory = bySide.filter { player in
+            guard let selectedCategory else { return true }
+            return player.metrics.contains { $0.category == selectedCategory }
+        }
+        let byQualifier = byCategory.filter { isQualified($0) }
         if isRosterRecent, sortMetric != nil {
-            let ranked = byQualifier.filter { recentValue($0) != nil }.sorted {
+            return byQualifier.filter { recentValue($0) != nil }.sorted {
                 let first = recentValue($0) ?? 0
                 let second = recentValue($1) ?? 0
                 return sortDescending ? first > second : first < second
             }
-            let tail = byQualifier.filter { recentValue($0) == nil }.sorted {
-                fallbackPercentile($0) > fallbackPercentile($1)
-            }
-            return ranked + tail
         }
         guard let sortMetric else {
             return byQualifier.sorted {

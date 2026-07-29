@@ -102,54 +102,49 @@ struct HotColdView: View {
 
     private var header: some View {
         VStack(spacing: 8) {
-            // Which position group, and which vocabulary. Both narrow the stat
-            // list below them, so they sit above it.
-            //
-            // Baseball draws its side switch as two inline segments. Five
-            // position groups is past what a segmented row can hold at a
-            // legible size, so the group is a menu and the mode keeps the
-            // segments, which also puts the wider control on the wider half of
-            // the row.
-            sideMenu
-                .frame(maxWidth: .infinity, alignment: .leading)
+            positionSelector
 
-            HStack(spacing: 8) {
-                metricPicker
-                Spacer(minLength: 0)
-                if let through = throughLabel {
-                    Text(through)
-                        .font(GridironType.micro)
-                        .foregroundStyle(GridironPalette.inkTertiary)
+            VStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    metricPicker
+                    Spacer(minLength: 0)
+                    if let through = throughLabel {
+                        Text(through)
+                            .font(GridironType.micro)
+                            .foregroundStyle(GridironPalette.inkTertiary)
+                    }
                 }
+
+                // Same control as every other inline picker; only the selected
+                // fill differs, because here the choice itself encodes hot vs
+                // cold.
+                GridironSegmented(
+                    segments: [
+                        .init(value: false, label: "Heating up", systemImage: "flame.fill"),
+                        .init(value: true, label: "Cooling off", systemImage: "snowflake"),
+                    ],
+                    selection: $showingCold,
+                    selectedFill: { $0 ? GridironPalette.performanceLow : GridironPalette.performanceHigh }
+                )
+
+                GridironSegmented(
+                    segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
+                    selection: $viewModel.recentWindow
+                )
+
+                // The window is games the player actually appeared in, not
+                // weeks elapsed: a bye or a missed game shifts the window back
+                // rather than shrinking it. The per-row week range is what
+                // says when.
+                Text("Games played, against the same number before them. Each row shows the weeks it covers.")
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-
-            // Same control as every other inline picker; only the selected fill
-            // differs, because here the choice itself encodes hot vs cold.
-            GridironSegmented(
-                segments: [
-                    .init(value: false, label: "Heating up", systemImage: "flame.fill"),
-                    .init(value: true, label: "Cooling off", systemImage: "snowflake"),
-                ],
-                selection: $showingCold,
-                selectedFill: { $0 ? GridironPalette.performanceLow : GridironPalette.performanceHigh }
-            )
-
-            GridironSegmented(
-                segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
-                selection: $viewModel.recentWindow
-            )
-
-            // The window is games the player actually appeared in, not weeks
-            // elapsed: a bye or a missed game shifts the window back rather
-            // than shrinking it. The per-row week range is what says when.
-            Text("Games played, against the same number before them. Each row shows the weeks it covers.")
-                .font(GridironType.micro)
-                .foregroundStyle(GridironPalette.inkTertiary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 12)
         }
-        .padding(.horizontal, 12)
-        .padding(.top, 12)
+        .padding(.top, 8)
     }
 
     /// Weeks read better than dates in a sport that plays once a week, but the
@@ -162,29 +157,22 @@ struct HotColdView: View {
         return nil
     }
 
-    /// Five position groups is past what a segmented row can hold, so this is
-    /// the app's other picker shape: the same plain `Menu` the season selector
-    /// and every sort control use.
-    private var sideMenu: some View {
-        Menu {
-            ForEach(TrendSide.allCases) { option in
-                Button {
-                    side = option
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    if option == side {
-                        Label(option.label, systemImage: "checkmark")
-                    } else {
-                        Text(option.label)
-                    }
+    /// Matches the persistent underlined position row at the top of Stats.
+    private var positionSelector: some View {
+        GridironTabs(
+            tabs: TrendSide.allCases.map(\.shortLabel),
+            selected: Binding(
+                get: { side.shortLabel },
+                set: { rawValue in
+                    guard let next = TrendSide.allCases.first(where: {
+                        $0.shortLabel == rawValue
+                    }) else { return }
+                    side = next
                 }
-            }
-        } label: {
-            GridironInlinePill(systemImage: "person.fill", title: side.shortLabel)
-        }
-        .menuOrder(.fixed)
-        .accessibilityLabel("Position group")
-        .accessibilityValue(side.label)
+            )
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Position")
     }
 
     private var metricPicker: some View {
