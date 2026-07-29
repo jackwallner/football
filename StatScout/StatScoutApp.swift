@@ -122,11 +122,8 @@ struct OnboardingCards: View {
     private var dataReady: Bool { viewModel.isReady }
     private var showsUpsellBlock: Bool { isLastPage && !store.isPro }
 
-    /// CTA label / disclosure mirror the direct-purchase pop-ups: trial copy
-    /// when eligible, price-forward yearly copy otherwise. Both come from
-    /// StoreService so every one-tap conversion surface reads the same.
     private var proCTALabel: String {
-        store.yearlyPackage != nil ? store.paywallBlurCTA : "Upgrade to StatScout+"
+        "Continue with StatScout+"
     }
 
     private var trialDisclosure: String? {
@@ -409,7 +406,7 @@ struct OnboardingCards: View {
                 BulletItem(text: "The Trends board: the league ranked by who's moving", icon: "flame.fill", color: GridironPalette.turf),
                 BulletItem(text: "Last 3 / 5 / 8 game form on any player or team", icon: "chart.bar.fill", color: GridironPalette.turf),
                 BulletItem(text: "Head-to-head matchups across every percentile", icon: "person.2.fill", color: GridironPalette.turf),
-                BulletItem(text: "Every season back to 2020, and year-over-year", icon: "calendar.badge.clock", color: GridironPalette.turf)
+                BulletItem(text: "Every season back to 2015, plus year-over-year", icon: "calendar.badge.clock", color: GridironPalette.turf)
             ]
         )
     ]

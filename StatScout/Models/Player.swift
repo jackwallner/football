@@ -54,12 +54,12 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         handedness = try container.decode(String.self, forKey: .handedness)
         // No headshot field: the app never renders player photos (same as the
         // baseball build), and the league's headshot URLs aren't ours to
-        // redistribute. It was also a live decoding hazard — it used to be
+        // redistribute. It was also a live decoding hazard - it used to be
         // decoded as `URL`, which only round-trips from a plain string on
         // JSONDecoder. PropertyListDecoder expects URL's keyed
         // {relative, base} form, so it threw typeMismatch on the first row and
         // took the whole `[Player]` array down with it, leaving the bundled
-        // current *and* historical datasets unreadable ("Data Error — No
+        // current *and* historical datasets unreadable ("Data Error - No
         // players found"). The feed still sends `image_url`; unknown keys are
         // simply ignored.
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
@@ -95,7 +95,7 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         guard !metrics.isEmpty else { return 0 }
         // Players who span more than one category (e.g. a rushing QB with both
         // Passing and Rushing metrics) shouldn't have their headline number
-        // diluted by averaging across unrelated skills — take the best category.
+        // diluted by averaging across unrelated skills - take the best category.
         let categories = Set(metrics.map(\.category))
         if categories.count > 1 {
             let categoryAverages = Dictionary(grouping: metrics) { $0.category }
@@ -234,7 +234,7 @@ extension Player {
         }
     }
 
-    /// The category a player leads with — drives Recent Form and single-category
+    /// The category a player leads with - drives Recent Form and single-category
     /// framing. Derived from the position group, falling back to the most common
     /// metric category when the role label is missing.
     var primaryCategory: MetricCategory {
@@ -254,7 +254,7 @@ extension Player {
     /// we never show "TBD" next to real stats.
     var displayPosition: String {
         let trimmed = position.trimmingCharacters(in: .whitespaces).uppercased()
-        if !trimmed.isEmpty && trimmed != "TBD" && trimmed != "—" && trimmed != "-" {
+        if !trimmed.isEmpty && trimmed != "TBD" && trimmed != "\u{2014}" && trimmed != "-" {
             return position
         }
         return playerType?.uppercased() ?? position

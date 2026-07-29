@@ -434,7 +434,7 @@ struct PlayerComparisonView: View {
                 }
                 .frame(maxWidth: .infinity)
             } else {
-                Text("—")
+                Text("-")
                     .font(GridironType.statSmall)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity)

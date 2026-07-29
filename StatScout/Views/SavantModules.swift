@@ -11,7 +11,7 @@ private func positionAndHandedness(_ player: Player) -> String {
 
 private func displayTeamFullName(_ abbr: String) -> String {
     let trimmed = abbr.trimmingCharacters(in: .whitespaces).uppercased()
-    if trimmed.isEmpty || trimmed == "TBD" || trimmed == "—" || trimmed == "-" {
+    if trimmed.isEmpty || trimmed == "TBD" || trimmed == "\u{2014}" || trimmed == "-" {
         return "Free Agent"
     }
     return teamFullName(abbr)
@@ -143,30 +143,33 @@ struct GridironTabs: View {
     @Binding var selected: String
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
-                ForEach(tabs, id: \.self) { tab in
-                    Button(action: {
-                        selected = tab
-                        let generator = UIImpactFeedbackGenerator(style: .light)
-                        generator.impactOccurred()
-                    }) {
-                        VStack(spacing: 0) {
-                            Text(tab.uppercased())
-                                .font(GridironType.smallBold)
-                                .foregroundStyle(selected == tab ? GridironPalette.ink : GridironPalette.inkTertiary)
-                                .padding(.vertical, 12)
-                                .padding(.horizontal, 14)
-                            Rectangle()
-                                .fill(selected == tab ? GridironPalette.turf : Color.clear)
-                                .frame(height: 2)
-                        }
+        HStack(spacing: 0) {
+            ForEach(tabs, id: \.self) { tab in
+                Button(action: {
+                    selected = tab
+                    let generator = UIImpactFeedbackGenerator(style: .light)
+                    generator.impactOccurred()
+                }) {
+                    VStack(spacing: 0) {
+                        Text(tab.uppercased())
+                            .font(GridironType.smallBold)
+                            .foregroundStyle(selected == tab ? GridironPalette.ink : GridironPalette.inkTertiary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .padding(.horizontal, 4)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 40)
+                        Rectangle()
+                            .fill(selected == tab ? GridironPalette.turf : Color.clear)
+                            .frame(height: 3)
                     }
                 }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
             }
         }
+        .frame(maxWidth: .infinity)
         .background(GridironPalette.surface)
         .overlay(Rectangle().fill(GridironPalette.hairline).frame(height: GridironGeo.hairline), alignment: .bottom)
     }
 }
-

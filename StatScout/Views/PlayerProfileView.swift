@@ -22,7 +22,7 @@ struct PlayerProfileView: View {
     @State private var showingPlayerPicker = false
     @State private var comparisonRoute: ComparisonRoute?
     // Contextual trial pitches (compare, recent form, year compare, first-open)
-    // all route through the low-friction TrialPitchSheet — its CTA starts the
+    // all route through the low-friction TrialPitchSheet - its CTA starts the
     // yearly trial directly. PaywallView stays for the deliberate upsell card.
     @State private var trialPitchTrigger: PaywallTrigger?
     @State private var formDisplayMode: FormDisplayMode = .season
@@ -66,7 +66,7 @@ struct PlayerProfileView: View {
     }
 
     private var seasonLabel: String {
-        activeSeason.map(String.init) ?? "—"
+        activeSeason.map(String.init) ?? "-"
     }
 
     private var profileMetricKind: MetricKind {
@@ -130,7 +130,7 @@ struct PlayerProfileView: View {
         // paywall blocking it), and a native half-sheet TrialPitchSheet
         // floats on top with a "Maybe later" dismiss. PaywallGate caps this
         // at 2 per session so repeat taps don't re-prompt. The old full-page
-        // .activation PaywallView was removed for being too intrusive — this
+        // .activation PaywallView was removed for being too intrusive - this
         // is the Vitals-style soft pitch that replaced it.
         .navigationTitle(player.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -170,7 +170,7 @@ struct PlayerProfileView: View {
             // Defer the first-impression pitch: a user verifying one stat from a
             // group chat shouldn't hit a subscription story before scrolling a
             // single row. Show it from the *second* profile open onward (Pro-only
-            // controls — Recent Form, past seasons, Compare — still pitch on tap).
+            // controls - Recent Form, past seasons, Compare - still pitch on tap).
             let opens = UserDefaults.standard.integer(forKey: profileOpenCountKey) + 1
             UserDefaults.standard.set(opens, forKey: profileOpenCountKey)
             if !store.isPro, opens >= 2, PaywallGate.shared.shouldPresent(.playerScouting) {
@@ -323,7 +323,7 @@ struct PlayerProfileView: View {
                             .foregroundStyle(GridironPalette.inkSecondary)
                     }
                     Spacer()
-                    Text(metric.value.isEmpty ? "—" : metric.value)
+                    Text(metric.value.isEmpty ? "-" : metric.value)
                         .font(GridironType.statMed)
                         .foregroundStyle(GridironPalette.color(forPercentile: metric.percentile))
                     Text("\(metric.percentile.ordinal)")
@@ -391,7 +391,7 @@ struct PlayerProfileView: View {
                 proPerk("chart.line.uptrend.xyaxis", "Year-over-year trends across every metric")
                 proPerk("person.2.fill", "Head-to-head comparisons vs any player")
                 proPerk("calendar.badge.clock", "Every past season, not just this one")
-                proPerk("arrow.down.circle.fill", "Saved offline — works on the road")
+                proPerk("arrow.down.circle.fill", "Saved offline - works on the road")
             }
 
             Button {
@@ -555,7 +555,7 @@ struct PlayerProfileView: View {
                         let isLocked = season != StatScoutSeason.free && !store.isPro
                         Button {
                             if isLocked {
-                                // Explicit tap on a locked season — always answer it.
+                                // Explicit tap on a locked season - always answer it.
                                 // PaywallGate only caps automatic pop-ups.
                                 trialPitchTrigger = .pastSeason
                             } else {
@@ -632,7 +632,7 @@ struct PlayerProfileView: View {
                 )
             )
 
-            // Recent mode only makes sense for the live season — game logs are
+            // Recent mode only makes sense for the live season - game logs are
             // only fetched for the current season, so on a historical season it
             // would always read "No games".
             if store.isPro, isCurrentSeasonActive {
@@ -712,7 +712,7 @@ struct PlayerProfileView: View {
         (activeSeason ?? StatScoutSeason.current) == StatScoutSeason.current
     }
 
-    /// The mode rows actually render in — forced back to `.season` on a
+    /// The mode rows actually render in - forced back to `.season` on a
     /// historical season so a user who toggled Recent/Both doesn't see stale
     /// current-season windows against past-season bars.
     private var effectiveFormDisplayMode: FormDisplayMode {
@@ -737,7 +737,7 @@ struct PlayerProfileView: View {
 
     private func displayedMetrics(in metrics: [Metric]) -> [Metric] {
         guard effectiveFormDisplayMode == .recent, store.isPro else { return metrics }
-        // Recent mode: show every season bar — metrics with window data render the
+        // Recent mode: show every season bar - metrics with window data render the
         // recent value, the rest fall back to the season bar (handled in
         // `percentileMetricRow`). Additionally inject a stub for any game-log spec
         // the season snapshot omits (Gridiron sometimes drops e.g. Hard-Hit%) so its
@@ -815,7 +815,7 @@ struct PlayerProfileView: View {
                         alignment: .bottom
                     )
             } else if !metric.id.hasPrefix("recent-stub-") {
-                // No game-log data for this metric — fall back to the season bar
+                // No game-log data for this metric - fall back to the season bar
                 // so the recent view still shows every percentile bar.
                 NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason)) {
                     MetricBar(metric: metric)
@@ -878,7 +878,7 @@ struct PlayerProfileView: View {
         do {
             recentLogs = try await fetch(player.playerId, season)
         } catch {
-            // Distinguish "no games" from "fetch failed" — otherwise a network
+            // Distinguish "no games" from "fetch failed" - otherwise a network
             // error renders as an honest-looking "No games in the last N days".
             recentLogs = []
             recentLoadError = "Couldn't load recent games. Check your connection and try again."
@@ -1143,13 +1143,13 @@ struct PercentileInfoSheet: View {
                         .foregroundStyle(GridironPalette.inkSecondary)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Elite (75–100): Red bars", systemImage: "flame.fill")
+                        Label("Elite (75-100): Green bars", systemImage: "flame.fill")
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.performanceHigh)
-                        Label("Average (25–75): Gray bars", systemImage: "minus")
+                        Label("Average (25-75): Charcoal bars", systemImage: "minus")
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.inkSecondary)
-                        Label("Below Average (0–25): Blue bars", systemImage: "snowflake")
+                        Label("Below Average (0-25): Rust bars", systemImage: "snowflake")
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.performanceLow)
                     }

@@ -51,7 +51,7 @@ struct TeamsView: View {
             teamFullName($0).localizedCaseInsensitiveContains(searchText) ||
             $0.localizedCaseInsensitiveContains(searchText)
         }
-        // Plain alphabetical by full team name — the old score-based ordering was
+        // Plain alphabetical by full team name - the old score-based ordering was
         // confusing and the score itself was a mislabeled percentile. The
         // favorite is lifted into its own pinned section above the grid.
         return teams.sorted { teamFullName($0).localizedCompare(teamFullName($1)) == .orderedAscending }
@@ -83,7 +83,7 @@ struct TeamsView: View {
                     allTeamsSection
                 }
                 // Scroll-under spacer so the last grid row isn't trapped behind
-                // the floating tab bar — matches the Dashboard pattern.
+                // the floating tab bar - matches the Dashboard pattern.
                 Color.clear.frame(height: 88)
             }
             .padding(.top, 12)
@@ -408,7 +408,7 @@ struct TeamGridTile: View {
 // MARK: - Favorite Team Card
 
 /// Full-width "hero" row for the pinned favorite team. Reads as a featured item
-/// distinct from the grid below — tap anywhere to open the team, tap the star to
+/// distinct from the grid below - tap anywhere to open the team, tap the star to
 /// unpin. This is what makes Favorite do something visible: your team is always
 /// one tap away at the top of the list.
 struct FavoriteTeamCard: View {

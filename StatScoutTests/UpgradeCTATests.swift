@@ -17,4 +17,11 @@ final class UpgradeCTATests: XCTestCase {
             XCTAssertLessThanOrEqual(label.count, 12)
         }
     }
+
+    func testKnownProductsMapToPurchasePackages() {
+        XCTAssertEqual(StatScoutProduct.packageType(for: StatScoutProduct.yearly), .annual)
+        XCTAssertEqual(StatScoutProduct.packageType(for: StatScoutProduct.monthly), .monthly)
+        XCTAssertEqual(StatScoutProduct.packageType(for: StatScoutProduct.lifetime), .lifetime)
+        XCTAssertNil(StatScoutProduct.packageType(for: "unknown"))
+    }
 }

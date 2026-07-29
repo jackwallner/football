@@ -184,11 +184,6 @@ struct TeamView: View {
         case .qualified:
             guard let selectedCategory else { return !player.metrics.isEmpty }
             return player.metrics.contains { $0.category == selectedCategory }
-        case .any:
-            guard let games = player.standardStats?.first(where: {
-                $0.label.uppercased() == "G"
-            }) else { return false }
-            return (Int(games.value.filter(\.isNumber)) ?? 0) >= qualifierLevel.minGames
         }
     }
 
@@ -209,7 +204,7 @@ struct TeamView: View {
                 }
 
                 // Lets content scroll under the floating tab bar so the last
-                // rows aren't trapped behind it — matches Dashboard.
+                // rows aren't trapped behind it - matches Dashboard.
                 Color.clear.frame(height: 88)
             }
         }
@@ -364,7 +359,7 @@ struct TeamView: View {
     }
 
     private func applyDefaultDirectionIfMetricChanged() {
-        let key = sortMetric.map { "\($0.category.rawValue)|\($0.label)" } ?? "—"
+        let key = sortMetric.map { "\($0.category.rawValue)|\($0.label)" } ?? "-"
         guard key != lastDefaultedSortKey else { return }
         lastDefaultedSortKey = key
         sortDescending = DashboardViewModel.defaultSortDescending(
@@ -373,7 +368,7 @@ struct TeamView: View {
         )
     }
 
-    /// Mirrors the Stats tab's sort UI — left-side chip showing the active
+    /// Mirrors the Stats tab's sort UI - left-side chip showing the active
     /// metric (tap flips direction), and a magnifying-glass toggle on the right
     /// that expands an inline search row.
     private var sortControlsRow: some View {
@@ -604,7 +599,7 @@ struct TeamView: View {
         .padding(.vertical, 48)
     }
 
-    /// Team name in the nav title doubles as a switcher menu — tap to jump to
+    /// Team name in the nav title doubles as a switcher menu - tap to jump to
     /// any other team without popping back to the Teams list.
     private var teamSwitcherMenu: some View {
         Menu {

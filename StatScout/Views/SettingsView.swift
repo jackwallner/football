@@ -134,7 +134,7 @@ struct AboutView: View {
             row(
                 icon: "clock.arrow.circlepath",
                 title: "Last Updated",
-                subtitle: lastUpdated.map { $0.formatted(date: .long, time: .shortened) } ?? "—"
+                subtitle: lastUpdated.map { $0.formatted(date: .long, time: .shortened) } ?? "-"
             )
         }
         .background(GridironPalette.surface)
@@ -158,7 +158,7 @@ struct AboutView: View {
                 row(
                     icon: "star.fill",
                     title: "Rate or Send Feedback",
-                    subtitle: "Help StatScout grow — or tell us what to improve."
+                    subtitle: "Help StatScout grow - or tell us what to improve."
                 )
             }
             .buttonStyle(.plain)

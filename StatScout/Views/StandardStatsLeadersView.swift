@@ -293,7 +293,7 @@ struct StandardStatsLeadersView: View {
     private func statDisplay(for player: Player) -> String {
         player.standardStats?.first(where: {
             $0.label == selectedStat
-        })?.value ?? "—"
+        })?.value ?? "-"
     }
 
     private func games(for player: Player) -> Double {

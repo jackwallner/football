@@ -33,7 +33,7 @@ final class DashboardViewModel {
 
     private var userSortMetric: String?
     var sortDescending = true
-    var selectedSeason: Int = Calendar.current.component(.year, from: Date())
+    var selectedSeason: Int = StatScoutSeason.current
 
     var sortLabel: String { currentSortMetric ?? "Top Metric" }
 
@@ -76,7 +76,7 @@ final class DashboardViewModel {
     }
 
     /// Reset direction to "best first" for the active metric. Triggered by
-    /// category changes and by picking a new sort metric — but only when the
+    /// category changes and by picking a new sort metric - but only when the
     /// user hasn't manually pinned a direction in this session.
     private func applyDefaultSortDirection() {
         guard let label = currentSortMetric,
@@ -151,8 +151,8 @@ final class DashboardViewModel {
         return "Updated \(formatter.string(from: lastUpdated))"
     }
 
-    /// Fetch per-game logs for a single player. Powers the Recent Form card —
-    /// the VM is just a passthrough so the card can stay UI-only and we don't
+    /// Fetch per-game logs for a single player. Powers the Recent Form card.
+    /// The VM is a passthrough so the card stays UI-only and we do not
     /// have to thread the provider through every PlayerProfileView caller.
     func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog] {
         try await provider.fetchGameLogs(playerId: playerId, season: season)
@@ -176,12 +176,12 @@ final class DashboardViewModel {
     }
     #endif
 
-    // Seasons present in fetched data, descending. Falls back to the current year while loading.
+    // Keep the full supported range visible even before historical data loads.
+    // Free users can discover older seasons in the menu and see that they are
+    // part of StatScout+, rather than seeing a misleading single-year picker.
     var availableSeasons: [Int] {
-        let seasons = Set(playerHistories.values.flatMap { $0 }.compactMap(\.season))
-        guard !seasons.isEmpty else {
-            return [Calendar.current.component(.year, from: Date())]
-        }
+        var seasons = Set(StatScoutSeason.earliest...StatScoutSeason.current)
+        seasons.formUnion(playerHistories.values.flatMap { $0 }.compactMap(\.season))
         return seasons.sorted(by: >)
     }
 
@@ -351,26 +351,14 @@ final class DashboardViewModel {
     }
 
     enum QualifierLevel: String, CaseIterable, Identifiable {
-        case all = "All"
-        case any = "Played"
+        case all = "All Players"
         case qualified = "Qualified"
 
         var id: String { rawValue }
 
-        var minGames: Int {
-            switch self {
-            case .all: return 0
-            case .any: return 1
-            case .qualified: return 4
-            }
-        }
-
-        /// Short caption explaining the active threshold. Shown next to the picker
-        /// so "All" and "Played" don't look like synonyms.
         var description: String {
             switch self {
-            case .all: return "No minimum"
-            case .any: return "1+ game"
+            case .all: return "No playing-time minimum"
             case .qualified: return "Next Gen qualifier"
             }
         }
@@ -390,14 +378,7 @@ final class DashboardViewModel {
                 return player.metrics.contains { $0.category == category }
             }
             return !player.metrics.isEmpty
-        case .any:
-            return gamesValue(in: player.standardStats ?? []) >= qualifierLevel.minGames
         }
-    }
-
-    private func gamesValue(in stats: [StandardStat]) -> Int {
-        guard let stat = stats.first(where: { $0.label.uppercased() == "G" }) else { return 0 }
-        return Int(stat.value.filter { $0.isNumber }) ?? 0
     }
 
     var leaderboard: [Player] {
@@ -466,7 +447,7 @@ final class DashboardViewModel {
     /// Handles ".345", "8.2%", "98.5 mph", "28.5 ft/s", "25.3°", "-1.2".
     static func rawNumeric(_ value: String) -> Double? {
         var s = value.trimmingCharacters(in: .whitespaces)
-        // Strip thousands separators — NFL yardage ships as "3,322".
+        // Strip thousands separators - NFL yardage ships as "3,322".
         s = s.replacingOccurrences(of: ",", with: "")
         if s.hasPrefix(".") { s = "0" + s }
         if s.hasPrefix("-.") { s = "-0" + s.dropFirst() }
@@ -480,7 +461,7 @@ final class DashboardViewModel {
         return !definition.higherIsBetter
     }
 
-    /// Default sort direction for a metric — descending (highest first) unless
+    /// Default sort direction for a metric - descending (highest first) unless
     /// the metric reads better when lower. Used to keep "best player first" as
     /// the initial ordering even after switching to raw-value sorting.
     static func defaultSortDescending(label: String?, category: MetricCategory?) -> Bool {
@@ -550,14 +531,14 @@ final class DashboardViewModel {
             // value; rawNumeric("") collapsed them all to 0, every player tied,
             // and the sort returned the same player (e.g. Ohtani) for both
             // ends with empty cells. Percentile is Gridiron's normalized
-            // goodness — already direction-correct (it inverts for pitchers),
+            // goodness - already direction-correct (it inverts for pitchers),
             // so highest = best, lowest = worst with no per-metric polarity
             // table needed.
             let byPercentile = data.values.sorted { $0.percentile < $1.percentile }
             guard let best = byPercentile.last else { return nil }
             let worst = byPercentile.first
             // Single qualifier (or every qualifier tied): the same player can't
-            // be both Best and Worst — drop the duplicate so the row reads
+            // be both Best and Worst - drop the duplicate so the row reads
             // "Best: X / Only qualifier" instead of "X is also the worst".
             let dedupedWorst = (worst?.player.id == best.player.id) ? nil : worst
             return (
@@ -639,7 +620,7 @@ final class DashboardViewModel {
             }
 
         } catch is DecodingError {
-            errorMessage = "Data format changed — app may need an update."
+            errorMessage = "Data format changed - app may need an update."
             lastFetchFailed = true
         } catch _ as URLError {
             errorMessage = players.isEmpty ? "Can't reach data feed. Check your connection." : "Showing saved data. Pull to refresh when your connection improves."

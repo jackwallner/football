@@ -20,8 +20,8 @@ final class RecentFormScreenshotUITests: XCTestCase {
         }
 
         // Player rows are buttons labelled "<rank>, <name>, <pos>, <team>, <stat>"
-        // on both the leaderboard and metric-ranking lists. Tap the first one —
-        // top of any hitting list is a qualified hitter with game logs.
+        // on both the leaderboard and metric-ranking lists. Tap the first one.
+        // The top of any hitting list is a qualified hitter with game logs.
         let playerRow = app.buttons.matching(
             NSPredicate(format: "label MATCHES %@", "^[0-9]+,.*")
         ).firstMatch
