@@ -97,6 +97,10 @@ leaderboards, Teams, Compare and the player page all get it with no special-casi
 - Rendered as "All Time" via `SeasonLabel`; never as `"0"`.
 - Career qualification is far higher than a single season (≈ 3 starting years):
   1500 attempts / 500 carries / 300 targets (200 receptions fallback) / 48 games.
+- Career **playoffs** get their own, much lower bar (150 attempts / 60 carries /
+  40 targets / 25 receptions / 6 games), because a playoff career is measured in
+  games, not seasons. Reusing the regular-season career numbers left the
+  career-playoff board with exactly one qualifying passer in league history.
 - Re-reads the weekly feed rather than summing stored snapshots, which would compound
   rounding and drop every season a player missed the single-season cut.
 - Trends excludes it: rolling 3/5/8-week windows are a within-season question.

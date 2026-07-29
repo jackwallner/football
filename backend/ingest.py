@@ -89,6 +89,17 @@ CAREER_QUAL_CARRIES = 500
 CAREER_QUAL_TARGETS = 300
 CAREER_QUAL_RECEPTIONS = 200
 CAREER_QUAL_GAMES = 48
+# Career *playoff* thresholds, roughly a handful of postseason starts. A career
+# is measured in seasons; a playoff career is measured in games, because nobody
+# accumulates a regular season's worth of volume in January. Reusing the numbers
+# above here produced a career-playoff board with exactly one qualifying player
+# in the league's entire modern history (Brady, on 1,921 attempts), which is a
+# hole dressed up as a leaderboard.
+CAREER_POST_QUAL_ATTEMPTS = 150
+CAREER_POST_QUAL_CARRIES = 60
+CAREER_POST_QUAL_TARGETS = 40
+CAREER_POST_QUAL_RECEPTIONS = 25
+CAREER_POST_QUAL_GAMES = 6
 
 # Weekly counting stats summed to season totals.
 SUM_COLS = [
@@ -302,9 +313,10 @@ def qualifies(
 ) -> bool:
     """Whether a player clears the qualification threshold for a category.
 
-    Three tiers: a full season, a postseason run (a handful of games, so the bar
-    drops), and a career (the all-time rollup, so the bar rises to roughly three
-    starting seasons).
+    Four tiers, one per (career, postseason) combination: a full season, a
+    postseason run (a handful of games, so the bar drops), a career (roughly
+    three starting seasons, so it rises), and a *playoff* career, which is a
+    career measured in games rather than seasons.
     """
     def _num(col: str) -> float:
         val = row.get(col)
@@ -315,30 +327,40 @@ def qualifies(
 
     postseason = season_type == "POST"
 
-    def _threshold(season: float, post: float, career_value: float) -> float:
+    def _threshold(
+        season: float,
+        post: float,
+        career_value: float,
+        career_post: float,
+    ) -> float:
         if career:
-            return career_value
+            return career_post if postseason else career_value
         return post if postseason else season
 
     if category == "Passing":
         return _num("attempts") >= _threshold(
-            QUAL_ATTEMPTS, POST_QUAL_ATTEMPTS, CAREER_QUAL_ATTEMPTS
+            QUAL_ATTEMPTS, POST_QUAL_ATTEMPTS,
+            CAREER_QUAL_ATTEMPTS, CAREER_POST_QUAL_ATTEMPTS,
         )
     if category == "Rushing":
         return _num("carries") >= _threshold(
-            QUAL_CARRIES, POST_QUAL_CARRIES, CAREER_QUAL_CARRIES
+            QUAL_CARRIES, POST_QUAL_CARRIES,
+            CAREER_QUAL_CARRIES, CAREER_POST_QUAL_CARRIES,
         )
     if category == "Receiving":
         if not bool(row.get("targets_reliable", True)):
             return _num("receptions") >= _threshold(
-                QUAL_RECEPTIONS, POST_QUAL_RECEPTIONS, CAREER_QUAL_RECEPTIONS
+                QUAL_RECEPTIONS, POST_QUAL_RECEPTIONS,
+                CAREER_QUAL_RECEPTIONS, CAREER_POST_QUAL_RECEPTIONS,
             )
         return _num("targets") >= _threshold(
-            QUAL_TARGETS, POST_QUAL_TARGETS, CAREER_QUAL_TARGETS
+            QUAL_TARGETS, POST_QUAL_TARGETS,
+            CAREER_QUAL_TARGETS, CAREER_POST_QUAL_TARGETS,
         )
     if category == "Defense":
         return player_type == "def" and _num("games") >= _threshold(
-            QUAL_GAMES, POST_QUAL_GAMES, CAREER_QUAL_GAMES
+            QUAL_GAMES, POST_QUAL_GAMES,
+            CAREER_QUAL_GAMES, CAREER_POST_QUAL_GAMES,
         )
     return False
 
