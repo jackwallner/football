@@ -26,7 +26,6 @@ struct YearComparisonView: View {
             yearPickerCard
 
             if let p1 = playerYearA, let p2 = playerYearB {
-                overallChangeCard(p1: p1, p2: p2)
                 comparisonContent(p1: p1, p2: p2)
             } else {
                 noDataView
@@ -52,7 +51,7 @@ struct YearComparisonView: View {
         } description: {
             Text(availableYears.isEmpty
                  ? "No historical data is available for this player."
-                 : "Data for \(recentYear) or \(priorYear) is not available.")
+                 : "Data for \(String(recentYear)) or \(String(priorYear)) is not available.")
         }
         .padding(.vertical, 48)
         .frame(maxWidth: .infinity)
@@ -125,58 +124,22 @@ struct YearComparisonView: View {
         }
     }
 
-    // MARK: - Overall Change Card
-
-    private func overallChangeCard(p1: Player, p2: Player) -> some View {
-        let delta = p1.overallPercentile - p2.overallPercentile
-        let isUp = delta > 0
-        let isDown = delta < 0
-        let color: Color = isUp ? .green : (isDown ? GridironPalette.turf : GridironPalette.inkSecondary)
-        let icon = isUp ? "arrow.up.circle.fill" : (isDown ? "arrow.down.circle.fill" : "minus.circle.fill")
-
-        return HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 32))
-                .foregroundStyle(color)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Overall Average")
-                    .font(GridironType.small)
-                    .foregroundStyle(GridironPalette.inkSecondary)
-                Text("\(p2.overallPercentile)% (\(String(priorYear))) → \(p1.overallPercentile)% (\(String(recentYear)))")
-                    .font(GridironType.bodyBold)
-                    .foregroundStyle(GridironPalette.ink)
-            }
-
-            Spacer()
-
-            HStack(spacing: 2) {
-                Text(isUp ? "+\(delta)%" : "\(delta)%")
-                    .font(GridironType.statLarge)
-            }
-            .foregroundStyle(color)
-        }
-        .padding(16)
-        .background(GridironPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
-        .overlay(
-            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
-                .stroke(GridironPalette.hairline, lineWidth: 0.5)
-        )
-    }
-
     // MARK: - Comparison Content
 
     private func comparisonContent(p1: Player, p2: Player) -> some View {
         let comparisons = buildComparisons(p1: p1, p2: p2)
         let grouped = Dictionary(grouping: comparisons) { $0.category }
+        let standard = buildStandardComparisons(p1: p1, p2: p2)
 
-        if comparisons.isEmpty {
+        if comparisons.isEmpty && standard.isEmpty {
             return AnyView(noMetricsView)
         }
 
         return AnyView(
             LazyVStack(spacing: 12) {
+                if !standard.isEmpty {
+                    standardStatsCard(items: standard)
+                }
                 ForEach(MetricCategory.allCases, id: \.self) { category in
                     if let items = grouped[category], !items.isEmpty {
                         categoryCard(category: category, items: items)
@@ -190,7 +153,7 @@ struct YearComparisonView: View {
         ContentUnavailableView {
             Label("No Comparable Metrics", systemImage: "chart.bar.xaxis")
         } description: {
-            Text("These seasons don't have overlapping metrics to compare.")
+            Text("These seasons don't have overlapping standard or advanced stats.")
         }
         .padding(.vertical, 48)
         .frame(maxWidth: .infinity)
@@ -206,7 +169,7 @@ struct YearComparisonView: View {
 
     private func categoryCard(category: MetricCategory, items: [MetricComparison]) -> some View {
         VStack(spacing: 0) {
-            GridironSubSectionBar(title: category.rawValue.uppercased())
+            GridironSubSectionBar(title: "ADVANCED · " + category.rawValue.uppercased())
 
             columnHeader
 
@@ -224,7 +187,7 @@ struct YearComparisonView: View {
 
     private var columnHeader: some View {
         HStack(spacing: 0) {
-            Text("Metric")
+            Text("STAT")
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -239,10 +202,6 @@ struct YearComparisonView: View {
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(width: 72)
 
-            Text("Δ")
-                .font(GridironType.micro)
-                .foregroundStyle(GridironPalette.inkSecondary)
-                .frame(width: 48)
         }
         .padding(.horizontal, GridironGeo.padInline)
         .frame(height: 28)
@@ -250,11 +209,6 @@ struct YearComparisonView: View {
     }
 
     private func comparisonRow(item: MetricComparison, isAlt: Bool) -> some View {
-        let isUp = item.change > 0
-        let isDown = item.change < 0
-        let deltaColor: Color = isUp ? .green : (isDown ? GridironPalette.turf : GridironPalette.inkSecondary)
-        let arrow = isUp ? "↑" : (isDown ? "↓" : "→")
-
         return HStack(spacing: 0) {
             // Metric label
             Text(item.metricLabel)
@@ -278,16 +232,6 @@ struct YearComparisonView: View {
                 isFaded: false
             )
             .frame(width: 72)
-
-            // Delta (in percentile points)
-            HStack(spacing: 2) {
-                Text(arrow)
-                    .font(GridironType.smallBold)
-                Text("\(abs(item.change))%")
-                    .font(GridironType.bodyBold)
-            }
-            .foregroundStyle(deltaColor)
-            .frame(width: 48)
         }
         .frame(height: 48)
         .padding(.horizontal, GridironGeo.padInline)
@@ -301,24 +245,65 @@ struct YearComparisonView: View {
     }
 
     private func yearValueColumn(percentile: Int, value: String, isFaded: Bool) -> some View {
-        VStack(spacing: 1) {
-            HStack(spacing: 4) {
-                Text("\(percentile)")
-                    .font(GridironType.bodyBold)
-                    .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.color(forPercentile: percentile))
-                // Mini bar
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(GridironPalette.color(forPercentile: percentile))
-                    .frame(width: CGFloat(percentile) * 0.3, height: 4)
-                    .opacity(isFaded ? 0.5 : 1)
-            }
-            if !value.isEmpty {
-                Text(value)
+        VStack(spacing: 2) {
+            Text(value.isEmpty ? String(percentile) : value)
+                .font(GridironType.statSmall)
+                .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.turf)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            if value.isEmpty {
+                Text("PCTL")
                     .font(GridironType.micro)
-                    .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.inkSecondary)
-                    .lineLimit(1)
+                    .foregroundStyle(GridironPalette.inkTertiary)
             }
         }
+    }
+
+    private func standardStatsCard(
+        items: [(label: String, prior: String?, recent: String?)]
+    ) -> some View {
+        VStack(spacing: 0) {
+            GridironSubSectionBar(title: "SEASON TOTALS")
+            columnHeader
+            ForEach(Array(items.enumerated()), id: \.element.label) { index, item in
+                HStack(spacing: 0) {
+                    Text(item.label)
+                        .font(GridironType.body)
+                        .foregroundStyle(GridironPalette.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    rawValue(item.prior, isFaded: true)
+                        .frame(width: 72)
+                    rawValue(item.recent, isFaded: false)
+                        .frame(width: 72)
+                }
+                .frame(height: 48)
+                .padding(.horizontal, GridironGeo.padInline)
+                .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
+                .overlay(
+                    Rectangle()
+                        .fill(GridironPalette.divider)
+                        .frame(height: GridironGeo.hairline),
+                    alignment: .bottom
+                )
+            }
+        }
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+    }
+
+    private func rawValue(_ value: String?, isFaded: Bool) -> some View {
+        Text(value ?? "-")
+            .font(GridironType.statSmall)
+            .foregroundStyle(
+                value == nil
+                    ? GridironPalette.inkTertiary
+                    : (isFaded ? GridironPalette.inkSecondary : GridironPalette.turf)
+            )
+            .monospacedDigit()
     }
 
     // MARK: - Comparisons Builder
@@ -336,14 +321,39 @@ struct YearComparisonView: View {
                 percentileA: m1.percentile,
                 percentileB: m2.percentile,
                 valueA: m1.value,
-                valueB: m2.value,
-                change: m1.percentile - m2.percentile
+                valueB: m2.value
             )
         }.sorted { a, b in
             a.category == b.category
                 ? a.category.sortMetrics(a.metricLabel, b.metricLabel)
                 : MetricCategory.allCases.firstIndex(of: a.category)! < MetricCategory.allCases.firstIndex(of: b.category)!
         }
+    }
+
+    private func buildStandardComparisons(
+        p1: Player,
+        p2: Player
+    ) -> [(label: String, prior: String?, recent: String?)] {
+        let recent = Dictionary(
+            uniqueKeysWithValues: (p1.standardStats ?? []).map { ($0.label, $0.value) }
+        )
+        let prior = Dictionary(
+            uniqueKeysWithValues: (p2.standardStats ?? []).map { ($0.label, $0.value) }
+        )
+        let preferredOrder = [
+            "G", "Cmp/Att", "Pass Yds", "Pass TD", "INT",
+            "Car", "Rush Yds", "Rush TD", "Rec/Tgt", "Rec Yds", "Rec TD",
+            "Tackles", "Sacks", "Def INT",
+        ]
+        return Set(recent.keys).union(prior.keys)
+            .sorted {
+                let first = preferredOrder.firstIndex(of: $0) ?? preferredOrder.count
+                let second = preferredOrder.firstIndex(of: $1) ?? preferredOrder.count
+                return first == second ? $0 < $1 : first < second
+            }
+            .map {
+                (label: $0, prior: prior[$0], recent: recent[$0])
+            }
     }
 }
 
@@ -354,7 +364,6 @@ private struct MetricComparison {
     let percentileB: Int
     let valueA: String
     let valueB: String
-    let change: Int
 }
 
 private extension Sequence where Element: Hashable {

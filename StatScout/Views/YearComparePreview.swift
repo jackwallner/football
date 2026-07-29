@@ -35,10 +35,7 @@ struct YearComparePreview: View {
             // Mock year picker
             mockYearPicker
 
-            // Mock overall change
-            mockOverallChange
-
-            // Mock category comparison
+            // Mock aggregate comparison
             mockCategoryCard
         }
         .padding(.horizontal, 12)
@@ -78,48 +75,15 @@ struct YearComparePreview: View {
         .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
     }
 
-    private var mockOverallChange: some View {
-        HStack(spacing: 16) {
-            Image(systemName: "arrow.up.circle.fill")
-                .font(.system(size: 32))
-                .foregroundStyle(.green)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Overall Change")
-                    .font(GridironType.small)
-                    .foregroundStyle(GridironPalette.inkSecondary)
-                Text("72nd (2025) → 85th (2026)")
-                    .font(GridironType.bodyBold)
-                    .foregroundStyle(GridironPalette.ink)
-            }
-
-            Spacer()
-
-            HStack(spacing: 4) {
-                Text("+")
-                    .font(GridironType.statLarge)
-                Text("13")
-                    .font(GridironType.statLarge)
-            }
-            .foregroundStyle(.green)
-        }
-        .padding(16)
-        .background(GridironPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
-        .overlay(
-            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
-                .stroke(GridironPalette.hairline, lineWidth: 0.5)
-        )
-    }
-
     private var mockCategoryCard: some View {
         VStack(spacing: 0) {
-            mockHeader("PASSING")
+            GridironSubSectionBar(title: "SEASON TOTALS")
+            mockHeader
 
-            mockRow(label: "Pass Yds", priorPct: 68, recentPct: 82, delta: 14, priorVal: "3,650", recentVal: "4,180")
-            mockRow(label: "Pass TD", priorPct: 55, recentPct: 79, delta: 24, priorVal: "24", recentVal: "34")
-            mockRow(label: "Rating", priorPct: 72, recentPct: 76, delta: 4, priorVal: "94.5", recentVal: "98.1")
-            mockRow(label: "EPA/Play", priorPct: 81, recentPct: 78, delta: -3, priorVal: "0.18", recentVal: "0.15")
+            mockRow(label: "Cmp/Att", priorVal: "348/530", recentVal: "385/566")
+            mockRow(label: "Pass Yds", priorVal: "3,650", recentVal: "4,180")
+            mockRow(label: "Pass TD", priorVal: "24", recentVal: "34")
+            mockRow(label: "Rush Yds", priorVal: "285", recentVal: "412")
         }
         .background(GridironPalette.surface)
         .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
@@ -129,9 +93,9 @@ struct YearComparePreview: View {
         )
     }
 
-    private func mockHeader(_ title: String) -> some View {
+    private var mockHeader: some View {
         HStack(spacing: 0) {
-            Text("Metric")
+            Text("STAT")
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -143,43 +107,29 @@ struct YearComparePreview: View {
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(width: 72)
-            Text("Δ")
-                .font(GridironType.micro)
-                .foregroundStyle(GridironPalette.inkSecondary)
-                .frame(width: 36)
         }
         .padding(.horizontal, GridironGeo.padInline)
         .frame(height: 28)
         .background(GridironPalette.surfaceAlt)
     }
 
-    private func mockRow(label: String, priorPct: Int, recentPct: Int, delta: Int, priorVal: String, recentVal: String) -> some View {
-        let isUp = delta > 0
-        let isDown = delta < 0
-        let deltaColor: Color = isUp ? .green : (isDown ? GridironPalette.turf : GridironPalette.inkSecondary)
-        let arrow = isUp ? "↑" : (isDown ? "↓" : "→")
-
-        return HStack(spacing: 0) {
+    private func mockRow(
+        label: String,
+        priorVal: String,
+        recentVal: String
+    ) -> some View {
+        HStack(spacing: 0) {
             Text(label)
                 .font(GridironType.body)
                 .foregroundStyle(GridironPalette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
 
-            mockYearValue(percentile: priorPct, value: priorVal, isFaded: true)
+            mockYearValue(value: priorVal, isFaded: true)
                 .frame(width: 72)
 
-            mockYearValue(percentile: recentPct, value: recentVal, isFaded: false)
+            mockYearValue(value: recentVal, isFaded: false)
                 .frame(width: 72)
-
-            HStack(spacing: 2) {
-                Text(arrow)
-                    .font(GridironType.smallBold)
-                Text("\(abs(delta))")
-                    .font(GridironType.bodyBold)
-            }
-            .foregroundStyle(deltaColor)
-            .frame(width: 36)
         }
         .frame(height: 48)
         .padding(.horizontal, GridironGeo.padInline)
@@ -192,22 +142,11 @@ struct YearComparePreview: View {
         )
     }
 
-    private func mockYearValue(percentile: Int, value: String, isFaded: Bool) -> some View {
-        VStack(spacing: 1) {
-            HStack(spacing: 4) {
-                Text("\(percentile)")
-                    .font(GridironType.bodyBold)
-                    .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.color(forPercentile: percentile))
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(GridironPalette.color(forPercentile: percentile))
-                    .frame(width: CGFloat(percentile) * 0.3, height: 4)
-                    .opacity(isFaded ? 0.5 : 1)
-            }
-            Text(value)
-                .font(GridironType.micro)
-                .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.inkSecondary)
-                .lineLimit(1)
-        }
+    private func mockYearValue(value: String, isFaded: Bool) -> some View {
+        Text(value)
+            .font(GridironType.statSmall)
+            .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.turf)
+            .lineLimit(1)
     }
 }
 

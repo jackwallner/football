@@ -8,9 +8,10 @@ struct ComparisonRoute: Hashable, Identifiable {
 
 struct ComparisonCatalog {
     var seasons: [Int] = []
-    var roster: (Int) -> [Player] = { _ in [] }
-    var resolve: (Player, Int) -> Player? = { player, season in
-        player.season == season ? player : nil
+    var defaultPhase: SeasonPhase = .regular
+    var roster: (Int, SeasonPhase) -> [Player] = { _, _ in [] }
+    var resolve: (Player, Int, SeasonPhase) -> Player? = { player, season, phase in
+        player.season == season && player.seasonPhase == phase ? player : nil
     }
     var isSeasonLocked: (Int) -> Bool = { _ in false }
     var isLoadingHistory: Bool = false
@@ -18,15 +19,17 @@ struct ComparisonCatalog {
 
     init(
         seasons: [Int] = [],
-        roster: @escaping (Int) -> [Player] = { _ in [] },
-        resolve: @escaping (Player, Int) -> Player? = { player, season in
-            player.season == season ? player : nil
+        defaultPhase: SeasonPhase = .regular,
+        roster: @escaping (Int, SeasonPhase) -> [Player] = { _, _ in [] },
+        resolve: @escaping (Player, Int, SeasonPhase) -> Player? = { player, season, phase in
+            player.season == season && player.seasonPhase == phase ? player : nil
         },
         isSeasonLocked: @escaping (Int) -> Bool = { _ in false },
         isLoadingHistory: Bool = false,
         loadHistory: (() async -> Void)? = nil
     ) {
         self.seasons = seasons
+        self.defaultPhase = defaultPhase
         self.roster = roster
         self.resolve = resolve
         self.isSeasonLocked = isSeasonLocked
@@ -35,17 +38,25 @@ struct ComparisonCatalog {
     }
 
     @MainActor
-    init(viewModel: DashboardViewModel) {
+    init(
+        viewModel: DashboardViewModel,
+        defaultPhase: SeasonPhase? = nil
+    ) {
+        let phase = defaultPhase ?? viewModel.selectedPhase
         self.init(
             seasons: viewModel.availableSeasons,
-            roster: { viewModel.players(forSeason: $0).sorted { $0.name < $1.name } },
-            resolve: { player, season in
+            defaultPhase: phase,
+            roster: { season, phase in
+                viewModel.players(forSeason: season, phase: phase)
+                    .sorted { $0.name < $1.name }
+            },
+            resolve: { player, season, phase in
                 if player.season == season,
-                   player.seasonPhase == viewModel.selectedPhase {
+                   player.seasonPhase == phase {
                     return player
                 }
                 return viewModel.playerHistories[player.playerId]?.first {
-                    $0.season == season && $0.seasonPhase == viewModel.selectedPhase
+                    $0.season == season && $0.seasonPhase == phase
                 }
             },
             isSeasonLocked: { viewModel.isSeasonLocked($0) },
@@ -99,6 +110,27 @@ struct PlayerComparisonView: View {
             let mapped = items.map { (label: $0.label, a: $0.a, b: $0.b) }
             return (cat, mapped)
         }
+    }
+
+    private var standardComparison: [(label: String, a: String?, b: String?)] {
+        let left = Dictionary(
+            uniqueKeysWithValues: (a.standardStats ?? []).map { ($0.label, $0.value) }
+        )
+        let right = Dictionary(
+            uniqueKeysWithValues: (b.standardStats ?? []).map { ($0.label, $0.value) }
+        )
+        let preferredOrder = [
+            "G", "Cmp/Att", "Pass Yds", "Pass TD", "INT",
+            "Car", "Rush Yds", "Rush TD", "Rec/Tgt", "Rec Yds", "Rec TD",
+            "Tackles", "Sacks", "Def INT",
+        ]
+        return Set(left.keys).union(right.keys)
+            .sorted {
+                let first = preferredOrder.firstIndex(of: $0) ?? preferredOrder.count
+                let second = preferredOrder.firstIndex(of: $1) ?? preferredOrder.count
+                return first == second ? $0 < $1 : first < second
+            }
+            .map { (label: $0, a: left[$0], b: right[$0]) }
     }
 
     var body: some View {
@@ -184,8 +216,15 @@ struct PlayerComparisonView: View {
                 let side = target == .a ? a : b
                 let other = target == .a ? b : a
                 ComparePlayerPicker(
-                    players: catalog.roster(side.season ?? 0).filter {
-                        $0.playerId != other.playerId
+                    players: catalog.roster(
+                        side.season ?? 0,
+                        side.seasonPhase
+                    ).filter {
+                        (
+                            $0.playerId != other.playerId
+                                || $0.season != other.season
+                                || $0.seasonPhase != other.seasonPhase
+                        )
                             && $0.canCompareHeadToHead(with: other)
                     },
                     season: side.season,
@@ -218,14 +257,18 @@ struct PlayerComparisonView: View {
                         .padding(.horizontal, 12)
                 }
 
-                if comparisonMetrics.isEmpty {
+                if comparisonMetrics.isEmpty && standardComparison.isEmpty {
                     ContentUnavailableView {
-                        Label("No comparable metrics", systemImage: "chart.bar")
+                        Label("No comparable stats", systemImage: "chart.bar")
                     } description: {
-                        Text("These players don't share any common metrics.")
+                        Text("These players don't share any standard or advanced stats.")
                     }
                     .padding(.vertical, 48)
                 } else {
+                    if !standardComparison.isEmpty {
+                        standardStatsCard
+                            .padding(.horizontal, 12)
+                    }
                     ForEach(groupedComparison, id: \.0) { category, metrics in
                         categoryCard(category: category, metrics: metrics)
                     }
@@ -239,6 +282,60 @@ struct PlayerComparisonView: View {
         .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationTitle("Player Comparison")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var standardStatsCard: some View {
+        VStack(spacing: 0) {
+            GridironSectionBar(title: "SEASON TOTALS")
+
+            HStack(spacing: 8) {
+                Text("STAT")
+                    .frame(width: 82, alignment: .leading)
+                Text(a.name.split(separator: " ").last.map(String.init) ?? "A")
+                    .frame(maxWidth: .infinity)
+                Text(b.name.split(separator: " ").last.map(String.init) ?? "B")
+                    .frame(maxWidth: .infinity)
+            }
+            .font(GridironType.micro)
+            .foregroundStyle(GridironPalette.inkTertiary)
+            .frame(height: GridironGeo.rowHeightHeader)
+            .padding(.horizontal, GridironGeo.padInline)
+            .background(GridironPalette.surfaceAlt)
+
+            ForEach(Array(standardComparison.enumerated()), id: \.element.label) { index, item in
+                HStack(spacing: 8) {
+                    Text(item.label)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.ink)
+                        .frame(width: 82, alignment: .leading)
+                    aggregateValue(item.a)
+                    aggregateValue(item.b)
+                }
+                .frame(height: GridironGeo.rowHeight)
+                .padding(.horizontal, GridironGeo.padInline)
+                .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
+                .overlay(
+                    Rectangle()
+                        .fill(GridironPalette.divider)
+                        .frame(height: GridironGeo.hairline),
+                    alignment: .bottom
+                )
+            }
+        }
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+    }
+
+    private func aggregateValue(_ value: String?) -> some View {
+        Text(value ?? "-")
+            .font(GridironType.statMed)
+            .foregroundStyle(value == nil ? GridironPalette.inkTertiary : GridironPalette.turf)
+            .monospacedDigit()
+            .frame(maxWidth: .infinity)
     }
 
     private var playerHeadlines: some View {
@@ -296,7 +393,12 @@ struct PlayerComparisonView: View {
                         if catalog.isSeasonLocked(season) {
                             showingTrial = true
                         } else {
-                            move(target, to: season, catalog: catalog)
+                            move(
+                                target,
+                                to: season,
+                                phase: player.seasonPhase,
+                                catalog: catalog
+                            )
                         }
                     }
                 ) {
@@ -306,6 +408,24 @@ struct PlayerComparisonView: View {
                     )
                 }
                 .accessibilityLabel("Season for \(player.name)")
+
+                SeasonPhaseMenu(
+                    selected: player.seasonPhase,
+                    onSelect: { phase in
+                        move(
+                            target,
+                            to: player.season ?? 0,
+                            phase: phase,
+                            catalog: catalog
+                        )
+                    }
+                ) {
+                    GridironInlinePill(
+                        systemImage: "football.fill",
+                        title: player.seasonPhase.label
+                    )
+                }
+                .accessibilityLabel("Season type for \(player.name)")
 
                 Button {
                     picker = target
@@ -337,9 +457,14 @@ struct PlayerComparisonView: View {
         )
     }
 
-    private func move(_ target: PickerTarget, to season: Int, catalog: ComparisonCatalog) {
+    private func move(
+        _ target: PickerTarget,
+        to season: Int,
+        phase: SeasonPhase,
+        catalog: ComparisonCatalog
+    ) {
         let current = target == .a ? a : b
-        if let resolved = catalog.resolve(current, season) {
+        if let resolved = catalog.resolve(current, season, phase) {
             if target == .a {
                 overrideA = resolved
             } else {
@@ -349,7 +474,7 @@ struct PlayerComparisonView: View {
         } else {
             note = catalog.isLoadingHistory
                 ? "Loading past seasons…"
-                : "No \(season) data for \(current.name)."
+                : "No \(String(season)) \(phase.label.lowercased()) data for \(current.name)."
             Task { await catalog.loadHistory?() }
         }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()

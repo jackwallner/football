@@ -10,6 +10,7 @@ final class DashboardViewModel {
     var players: [Player] = []
     var playerHistories: [Int: [Player]] = [:]
     var searchText = ""
+    var selectedConference: NFLConference = .all
     var selectedPosition: PlayerPositionGroup = .qb {
         didSet {
             guard oldValue != selectedPosition else { return }
@@ -219,12 +220,32 @@ final class DashboardViewModel {
     /// Pro-gated at the call site, free users get a blurred teaser.
     var showingRecent = false
 
-    func recentForm(for playerId: Int, window: TrendWindow? = nil) -> RecentForm? {
-        recentFormByWindow[(window ?? recentWindow).rawValue]?[playerId]
+    func recentForm(
+        for playerId: Int,
+        window: TrendWindow? = nil,
+        season: Int? = nil,
+        phase: SeasonPhase? = nil
+    ) -> RecentForm? {
+        let targetSeason = season ?? selectedSeason
+        let targetPhase = phase ?? selectedPhase
+        return recentFormByWindow[(window ?? recentWindow).rawValue]?[playerId]
+            .flatMap {
+                $0.season == targetSeason && $0.seasonPhase == targetPhase ? $0 : nil
+            }
     }
 
-    func recentForm(for playerId: Int, window: RecentWindow) -> RecentForm? {
-        recentFormByWindow[window.rawValue]?[playerId]
+    func recentForm(
+        for playerId: Int,
+        window: RecentWindow,
+        season: Int? = nil,
+        phase: SeasonPhase? = nil
+    ) -> RecentForm? {
+        let targetSeason = season ?? selectedSeason
+        let targetPhase = phase ?? selectedPhase
+        return recentFormByWindow[window.rawValue]?[playerId]
+            .flatMap {
+                $0.season == targetSeason && $0.seasonPhase == targetPhase ? $0 : nil
+            }
     }
 
     var isRecentFormLoading: Bool {
@@ -232,40 +253,73 @@ final class DashboardViewModel {
     }
 
     /// The last game date covered by the loaded window, for honest labelling.
-    var recentFormAsOf: Date? {
-        recentFormByWindow[recentWindow.rawValue]?.values.compactMap(\.asOf).max()
+    func recentFormAsOf(
+        window: TrendWindow,
+        season: Int,
+        phase: SeasonPhase
+    ) -> Date? {
+        recentFormRowsByWindow[window.rawValue]?
+            .filter { $0.season == season && $0.seasonPhase == phase }
+            .compactMap(\.asOf)
+            .max()
     }
 
     /// The latest week any loaded row reaches, so a board can say "through
     /// Week 18" without every row carrying its own caption.
-    var recentFormThroughWeek: Int? {
-        recentFormByWindow[recentWindow.rawValue]?.values.compactMap(\.endWeek).max()
+    func recentFormThroughWeek(
+        window: TrendWindow,
+        season: Int,
+        phase: SeasonPhase
+    ) -> Int? {
+        recentFormRowsByWindow[window.rawValue]?
+            .filter { $0.season == season && $0.seasonPhase == phase }
+            .compactMap(\.endWeek)
+            .max()
     }
 
     /// Every row for a window, keyed by side of the ball. The Trends board
     /// ranks within one position group, so it needs the rows a per-player
     /// dictionary throws away: a two-way player has one row per player_type.
-    func recentFormRows(window: TrendWindow, playerType: String) -> [RecentForm] {
+    func recentFormRows(
+        window: TrendWindow,
+        playerType: String,
+        season: Int,
+        phase: SeasonPhase
+    ) -> [RecentForm] {
         (recentFormRowsByWindow[window.rawValue] ?? [])
-            .filter { $0.playerType == playerType }
+            .filter {
+                $0.playerType == playerType
+                    && $0.season == season
+                    && $0.seasonPhase == phase
+            }
     }
 
     private var recentFormRowsByWindow: [Int: [RecentForm]] = [:]
 
-    func reloadRecentForm(window: TrendWindow? = nil) async {
+    func reloadRecentForm(
+        window: TrendWindow? = nil,
+        season: Int? = nil,
+        phase: SeasonPhase? = nil
+    ) async {
         let target = window ?? recentWindow
         recentFormTasks[target.rawValue]?.cancel()
         recentFormTasks.removeValue(forKey: target.rawValue)
         recentFormByWindow.removeValue(forKey: target.rawValue)
         recentFormRowsByWindow.removeValue(forKey: target.rawValue)
         recentFormError = nil
-        await loadRecentFormIfNeeded(window: target)
+        await loadRecentFormIfNeeded(window: target, season: season, phase: phase)
     }
 
-    func loadRecentFormIfNeeded(window: TrendWindow? = nil) async {
+    func loadRecentFormIfNeeded(
+        window: TrendWindow? = nil,
+        season: Int? = nil,
+        phase: SeasonPhase? = nil
+    ) async {
         let target = window ?? recentWindow
+        let targetSeason = season ?? selectedSeason
+        let targetPhase = phase ?? selectedPhase
         // Season changed under us, the cache describes a different year.
-        let context = "\(selectedSeason)-\(selectedPhase.rawValue)"
+        let context = "\(targetSeason)-\(targetPhase.rawValue)"
         if recentFormContext != context {
             for task in recentFormTasks.values { task.cancel() }
             recentFormTasks.removeAll()
@@ -283,7 +337,6 @@ final class DashboardViewModel {
 
         recentFormLoadingWindows.insert(target.rawValue)
         recentFormError = nil
-        let season = selectedSeason
         let task = Task { @MainActor [weak self] in
             guard let self else { return }
             defer {
@@ -292,12 +345,14 @@ final class DashboardViewModel {
             }
             do {
                 let rows = try await self.provider.fetchRecentForm(
-                    season: season,
-                    seasonPhase: self.selectedPhase,
+                    season: targetSeason,
+                    seasonPhase: targetPhase,
                     windowWeeks: target.rawValue
                 )
-                guard season == self.selectedSeason,
-                      rows.allSatisfy({ $0.seasonPhase == self.selectedPhase }) else { return }
+                guard self.recentFormContext == context,
+                      rows.allSatisfy({
+                          $0.season == targetSeason && $0.seasonPhase == targetPhase
+                      }) else { return }
                 var byPlayer: [Int: RecentForm] = [:]
                 for row in rows {
                     if let existing = byPlayer[row.playerId],
@@ -317,9 +372,17 @@ final class DashboardViewModel {
         await task.value
     }
 
-    func loadRecentFormIfNeeded(window: RecentWindow) async {
+    func loadRecentFormIfNeeded(
+        window: RecentWindow,
+        season: Int? = nil,
+        phase: SeasonPhase? = nil
+    ) async {
         guard let trendWindow = TrendWindow(rawValue: window.rawValue) else { return }
-        await loadRecentFormIfNeeded(window: trendWindow)
+        await loadRecentFormIfNeeded(
+            window: trendWindow,
+            season: season,
+            phase: phase
+        )
     }
 
     /// Unique players for an arbitrary season, not just the selected one.
@@ -345,8 +408,11 @@ final class DashboardViewModel {
         guard !query.isEmpty else { return [] }
         return teamsWithData
             .filter {
-                teamFullName($0).localizedCaseInsensitiveContains(query)
-                    || $0.localizedCaseInsensitiveContains(query)
+                selectedConference.contains(team: $0)
+                    && (
+                        teamFullName($0).localizedCaseInsensitiveContains(query)
+                            || $0.localizedCaseInsensitiveContains(query)
+                    )
             }
             .sorted { teamFullName($0) < teamFullName($1) }
     }
@@ -365,12 +431,21 @@ final class DashboardViewModel {
                 || player.team.localizedCaseInsensitiveContains(searchText)
                 || teamFullName(player.team).localizedCaseInsensitiveContains(searchText)
             let matchesPosition = player.positionGroup == selectedPosition
+            let matchesConference = matchesSelectedConference(player)
             let matchingMetrics = player.metrics.filter {
                 FootballMetricRegistry.isSupported($0, by: selectedPosition)
             }
             let qualifies = matchingMetrics.contains { isQualified(player, for: $0.category) }
-            return matchesSearch && matchesPosition && !matchingMetrics.isEmpty && qualifies
+            return matchesSearch
+                && matchesPosition
+                && matchesConference
+                && !matchingMetrics.isEmpty
+                && qualifies
         }
+    }
+
+    func matchesSelectedConference(_ player: Player) -> Bool {
+        selectedConference.contains(team: player.team)
     }
 
     enum QualifierLevel: String, CaseIterable, Identifiable {
@@ -536,7 +611,7 @@ final class DashboardViewModel {
 
     var allMetrics: [(label: String, category: MetricCategory, best: (player: Player, percentile: Int, actualValue: String)?, worst: (player: Player, percentile: Int, actualValue: String)?)] {
         var metricMap: [String: (category: MetricCategory, values: [(player: Player, percentile: Int, actualValue: String)])] = [:]
-        for player in seasonPlayers {
+        for player in seasonPlayers where matchesSelectedConference(player) {
             for metric in player.metrics {
                 guard isQualified(player, for: metric.category) else { continue }
                 let compositeKey = "\(metric.label)|\(metric.category.rawValue)"

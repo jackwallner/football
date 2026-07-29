@@ -10,31 +10,37 @@ struct DashboardView: View {
 
     var body: some View {
         ZStack {
-            ScrollView {
-                LazyVStack(spacing: 0, pinnedViews: []) {
-                    unifiedControlBar
-                    if !viewModel.players.isEmpty {
-                        activeSortChip
-                        if isSearching || !viewModel.searchText.isEmpty {
-                            searchRow
+            VStack(spacing: 0) {
+                unifiedControlBar
+                if !viewModel.players.isEmpty {
+                    activeSortChip
+                    if isSearching || !viewModel.searchText.isEmpty {
+                        searchRow
+                    }
+                }
+
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        if !viewModel.players.isEmpty,
+                           isSearching || !viewModel.searchText.isEmpty {
                             teamResults
                         }
+                        leaderboardSection
+                        if !viewModel.players.isEmpty {
+                            aboutFooter
+                        }
+                        // Lets the leaderboard scroll through the floating tab bar instead of
+                        // stopping above it with canvas gray showing underneath the glass pill.
+                        Color.clear.frame(height: 88)
                     }
-                    leaderboardSection
-                    if !viewModel.players.isEmpty {
-                        aboutFooter
-                    }
-                    // Lets the leaderboard scroll through the floating tab bar instead of
-                    // stopping above it with canvas gray showing underneath the glass pill.
-                    Color.clear.frame(height: 88)
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollDismissesKeyboard(.interactively)
+                .refreshable {
+                    await viewModel.load()
                 }
             }
-            .scrollBounceBehavior(.basedOnSize)
-            .scrollDismissesKeyboard(.interactively)
-            .scrollClipDisabled()
-            .refreshable {
-                await viewModel.load()
-            }
+
             if viewModel.isLoading && viewModel.players.isEmpty {
                 loadingCard
             }

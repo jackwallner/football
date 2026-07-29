@@ -174,11 +174,14 @@ struct StatsViewMenu: View {
     @Binding var board: StatsBoard
 
     private var isActive: Bool {
-        viewModel.qualifierLevel != .qualified || board == .bestWorst
+        viewModel.qualifierLevel != .qualified
+            || viewModel.selectedConference != .all
+            || board == .bestWorst
     }
 
     var body: some View {
         Menu {
+            conferenceSection
             qualifierSection
             boardSection
         } label: {
@@ -191,6 +194,23 @@ struct StatsViewMenu: View {
         }
         .menuOrder(.fixed)
         .accessibilityLabel("View options")
+    }
+
+    private var conferenceSection: some View {
+        Section("Conference") {
+            ForEach(NFLConference.allCases) { conference in
+                Button {
+                    viewModel.selectedConference = conference
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } label: {
+                    if conference == viewModel.selectedConference {
+                        Label(conference.rawValue, systemImage: "checkmark")
+                    } else {
+                        Text(conference.rawValue)
+                    }
+                }
+            }
+        }
     }
 
     private var qualifierSection: some View {
