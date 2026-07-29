@@ -20,17 +20,33 @@ import SwiftUI
 struct HotColdView: View {
     @EnvironmentObject private var store: StoreService
     @Bindable var viewModel: DashboardViewModel
+    let isActive: Bool
     @State private var favorites = FavoritesStore.shared
     @State private var showingCold = false
     @State private var side: TrendSide = .qb
     @State private var metric: TrendMetric = TrendMetric.qbAdvanced[0]
+    @State private var selectedSeason: Int
+    @State private var selectedPhase: SeasonPhase
+    @State private var paywallTrigger: PaywallTrigger?
+
+    init(viewModel: DashboardViewModel, isActive: Bool = true) {
+        self.viewModel = viewModel
+        self.isActive = isActive
+        _selectedSeason = State(initialValue: viewModel.selectedSeason)
+        _selectedPhase = State(initialValue: viewModel.selectedPhase)
+    }
 
     private var metricOptions: [TrendMetric] {
         TrendMetric.advanced(for: side) + TrendMetric.standard(for: side)
     }
 
     private var forms: [RecentForm] {
-        viewModel.recentFormRows(window: viewModel.recentWindow, playerType: side.playerType)
+        viewModel.recentFormRows(
+            window: viewModel.recentWindow,
+            playerType: side.playerType,
+            season: selectedSeason,
+            phase: selectedPhase
+        )
     }
 
     /// How much better this player got. Falling numbers are the improvement for
@@ -64,9 +80,7 @@ struct HotColdView: View {
     /// unlock panel floating in the middle of nothing. There is also nothing
     /// below the fold to scroll *to* when the rows are a teaser.
     var body: some View {
-        VStack(spacing: 0) {
-            header
-
+        Group {
             if store.isPro {
                 ScrollView {
                     LazyVStack(spacing: 0) {
@@ -75,8 +89,15 @@ struct HotColdView: View {
                     }
                 }
                 .scrollBounceBehavior(.basedOnSize)
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    header
+                        .background(GridironPalette.canvas)
+                }
             } else {
-                lockedContent
+                VStack(spacing: 0) {
+                    header
+                    lockedContent
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -93,18 +114,35 @@ struct HotColdView: View {
         // we're asking to be trusted. It's a single request against the
         // pre-aggregated rollup table, the same one Pro reads.
         .task(
-            id: "\(viewModel.recentWindow.rawValue)-\(viewModel.selectedSeason)-\(viewModel.selectedPhase.rawValue)"
+            id: "\(isActive)-\(viewModel.recentWindow.rawValue)-\(selectedSeason)-\(selectedPhase.rawValue)"
         ) {
-            await viewModel.loadRecentFormIfNeeded()
+            guard isActive else { return }
+            await viewModel.loadRecentFormIfNeeded(
+                season: selectedSeason,
+                phase: selectedPhase
+            )
         }
         .onChange(of: side) { _, _ in
             metric = metricOptions[0]
         }
+        .sheet(item: $paywallTrigger) { trigger in
+            TrialPitchSheet(trigger: trigger)
+        }
     }
 
     private var header: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 0) {
+            SeasonPhaseFilterBar(
+                seasons: viewModel.availableSeasons,
+                selectedSeason: selectedSeason,
+                selectedPhase: selectedPhase,
+                isSeasonLocked: viewModel.isSeasonLocked,
+                onSelectSeason: selectSeason,
+                onSelectPhase: { selectedPhase = $0 }
+            )
+
             positionSelector
+                .padding(.top, 8)
 
             VStack(spacing: 8) {
                 HStack(spacing: 8) {
@@ -142,17 +180,35 @@ struct HotColdView: View {
             }
             .padding(.horizontal, 12)
         }
-        .padding(.top, 8)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Weeks read better than dates in a sport that plays once a week, but the
     /// rollup only started storing them recently, so the date is the fallback.
     private var throughLabel: String? {
-        if let week = viewModel.recentFormThroughWeek { return "Through Week \(week)" }
-        if let asOf = viewModel.recentFormAsOf {
+        if let week = viewModel.recentFormThroughWeek(
+            window: viewModel.recentWindow,
+            season: selectedSeason,
+            phase: selectedPhase
+        ) {
+            return "Through Week \(week)"
+        }
+        if let asOf = viewModel.recentFormAsOf(
+            window: viewModel.recentWindow,
+            season: selectedSeason,
+            phase: selectedPhase
+        ) {
             return "Through \(asOf.formatted(.dateTime.month(.abbreviated).day()))"
         }
         return nil
+    }
+
+    private func selectSeason(_ season: Int) {
+        if viewModel.isSeasonLocked(season) {
+            paywallTrigger = .lockedSeason(season)
+        } else {
+            selectedSeason = season
+        }
     }
 
     /// Matches the persistent underlined position row at the top of Stats.
@@ -205,7 +261,12 @@ struct HotColdView: View {
                 Text(error)
             } actions: {
                 Button("Try Again") {
-                    Task { await viewModel.reloadRecentForm() }
+                    Task {
+                        await viewModel.reloadRecentForm(
+                            season: selectedSeason,
+                            phase: selectedPhase
+                        )
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(GridironPalette.turf)
@@ -337,7 +398,10 @@ struct HotColdView: View {
 
     @ViewBuilder
     private func row(form: RecentForm, rank: Int?, index: Int) -> some View {
-        let player = viewModel.players(forSeason: form.season).first { $0.playerId == form.playerId }
+        let player = viewModel.players(
+            forSeason: form.season,
+            phase: form.seasonPhase
+        ).first { $0.playerId == form.playerId }
         let delta = form.delta[metric.key] ?? 0
         let now = form.metrics[metric.key]
         let then = form.priorMetrics[metric.key]

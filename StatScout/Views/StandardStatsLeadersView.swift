@@ -61,18 +61,21 @@ struct StandardStatsLeadersView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                positionSelector
-                controlRow
+        VStack(spacing: 0) {
+            positionSelector
+            controlRow
+
+            ScrollView {
+                VStack(spacing: 0) {
                 leadersList
                     .padding(.horizontal, 12)
                     .padding(.top, 8)
                     .padding(.bottom, 12)
                 Color.clear.frame(height: 88)
+                }
             }
+            .scrollBounceBehavior(.basedOnSize)
         }
-        .scrollBounceBehavior(.basedOnSize)
         .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: selectedPosition) { _, next in

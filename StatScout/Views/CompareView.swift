@@ -12,8 +12,10 @@ struct YearCompareRoute: Hashable {
 struct TeamComparisonRoute: Hashable {
     let teamA: String
     let teamB: String
-    let season: Int
-    let phase: SeasonPhase
+    let seasonA: Int
+    let phaseA: SeasonPhase
+    let seasonB: Int
+    let phaseB: SeasonPhase
 }
 
 /// Dedicated "Compare" tab, and the home of the players you follow.
@@ -48,29 +50,60 @@ struct CompareView: View {
     @State private var favorites = FavoritesStore.shared
     @State private var seasonA: Int?
     @State private var seasonB: Int?
+    @State private var phaseA: SeasonPhase
+    @State private var phaseB: SeasonPhase
+    @State private var yearPhase: SeasonPhase
     @State private var teamA: String?
     @State private var teamB: String?
+    @State private var teamSeasonA: Int?
+    @State private var teamSeasonB: Int?
+    @State private var teamPhaseA: SeasonPhase
+    @State private var teamPhaseB: SeasonPhase
     @State private var teamComparisonRoute: TeamComparisonRoute?
+
+    init(viewModel: DashboardViewModel) {
+        self.viewModel = viewModel
+        _seasonA = State(initialValue: viewModel.selectedSeason)
+        _seasonB = State(initialValue: viewModel.selectedSeason)
+        _phaseA = State(initialValue: viewModel.selectedPhase)
+        _phaseB = State(initialValue: viewModel.selectedPhase)
+        _yearPhase = State(initialValue: viewModel.selectedPhase)
+        _teamSeasonA = State(initialValue: viewModel.selectedSeason)
+        _teamSeasonB = State(initialValue: viewModel.selectedSeason)
+        _teamPhaseA = State(initialValue: viewModel.selectedPhase)
+        _teamPhaseB = State(initialValue: viewModel.selectedPhase)
+    }
 
     private var activeSeasonA: Int { seasonA ?? viewModel.selectedSeason }
     private var activeSeasonB: Int { seasonB ?? viewModel.selectedSeason }
+    private var activeTeamSeasonA: Int { teamSeasonA ?? viewModel.selectedSeason }
+    private var activeTeamSeasonB: Int { teamSeasonB ?? viewModel.selectedSeason }
 
-    private func players(forSeason season: Int) -> [Player] {
-        viewModel.players(forSeason: season).sorted { $0.name < $1.name }
+    private func players(forSeason season: Int, phase: SeasonPhase) -> [Player] {
+        viewModel.players(forSeason: season, phase: phase).sorted { $0.name < $1.name }
     }
 
-    private func resolved(_ player: Player?, season: Int) -> Player? {
+    private func resolved(
+        _ player: Player?,
+        season: Int,
+        phase: SeasonPhase
+    ) -> Player? {
         guard let player else { return nil }
-        if player.season == season, player.seasonPhase == viewModel.selectedPhase {
+        if player.season == season, player.seasonPhase == phase {
             return player
         }
         return viewModel.playerHistories[player.playerId]?.first {
-            $0.season == season && $0.seasonPhase == viewModel.selectedPhase
+            $0.season == season && $0.seasonPhase == phase
         }
     }
 
-    private var resolvedA: Player? { resolved(playerA, season: activeSeasonA) }
-    private var resolvedB: Player? { resolved(playerB, season: activeSeasonB) }
+    private var resolvedA: Player? {
+        resolved(playerA, season: activeSeasonA, phase: phaseA)
+    }
+
+    private var resolvedB: Player? {
+        resolved(playerB, season: activeSeasonB, phase: phaseB)
+    }
     private var canCompareResolvedPlayers: Bool {
         guard let a = resolvedA, let b = resolvedB else { return false }
         return a.canCompareHeadToHead(with: b)
@@ -81,10 +114,10 @@ struct CompareView: View {
             return "Loading past seasons…"
         }
         if let playerA, resolvedA == nil {
-            return "No \(activeSeasonA) data for \(playerA.name)."
+            return "No \(String(activeSeasonA)) \(phaseA.label.lowercased()) data for \(playerA.name)."
         }
         if let playerB, resolvedB == nil {
-            return "No \(activeSeasonB) data for \(playerB.name)."
+            return "No \(String(activeSeasonB)) \(phaseB.label.lowercased()) data for \(playerB.name)."
         }
         if let a = resolvedA, let b = resolvedB, !a.canCompareHeadToHead(with: b) {
             return "Choose two offensive players or two defensive players."
@@ -95,10 +128,24 @@ struct CompareView: View {
     /// The followed players that exist in the selected season, in the order
     /// they were followed.
     private var followedPlayers: [Player] {
-        let roster = viewModel.players(forSeason: viewModel.selectedSeason)
+        let roster = viewModel.players(
+            forSeason: activeSeasonA,
+            phase: phaseA
+        )
         return favorites.playerIds.compactMap { id in
             roster.first { $0.playerId == id }
         }
+    }
+
+    private func teamsWithData(
+        season: Int,
+        phase: SeasonPhase
+    ) -> [String] {
+        Set(
+            viewModel.players(forSeason: season, phase: phase)
+                .map { normalizedTeamAbbreviation($0.team) }
+        )
+        .sorted()
     }
 
     var body: some View {
@@ -148,26 +195,46 @@ struct CompareView: View {
                 Task { await viewModel.loadHistoricalIfNeeded() }
             }
         }
-        .task(id: "\(activeSeasonA)-\(activeSeasonB)") {
+        .task(
+            id: "\(activeSeasonA)-\(phaseA.rawValue)-\(activeSeasonB)-\(phaseB.rawValue)-\(activeTeamSeasonA)-\(teamPhaseA.rawValue)-\(activeTeamSeasonB)-\(teamPhaseB.rawValue)"
+        ) {
             guard store.isPro,
                   activeSeasonA != viewModel.selectedSeason
                     || activeSeasonB != viewModel.selectedSeason
+                    || activeTeamSeasonA != viewModel.selectedSeason
+                    || activeTeamSeasonB != viewModel.selectedSeason
             else { return }
             await viewModel.loadHistoricalIfNeeded()
         }
         .sheet(item: $picker) { target in
-            let season: Int = {
+            let context: (season: Int, phase: SeasonPhase) = {
                 switch target {
-                case .playerA: return activeSeasonA
-                case .playerB: return activeSeasonB
-                case .yearPlayer, .teamA, .teamB: return viewModel.selectedSeason
+                case .playerA: return (activeSeasonA, phaseA)
+                case .playerB: return (activeSeasonB, phaseB)
+                case .yearPlayer: return (activeSeasonA, yearPhase)
+                case .teamA: return (activeTeamSeasonA, teamPhaseA)
+                case .teamB: return (activeTeamSeasonB, teamPhaseB)
                 }
             }()
             switch target {
             case .teamA, .teamB:
                 CompareTeamPicker(
-                    teams: viewModel.teamsWithData.filter {
-                        target == .teamA ? $0 != teamB : $0 != teamA
+                    teams: teamsWithData(
+                        season: context.season,
+                        phase: context.phase
+                    ).filter {
+                        switch target {
+                        case .teamA:
+                            return $0 != teamB
+                                || context.season != activeTeamSeasonB
+                                || context.phase != teamPhaseB
+                        case .teamB:
+                            return $0 != teamA
+                                || context.season != activeTeamSeasonA
+                                || context.phase != teamPhaseA
+                        default:
+                            return true
+                        }
                     }
                 ) { selected in
                     if target == .teamA {
@@ -178,19 +245,30 @@ struct CompareView: View {
                 }
             default:
                 ComparePlayerPicker(
-                    players: players(forSeason: season).filter { candidate in
+                    players: players(
+                        forSeason: context.season,
+                        phase: context.phase
+                    ).filter { candidate in
                         switch target {
                         case .playerA:
-                            return candidate.playerId != playerB?.playerId
+                            return (
+                                candidate.playerId != playerB?.playerId
+                                    || context.season != activeSeasonB
+                                    || context.phase != phaseB
+                            )
                                 && (resolvedB?.canCompareHeadToHead(with: candidate) ?? true)
                         case .playerB:
-                            return candidate.playerId != playerA?.playerId
+                            return (
+                                candidate.playerId != playerA?.playerId
+                                    || context.season != activeSeasonA
+                                    || context.phase != phaseA
+                            )
                                 && (resolvedA?.canCompareHeadToHead(with: candidate) ?? true)
                         case .yearPlayer: return true
                         case .teamA, .teamB: return false
                         }
                     },
-                    season: season,
+                    season: context.season,
                     isLoading: viewModel.isHistoricalLoading
                 ) { selected in
                     switch target {
@@ -201,7 +279,7 @@ struct CompareView: View {
                         yearRoute = YearCompareRoute(
                             playerId: selected.playerId,
                             playerName: selected.name,
-                            phase: selected.seasonPhase
+                            phase: yearPhase
                         )
                     case .teamA, .teamB: break
                     }
@@ -216,7 +294,10 @@ struct CompareView: View {
             PlayerComparisonView(
                 playerA: route.playerA,
                 playerB: route.playerB,
-                catalog: ComparisonCatalog(viewModel: viewModel)
+                catalog: ComparisonCatalog(
+                    viewModel: viewModel,
+                    defaultPhase: route.playerA.seasonPhase
+                )
             )
                 .modifier(GridironNavBarPublic())
         }
@@ -231,7 +312,14 @@ struct CompareView: View {
         .navigationDestination(item: $teamComparisonRoute) { route in
             TeamComparisonView(
                 route: route,
-                players: viewModel.players(forSeason: route.season, phase: route.phase)
+                playersA: viewModel.players(
+                    forSeason: route.seasonA,
+                    phase: route.phaseA
+                ),
+                playersB: viewModel.players(
+                    forSeason: route.seasonB,
+                    phase: route.phaseB
+                )
             )
             .modifier(GridironNavBarPublic())
         }
@@ -444,8 +532,10 @@ struct CompareView: View {
                         player: playerA,
                         placeholder: "Player A",
                         season: activeSeasonA,
+                        phase: phaseA,
                         onPickPlayer: { picker = .playerA },
-                        onPickSeason: { seasonA = $0 }
+                        onPickSeason: { seasonA = $0 },
+                        onPickPhase: { phaseA = $0 }
                     )
                     Text("vs")
                         .font(GridironType.smallBold)
@@ -455,8 +545,10 @@ struct CompareView: View {
                         player: playerB,
                         placeholder: "Player B",
                         season: activeSeasonB,
+                        phase: phaseB,
                         onPickPlayer: { picker = .playerB },
-                        onPickSeason: { seasonB = $0 }
+                        onPickSeason: { seasonB = $0 },
+                        onPickPhase: { phaseB = $0 }
                     )
                 }
 
@@ -502,28 +594,40 @@ struct CompareView: View {
             GridironSectionBar(title: "YEAR OVER YEAR")
 
             VStack(spacing: 12) {
-                Text("Pick a player to see how their percentile rankings moved across every season.")
+                Text("Pick a player and season type to compare their aggregated stats across years.")
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Button {
-                    picker = .yearPlayer
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "calendar.badge.clock")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Choose a player")
-                            .font(GridironType.bodyBold)
+                HStack(spacing: 8) {
+                    SeasonPhaseMenu(
+                        selected: yearPhase,
+                        onSelect: { yearPhase = $0 }
+                    ) {
+                        GridironInlinePill(
+                            systemImage: "football.fill",
+                            title: yearPhase.label
+                        )
                     }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 46)
-                    .background(GridironPalette.turf)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    Button {
+                        picker = .yearPlayer
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "calendar.badge.clock")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text("Choose a player")
+                                .font(GridironType.bodyBold)
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 46)
+                        .background(GridironPalette.turf)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
             .padding(16)
         }
@@ -540,16 +644,29 @@ struct CompareView: View {
             GridironSectionBar(title: "TEAM VS TEAM")
 
             VStack(spacing: 12) {
-                HStack(spacing: 10) {
-                    teamSlot(team: teamA, placeholder: "Team A") {
-                        picker = .teamA
-                    }
+                HStack(alignment: .top, spacing: 10) {
+                    teamSlotColumn(
+                        team: teamA,
+                        placeholder: "Team A",
+                        season: activeTeamSeasonA,
+                        phase: teamPhaseA,
+                        onPickTeam: { picker = .teamA },
+                        onPickSeason: { teamSeasonA = $0 },
+                        onPickPhase: { teamPhaseA = $0 }
+                    )
                     Text("vs")
                         .font(GridironType.smallBold)
                         .foregroundStyle(GridironPalette.inkTertiary)
-                    teamSlot(team: teamB, placeholder: "Team B") {
-                        picker = .teamB
-                    }
+                        .padding(.top, 40)
+                    teamSlotColumn(
+                        team: teamB,
+                        placeholder: "Team B",
+                        season: activeTeamSeasonB,
+                        phase: teamPhaseB,
+                        onPickTeam: { picker = .teamB },
+                        onPickSeason: { teamSeasonB = $0 },
+                        onPickPhase: { teamPhaseB = $0 }
+                    )
                 }
 
                 Button {
@@ -557,8 +674,10 @@ struct CompareView: View {
                     teamComparisonRoute = TeamComparisonRoute(
                         teamA: teamA,
                         teamB: teamB,
-                        season: viewModel.selectedSeason,
-                        phase: viewModel.selectedPhase
+                        seasonA: activeTeamSeasonA,
+                        phaseA: teamPhaseA,
+                        seasonB: activeTeamSeasonB,
+                        phaseB: teamPhaseB
                     )
                 } label: {
                     Text("Compare Teams")
@@ -576,9 +695,6 @@ struct CompareView: View {
                 .buttonStyle(.plain)
                 .disabled(teamA == nil || teamB == nil)
 
-                Text("\(viewModel.selectedSeason) · \(viewModel.selectedPhase.fullLabel)")
-                    .font(GridironType.micro)
-                    .foregroundStyle(GridironPalette.inkTertiary)
             }
             .padding(16)
         }
@@ -588,6 +704,55 @@ struct CompareView: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
+    }
+
+    private func teamSlotColumn(
+        team: String?,
+        placeholder: String,
+        season: Int,
+        phase: SeasonPhase,
+        onPickTeam: @escaping () -> Void,
+        onPickSeason: @escaping (Int) -> Void,
+        onPickPhase: @escaping (SeasonPhase) -> Void
+    ) -> some View {
+        VStack(spacing: 6) {
+            teamSlot(
+                team: team,
+                placeholder: placeholder,
+                action: onPickTeam
+            )
+
+            HStack(spacing: 6) {
+                SeasonMenu(
+                    seasons: viewModel.availableSeasons,
+                    selected: season,
+                    isLocked: viewModel.isSeasonLocked,
+                    onSelect: { picked in
+                        if viewModel.isSeasonLocked(picked) {
+                            showingTrial = true
+                        } else {
+                            onPickSeason(picked)
+                        }
+                    }
+                ) {
+                    GridironInlinePill(
+                        systemImage: "calendar",
+                        title: String(season)
+                    )
+                }
+
+                SeasonPhaseMenu(
+                    selected: phase,
+                    onSelect: onPickPhase
+                ) {
+                    GridironInlinePill(
+                        systemImage: nil,
+                        title: phase.label
+                    )
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func teamSlot(
@@ -623,8 +788,10 @@ struct CompareView: View {
         player: Player?,
         placeholder: String,
         season: Int,
+        phase: SeasonPhase,
         onPickPlayer: @escaping () -> Void,
-        onPickSeason: @escaping (Int) -> Void
+        onPickSeason: @escaping (Int) -> Void,
+        onPickPhase: @escaping (SeasonPhase) -> Void
     ) -> some View {
         VStack(spacing: 6) {
             playerSlot(player: player, placeholder: placeholder, action: onPickPlayer)
@@ -647,12 +814,12 @@ struct CompareView: View {
                 .accessibilityLabel("Season for \(player?.name ?? placeholder)")
 
                 SeasonPhaseMenu(
-                    selected: viewModel.selectedPhase,
-                    onSelect: { viewModel.selectedPhase = $0 }
+                    selected: phase,
+                    onSelect: onPickPhase
                 ) {
                     GridironInlinePill(
                         systemImage: nil,
-                        title: viewModel.selectedPhase.label
+                        title: phase.label
                     )
                 }
             }
@@ -990,72 +1157,128 @@ struct CompareTeamPicker: View {
 
 struct TeamComparisonView: View {
     let route: TeamComparisonRoute
-    let players: [Player]
+    let playersA: [Player]
+    let playersB: [Player]
 
-    private struct ScoreRow: Identifiable {
+    private struct StatRow: Identifiable {
         let id: String
         let label: String
-        let a: Int?
-        let b: Int?
+        let aText: String
+        let bText: String
+        let aValue: Double?
+        let bValue: Double?
     }
 
     private var rosterA: [Player] {
-        players.filter {
+        playersA.filter {
             normalizedTeamAbbreviation($0.team)
                 == normalizedTeamAbbreviation(route.teamA)
         }
     }
 
     private var rosterB: [Player] {
-        players.filter {
+        playersB.filter {
             normalizedTeamAbbreviation($0.team)
                 == normalizedTeamAbbreviation(route.teamB)
         }
     }
 
-    private var scores: [ScoreRow] {
+    private var statGroups: [(title: String, rows: [StatRow])] {
         [
-            ScoreRow(
-                id: "overall",
-                label: "Overall",
-                a: average(rosterA.map(\.overallPercentile)),
-                b: average(rosterB.map(\.overallPercentile))
+            (
+                "PASSING",
+                [
+                    pairedRow(label: "Cmp/Att", rosterA: rosterA, rosterB: rosterB),
+                    totalRow(label: "Pass Yds", rosterA: rosterA, rosterB: rosterB),
+                    totalRow(label: "Pass TD", rosterA: rosterA, rosterB: rosterB),
+                    totalRow(label: "INT", rosterA: rosterA, rosterB: rosterB),
+                ]
             ),
-        ] + MetricCategory.allCases.map { category in
-            ScoreRow(
-                id: category.rawValue,
-                label: category.rawValue,
-                a: categoryAverage(category, roster: rosterA),
-                b: categoryAverage(category, roster: rosterB)
+            (
+                "RUSHING",
+                [
+                    totalRow(label: "Car", rosterA: rosterA, rosterB: rosterB),
+                    totalRow(label: "Rush Yds", rosterA: rosterA, rosterB: rosterB),
+                    totalRow(label: "Rush TD", rosterA: rosterA, rosterB: rosterB),
+                ]
+            ),
+            (
+                "RECEIVING",
+                [
+                    pairedRow(label: "Rec/Tgt", rosterA: rosterA, rosterB: rosterB),
+                    totalRow(label: "Rec Yds", rosterA: rosterA, rosterB: rosterB),
+                    totalRow(label: "Rec TD", rosterA: rosterA, rosterB: rosterB),
+                ]
+            ),
+            (
+                "DEFENSE",
+                [
+                    totalRow(label: "Tackles", rosterA: rosterA, rosterB: rosterB),
+                    totalRow(label: "Sacks", rosterA: rosterA, rosterB: rosterB),
+                    totalRow(label: "Def INT", rosterA: rosterA, rosterB: rosterB),
+                ]
+            ),
+        ]
+        .map { group in
+            (
+                title: group.0,
+                rows: group.1.filter {
+                    $0.aText != "-" || $0.bText != "-"
+                }
             )
         }
+        .filter { !$0.rows.isEmpty }
     }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    teamHeader(route.teamA, rosterCount: rosterA.count)
+                    teamHeader(
+                        route.teamA,
+                        rosterCount: rosterA.count,
+                        season: route.seasonA,
+                        phase: route.phaseA
+                    )
                     Image(systemName: "arrow.left.arrow.right")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(GridironPalette.inkTertiary)
-                    teamHeader(route.teamB, rosterCount: rosterB.count)
+                    teamHeader(
+                        route.teamB,
+                        rosterCount: rosterB.count,
+                        season: route.seasonB,
+                        phase: route.phaseB
+                    )
                 }
 
-                VStack(spacing: 0) {
-                    GridironSectionBar(title: "TEAM PERCENTILES")
-                    ForEach(Array(scores.enumerated()), id: \.element.id) { index, row in
-                        scoreRow(row, index: index)
+                if statGroups.isEmpty {
+                    ContentUnavailableView {
+                        Label("No aggregate stats", systemImage: "sum")
+                    } description: {
+                        Text("Neither selected roster has standard stats for this context.")
+                    }
+                    .padding(.vertical, 32)
+                    .frame(maxWidth: .infinity)
+                    .background(GridironPalette.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+                } else {
+                    ForEach(statGroups, id: \.title) { group in
+                        VStack(spacing: 0) {
+                            GridironSectionBar(title: group.title)
+                            ForEach(Array(group.rows.enumerated()), id: \.element.id) { index, row in
+                                statRow(row, index: index)
+                            }
+                        }
+                        .background(GridironPalette.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+                        )
                     }
                 }
-                .background(GridironPalette.surface)
-                .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
-                .overlay(
-                    RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
-                        .stroke(GridironPalette.hairline, lineWidth: 0.5)
-                )
 
-                Text("Team scores are the mean player percentile for the selected roster and category. They compare tracked player performance, not wins or team efficiency.")
+                Text("Totals sum the selected roster's player season lines. Traded players bring their full-season line, so these are roster aggregates rather than official team totals.")
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1068,7 +1291,12 @@ struct TeamComparisonView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func teamHeader(_ team: String, rosterCount: Int) -> some View {
+    private func teamHeader(
+        _ team: String,
+        rosterCount: Int,
+        season: Int,
+        phase: SeasonPhase
+    ) -> some View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
@@ -1083,7 +1311,13 @@ struct TeamComparisonView: View {
                 .foregroundStyle(GridironPalette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-            Text("\(rosterCount) tracked · \(route.season) \(route.phase.label)")
+            Text(
+                String(rosterCount)
+                    + " tracked · "
+                    + String(season)
+                    + " "
+                    + phase.label
+            )
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
         }
@@ -1097,14 +1331,22 @@ struct TeamComparisonView: View {
         )
     }
 
-    private func scoreRow(_ row: ScoreRow, index: Int) -> some View {
+    private func statRow(_ row: StatRow, index: Int) -> some View {
         HStack(spacing: 8) {
-            score(row.a, other: row.b)
+            statValue(
+                row.aText,
+                value: row.aValue,
+                other: row.bValue
+            )
             Text(row.label)
                 .font(GridironType.smallBold)
                 .foregroundStyle(GridironPalette.ink)
                 .frame(width: 88)
-            score(row.b, other: row.a)
+            statValue(
+                row.bText,
+                value: row.bValue,
+                other: row.aValue
+            )
         }
         .frame(height: 56)
         .padding(.horizontal, GridironGeo.padInline)
@@ -1117,34 +1359,91 @@ struct TeamComparisonView: View {
         )
     }
 
-    private func score(_ value: Int?, other: Int?) -> some View {
+    private func statValue(
+        _ text: String,
+        value: Double?,
+        other: Double?
+    ) -> some View {
         HStack(spacing: 4) {
             if let value, let other, value > other {
                 Image(systemName: "trophy.fill")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(Color.yellow)
             }
-            Text(value.map { "\($0)" } ?? "-")
+            Text(text)
                 .font(GridironType.statMed)
-                .foregroundStyle(
-                    value.map(GridironPalette.color(forPercentile:))
-                        ?? GridironPalette.inkTertiary
-                )
+                .foregroundStyle(text == "-" ? GridironPalette.inkTertiary : GridironPalette.turf)
                 .monospacedDigit()
         }
         .frame(maxWidth: .infinity)
     }
 
-    private func categoryAverage(
-        _ category: MetricCategory,
-        roster: [Player]
-    ) -> Int? {
-        average(roster.compactMap { $0.percentile(for: category) })
+    private func totalRow(
+        label: String,
+        rosterA: [Player],
+        rosterB: [Player]
+    ) -> StatRow {
+        let a = total(label: label, roster: rosterA)
+        let b = total(label: label, roster: rosterB)
+        return StatRow(
+            id: label,
+            label: label,
+            aText: format(a, label: label),
+            bText: format(b, label: label),
+            aValue: a,
+            bValue: b
+        )
     }
 
-    private func average(_ values: [Int]) -> Int? {
+    private func pairedRow(
+        label: String,
+        rosterA: [Player],
+        rosterB: [Player]
+    ) -> StatRow {
+        StatRow(
+            id: label,
+            label: label,
+            aText: pairedTotal(label: label, roster: rosterA),
+            bText: pairedTotal(label: label, roster: rosterB),
+            aValue: nil,
+            bValue: nil
+        )
+    }
+
+    private func total(label: String, roster: [Player]) -> Double? {
+        let values = roster.compactMap { player in
+            player.standardStats?
+                .first { $0.label == label }
+                .flatMap { DashboardViewModel.rawNumeric($0.value) }
+        }
         guard !values.isEmpty else { return nil }
-        return Int(round(Double(values.reduce(0, +)) / Double(values.count)))
+        return values.reduce(0, +)
+    }
+
+    private func pairedTotal(label: String, roster: [Player]) -> String {
+        let pairs = roster.compactMap { player -> (Double, Double)? in
+            guard let raw = player.standardStats?.first(where: {
+                $0.label == label
+            })?.value else { return nil }
+            let components = raw.split(separator: "/", maxSplits: 1)
+            guard components.count == 2,
+                  let first = DashboardViewModel.rawNumeric(String(components[0])),
+                  let second = DashboardViewModel.rawNumeric(String(components[1]))
+            else { return nil }
+            return (first, second)
+        }
+        guard !pairs.isEmpty else { return "-" }
+        let first = pairs.reduce(0) { $0 + $1.0 }
+        let second = pairs.reduce(0) { $0 + $1.1 }
+        return format(first, label: label) + "/" + format(second, label: label)
+    }
+
+    private func format(_ value: Double?, label: String) -> String {
+        guard let value else { return "-" }
+        if label == "Sacks", value.rounded() != value {
+            return String(format: "%.1f", value)
+        }
+        return Int(value.rounded()).formatted(.number.grouping(.automatic))
     }
 }
 

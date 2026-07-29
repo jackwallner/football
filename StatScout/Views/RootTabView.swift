@@ -128,10 +128,6 @@ struct RootTabView: View {
             floatingTabBar
         }
         .ignoresSafeArea(edges: .bottom)
-        .onChange(of: selection) { _, tab in
-            guard tab == Tab.trends.rawValue else { return }
-            Task { await viewModel.loadRecentFormIfNeeded() }
-        }
     }
 
     private enum Tab: Int, CaseIterable, Identifiable {
@@ -203,7 +199,10 @@ struct RootTabView: View {
 
     private var trendsTab: some View {
         NavigationStack {
-            HotColdView(viewModel: viewModel)
+            HotColdView(
+                viewModel: viewModel,
+                isActive: selection == Tab.trends.rawValue
+            )
                 .navigationTitle("Trends")
                 .navigationBarTitleDisplayMode(.inline)
                 .modifier(GridironNavBar())
@@ -397,13 +396,18 @@ struct PlayerProfileDestination: ViewModifier {
             .navigationDestination(for: Player.self) { player in
                 let history = viewModel.playerHistories[player.playerId] ?? []
                 let seasonPlayer = history.first {
-                    $0.season == viewModel.selectedSeason
-                        && $0.seasonPhase == viewModel.selectedPhase
+                    $0.season == player.season
+                        && $0.seasonPhase == player.seasonPhase
                 } ?? player
+                let profileSeason = seasonPlayer.season ?? viewModel.selectedSeason
+                let profilePhase = seasonPlayer.seasonPhase
                 PlayerProfileView(
                     player: seasonPlayer,
                     history: history,
-                    allPlayers: viewModel.seasonPlayers,
+                    allPlayers: viewModel.players(
+                        forSeason: profileSeason,
+                        phase: profilePhase
+                    ),
                     isHistoricalLoading: viewModel.isHistoricalLoading,
                     hasLoadedHistorical: viewModel.hasLoadedHistorical,
                     historicalLoadingMessage: viewModel.loadingMessage,
@@ -413,12 +417,24 @@ struct PlayerProfileDestination: ViewModifier {
                         try await viewModel.fetchGameLogs(playerId: id, season: season)
                     },
                     recentFormLookup: { id, window in
-                        viewModel.recentForm(for: id, window: window)
+                        viewModel.recentForm(
+                            for: id,
+                            window: window,
+                            season: profileSeason,
+                            phase: profilePhase
+                        )
                     },
                     loadRecentForm: { window in
-                        await viewModel.loadRecentFormIfNeeded(window: window)
+                        await viewModel.loadRecentFormIfNeeded(
+                            window: window,
+                            season: profileSeason,
+                            phase: profilePhase
+                        )
                     },
-                    comparisonCatalog: ComparisonCatalog(viewModel: viewModel)
+                    comparisonCatalog: ComparisonCatalog(
+                        viewModel: viewModel,
+                        defaultPhase: profilePhase
+                    )
                 )
                     .modifier(GridironNavBar())
             }
@@ -469,7 +485,10 @@ private struct StandardDestinations: ViewModifier {
                 PlayerComparisonView(
                     playerA: route.playerA,
                     playerB: route.playerB,
-                    catalog: ComparisonCatalog(viewModel: viewModel)
+                    catalog: ComparisonCatalog(
+                        viewModel: viewModel,
+                        defaultPhase: route.playerA.seasonPhase
+                    )
                 )
                     .modifier(GridironNavBar())
             }

@@ -81,6 +81,56 @@ struct SeasonPhaseMenu<Trigger: View>: View {
     }
 }
 
+/// Shared top-of-screen season context. Keeping both menus in one content bar
+/// avoids the navigation bar spacing changes that occur when leading and
+/// trailing toolbar items compete with the centered title.
+struct SeasonPhaseFilterBar: View {
+    let seasons: [Int]
+    let selectedSeason: Int
+    let selectedPhase: SeasonPhase
+    let isSeasonLocked: (Int) -> Bool
+    let onSelectSeason: (Int) -> Void
+    let onSelectPhase: (SeasonPhase) -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            SeasonMenu(
+                seasons: seasons,
+                selected: selectedSeason,
+                isLocked: isSeasonLocked,
+                onSelect: onSelectSeason
+            ) {
+                GridironInlinePill(
+                    systemImage: "calendar",
+                    title: String(selectedSeason),
+                    isLocked: isSeasonLocked(selectedSeason)
+                )
+            }
+
+            SeasonPhaseMenu(
+                selected: selectedPhase,
+                onSelect: onSelectPhase
+            ) {
+                GridironInlinePill(
+                    systemImage: "football.fill",
+                    title: selectedPhase.label
+                )
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(GridironPalette.surface)
+        .overlay(
+            Rectangle()
+                .fill(GridironPalette.divider)
+                .frame(height: GridironGeo.hairline),
+            alignment: .bottom
+        )
+    }
+}
+
 extension View {
     /// Pins a `Menu` to the light popup the rest of the app draws.
     ///

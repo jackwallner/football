@@ -147,6 +147,36 @@ let nflTeamAbbreviations: [String] = [
     "TEN", "WAS"
 ]
 
+enum NFLConference: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case all = "All"
+    case afc = "AFC"
+    case nfc = "NFC"
+
+    var id: String { rawValue }
+
+    func contains(team: String) -> Bool {
+        let abbr = normalizedTeamAbbreviation(team)
+        switch self {
+        case .all:
+            return true
+        case .afc:
+            return Self.afcTeams.contains(abbr)
+        case .nfc:
+            return Self.nfcTeams.contains(abbr)
+        }
+    }
+
+    private static let afcTeams: Set<String> = [
+        "BAL", "BUF", "CIN", "CLE", "DEN", "HOU", "IND", "JAX",
+        "KC", "LAC", "LV", "MIA", "NE", "NYJ", "PIT", "TEN",
+    ]
+
+    private static let nfcTeams: Set<String> = [
+        "ARI", "ATL", "CAR", "CHI", "DAL", "DET", "GB", "LA",
+        "MIN", "NO", "NYG", "PHI", "SEA", "SF", "TB", "WAS",
+    ]
+}
+
 func normalizedTeamAbbreviation(_ team: String) -> String {
     let key = team.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
     let aliases: [String: String] = [

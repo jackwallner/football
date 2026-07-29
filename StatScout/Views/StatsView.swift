@@ -23,6 +23,15 @@ struct StatsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            SeasonPhaseFilterBar(
+                seasons: viewModel.availableSeasons,
+                selectedSeason: viewModel.selectedSeason,
+                selectedPhase: viewModel.selectedPhase,
+                isSeasonLocked: viewModel.isSeasonLocked,
+                onSelectSeason: selectSeason,
+                onSelectPhase: { viewModel.selectedPhase = $0 }
+            )
+
             switch board {
             case .advanced:
                 DashboardView(viewModel: viewModel, boardBindings: bindings)
@@ -54,20 +63,6 @@ struct StatsView: View {
                 board = .standard
             }
         }
-        .toolbar {
-            if #available(iOS 26.0, *) {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    seasonMenu
-                    phaseMenu
-                }
-                    .sharedBackgroundVisibility(.hidden)
-            } else {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    seasonMenu
-                    phaseMenu
-                }
-            }
-        }
         .sheet(item: $paywallTrigger) { trigger in
             TrialPitchSheet(trigger: trigger)
         }
@@ -76,6 +71,7 @@ struct StatsView: View {
     private var standardBoardPlayers: [Player] {
         viewModel.qualifiedSeasonPlayers.filter {
             $0.positionGroup == viewModel.selectedPosition
+                && viewModel.matchesSelectedConference($0)
         }
     }
 
@@ -86,30 +82,11 @@ struct StatsView: View {
         )
     }
 
-    private var seasonMenu: some View {
-        SeasonMenu(
-            seasons: viewModel.availableSeasons,
-            selected: viewModel.selectedSeason,
-            isLocked: { viewModel.isSeasonLocked($0) },
-            onSelect: { season in
-                if viewModel.isSeasonLocked(season) {
-                    paywallTrigger = .lockedSeason(season)
-                } else {
-                    viewModel.selectedSeason = season
-                }
-            }
-        ) {
-            GridironNavPill(title: String(viewModel.selectedSeason))
-        }
-        .accessibilityHint("Choose which season's stats to view")
-    }
-
-    private var phaseMenu: some View {
-        SeasonPhaseMenu(
-            selected: viewModel.selectedPhase,
-            onSelect: { viewModel.selectedPhase = $0 }
-        ) {
-            GridironNavPill(title: viewModel.selectedPhase.label)
+    private func selectSeason(_ season: Int) {
+        if viewModel.isSeasonLocked(season) {
+            paywallTrigger = .lockedSeason(season)
+        } else {
+            viewModel.selectedSeason = season
         }
     }
 }

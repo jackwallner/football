@@ -86,6 +86,41 @@ final class DashboardViewModelTests: XCTestCase {
     }
 
     @MainActor
+    func testConferenceFilterScopesPlayersTeamsAndMetrics() async {
+        let players = [
+            Player(
+                playerId: 1, name: "AFC Player", team: "KC", position: "QB", handedness: "",
+                updatedAt: Date(), season: 2025, playerType: "qb",
+                metrics: [Metric(id: "afc", label: "Pass Yds", value: "4,000", percentile: 90, category: .passing)],
+                standardStats: [],
+                games: []
+            ),
+            Player(
+                playerId: 2, name: "NFC Player", team: "PHI", position: "QB", handedness: "",
+                updatedAt: Date(), season: 2025, playerType: "qb",
+                metrics: [Metric(id: "nfc", label: "CPOE", value: "5.1", percentile: 80, category: .passing)],
+                standardStats: [],
+                games: []
+            ),
+        ]
+        let vm = DashboardViewModel(provider: MockProvider(players: players))
+        vm.selectedSeason = 2025
+        await vm.load()
+
+        vm.selectedConference = .afc
+        vm.searchText = "Kansas"
+        XCTAssertEqual(vm.filteredPlayers.map(\.name), ["AFC Player"])
+        XCTAssertEqual(vm.searchedTeams, ["KC"])
+        XCTAssertEqual(vm.allMetrics.map(\.label), ["Pass Yds"])
+
+        vm.selectedConference = .nfc
+        vm.searchText = "Philadelphia"
+        XCTAssertEqual(vm.filteredPlayers.map(\.name), ["NFC Player"])
+        XCTAssertEqual(vm.searchedTeams, ["PHI"])
+        XCTAssertEqual(vm.allMetrics.map(\.label), ["CPOE"])
+    }
+
+    @MainActor
     func testTeamCountsPopulatedAfterLoad() async {
         let players = [
             Player(playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []),
