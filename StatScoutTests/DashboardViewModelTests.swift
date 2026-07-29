@@ -228,6 +228,19 @@ final class DashboardViewModelTests: XCTestCase {
     }
 
     @MainActor
+    func testAvailableSeasonsIncludesLockedHistoryBeforeHistoryLoads() async {
+        let vm = DashboardViewModel(provider: MockProvider(players: makeCompleteCurrentPlayers()))
+
+        await vm.load()
+
+        XCTAssertEqual(
+            vm.availableSeasons,
+            Array(StatScoutSeason.earliest...StatScoutSeason.current).reversed()
+        )
+        XCTAssertTrue(vm.isSeasonLocked(StatScoutSeason.current - 1))
+    }
+
+    @MainActor
     func testSeasonPlayersReturnsPlayersForSelectedSeason() async {
         // Create players with different seasons
         let player2025 = Player(
@@ -264,7 +277,7 @@ final class DashboardViewModelTests: XCTestCase {
         let vm = DashboardViewModel(provider: MockProvider(players: [player2025]))
         await vm.load()
 
-        // Select 2024 which has no data — should report empty (no stale fallback).
+        // Select 2024 which has no data - should report empty (no stale fallback).
         vm.selectedSeason = 2024
         XCTAssertTrue(vm.seasonPlayers.isEmpty)
     }

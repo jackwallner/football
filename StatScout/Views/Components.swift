@@ -93,7 +93,7 @@ struct TeamColorDot: View {
 
 func displayTeamAbbr(_ abbr: String) -> String {
     let trimmed = abbr.trimmingCharacters(in: .whitespaces).uppercased()
-    if trimmed.isEmpty || trimmed == "TBD" || trimmed == "—" || trimmed == "-" {
+    if trimmed.isEmpty || trimmed == "TBD" || trimmed == "\u{2014}" || trimmed == "-" {
         return "FA"
     }
     return abbr
@@ -128,7 +128,7 @@ struct MetricBar: View {
                 ZStack(alignment: .leading) {
                     // Track
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(GridironPalette.hairline)
+                        .fill(GridironPalette.surfaceSunk)
                         .frame(height: 10)
 
                     // Fill
@@ -145,8 +145,8 @@ struct MetricBar: View {
                         Text("\(percentileValue)")
                             .font(.system(size: 11, weight: .bold, design: .monospaced))
                             .monospacedDigit()
-                            .foregroundStyle(percentileValue >= 35 && percentileValue <= 75 ? GridironPalette.ink : .white)
-                            .shadow(color: percentileValue >= 35 && percentileValue <= 75 ? Color.clear : Color.black.opacity(0.3), radius: 1, x: 0, y: 0.5)
+                            .foregroundStyle(.white)
+                            .shadow(color: Color.black.opacity(0.35), radius: 1, x: 0, y: 0.5)
                     }
                     .position(x: offset, y: 14)
                 }
@@ -171,7 +171,7 @@ struct MetricBar: View {
     }
 }
 
-/// Season + recent percentile bars stacked in one row — same Gridiron layout,
+/// Season + recent percentile bars stacked in one row - same Gridiron layout,
 /// with a compact recent track under the season bar when both are available.
 struct DualMetricBar: View {
     let season: Metric
@@ -298,7 +298,7 @@ struct QualifierPicker: View {
             .clipShape(Capsule())
             .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
 
-            // Threshold caption — keeps "All" and "Min Sample" from reading as
+            // Threshold caption - keeps "All" and "Min Sample" from reading as
             // synonyms by spelling out what the active level actually filters.
             Text(selection.description)
                 .font(GridironType.micro)
@@ -452,13 +452,13 @@ struct TrendArrow: View {
 
 struct PercentileBarMini: View {
     let percentile: Int
-    var height: CGFloat = 4
+    var height: CGFloat = 7
 
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: height/2)
-                    .fill(GridironPalette.hairline)
+                    .fill(GridironPalette.surfaceSunk)
                     .frame(height: height)
 
                 RoundedRectangle(cornerRadius: height/2)
@@ -594,7 +594,7 @@ struct LeaderboardTableRow: View {
         displayMetric?.percentile ?? 0
     }
 
-    // Raw stat value only — never the percentile. The colored bar to the left
+    // Raw stat value only - never the percentile. The colored bar to the left
     // already conveys percentile visually; numeric percentile in this column
     // duplicates that signal and reads as "the stat value" at a glance.
     private var displayValueText: String {
@@ -643,16 +643,16 @@ struct LeaderboardTableRow: View {
             .frame(width: 44, alignment: .leading)
 
             HStack(spacing: 8) {
-                // A player without the sorted metric gets no bar — drawing one
+                // A player without the sorted metric gets no bar - drawing one
                 // from their overall percentile would mislabel a different number
-                // as this column's stat. Show a muted "—" instead.
+                // as this column's stat. Show a muted "-" instead.
                 if displayMetric != nil || valueOverride != nil {
                     // A window value drops the bar: the season percentile bar
                     // beside five games' worth of numbers reads as that
                     // number's rank, which it is not.
                     if valueOverride == nil {
                         PercentileBarMini(percentile: displayPercentile)
-                            .frame(width: 36)
+                            .frame(width: 40)
                     }
                     Text(displayValueText)
                         .font(GridironType.statSmall)
@@ -662,7 +662,7 @@ struct LeaderboardTableRow: View {
                         .frame(width: 48, alignment: .trailing)
                         .monospacedDigit()
                 } else {
-                    Text("—")
+                    Text("-")
                         .font(GridironType.statSmall)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(maxWidth: .infinity, alignment: .trailing)

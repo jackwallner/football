@@ -70,7 +70,7 @@ struct MetricRankingView: View {
                     }
                     .padding(.vertical, 24)
                 } else {
-                    // Sorted by raw stat value — header carries the metric label
+                    // Sorted by raw stat value - header carries the metric label
                     // (e.g. "xwOBA") so the column matches what's in each row.
                     LeaderboardTableHeader(sortDescending: sortDescending, sortLabel: metricLabel)
                     ForEach(Array(rankedPlayers.enumerated()), id: \.element.id) { index, player in

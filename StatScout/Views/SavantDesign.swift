@@ -16,9 +16,9 @@ enum GridironPalette {
     static let leather      = Color(red: 0.48, green: 0.23, blue: 0.10)
     static let gold         = Color(red: 0.84, green: 0.63, blue: 0.19)
     static let linkBlue     = Color(red: 0.05, green: 0.32, blue: 0.45)
-    static let performanceHigh = Color(red: 0.08, green: 0.42, blue: 0.22)
-    static let performanceMid  = Color(red: 0.74, green: 0.72, blue: 0.65)
-    static let performanceLow  = Color(red: 0.62, green: 0.24, blue: 0.12)
+    static let performanceHigh = Color(red: 0.02, green: 0.46, blue: 0.20)
+    static let performanceMid  = Color(red: 0.40, green: 0.38, blue: 0.31)
+    static let performanceLow  = Color(red: 0.70, green: 0.20, blue: 0.08)
     static let up           = performanceHigh
     static let down         = performanceLow
     static let flat         = inkTertiary
@@ -49,9 +49,9 @@ enum GridironPalette {
         }
     }
 
-    private static let hotRGB: (Double, Double, Double) = (0.08, 0.42, 0.22)
-    private static let midRGB: (Double, Double, Double) = (0.74, 0.72, 0.65)
-    private static let coldRGB: (Double, Double, Double) = (0.62, 0.24, 0.12)
+    private static let hotRGB: (Double, Double, Double) = (0.02, 0.46, 0.20)
+    private static let midRGB: (Double, Double, Double) = (0.40, 0.38, 0.31)
+    private static let coldRGB: (Double, Double, Double) = (0.70, 0.20, 0.08)
 
     private static let hotTextRGB: (Double, Double, Double) = (0.06, 0.36, 0.19)
     private static let midTextRGB: (Double, Double, Double) = (0.24, 0.26, 0.24)

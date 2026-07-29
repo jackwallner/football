@@ -483,7 +483,7 @@ struct PaywallView: View {
                     break
                 case .pending:
                     // Ask-to-Buy / deferred payment: nothing is unlocked yet and
-                    // no error occurred — tell the user instead of going silent.
+                    // no error occurred - tell the user instead of going silent.
                     restoreMessage = "Purchase pending approval. StatScout+ unlocks automatically once it's approved."
                 case .cancelled:
                     errorMessage = "Purchase cancelled. Tap again to continue."
@@ -514,7 +514,7 @@ struct PaywallView: View {
     }
 }
 
-/// Faint percentile-bar motif behind the hero — ties the paywall to the
+/// Faint percentile-bar motif behind the hero - ties the paywall to the
 /// app's advanced-stats leaderboard visual language without competing with the copy.
 private struct PaywallBarBackdrop: View {
     private let percentiles: [Int] = [94, 81, 67, 52, 38, 88, 73, 60, 45, 83, 70]
@@ -536,7 +536,7 @@ private struct PaywallPlanCard: View {
     let isSelected: Bool
     let showsTrialBadge: Bool
     let isMostPopular: Bool
-    /// Integer savings vs. 12× monthly (yearly only) — drives the SAVE X% chip.
+    /// Integer savings vs. 12× monthly (yearly only) - drives the SAVE X% chip.
     let savingsPercent: Int?
     /// Per-month breakdown for an annual plan, e.g. "$2.50".
     let perMonthLabel: String?

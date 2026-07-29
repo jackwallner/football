@@ -185,7 +185,7 @@ struct StatcastAPI: StatcastProviding {
             let rows = try JSONDecoder.statScout.decode([Lenient<Player>].self, from: data)
             let page = rows.compactMap(\.value)
             // A non-empty page that decodes to zero players means the schema
-            // changed under us — surface it instead of silently going blank.
+            // changed under us - surface it instead of silently going blank.
             if !rows.isEmpty && page.isEmpty {
                 throw DecodingError.dataCorrupted(
                     .init(codingPath: [], debugDescription: "All player rows failed to decode")
@@ -199,8 +199,8 @@ struct StatcastAPI: StatcastProviding {
     }
 }
 
-/// Decodes an element if possible, otherwise yields nil instead of throwing —
-/// so one malformed row can't fail the entire page.
+/// Decodes an element if possible, otherwise yields nil instead of throwing,
+/// so one malformed row cannot fail the entire page.
 private struct Lenient<T: Decodable>: Decodable {
     let value: T?
 
@@ -269,7 +269,7 @@ extension JSONDecoder {
             // (e.g. "…40.95411+00:00"). ISO8601DateFormatter's
             // .withFractionalSeconds only accepts exactly 3 fractional digits
             // on some iOS versions, and the plain formatter rejects any
-            // fractional part at all — so a 5-digit fraction fails BOTH above
+            // fractional part at all - so a 5-digit fraction fails BOTH above
             // and every row's required updated_at drops, surfacing as a bogus
             // "Data format changed" error. Strip the fraction and retry.
             if let dotRange = dateString.range(of: #"\.\d+"#, options: .regularExpression) {

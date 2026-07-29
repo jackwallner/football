@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Last 7 / 15 / 30 day rolling form for a single player. Pro-gated: free
-/// users see a blurred static teaser and an upgrade CTA — no game-log fetch.
+/// users see a blurred static teaser and an upgrade CTA - no game-log fetch.
 /// Pro users load game logs once, then compute window aggregates client-side
 /// so we don't pay a round-trip when the user switches windows.
 struct RecentFormCard: View {
@@ -135,8 +135,8 @@ struct RecentFormCard: View {
         }
     }
 
-    /// Static, non-fetching preview for free users. No game logs are loaded —
-    /// these are illustrative bars in the season percentile format so the blur
+    /// Static, non-fetching preview for free users. No game logs are loaded.
+    /// These are illustrative bars in the season percentile format so the blur
     /// reads as "real recent-form bars" without paying the network/battery cost.
     private var teaserBody: some View {
         let sample: [Metric] = isDefense
@@ -222,8 +222,8 @@ struct RecentFormCard: View {
     }
 
     /// Recent-window metrics rendered with the exact same `MetricBar` row used
-    /// on the season percentile card — same label/bar/value layout and the same
-    /// alternating row backgrounds — so recent form reads on the identical ruler.
+    /// on the season percentile card - same label/bar/value layout and the same
+    /// alternating row backgrounds - so recent form reads on the identical ruler.
     private func metricBarList(_ rows: [Metric]) -> some View {
         VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
@@ -302,7 +302,7 @@ struct RecentFormCard: View {
     }
 
     private func load() async {
-        // Free users see a static teaser — no game-log fetch, no battery cost.
+        // Free users see a static teaser - no game-log fetch, no battery cost.
         guard store.isPro, let fetch = fetchGameLogs else { return }
         loading = true
         loadError = nil

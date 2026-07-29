@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Team "percentile rankings" card — the team-level analogue of the player
+/// Team "percentile rankings" card - the team-level analogue of the player
 /// profile's percentile card. Aggregates the roster into one synthetic
 /// "team-as-a-player" and renders its profile as percentile bars on the league
 /// ruler, with a Season / Recent toggle that mirrors the player page:
@@ -54,7 +54,7 @@ struct TeamRankingsCard: View {
         var usesRecent: Bool { self != .season }
     }
 
-    /// Smallest team-window play count we'll treat as trustworthy — below this we
+    /// Smallest team-window play count we'll treat as trustworthy - below this we
     /// flag the window as a small sample.
     private let smallSamplePlaysThreshold = 40
 
@@ -231,7 +231,7 @@ struct TeamRankingsCard: View {
         }
     }
 
-    /// One bar per roster metric — roster mean placed on the league curve. Each
+    /// One bar per roster metric - roster mean placed on the league curve. Each
     /// bar keeps its own metric category (Passing / Rushing / Receiving) so the
     /// leaderboard link routes correctly.
     private func aggregateSeasonRows() -> [Metric] {
@@ -309,7 +309,7 @@ struct TeamRankingsCard: View {
         }
     }
 
-    /// Static, non-fetching preview for free users — illustrative team bars in
+    /// Static, non-fetching preview for free users - illustrative team bars in
     /// the recent-form layout. No game logs are fetched (no network/battery cost)
     /// and no real team data is shown, so the blur can't be read through to leak
     /// the actual recent numbers.
@@ -485,7 +485,7 @@ struct TeamRankingsCard: View {
     }
 
     private func load() async {
-        // Free users see a static teaser — never fetch real team game logs.
+        // Free users see a static teaser - never fetch real team game logs.
         guard store.isPro, let fetch = fetchTeamGameLogs else { return }
         loading = true
         loadError = nil

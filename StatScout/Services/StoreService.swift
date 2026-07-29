@@ -6,12 +6,30 @@ enum StatScoutProduct {
     static let lifetime = "com.jackwallner.football.pro"
     static let yearly = "com.jackwallner.football.pro.yearly"
     static let monthly = "com.jackwallner.football.pro.monthly"
-    static let all: [String] = [lifetime, yearly, monthly]
+    static let all: [String] = [yearly, monthly, lifetime]
+
+    static func packageType(for identifier: String) -> PackageType? {
+        switch identifier {
+        case yearly: return .annual
+        case monthly: return .monthly
+        case lifetime: return .lifetime
+        default: return nil
+        }
+    }
+
+    static func packageIdentifier(for identifier: String) -> String? {
+        switch identifier {
+        case yearly: return "$rc_annual"
+        case monthly: return "$rc_monthly"
+        case lifetime: return "$rc_lifetime"
+        default: return nil
+        }
+    }
 }
 
 enum RevenueCatConfig {
     // RevenueCat "Football" project (proj9c303632), App Store app app039a312379.
-    // Public SDK key (appl_...) — used only in device Release / TestFlight / App
+    // Public SDK key (appl_...) - used only in device Release / TestFlight / App
     // Store builds; simulator runs skip Purchases.configure (see configureIfNeeded).
     static let apiKey = "appl_ivmIolnYwgJaeylzJwULBKiNrIx"
     static let proEntitlement = "Football Pro"
@@ -20,7 +38,7 @@ enum RevenueCatConfig {
 
 enum StatScoutSeason {
     /// The season the nightly pipeline is currently writing. Single source of
-    /// truth for the current/historical split — the API filters, the two-tier
+    /// truth for the current/historical split - the API filters, the two-tier
     /// cache partition, and the free-tier gate all read this, so the yearly
     /// rollover is a one-line change.
     static let current = 2025
@@ -33,7 +51,7 @@ enum StatScoutSeason {
 }
 
 enum StatScoutLegal {
-    /// Apple's standard EULA — required on the paywall unless a custom one is hosted.
+    /// Apple's standard EULA - required on the paywall unless a custom one is hosted.
     static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
     static let privacyURL = URL(string: "https://jackwallner.github.io/football/privacy-policy.html")!
 }
@@ -163,8 +181,8 @@ extension Package {
         case .year:  monthsDecimal = Decimal(period.value) * Decimal(12)
         @unknown default: return nil
         }
-        // Only show /mo breakdown for periods that aren't already monthly —
-        // showing "$4.99/mo" under a "$4.99/month" price is noise.
+        // Only show /mo breakdown for periods that are not already monthly.
+        // Showing "$4.99/mo" under a "$4.99/month" price is noise.
         guard monthsDecimal > 1 else { return nil }
         let perMonth = storeProduct.price / monthsDecimal
         let formatter = storeProduct.priceFormatter ?? Self.defaultCurrencyFormatter(currencyCode: storeProduct.currencyCode)
@@ -336,7 +354,7 @@ final class StoreService: NSObject, ObservableObject {
         return "Then \(yearly.priceLabel). Cancel anytime."
     }
 
-    /// The yearly package — the one-tap conversion target for every trial /
+    /// The yearly package - the one-tap conversion target for every trial /
     /// teaser pop-up (onboarding, TrialPitchSheet, blur CTAs). Those surfaces
     /// purchase this directly, trial or not; the full `PaywallView` is only the
     /// fallback when this is nil (products not loaded), or for deliberate
@@ -378,7 +396,7 @@ final class StoreService: NSObject, ObservableObject {
         return percent > 0 ? percent : nil
     }
 
-    /// Strike-through anchor price for the yearly card — "$4.99/mo" if a
+    /// Strike-through anchor price for the yearly card - "$4.99/mo" if a
     /// monthly package exists. Nil when there's nothing to anchor against.
     var monthlyAnchorPriceLabel: String? {
         monthlyPackage?.monthlyEquivalentAnchorLabel
@@ -449,12 +467,45 @@ final class StoreService: NSObject, ObservableObject {
             let offerings = try await Purchases.shared.offerings()
             let offering = offerings.paywallOffering
             currentOffering = offering
-            products = offering?.sortedPackages ?? []
-            lastError = nil
+            let offeringPackages = offering?.sortedPackages ?? []
+            products = offeringPackages.isEmpty
+                ? await fetchDirectPackages()
+                : offeringPackages
+            lastError = products.isEmpty
+                ? "Subscription options are temporarily unavailable. Please try again."
+                : nil
             await refreshIntroEligibility()
         } catch {
-            logger.error("Product fetch failed: \(String(describing: error), privacy: .public)")
-            lastError = "Couldn't load subscription options. Check your connection and try again."
+            logger.error("Offering fetch failed: \(String(describing: error), privacy: .public)")
+            products = await fetchDirectPackages()
+            lastError = products.isEmpty
+                ? "Couldn't load subscription options. Check your connection and try again."
+                : nil
+            await refreshIntroEligibility()
+        }
+    }
+
+    private func fetchDirectPackages() async -> [Package] {
+        let storeProducts = await Purchases.shared.products(StatScoutProduct.all)
+        let packages = storeProducts.compactMap { product -> Package? in
+            guard let packageType = StatScoutProduct.packageType(for: product.productIdentifier),
+                  let packageIdentifier = StatScoutProduct.packageIdentifier(for: product.productIdentifier) else {
+                return nil
+            }
+            return Package(
+                identifier: packageIdentifier,
+                packageType: packageType,
+                storeProduct: product,
+                offeringIdentifier: currentOffering?.identifier ?? "default",
+                webCheckoutUrl: nil
+            )
+        }
+        return packages.sorted { lhs, rhs in
+            guard let lhsIndex = StatScoutProduct.all.firstIndex(of: lhs.storeProduct.productIdentifier),
+                  let rhsIndex = StatScoutProduct.all.firstIndex(of: rhs.storeProduct.productIdentifier) else {
+                return lhs.storeProduct.productIdentifier < rhs.storeProduct.productIdentifier
+            }
+            return lhsIndex < rhsIndex
         }
     }
 
@@ -548,7 +599,7 @@ final class StoreService: NSObject, ObservableObject {
         self.customerInfo = customerInfo
         let activeKeys = customerInfo.entitlements.active.keys.sorted().joined(separator: ", ")
         let allKeys = customerInfo.entitlements.all.keys.sorted().joined(separator: ", ")
-        logger.info("Applied customerInfo — active: [\(activeKeys, privacy: .public)] all: [\(allKeys, privacy: .public)]")
+        logger.info("Applied customerInfo - active: [\(activeKeys, privacy: .public)] all: [\(allKeys, privacy: .public)]")
         let hasActiveSubscription = customerInfo.hasProEntitlement
         if isPro != hasActiveSubscription {
             isPro = hasActiveSubscription
@@ -559,7 +610,7 @@ final class StoreService: NSObject, ObservableObject {
     #if DEBUG
     /// Populates `products` with mock packages (RevenueCat `TestStoreProduct`) so
     /// the real PaywallView renders with correct prices/trials for App Store and
-    /// App Review screenshots — no `Purchases.configure`, no StoreKit, no network,
+    /// App Review screenshots - no `Purchases.configure`, no StoreKit, no network,
     /// so prod RevenueCat stays clean. Used by `PaywallScreenshotHarness`.
     func loadScreenshotProducts() {
         let locale = Locale(identifier: "en_US")
@@ -602,7 +653,7 @@ final class StoreService: NSObject, ObservableObject {
     private func configureIfNeeded() -> Bool {
         guard !isConfigured else { return true }
         #if targetEnvironment(simulator)
-        // Agent/sim runs must NOT hit the prod RevenueCat project — configuring
+        // Agent/sim runs must NOT hit the prod RevenueCat project - configuring
         // the prod appl_ key on the simulator creates fake "new customers" in the
         // prod charts (RC has no dashboard switch to exclude sim installs). Skip
         // configure entirely; use StoreKit Testing + a local Pro override for

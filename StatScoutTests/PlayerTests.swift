@@ -30,7 +30,7 @@ final class PlayerTests: XCTestCase {
     }
 
     func testMultiCategoryOverallUsesBestCategoryAverage() {
-        // A rushing QB carries both Passing and Rushing metrics — the headline
+        // A rushing QB carries both Passing and Rushing metrics - the headline
         // number should reflect the best category, not a blended average.
         let metrics = [
             Metric(id: "p1", label: "Pass Yds", value: "4,000", percentile: 95, category: .passing),

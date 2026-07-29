@@ -6,7 +6,7 @@ import Foundation
 /// (raw season value, season percentile) pair, sort by value, and interpolate.
 ///
 /// This lets the Recent Form card draw a recent-window bar on the *same ruler*
-/// as the player's season bar — so a hot 15-day stretch reads as "playing like
+/// as the player's season bar - so a hot 15-day stretch reads as "playing like
 /// a 92" against the league norm, in context of the player's season line.
 struct LeaguePercentileCurve {
     /// (value, percentile) points sorted ascending by value.
@@ -18,7 +18,7 @@ struct LeaguePercentileCurve {
         self.points = sorted.map { (value: $0.0, pct: $0.1) }
     }
 
-    /// Interpolate the percentile (1–100) for a value. Direction is encoded in
+    /// Interpolate the percentile (1-100) for a value. Direction is encoded in
     /// the points themselves (lower-is-better metrics ramp percentile down as
     /// value rises), so no per-metric direction flag is needed here.
     func percentile(for v: Double) -> Int {

@@ -39,8 +39,8 @@ struct DiskPlayerCache: PlayerCaching {
     }
 }
 
-/// Binary-plist–backed cache for the heavyweight historical dataset.
-/// Plist decode is ~2–3× faster than JSON on the same payload, and the file is ~30% smaller.
+/// Binary-plist-backed cache for the heavyweight historical dataset.
+/// Plist decode is ~2-3× faster than JSON on the same payload, and the file is ~30% smaller.
 struct PlistPlayerCache: PlayerCaching {
     private let fileURL: URL
 
@@ -118,7 +118,7 @@ struct TwoTierPlayerCache: PlayerCaching {
             try? FileManager.default.removeItem(at: legacyHistorical.fileURL)
             return bundled
         }
-        // 3. Legacy on-disk JSON cache from older builds — migrate forward.
+        // 3. Legacy on-disk JSON cache from older builds - migrate forward.
         if let players = try? legacyHistorical.loadPlayers(), !players.isEmpty {
             try? historical.savePlayers(players)
             try? FileManager.default.removeItem(at: legacyHistorical.fileURL)
