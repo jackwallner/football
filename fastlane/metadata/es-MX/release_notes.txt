@@ -1,0 +1,1 @@
+Bienvenido a StatScout. Percentiles visuales de la NFL en pase, carrera, recepción y defensa, actualizados cada noche.

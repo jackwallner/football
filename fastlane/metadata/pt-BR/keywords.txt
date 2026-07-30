@@ -1,0 +1,1 @@
+analise,jogadores,temporada,comparar,epa,cpoe,yac,passes,corridas,defesa,times,percentil,dados

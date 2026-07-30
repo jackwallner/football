@@ -154,14 +154,59 @@ storefront. Verify with rank tracking after launch rather than assuming.
 `NFL` · `EPA` · `CPOE` · `YAC` · `QB` · `Next Gen` · `StatScout`. Translating these loses the
 query, and every serious NFL fan searches them in English regardless of storefront.
 
+### What shipped (2026-07-29, all 50 on ASC draft 1.0)
+
+Measured pop/diff per storefront before writing each field. `nfl` is the head term in every
+foreign store (GB 58, CA 61, AU 59, MX 62, BR 51, DE 58, JP 40), while `american football` sits
+at the pop-5 floor in GB — so NFL carries the intent abroad, not the disambiguator.
+
+| Locale | Name | Subtitle |
+|---|---|---|
+| `en-US` | Football Next: StatScout | Advanced NFL Stats & Analytics |
+| `en-GB` / `en-AU` | Football Next: StatScout | American Football Statistics |
+| `en-CA` | Football Next: StatScout | Advanced NFL Stats & Analytics |
+| `de-DE` | NFL Statistiken: StatScout | American Football Perzentile |
+| `es-MX` / `es-ES` | NFL Estadísticas: StatScout | Fútbol Americano Avanzado |
+| `pt-BR` | NFL Estatísticas: StatScout | Futebol Americano Avançado |
+| `ja` | アメフト統計: StatScout | NFL選手のスタッツと分析 |
+| other 41 | Football Next: StatScout | Advanced NFL Stats & Analytics |
+
+`en-GB`/`en-AU` move `statistics` (pop 20, diff 17 GB / 13 AU) into the subtitle, which frees
+their keyword fields to carry `nfl` and `gridiron` (diff 15 GB, diff 7 CA). The five Tier-2
+locales put the exact searched phrase in the **name** — German users type "nfl statistiken" —
+because in-name exact match is the lever this niche rewards.
+
+**Dedupe traps found in the first draft of these fields:**
+
+- Every Tier-3 field opened with `nfl,` while the subtitle already contains NFL. Apple indexes
+  name + subtitle + keywords as one set, so that was 4 wasted characters in 40 locales.
+- French, Italian and Dutch repeated `football` from the name inside "football américain",
+  "football americano", "american football". Apple tokenizes on **spaces as well as commas**, so
+  the phrase produced a duplicate token. Cost 9 characters each.
+
+**Word-sense errors caught in review of the non-Latin fields** (worth re-checking on any future
+locale pass, since a dictionary translation silently targets the wrong sport):
+
+| Locale | Was | Problem | Now |
+|---|---|---|---|
+| `ta-IN` | அமெரிக்க கால்பந்து | கால்பந்து is **soccer** — read as "American soccer" | அமெரிக்க ஃபுட்பால் |
+| `ml-IN` | സ്ഥിതിവിവരക്കണക്കുകൾ | census/bureaucratic register for "statistics", ~20 chars, never typed by a fan | സ്റ്റാറ്റ്സ് |
+| `zh-Hans` / `zh-Hant` | 橄榄球 / 橄欖球 | ambiguous with rugby | 美式橄榄球 / 美式橄欖球 |
+| `vi` | bóng bầu dục | reads as rugby in Vietnamese media | bóng bầu dục Mỹ |
+| `hi` | रक्षा | national-security "defense", not the sports unit | डिफेंस |
+| `ar-SA` | لاعبون | literary nominative plural; not the typed form | لاعبين |
+| `ja` | 選手 | duplicated the subtitle; レシーブ is a volleyball term | キャッチ, ランキング |
+
 ---
 
 ## 6. Rollout
 
-1. **Staged now:** en-US on ASC draft 1.0 (name, subtitle, keywords, promo, description,
-   8 screenshots at 1320x2868, StatScout+ IAPs at $1.99 / $9.99 / $19.99).
-2. **On approval:** 50-locale pass using the tiering above (`aso-apply-locale-optimizations.py`,
-   `astro-sync-all-stores.sh`, `asc-finish-missed.sh`). Swap in
-   `fastlane/Deliverfile.all-locales` **only** once every listed locale has real copy on disk.
-   See `docs/localization-aso.md`.
-3. **go refine:** 7-14 days after the listing is live and rank data exists.
+1. **Staged:** all 50 locales on ASC draft 1.0 (name, subtitle, keywords, promo, description),
+   8 screenshots at 1320x2868 in `en-US` only, StatScout+ IAPs at $1.99 / $9.99 / $19.99.
+2. **Pending:** Jack's approval, then attach a build and submit.
+3. **go refine:** 7-14 days after the listing is live and rank data exists. Only then is
+   `astro-optimize.sh` meaningful, since it tunes against real ranks.
+
+The app UI ships **English only** (no `.lproj`, no `.xcstrings`). Localized store listings for an
+English-only app are permitted and standard, and baseball runs the same way, but it is a
+deliberate tradeoff rather than an oversight.
