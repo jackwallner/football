@@ -189,8 +189,7 @@ struct RootTabView: View {
     private var statsTab: some View {
         NavigationStack {
             StatsView(viewModel: viewModel)
-                .navigationTitle("Stats")
-                .navigationBarTitleDisplayMode(.inline)
+                // Title and season pills come from SeasonPhaseNavBar.
                 .modifier(GridironNavBar())
                 .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated))
                 .modifier(StandardDestinations(viewModel: viewModel))
@@ -203,8 +202,7 @@ struct RootTabView: View {
                 viewModel: viewModel,
                 isActive: selection == Tab.trends.rawValue
             )
-                .navigationTitle("Trends")
-                .navigationBarTitleDisplayMode(.inline)
+                // Title and season pills come from SeasonPhaseNavBar.
                 .modifier(GridironNavBar())
                 .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated))
                 .modifier(StandardDestinations(viewModel: viewModel))
@@ -214,8 +212,7 @@ struct RootTabView: View {
     private var teamsTab: some View {
         NavigationStack(path: $teamsPath) {
             TeamsView(viewModel: viewModel, path: $teamsPath)
-                .navigationTitle("Teams")
-                .navigationBarTitleDisplayMode(.inline)
+                // Title and season pills come from SeasonPhaseNavBar.
                 .modifier(GridironNavBar())
                 .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated))
                 .modifier(StandardDestinations(viewModel: viewModel))

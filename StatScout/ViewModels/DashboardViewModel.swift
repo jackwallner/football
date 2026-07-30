@@ -198,11 +198,22 @@ final class DashboardViewModel {
 
     /// Seasons offered where a career rollup makes no sense.
     ///
-    /// Trends ranks the last 3/5/8 *weeks* against the span before them, which
-    /// is a question about one season in progress. There is no such thing as the
-    /// last five weeks of all time, and the rolling-window table has no rows
-    /// under the sentinel, so offering it there would only ever produce an empty
-    /// board.
+    /// Two screens are excluded, for different reasons.
+    ///
+    /// **Trends** ranks the last 3/5/8 *weeks* against the span before them,
+    /// which is a question about one season in progress. There is no such thing
+    /// as the last five weeks of all time, and the rolling-window table has no
+    /// rows under the sentinel, so offering it there would only ever produce an
+    /// empty board.
+    ///
+    /// **Teams** is the subtler one. A career row carries whichever team the
+    /// player *last* played for, because that is what a career aggregate can
+    /// know - the rollup has no per-franchise split. So "Kansas City, All Time"
+    /// would list players who happened to finish there, crediting them with
+    /// production earned elsewhere, and would file Joe Montana under the Chiefs
+    /// rather than the 49ers. That is not franchise all-time leaders; it just
+    /// looks enough like it to be believed. Until the pipeline stores a
+    /// per-team career split, not offering it is the honest answer.
     var seasonsExcludingAllTime: [Int] {
         availableSeasons.filter { !StatScoutSeason.isAllTime($0) }
     }

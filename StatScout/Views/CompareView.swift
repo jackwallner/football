@@ -724,7 +724,9 @@ struct CompareView: View {
 
             HStack(spacing: 6) {
                 SeasonMenu(
-                    seasons: viewModel.availableSeasons,
+                    // Team-scoped, so no All Time: a career line carries the
+                    // player's last club and would miscredit the franchise.
+                    seasons: viewModel.seasonsExcludingAllTime,
                     selected: season,
                     isLocked: viewModel.isSeasonLocked,
                     onSelect: { picked in

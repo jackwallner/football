@@ -4,6 +4,7 @@
 import json
 import os
 import subprocess
+import time
 import urllib.parse
 import urllib.request
 from collections import Counter
@@ -27,6 +28,27 @@ HEADERS = {
 }
 
 
+def fetch_page(query: str, attempts: int = 4) -> list[dict]:
+    """One page, retried on transient failure.
+
+    The historical export walks ~34k rows a thousand at a time, so a single
+    hiccup from the API used to throw away the whole multi-minute run. Retrying
+    the page is cheaper than restarting the export.
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            request = urllib.request.Request(f"{URL}?{query}", headers=HEADERS)
+            with urllib.request.urlopen(request, timeout=120) as response:
+                return json.loads(response.read())
+        except Exception as error:  # noqa: BLE001 - any failure is worth a retry
+            if attempt == attempts:
+                raise
+            delay = 2 ** attempt
+            print(f"  page failed ({error}); retrying in {delay}s")
+            time.sleep(delay)
+    return []
+
+
 def fetch_all(query_filters: list[tuple[str, str]]) -> list[dict]:
     page_size = 1000
     offset = 0
@@ -40,12 +62,7 @@ def fetch_all(query_filters: list[tuple[str, str]]) -> list[dict]:
             ("limit", str(page_size)),
             ("offset", str(offset)),
         ])
-        request = urllib.request.Request(
-            f"{URL}?{query}",
-            headers=HEADERS,
-        )
-        with urllib.request.urlopen(request) as response:
-            page = json.loads(response.read())
+        page = fetch_page(query)
         players.extend(page)
         print(f"  fetched {len(page)} rows (total {len(players)})")
         if len(page) < page_size:

@@ -77,7 +77,9 @@ struct TeamsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                if isInitiallyLoading {
+                if StatScoutSeason.isAllTime(viewModel.selectedSeason) {
+                    allTimeUnavailableState
+                } else if isInitiallyLoading {
                     teamsLoadingState
                 } else {
                     allTeamsSection
@@ -95,7 +97,10 @@ struct TeamsView: View {
         .modifier(
             SeasonPhaseNavBar(
                 title: "Teams",
-                seasons: viewModel.availableSeasons,
+                // No All Time here: a career row carries the player's last team,
+                // so a franchise's "all time" list would credit it with yards
+                // earned elsewhere. See `seasonsExcludingAllTime`.
+                seasons: viewModel.seasonsExcludingAllTime,
                 selectedSeason: viewModel.selectedSeason,
                 selectedPhase: viewModel.selectedPhase,
                 isSeasonLocked: { viewModel.isSeasonLocked($0) },
@@ -123,10 +128,64 @@ struct TeamsView: View {
     /// back or revisiting the tab doesn't trap them by re-pushing.
     private func autoEnterFavoriteIfNeeded() {
         guard !didAutoEnterFavorite,
+              // A career selection has no franchise view to push into; the
+              // explanatory state stays on screen instead.
+              !StatScoutSeason.isAllTime(viewModel.selectedSeason),
               let favorite = teamsViewModel.favoriteTeam,
               path.isEmpty else { return }
         didAutoEnterFavorite = true
         path.append(TeamDestination(abbr: favorite))
+    }
+
+    /// The season is chosen once and shared across tabs, so picking All Time on
+    /// Stats and then opening Teams lands here. Rather than silently reinterpret
+    /// the selection (a franchise list built from career rows would credit each
+    /// team with yards its players earned elsewhere) or silently change it back,
+    /// this says what it can't do and offers the one tap that fixes it.
+    private var allTimeUnavailableState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "shield.lefthalf.filled.slash")
+                .font(.system(size: 28, weight: .regular))
+                .foregroundStyle(GridironPalette.inkTertiary)
+            Text("Teams needs a single season")
+                .font(GridironType.cardTitle)
+                .foregroundStyle(GridironPalette.ink)
+            Text("Career totals follow the player, not the club: a career line carries whichever team he finished with, so an all-time roster would credit a franchise with yards earned somewhere else. Pick a season to see its teams.")
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                viewModel.selectedSeason = latestUnlockedSeason
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                Text("Show " + SeasonLabel.text(latestUnlockedSeason))
+                    .font(GridironType.smallBold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 9)
+                    .background(GridironPalette.turf)
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 36)
+        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity)
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+        .padding(.horizontal, 12)
+    }
+
+    /// Newest season this user can actually open, so a free user isn't sent to a
+    /// paywalled year by a button labelled as the fix.
+    private var latestUnlockedSeason: Int {
+        viewModel.seasonsExcludingAllTime.first { !viewModel.isSeasonLocked($0) }
+            ?? StatScoutSeason.free
     }
 
     private var teamsLoadingState: some View {

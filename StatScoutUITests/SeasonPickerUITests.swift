@@ -1,106 +1,111 @@
 import XCTest
 
+/// The nav-bar season control: what it offers, and that choosing something takes
+/// effect.
+///
+/// The previous version was baseball-fork leftover and could not pass here. It
+/// waited on `app.staticTexts["LEADERBOARD"]` - a section title the football
+/// redesign removed - and looked for `Calendar.current.component(.year)`, i.e.
+/// the real-world year, when the NFL season label lags it (season 2025 runs into
+/// February 2026). It also drove the picker by tapping normalised screen
+/// coordinates, which broke the moment the bar changed. This version anchors on
+/// the table header and addresses the control by its accessibility label.
 final class SeasonPickerUITests: XCTestCase {
     var app: XCUIApplication!
+
+    /// A debug build decodes the 33k-row bundled snapshot unoptimised; release
+    /// does the same work in about three seconds.
+    private let loadTimeout: TimeInterval = 120
 
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
+        app.launchArguments += ["-hasCompletedOnboarding", "YES"]
         app.launch()
     }
 
-    func testSeasonPickerShowsCorrectYears() throws {
-        // Wait for app to load data
-        let leaderboard = app.staticTexts["LEADERBOARD"]
-        XCTAssertTrue(leaderboard.waitForExistence(timeout: 10), "Leaderboard should appear")
-
-        // Find the year picker (should show current year like "2026")
-        let currentYear = Calendar.current.component(.year, from: Date())
-        let yearButton = app.buttons.containing(.staticText, identifier: String(currentYear)).firstMatch
-
-        // If not found by text, try finding by partial match
-        let yearPicker = app.buttons.element(boundBy: 0) // First button in nav area
-
-        // Take screenshot of initial state
-        let screenshot1 = XCUIScreen.main.screenshot()
-        let attachment1 = XCTAttachment(screenshot: screenshot1)
-        attachment1.name = "01_Initial_State"
-        attachment1.lifetime = .keepAlways
-        add(attachment1)
-
-        // Tap the year picker to open menu
-        if yearButton.exists {
-            yearButton.tap()
-        } else {
-            // Try tapping at coordinates where year picker should be
-            let coordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.15))
-            coordinate.tap()
-        }
-
-        // Wait for menu to open
-        sleep(2)
-
-        // Take screenshot of menu open
-        let screenshot2 = XCUIScreen.main.screenshot()
-        let attachment2 = XCTAttachment(screenshot: screenshot2)
-        attachment2.name = "02_Menu_Open"
-        attachment2.lifetime = .keepAlways
-        add(attachment2)
-
-        // Verify year format - check for years in menu
-        // Years should be 2015-2026 range
-        var foundYears: [String] = []
-        for year in 2015...2026 {
-            let yearString = String(year)
-            if app.buttons[yearString].exists || app.staticTexts[yearString].exists {
-                foundYears.append(yearString)
-            }
-        }
-
-        print("Found years: \(foundYears)")
-        XCTAssertGreaterThan(foundYears.count, 0, "Should find at least one year in the picker")
-
-        // Check for comma in year format (should NOT have comma)
-        let commaYearPattern = app.staticTexts.containing(NSPredicate(format: "label CONTAINS ','"))
-        XCTAssertEqual(commaYearPattern.count, 0, "Year format should not contain comma")
+    /// Season and phase share one pill, labelled for VoiceOver as
+    /// "Season and season type" with a value like "2025, Regular Season".
+    private func seasonControl() -> XCUIElement {
+        app.buttons["Season and season type"]
     }
 
-    func testSelectDifferentYear() throws {
-        // Wait for data to load
-        sleep(5)
+    private func waitForBoard() -> Bool {
+        app.staticTexts["RANK"].waitForExistence(timeout: loadTimeout)
+    }
 
-        // Take initial screenshot
-        let screenshot1 = XCUIScreen.main.screenshot()
-        let attachment1 = XCTAttachment(screenshot: screenshot1)
-        attachment1.name = "03_Before_Year_Change"
-        attachment1.lifetime = .keepAlways
-        add(attachment1)
+    func testSeasonMenuOffersEveryStoredSeason() throws {
+        XCTAssertTrue(waitForBoard(), "Leaderboard should appear")
 
-        // Tap year picker
-        let coordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.15))
-        coordinate.tap()
-        sleep(2)
+        let control = seasonControl()
+        XCTAssertTrue(control.waitForExistence(timeout: 15), "Season control should exist in the nav bar")
+        control.tap()
 
-        // Try to select 2024
-        let year2024Button = app.buttons["2024"]
-        if year2024Button.exists {
-            year2024Button.tap()
-        } else {
-            // Tap at approximate location of 2024 in menu
-            let menuCoordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
-            menuCoordinate.tap()
+        // The menu should carry the career rollup plus the full 2000-current
+        // range. Spot-check the ends and the sentinel rather than all 27 rows,
+        // since a long menu scrolls and off-screen rows aren't hittable.
+        XCTAssertTrue(
+            app.buttons["All Time"].waitForExistence(timeout: 5),
+            "Season menu should offer the career rollup"
+        )
+        XCTAssertTrue(app.buttons["2025"].exists, "Season menu should offer the current season")
+
+        // Years are bare four-digit strings - never thousands-separated, which is
+        // what this originally guarded against ("2,025").
+        let commaYears = app.buttons.matching(
+            NSPredicate(format: "label MATCHES %@", "^[0-9],[0-9]{3}$")
+        )
+        XCTAssertEqual(commaYears.count, 0, "Season labels should not be thousands-separated")
+    }
+
+    func testSelectingAnotherSeasonKeepsTheBoardAlive() throws {
+        XCTAssertTrue(waitForBoard(), "Leaderboard should appear")
+
+        let control = seasonControl()
+        guard control.waitForExistence(timeout: 15) else {
+            return XCTFail("Season control should exist")
         }
+        let before = control.value as? String
 
-        sleep(3)
+        control.tap()
+        let target = app.buttons["2024"]
+        guard target.waitForExistence(timeout: 5) else {
+            // Locked behind Pro in this build: the paywall is a valid outcome.
+            app.tap()
+            return
+        }
+        target.tap()
 
-        // Take screenshot after year change
-        let screenshot2 = XCUIScreen.main.screenshot()
-        let attachment2 = XCTAttachment(screenshot: screenshot2)
-        attachment2.name = "04_After_Year_Change"
-        attachment2.lifetime = .keepAlways
-        add(attachment2)
+        // Either the board comes back for the new season, or the trial sheet
+        // intercepted the locked year. Both are correct; a blank screen isn't.
+        let board = app.staticTexts["RANK"].waitForExistence(timeout: loadTimeout)
+        let paywall = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] 'trial' OR label CONTAINS[c] 'unlock'")
+        ).firstMatch.exists
+        XCTAssertTrue(board || paywall, "Season change should leave the app in a usable state")
 
-        // Verify app didn't crash and still shows leaderboard
-        XCTAssertTrue(app.staticTexts["LEADERBOARD"].exists, "Leaderboard should still exist after year change")
+        if board, let before {
+            let after = seasonControl().value as? String
+            XCTAssertNotEqual(after, before, "The control should report the newly selected season")
+        }
+    }
+
+    func testPhaseIsSelectableFromTheSameControl() throws {
+        XCTAssertTrue(waitForBoard(), "Leaderboard should appear")
+
+        let control = seasonControl()
+        guard control.waitForExistence(timeout: 15) else {
+            return XCTFail("Season control should exist")
+        }
+        control.tap()
+
+        // Season and phase were two separate pills until they were merged to stop
+        // iOS pushing the upgrade CTA into a "..." overflow. Both sections must
+        // still be reachable from the one menu.
+        XCTAssertTrue(
+            app.buttons["Playoffs"].waitForExistence(timeout: 5),
+            "The merged menu should still offer the season type"
+        )
+        XCTAssertTrue(app.buttons["Regular Season"].exists, "Regular season should be listed too")
     }
 }
