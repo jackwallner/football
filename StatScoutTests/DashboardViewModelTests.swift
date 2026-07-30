@@ -288,6 +288,42 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertFalse(vm.isSeasonLocked(StatScoutSeason.allTime))
     }
 
+    /// The free season follows the data, not the calendar.
+    ///
+    /// `StatScoutSeason.current` is derived from the date now, so from September
+    /// onwards it names a season the pipeline may not have written a single row
+    /// for yet. Pinning the free tier to it there would open the app on an empty
+    /// board for the whole preseason, so it falls back to the newest season that
+    /// actually loaded.
+    @MainActor
+    func testFreeSeasonFallsBackToTheNewestSeasonWithData() async {
+        let stale = makeCompleteSeasonPlayers(
+            season: StatScoutSeason.current - 1,
+            namePrefix: "LastYear"
+        )
+        let vm = DashboardViewModel(provider: MockProvider(players: stale))
+
+        await vm.load()
+
+        XCTAssertEqual(vm.freeSeason, StatScoutSeason.current - 1)
+        XCTAssertFalse(vm.isSeasonLocked(StatScoutSeason.current - 1))
+        // And the menu stops at the newest season that exists, rather than
+        // offering an empty year above a full one.
+        XCTAssertEqual(vm.availableSeasons.first, StatScoutSeason.allTime)
+        XCTAssertFalse(vm.availableSeasons.contains(StatScoutSeason.current))
+    }
+
+    /// With the live season present, nothing changes: the free season is it.
+    @MainActor
+    func testFreeSeasonIsTheCurrentSeasonOnceItHasData() async {
+        let vm = DashboardViewModel(provider: MockProvider(players: makeCompleteCurrentPlayers()))
+
+        await vm.load()
+
+        XCTAssertEqual(vm.freeSeason, StatScoutSeason.current)
+        XCTAssertFalse(vm.isSeasonLocked(StatScoutSeason.current))
+    }
+
     /// Trends ranks rolling week windows, so a career has nothing to rank.
     @MainActor
     func testTrendsSeasonListExcludesAllTime() async {
@@ -465,5 +501,10 @@ struct MockProvider: StatcastProviding, @unchecked Sendable {
     ) async throws -> [RecentForm] {
         if let error { throw error }
         return []
+    }
+
+    func fetchDataCoverage(season: Int) async throws -> DataCoverage? {
+        if let error { throw error }
+        return nil
     }
 }

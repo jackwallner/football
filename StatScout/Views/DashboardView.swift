@@ -52,6 +52,7 @@ struct DashboardView: View {
             NavigationStack {
                 AboutView(
                     lastUpdated: viewModel.lastUpdated,
+                    dataCoverage: viewModel.dataCoverage,
                     onRequestReview: {
                         showingAbout = false
                         Task { @MainActor in
@@ -204,7 +205,7 @@ struct DashboardView: View {
         }
         .padding(.trailing, 12)
         .frame(height: GridironControl.height + 2)
-        .padding(.top, 8)
+        .padding(.top, GridironGeo.controlRowGap)
     }
 
     /// True while the search row is open or a query is still applied, so the

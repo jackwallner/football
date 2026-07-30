@@ -114,6 +114,19 @@ struct RecentFormWindow {
             if any { combined[key] = total }
         }
 
+        // Combined tackles has no column of its own in the weekly feed - the
+        // game log stores solo and assists separately, the way nflverse
+        // publishes them. Every consumer wants the total (that is what
+        // "Tackles" means on the season line and on every board), so derive it
+        // once here rather than leaving each caller to look up a `tackles` key
+        // that has never existed and silently render nothing. That was the
+        // shipped behaviour: a defender's Recent card had no Tackles bar at all.
+        let solo = combined["def_tackles_solo"]
+        let assists = combined["def_tackle_assists"]
+        if solo != nil || assists != nil {
+            combined["tackles"] = (solo ?? 0) + (assists ?? 0)
+        }
+
         return RecentFormWindow(
             label: label,
             span: span,

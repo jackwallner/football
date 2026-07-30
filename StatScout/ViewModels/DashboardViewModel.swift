@@ -92,8 +92,23 @@ final class DashboardViewModel {
     // selectedSeason clamping stay consistent without the VM depending on the store.
     var isPro: Bool = false
 
+    /// The season a free user gets, resolved against the data actually loaded.
+    ///
+    /// `StatScoutSeason.free` is the calendar's answer, and between the start of
+    /// September and week 1 the calendar is ahead of the database: the season
+    /// has a name but no rows. Pinning the free tier to it there would open the
+    /// app on an empty board for the whole preseason. So this is the newest
+    /// season that has data and is not in the future, falling back to the
+    /// calendar before anything has loaded.
+    ///
+    /// Stored, not computed. It only moves when players are ingested, and
+    /// `isSeasonLocked` is called once per row while a twenty-seven-entry season
+    /// menu is being laid out - deriving it from a flatMap over every loaded
+    /// season each time walked 33k rows per call and hung the app on launch.
+    private(set) var freeSeason: Int = StatScoutSeason.free
+
     func isSeasonLocked(_ season: Int) -> Bool {
-        !isPro && season != StatScoutSeason.free
+        !isPro && season != freeSeason
     }
 
     /// Push Pro state in from the view and re-clamp the selected season so a free
@@ -105,7 +120,7 @@ final class DashboardViewModel {
 
     private func clampSelectedSeason() {
         guard isSeasonLocked(selectedSeason) else { return }
-        let target = availableSeasons.first(where: { !isSeasonLocked($0) }) ?? StatScoutSeason.free
+        let target = availableSeasons.first(where: { !isSeasonLocked($0) }) ?? freeSeason
         if selectedSeason != target { selectedSeason = target }
     }
 
@@ -150,6 +165,10 @@ final class DashboardViewModel {
         players.map(\.updatedAt).max()
     }
 
+    /// The last game the data actually covers, as opposed to when the rows were
+    /// written. See `DataCoverage`.
+    var dataCoverage: DataCoverage?
+
     var freshnessText: String? {
         guard let lastUpdated else { return nil }
         let formatter = DateFormatter()
@@ -187,7 +206,11 @@ final class DashboardViewModel {
     // Free users can discover older seasons in the menu and see that they are
     // part of StatScout+, rather than seeing a misleading single-year picker.
     var availableSeasons: [Int] {
-        var seasons = Set(StatScoutSeason.earliest...StatScoutSeason.current)
+        // Capped at the newest season with data rather than at the calendar's
+        // season, so the menu never offers a year the pipeline hasn't written
+        // yet - a September that lists an empty 2026 above a full 2025 reads as
+        // a broken app rather than as a season that hasn't started.
+        var seasons = Set(StatScoutSeason.earliest...max(freeSeason, StatScoutSeason.earliest))
         seasons.formUnion(playerHistories.values.flatMap { $0 }.compactMap(\.season))
         // The career rollup sits under season 0, so a plain descending sort would
         // bury "All Time" underneath 2000. It belongs at the top of the menu, as
@@ -751,6 +774,14 @@ final class DashboardViewModel {
         }
         isLoading = false
         loadingProgress = 1
+
+        // Off the critical path on purpose: a single row that only the About
+        // sheet reads, fetched once the leaderboard is already on screen. A
+        // failure here leaves the coverage line blank rather than failing the
+        // load.
+        if let coverage = try? await provider.fetchDataCoverage(season: freeSeason) {
+            dataCoverage = coverage
+        }
     }
 
     func loadHistoricalIfNeeded() async {
@@ -804,6 +835,12 @@ final class DashboardViewModel {
         self.players = latestPlayers
 
         let seasonsWithData = Set(histories.values.flatMap { $0 }.compactMap(\.season))
+        // The one place the free season can move: recompute it off the set we
+        // already walked, before anything downstream asks whether a season is
+        // locked.
+        freeSeason = seasonsWithData
+            .filter { $0 != StatScoutSeason.allTime && $0 <= StatScoutSeason.free }
+            .max() ?? StatScoutSeason.free
         if !seasonsWithData.contains(selectedSeason),
            let mostRecentUnlocked = seasonsWithData.sorted(by: >).first(where: { !isSeasonLocked($0) }) {
             // Only auto-jump to a season the user can actually view; a free user

@@ -19,6 +19,24 @@ protocol StatcastProviding: Sendable {
         seasonPhase: SeasonPhase,
         windowWeeks: Int
     ) async throws -> [RecentForm]
+    func fetchDataCoverage(season: Int) async throws -> DataCoverage?
+}
+
+/// Which games the numbers cover, as opposed to when the rows were written.
+///
+/// The two come apart every single night here, and more starkly than in a sport
+/// that plays daily: the nightly job runs seven times a week against a source
+/// that publishes once, so six of those runs rewrite every row without closing
+/// out a new game. Settings reported the write stamp alone and so said "Last
+/// Updated: today" on a Thursday whose newest game was Sunday's, while the
+/// Trends header two taps away correctly said "Through Week 12". Reporting the
+/// coverage alongside the refresh is what makes the pair readable.
+struct DataCoverage: Sendable, Equatable {
+    /// Date of the last game included.
+    let asOf: Date
+    /// NFL week number of that game, when the rollup carries one.
+    let week: Int?
+    let phase: SeasonPhase
 }
 
 struct StatcastAPI: StatcastProviding {
@@ -172,6 +190,65 @@ struct StatcastAPI: StatcastProviding {
         return all
     }
 
+    /// One row, read for its coverage columns only.
+    ///
+    /// Ordered by `end_week` before `as_of` because the week is the answer the
+    /// UI wants and a playoff row carries a higher week than any regular-season
+    /// one, so the newest row is also the furthest through the season. `as_of`
+    /// breaks the tie for the seasons ingested before the week columns existed,
+    /// where `end_week` is null throughout.
+    func fetchDataCoverage(season: Int) async throws -> DataCoverage? {
+        let endpoint = baseURL
+            .appending(path: "rest/v1/player_recent_form")
+            .appending(queryItems: [
+                URLQueryItem(name: "select", value: "as_of,end_week,season_type"),
+                URLQueryItem(name: "season", value: "eq.\(season)"),
+                URLQueryItem(name: "as_of", value: "not.is.null"),
+                URLQueryItem(
+                    name: "order",
+                    value: "end_week.desc.nullslast,as_of.desc"
+                ),
+                URLQueryItem(name: "limit", value: "1"),
+            ])
+        var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(apiKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              200..<300 ~= httpResponse.statusCode else {
+            throw URLError(.badServerResponse)
+        }
+
+        struct Row: Decodable {
+            let as_of: String?
+            let end_week: Int?
+            let season_type: String?
+        }
+        guard let row = try JSONDecoder().decode([Row].self, from: data).first,
+              let raw = row.as_of else { return nil }
+
+        // `as_of` is a Postgres `date`: "YYYY-MM-DD", not ISO8601. Same parse
+        // RecentForm does, anchored to Eastern so a west-coast Sunday night
+        // game doesn't roll the label onto Monday.
+        let bits = raw.split(separator: "-").compactMap { Int($0) }
+        guard bits.count == 3 else { return nil }
+        var parts = DateComponents()
+        parts.year = bits[0]
+        parts.month = bits[1]
+        parts.day = bits[2]
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/New_York") ?? .current
+        guard let date = calendar.date(from: parts) else { return nil }
+
+        return DataCoverage(
+            asOf: date,
+            week: row.end_week,
+            phase: row.season_type.flatMap(SeasonPhase.init(rawValue:)) ?? .regular
+        )
+    }
+
     private func fetchPlayers(queryItems filters: [URLQueryItem]) async throws -> [Player] {
         var all: [Player] = []
         let pageSize = 1000
@@ -241,6 +318,7 @@ struct OfflineStatcastAPI: StatcastProviding {
         seasonPhase: SeasonPhase,
         windowWeeks: Int
     ) async throws -> [RecentForm] { [] }
+    func fetchDataCoverage(season: Int) async throws -> DataCoverage? { nil }
 }
 
 #if DEBUG
@@ -272,6 +350,8 @@ struct PreviewStatcastAPI: StatcastProviding {
     ) async throws -> [RecentForm] {
         []
     }
+
+    func fetchDataCoverage(season: Int) async throws -> DataCoverage? { nil }
 }
 #endif
 

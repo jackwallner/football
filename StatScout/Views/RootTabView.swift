@@ -191,7 +191,7 @@ struct RootTabView: View {
             StatsView(viewModel: viewModel)
                 // Title and season pills come from SeasonPhaseNavBar.
                 .modifier(GridironNavBar())
-                .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated))
+                .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated, dataCoverage: viewModel.dataCoverage))
                 .modifier(StandardDestinations(viewModel: viewModel))
         }
     }
@@ -204,7 +204,7 @@ struct RootTabView: View {
             )
                 // Title and season pills come from SeasonPhaseNavBar.
                 .modifier(GridironNavBar())
-                .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated))
+                .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated, dataCoverage: viewModel.dataCoverage))
                 .modifier(StandardDestinations(viewModel: viewModel))
         }
     }
@@ -214,7 +214,7 @@ struct RootTabView: View {
             TeamsView(viewModel: viewModel, path: $teamsPath)
                 // Title and season pills come from SeasonPhaseNavBar.
                 .modifier(GridironNavBar())
-                .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated))
+                .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated, dataCoverage: viewModel.dataCoverage))
                 .modifier(StandardDestinations(viewModel: viewModel))
         }
     }
@@ -228,7 +228,7 @@ struct RootTabView: View {
                 .navigationTitle("Compare")
                 .navigationBarTitleDisplayMode(.inline)
                 .modifier(GridironNavBar())
-                .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated))
+                .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated, dataCoverage: viewModel.dataCoverage))
                 .modifier(PlayerProfileDestination(viewModel: viewModel))
         }
     }
@@ -286,6 +286,7 @@ private struct GridironNavBar: ViewModifier {
 private struct HomeTabToolbar: ViewModifier {
     @EnvironmentObject private var store: StoreService
     let lastUpdated: Date?
+    var dataCoverage: DataCoverage?
     /// Owned per tab, not shared. All four tabs stay alive in the ZStack, so a
     /// single shared flag would push Settings onto all four stacks at once.
     @State private var showingSettings = false
@@ -340,6 +341,7 @@ private struct HomeTabToolbar: ViewModifier {
             .navigationDestination(isPresented: $showingSettings) {
                 AboutView(
                     lastUpdated: lastUpdated,
+                    dataCoverage: dataCoverage,
                     onRequestReview: {
                         showingSettings = false
                         Task { @MainActor in
@@ -405,6 +407,7 @@ struct PlayerProfileDestination: ViewModifier {
                         forSeason: profileSeason,
                         phase: profilePhase
                     ),
+                    currentSeason: viewModel.freeSeason,
                     isHistoricalLoading: viewModel.isHistoricalLoading,
                     hasLoadedHistorical: viewModel.hasLoadedHistorical,
                     historicalLoadingMessage: viewModel.loadingMessage,
@@ -412,21 +415,6 @@ struct PlayerProfileDestination: ViewModifier {
                     loadHistorical: { await viewModel.loadHistoricalIfNeeded() },
                     fetchGameLogs: { id, season in
                         try await viewModel.fetchGameLogs(playerId: id, season: season)
-                    },
-                    recentFormLookup: { id, window in
-                        viewModel.recentForm(
-                            for: id,
-                            window: window,
-                            season: profileSeason,
-                            phase: profilePhase
-                        )
-                    },
-                    loadRecentForm: { window in
-                        await viewModel.loadRecentFormIfNeeded(
-                            window: window,
-                            season: profileSeason,
-                            phase: profilePhase
-                        )
                     },
                     comparisonCatalog: ComparisonCatalog(
                         viewModel: viewModel,

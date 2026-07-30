@@ -181,6 +181,11 @@ struct HotColdView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 12)
+            // The position tabs draw their own underline and hairline, so with
+            // no gap the stat chip sat welded to the bottom of the tab strip
+            // and read as part of it. Same 10pt Stats puts above its own
+            // control row.
+            .padding(.top, GridironGeo.controlRowGap)
         }
         .fixedSize(horizontal: false, vertical: true)
     }

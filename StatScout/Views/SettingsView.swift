@@ -3,6 +3,7 @@ import SwiftUI
 struct AboutView: View {
     @EnvironmentObject private var store: StoreService
     let lastUpdated: Date?
+    var dataCoverage: DataCoverage?
     var onRequestReview: (() -> Void)?
     @State private var paywallTrigger: PaywallTrigger?
 
@@ -145,6 +146,23 @@ struct AboutView: View {
         )
     }
 
+    /// Which games are in, phrased the way the boards phrase it.
+    ///
+    /// The row "Last Refreshed" needs standing next to it. The nightly job runs
+    /// every night against a source that publishes weekly, so on most days it
+    /// rewrites every row and closes out no new game: the write stamp says
+    /// today while the newest game is Sunday's. Reporting only the write stamp
+    /// made the app contradict the Trends header, which correctly says "Through
+    /// Week 12". Weeks lead because that is the unit the sport and the rest of
+    /// the app count in; the date follows for anyone who wants it.
+    private var gamesThroughText: String {
+        guard let dataCoverage else { return "-" }
+        let stamp = dataCoverage.asOf.formatted(.dateTime.month(.abbreviated).day())
+        guard let week = dataCoverage.week else { return stamp }
+        let phase = dataCoverage.phase == .playoffs ? " (playoffs)" : ""
+        return "Week \(week)\(phase) · \(stamp)"
+    }
+
     private var refreshCard: some View {
         VStack(spacing: 0) {
             GridironSectionBar(title: "DATA")
@@ -155,8 +173,14 @@ struct AboutView: View {
             )
             Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
             row(
+                icon: "calendar.badge.clock",
+                title: "Games Through",
+                subtitle: gamesThroughText
+            )
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
+            row(
                 icon: "clock.arrow.circlepath",
-                title: "Last Updated",
+                title: "Last Refreshed",
                 subtitle: lastUpdated.map { $0.formatted(date: .long, time: .shortened) } ?? "-"
             )
         }
@@ -378,7 +402,10 @@ struct StatGlossaryView: View {
 
 #Preview {
     NavigationStack {
-        AboutView(lastUpdated: Date())
+        AboutView(
+            lastUpdated: Date(),
+            dataCoverage: DataCoverage(asOf: .now, week: 12, phase: .regular)
+        )
             .environmentObject(StoreService.shared)
     }
 }

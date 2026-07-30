@@ -15,7 +15,15 @@ final class SeasonPickerUITests: XCTestCase {
 
     /// A debug build decodes the 33k-row bundled snapshot unoptimised; release
     /// does the same work in about three seconds.
-    private let loadTimeout: TimeInterval = 120
+    ///
+    /// Generous because XCUITest makes it worse than a plain launch, not better:
+    /// each `waitForExistence` retry captures a debug description, which walks
+    /// the accessibility tree of a fifty-row board across all four mounted tabs
+    /// while the decode is still competing for the main thread. Launched
+    /// directly on the same simulator the board is up inside 45s; under the test
+    /// host 120s was not enough and every one of these failed on "Leaderboard
+    /// should appear" without the app being at fault.
+    private let loadTimeout: TimeInterval = 360
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -102,10 +110,30 @@ final class SeasonPickerUITests: XCTestCase {
         // Season and phase were two separate pills until they were merged to stop
         // iOS pushing the upgrade CTA into a "..." overflow. Both sections must
         // still be reachable from the one menu.
+        let playoffs = app.buttons["Playoffs"]
         XCTAssertTrue(
-            app.buttons["Playoffs"].waitForExistence(timeout: 5),
+            playoffs.waitForExistence(timeout: 5),
             "The merged menu should still offer the season type"
         )
         XCTAssertTrue(app.buttons["Regular Season"].exists, "Regular season should be listed too")
+
+        // `exists` alone was not enough, and this is the bug that shipped: the
+        // season section listed 27 rows above these two, so the phase sat below
+        // the fold of a scrolling menu. It was in the hierarchy the whole time -
+        // present, addressable, and untappable without scrolling to the bottom
+        // of a list nobody would think to scroll. Hittability is the assertion
+        // that would have caught it.
+        XCTAssertTrue(
+            playoffs.isHittable,
+            "Season type must be visible when the menu opens, not buried under the season list"
+        )
+
+        playoffs.tap()
+
+        let value = seasonControl().value as? String
+        XCTAssertEqual(
+            value?.contains("Playoffs"), true,
+            "Choosing Playoffs should be reflected in the pill, got \(value ?? "nil")"
+        )
     }
 }

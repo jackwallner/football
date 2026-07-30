@@ -155,7 +155,7 @@ struct StandardStatsLeadersView: View {
         }
         .padding(.trailing, 12)
         .frame(height: GridironControl.height + 2)
-        .padding(.top, 8)
+        .padding(.top, GridironGeo.controlRowGap)
     }
 
     private var statMenu: some View {
