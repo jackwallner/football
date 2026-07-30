@@ -107,15 +107,27 @@ struct SeasonPhaseNavBar: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            // No centered title.
+            //
+            // Four things wanted that bar at once: two season pills, the title,
+            // the settings gear and the upgrade CTA. iOS resolves that by
+            // dropping the title's neighbours into a "..." overflow - which on
+            // Teams had already buried the upgrade button, the one control on
+            // screen we most need to stay visible, and squeezed the title out
+            // anyway. Something had to go, and the title was the cheapest: the
+            // tab bar at the bottom of the screen already says "Stats" in green
+            // with a filled icon, so the centered copy of it was the only item
+            // in the bar carrying no information. Removing it leaves the pills
+            // and the two trailing controls spread across the full width.
+            //
+            // `navigationBarTitleDisplayMode(.inline)` still matters: it keeps
+            // the bar at one compact height instead of the large-title layout.
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            // Announced for VoiceOver, which loses the screen's name along with
+            // the visible title.
+            .accessibilityLabel(title)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text(title)
-                        .font(GridironType.bodyBold)
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
                 // The green pills are their own capsules; suppress the iOS 26
                 // Liquid Glass container or each reads as a pill inside a pill.
                 if #available(iOS 26.0, *) {
@@ -127,27 +139,61 @@ struct SeasonPhaseNavBar: ViewModifier {
             }
     }
 
+    /// One pill, not two.
+    ///
+    /// Season and phase used to be separate capsules. Together they ran to about
+    /// 185pt, and with the gear and the upgrade CTA on the other side iOS ran out
+    /// of bar and pushed the CTA into a "..." overflow - burying the one control
+    /// we least want hidden. Dropping the centered title wasn't enough on its
+    /// own, because width was the binding constraint rather than the title.
+    ///
+    /// Merging them costs nothing in reach (it was always one tap to open a menu,
+    /// and still is) and reads better besides: "2025 · Regular" is a single fact
+    /// about what you're looking at, not two settings that happen to be adjacent.
     private var pills: some View {
-        HStack(spacing: 6) {
-            SeasonMenu(
-                seasons: seasons,
-                selected: selectedSeason,
-                isLocked: isSeasonLocked,
-                onSelect: onSelectSeason
-            ) {
-                GridironNavPill(
-                    systemImage: "calendar",
-                    title: SeasonLabel.text(selectedSeason)
-                )
+        Menu {
+            Section("Season") {
+                ForEach(seasons, id: \.self) { season in
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        onSelectSeason(season)
+                    } label: {
+                        // A locked year keeps its crown and still routes the tap,
+                        // so it can pitch that specific season.
+                        if isSeasonLocked(season) {
+                            Label(SeasonLabel.text(season), systemImage: "crown.fill")
+                        } else if season == selectedSeason {
+                            Label(SeasonLabel.text(season), systemImage: "checkmark")
+                        } else {
+                            Text(SeasonLabel.text(season))
+                        }
+                    }
+                }
             }
-
-            SeasonPhaseMenu(
-                selected: selectedPhase,
-                onSelect: onSelectPhase
-            ) {
-                GridironNavPill(title: selectedPhase.label)
+            Section("Season type") {
+                ForEach(SeasonPhase.allCases) { phase in
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        onSelectPhase(phase)
+                    } label: {
+                        if phase == selectedPhase {
+                            Label(phase.fullLabel, systemImage: "checkmark")
+                        } else {
+                            Text(phase.fullLabel)
+                        }
+                    }
+                }
             }
+        } label: {
+            GridironNavPill(
+                systemImage: "calendar",
+                title: SeasonLabel.text(selectedSeason) + " · " + selectedPhase.label
+            )
         }
+        .menuOrder(.fixed)
+        .gridironMenuAppearance()
+        .accessibilityLabel("Season and season type")
+        .accessibilityValue(SeasonLabel.text(selectedSeason) + ", " + selectedPhase.fullLabel)
     }
 }
 

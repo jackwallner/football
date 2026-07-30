@@ -45,17 +45,26 @@ The entire `football analytics` SERP is 0-1 rating apps. That is the crack in th
 |---|---|---:|
 | **Name** | `Football Next: StatScout` | 24/30 |
 | **Subtitle** | `Advanced NFL Stats & Analytics` | 30/30 |
-| **Keywords** | `gen,cpoe,yac,percentile,rankings,compare,player,passing,rushing,receiving,defense,qb,fantasy,teams` | 98/100 |
+| **Keywords** | `gen,epa,cpoe,yac,statistics,compare,player,passing,rushing,receiving,defense,qb,fantasy,teams,trends` | 100/100 |
 
 ### What changed and why
 
 | OUT | IN | Why |
 |---|---|---|
 | `Football Next Play: StatScout` | `Football Next: StatScout` | "Play" carried no search weight; frees 5 chars and keeps the Next Gen Stats association |
-| `epa` | — | Homograph wall: SERP is 100% EPA/HVAC, zero football |
 | `nfl`, `football` | — | Already indexed via name + subtitle; Apple indexes name + subtitle + keywords together, so duplicating them wasted ~11 chars |
 | `nextgen` | `gen` | Apple tokenizes on spaces. `nextgen` is a distinct token that never matches the query "next gen stats"; `gen` + name's "Next" + subtitle's "Stats" does |
-| — | `compare`, `player`, `teams` | `player comparison` diff 5, `compare players` diff 17, `football team stats` diff 5, and all three are shipped features |
+| `percentile` | `statistics` | `percentile` is pop 5 (floor) — essentially nobody searches it. `statistics` is pop **20**, diff 21, and Apple does not stem `stats` (subtitle) into `statistics` |
+| — | `compare`, `player`, `teams`, `trends` | `player comparison` diff 5, `compare players` diff 17, `football team stats` diff 5, `football trends` diff 40; all shipped features |
+
+### On `epa` (kept, deliberately)
+
+Standalone `epa` is worthless: pop 44, SERP 12/12 Environmental Protection Agency and HVAC
+EPA-608 exam prep. But Apple builds combinations across fields, so the token costs 4 characters
+and buys `football epa` (**diff 15**) and `epa per play` (diff 23) against the name's "Football".
+Those are low-volume, low-competition, and exactly the analytics-literate user this app wants.
+**Budget it as a long-tail combo token, not as a pop-44 head.** Do not expect standalone `epa`
+traffic and do not spend more characters defending it.
 
 ### Cross-field combinations this buys
 

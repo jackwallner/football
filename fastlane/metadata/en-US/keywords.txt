@@ -1,1 +1,1 @@
-gen,cpoe,yac,percentile,rankings,compare,player,passing,rushing,receiving,defense,qb,fantasy,teams
+gen,epa,cpoe,yac,statistics,compare,player,passing,rushing,receiving,defense,qb,fantasy,teams,trends

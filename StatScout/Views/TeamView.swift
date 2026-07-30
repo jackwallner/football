@@ -637,7 +637,10 @@ struct TeamView: View {
 
     private func navSeasonMenu(viewModel: DashboardViewModel) -> some View {
         SeasonMenu(
-            seasons: viewModel.availableSeasons,
+            // A single team page, so no All Time - see
+            // `seasonsExcludingAllTime` for why a career row can't be
+            // attributed to one franchise.
+            seasons: viewModel.seasonsExcludingAllTime,
             selected: viewModel.selectedSeason,
             isLocked: { viewModel.isSeasonLocked($0) },
             onSelect: { season in

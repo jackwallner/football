@@ -54,10 +54,20 @@ SKIP_SCREENSHOTS=false ./scripts/upload-appstore-metadata.sh
 
 Use `scripts/fastlane-bin.sh` (fastlane **2.234+**). Do not use `/usr/local/bin/fastlane` 2.230.
 
-`fastlane/Deliverfile` lists all 50 deliver-supported languages. **That list is what creates
-localizations in ASC.** During the en-US-only phase it was temporarily reduced to `en-US`; it has
-since been restored to the full 50 for the localization pass. Scope it back down if you need
-another en-US-only upload.
+### Deliverfile trap (hit on 2026-07-29)
+
+`fastlane/Deliverfile` is **`en-US` only** on purpose. The `languages([...])` list is what
+*creates* localizations in ASC, independent of what exists on disk. Restoring the full 50-language
+list while only `fastlane/metadata/en-US/` existed created **49 empty version localizations**
+(blank description, no screenshots, which blocks submission) and copied the en-US name/subtitle
+into all 50 appInfo localizations. They had to be deleted through the API:
+
+```
+DELETE /v1/appStoreVersionLocalizations/<id>
+```
+
+The full list is preserved in `fastlane/Deliverfile.all-locales`. Swap it in **only** when every
+language in it has real football copy on disk.
 
 ## Screenshot gotcha
 
