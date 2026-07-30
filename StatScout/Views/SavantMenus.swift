@@ -65,9 +65,9 @@ struct SeasonPhaseMenu<Trigger: View>: View {
                     onSelect(phase)
                 } label: {
                     if phase == selected {
-                        Label(phase.fullLabel, systemImage: "checkmark")
+                        Label(phase.label, systemImage: "checkmark")
                     } else {
-                        Text(phase.fullLabel)
+                        Text(phase.label)
                     }
                 }
             }
@@ -77,7 +77,7 @@ struct SeasonPhaseMenu<Trigger: View>: View {
         .menuOrder(.fixed)
         .gridironMenuAppearance()
         .accessibilityLabel("Season type")
-        .accessibilityValue(selected.fullLabel)
+        .accessibilityValue(selected.label)
     }
 }
 
@@ -168,9 +168,9 @@ struct SeasonPhaseNavBar: ViewModifier {
                         onSelectPhase(phase)
                     } label: {
                         if phase == selectedPhase {
-                            Label(phase.fullLabel, systemImage: "checkmark")
+                            Label(phase.label, systemImage: "checkmark")
                         } else {
-                            Text(phase.fullLabel)
+                            Text(phase.label)
                         }
                     }
                 }
@@ -194,15 +194,24 @@ struct SeasonPhaseNavBar: ViewModifier {
                 }
             }
         } label: {
+            // No calendar glyph.
+            //
+            // Spelling the phase out in full ("Regular Season", not "Regular")
+            // costs about fifty points, and the bar has a hard budget: overrun
+            // it and iOS sweeps the trailing items into a "..." overflow, which
+            // on the first build of this change swallowed the upgrade CTA - the
+            // one control that must never be hidden. The glyph is what pays for
+            // it, and it is the right thing to cut: a four-digit year beside the
+            // word "Season" is already unmistakably a date, so the icon was
+            // decoration sitting in front of the label it decorated.
             GridironNavPill(
-                systemImage: "calendar",
                 title: SeasonLabel.text(selectedSeason) + " · " + selectedPhase.label
             )
         }
         .menuOrder(.fixed)
         .gridironMenuAppearance()
         .accessibilityLabel("Season and season type")
-        .accessibilityValue(SeasonLabel.text(selectedSeason) + ", " + selectedPhase.fullLabel)
+        .accessibilityValue(SeasonLabel.text(selectedSeason) + ", " + selectedPhase.label)
     }
 }
 
@@ -234,21 +243,28 @@ struct GridironNavPill: View {
     let title: String
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 4) {
             if let systemImage {
                 Image(systemName: systemImage)
                     .font(.system(size: 11, weight: .semibold))
             }
             Text(title)
-                .font(GridironType.smallBold)
+                // Micro rather than smallBold. The bar holds this pill, the
+                // settings gear and the upgrade CTA, and it is a fixed budget:
+                // spelling out "Regular Season" pushed the total past it and iOS
+                // swept the CTA into a "..." overflow. One step down the type
+                // scale buys the words back without touching the CTA, and this
+                // is nav-bar chrome rather than content, so it can afford to sit
+                // a size below the board it labels.
+                .font(GridironType.micro)
             Image(systemName: "chevron.down")
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 8, weight: .bold))
         }
         .foregroundStyle(.white)
         // Without this the toolbar squeezes the label and the title itself is
         // the first thing to get clipped, leaving a bare icon.
         .fixedSize()
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 9)
         .padding(.vertical, 5)
         .background(GridironPalette.turf)
         .clipShape(Capsule())

@@ -301,17 +301,27 @@ struct StandardStatsLeadersView: View {
         .buttonStyle(.plain)
     }
 
+    /// Case-insensitive on purpose.
+    ///
+    /// Callers reach this board from several places and one of them displays its
+    /// stat names in caps. An exact match meant a casing difference emptied the
+    /// whole board and reported it as "no data for this season", which reads as
+    /// a fact about the league rather than a mismatch between two strings. The
+    /// route now passes the data's own spelling, and this makes a future one
+    /// harmless instead of silent.
+    private func standardStat(for player: Player) -> StandardStat? {
+        player.standardStats?.first {
+            $0.label.compare(selectedStat, options: .caseInsensitive) == .orderedSame
+        }
+    }
+
     private func numericStat(for player: Player) -> Double? {
-        guard let stat = player.standardStats?.first(where: {
-            $0.label == selectedStat
-        }) else { return nil }
+        guard let stat = standardStat(for: player) else { return nil }
         return DashboardViewModel.rawNumeric(stat.value)
     }
 
     private func statDisplay(for player: Player) -> String {
-        player.standardStats?.first(where: {
-            $0.label == selectedStat
-        })?.value ?? "-"
+        standardStat(for: player)?.value ?? "-"
     }
 
     private func games(for player: Player) -> Double {

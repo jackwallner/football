@@ -169,14 +169,15 @@ enum SeasonPhase: String, Codable, CaseIterable, Identifiable, Hashable, Sendabl
 
     var id: String { rawValue }
 
+    /// One name, everywhere.
+    ///
+    /// There used to be a short `label` ("Regular") for controls and a
+    /// `fullLabel` ("Regular Season") for prose, and the short one was wrong in
+    /// every place it appeared: on its own, "Regular" is an adjective with no
+    /// noun, and the nav pill read "2025 · Regular" as though it were describing
+    /// the year. The saving was about forty points of width on one capsule,
+    /// which the bar has.
     var label: String {
-        switch self {
-        case .regular: return "Regular"
-        case .playoffs: return "Playoffs"
-        }
-    }
-
-    var fullLabel: String {
         switch self {
         case .regular: return "Regular Season"
         case .playoffs: return "Playoffs"

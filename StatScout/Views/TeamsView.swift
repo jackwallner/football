@@ -108,7 +108,7 @@ struct TeamsView: View {
                     if viewModel.isSeasonLocked(season) {
                         showingTrial = true
                     } else {
-                        viewModel.selectedSeason = season
+                        viewModel.selectSeason(season)
                     }
                 },
                 onSelectPhase: { viewModel.selectedPhase = $0 }

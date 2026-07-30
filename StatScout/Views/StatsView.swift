@@ -88,7 +88,7 @@ struct StatsView: View {
         if viewModel.isSeasonLocked(season) {
             paywallTrigger = .lockedSeason(season)
         } else {
-            viewModel.selectedSeason = season
+            viewModel.selectSeason(season)
         }
     }
 }

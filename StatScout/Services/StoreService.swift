@@ -92,15 +92,24 @@ enum StatScoutSeason {
 /// as "All Time" in the menu, the nav pill, page titles and share text alike -
 /// and `String(0)` leaking into any one of them is an obvious bug.
 enum SeasonLabel {
+    /// "All since 2000" rather than "All Time".
+    ///
+    /// The rollup covers `earliest` onward, and nflverse only publishes player
+    /// stats back to 1999 - so "All Time" claimed a century of football the
+    /// data does not have, and put Jim Brown's absence down to a bug rather
+    /// than to a start date. Naming the start date is both honest and more
+    /// useful: it tells you what you are about to compare against.
     static func text(_ season: Int) -> String {
-        StatScoutSeason.isAllTime(season) ? "All Time" : String(season)
+        StatScoutSeason.isAllTime(season)
+            ? "All since \(StatScoutSeason.earliest)"
+            : String(season)
     }
 
     /// Longer form for prose and subtitles ("2024 Regular Season").
     static func text(_ season: Int, phase: SeasonPhase) -> String {
         StatScoutSeason.isAllTime(season)
-            ? "All Time · " + phase.fullLabel
-            : String(season) + " " + phase.fullLabel
+            ? text(season) + " · " + phase.label
+            : String(season) + " " + phase.label
     }
 }
 

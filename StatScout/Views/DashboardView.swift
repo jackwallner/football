@@ -338,6 +338,21 @@ struct DashboardView: View {
                 }
                 .padding(.vertical, 24)
                 .frame(minHeight: 200)
+            } else if viewModel.leaderboard.isEmpty && viewModel.isHistoricalLoading {
+                // Season history is fetched on demand, so the first tap on a past
+                // season (or on All since 2000) arrives before its rows do. This
+                // used to fall through to "No player data is available", which
+                // reads as a permanent answer to a temporary state - the board
+                // filled in seconds later, by which point the user had believed
+                // the app.
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading \(SeasonLabel.text(viewModel.selectedSeason))…")
+                        .font(GridironType.small)
+                        .foregroundStyle(GridironPalette.inkSecondary)
+                }
+                .padding(.vertical, 40)
+                .frame(maxWidth: .infinity, minHeight: 200)
             } else if viewModel.leaderboard.isEmpty && !viewModel.isLoading {
                 let hasSeasonData = !viewModel.seasonPlayers.isEmpty
                 ContentUnavailableView {

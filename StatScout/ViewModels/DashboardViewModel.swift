@@ -111,6 +111,32 @@ final class DashboardViewModel {
         !isPro && season != freeSeason
     }
 
+    /// Switch season, and fetch what that season needs.
+    ///
+    /// Season history is loaded lazily - the launch path only fetches the live
+    /// season, because decoding thirty-three thousand historical rows is the
+    /// slowest thing the app does and most sessions never leave the current
+    /// year. Nothing was triggering that load from the nav bar, though, so
+    /// picking any past season (and All since 2000 most visibly, since it is the
+    /// first row of the menu) dropped you on an empty board with no spinner and
+    /// no explanation. Whether it recovered came down to whether you had
+    /// happened to open the Compare tab earlier in the session, which is the
+    /// only place that asked for history.
+    ///
+    /// Setting the season first and loading second is deliberate: the header
+    /// updates on the tap, so the screen acknowledges you immediately and the
+    /// board fills in behind it.
+    func selectSeason(_ season: Int) {
+        selectedSeason = season
+        guard !hasLoadedHistorical, season != freeSeason else { return }
+        seasonLoadTask = Task { await loadHistoricalIfNeeded() }
+    }
+
+    /// Held only so tests can await the load the tap kicked off. Nothing in the
+    /// app reads it: the board is driven by `isHistoricalLoading` and the
+    /// resulting data, not by the task.
+    private(set) var seasonLoadTask: Task<Void, Never>?
+
     /// Push Pro state in from the view and re-clamp the selected season so a free
     /// user can never land on (and silently render) a locked past season.
     func applyProState(_ pro: Bool) {
