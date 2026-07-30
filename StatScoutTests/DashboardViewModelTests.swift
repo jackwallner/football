@@ -324,6 +324,37 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertFalse(vm.isSeasonLocked(StatScoutSeason.current))
     }
 
+    /// Picking a past season fetches that season.
+    ///
+    /// History is decoded on demand, and nothing in the nav bar used to ask for
+    /// it - so the first tap on any past season, and on "All since 2000" most
+    /// visibly since it is the first row of the menu, landed on an empty board.
+    @MainActor
+    func testSelectingAPastSeasonLoadsTheHistoryItNeeds() async {
+        let vm = DashboardViewModel(provider: MockProvider(players: makeCompleteCurrentPlayers()))
+        vm.isPro = true
+        await vm.load()
+        XCTAssertFalse(vm.hasLoadedHistorical, "History should still be unfetched after a plain load")
+
+        vm.selectSeason(StatScoutSeason.allTime)
+
+        // The header moves on the tap; the rows arrive behind it.
+        XCTAssertEqual(vm.selectedSeason, StatScoutSeason.allTime)
+        XCTAssertNotNil(vm.seasonLoadTask, "Choosing a past season should start the history load")
+        await vm.seasonLoadTask?.value
+    }
+
+    /// The live season needs no extra fetch, so it must not start one.
+    @MainActor
+    func testSelectingTheFreeSeasonDoesNotRefetchHistory() async {
+        let vm = DashboardViewModel(provider: MockProvider(players: makeCompleteCurrentPlayers()))
+        await vm.load()
+
+        vm.selectSeason(vm.freeSeason)
+
+        XCTAssertNil(vm.seasonLoadTask)
+    }
+
     /// Trends ranks rolling week windows, so a career has nothing to rank.
     @MainActor
     func testTrendsSeasonListExcludesAllTime() async {
@@ -335,15 +366,23 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertEqual(vm.seasonsExcludingAllTime.count, vm.availableSeasons.count - 1)
     }
 
-    /// The sentinel must never reach the UI as "0".
-    func testSeasonLabelRendersSentinelAsAllTime() {
-        XCTAssertEqual(SeasonLabel.text(StatScoutSeason.allTime), "All Time")
+    /// The sentinel must never reach the UI as "0", and it must name its own
+    /// start date rather than claiming every season ever played.
+    func testSeasonLabelRendersSentinelAsAllSinceEarliest() {
+        XCTAssertEqual(SeasonLabel.text(StatScoutSeason.allTime), "All since 2000")
         XCTAssertEqual(SeasonLabel.text(2024), "2024")
         XCTAssertEqual(
             SeasonLabel.text(StatScoutSeason.allTime, phase: .regular),
-            "All Time · Regular Season"
+            "All since 2000 · Regular Season"
         )
         XCTAssertEqual(SeasonLabel.text(2024, phase: .playoffs), "2024 Playoffs")
+    }
+
+    /// One name for the phase everywhere. The nav pill used to get a bare
+    /// "Regular", which reads as an adjective describing the year beside it.
+    func testSeasonPhaseAlwaysReadsAsAFullName() {
+        XCTAssertEqual(SeasonPhase.regular.label, "Regular Season")
+        XCTAssertEqual(SeasonPhase.playoffs.label, "Playoffs")
     }
 
     @MainActor

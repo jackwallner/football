@@ -188,13 +188,27 @@ struct DualMetricBar: View {
                 MetricBar(metric: season, showValue: true)
             }
 
-            if let recent {
-                HStack(spacing: 6) {
-                    Text(recentCaption)
-                        .font(GridironType.micro)
-                        .foregroundStyle(GridironPalette.turf)
-                        .frame(width: 52, alignment: .leading)
+            HStack(spacing: 6) {
+                Text(recentCaption)
+                    .font(GridironType.micro)
+                    .foregroundStyle(recent == nil ? GridironPalette.inkTertiary : GridironPalette.turf)
+                    .frame(width: 52, alignment: .leading)
+                if let recent {
                     MetricBar(metric: recent, showValue: true)
+                } else {
+                    // The row used to just vanish, which made "Both" look
+                    // identical to "Season" and read as a broken toggle rather
+                    // than as a metric with no window figure. Say which it is.
+                    // Nothing here is derivable for the Next Gen Stats season
+                    // aggregates (Separation, CPOE, Time to Throw) or the
+                    // team-relative shares (Target Share, WOPR): the per-game
+                    // feed carries no denominator for them, and averaging their
+                    // per-game averages would be a different number wearing this
+                    // one's label.
+                    Text("Not available per game")
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }

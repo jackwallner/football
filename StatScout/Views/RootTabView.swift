@@ -311,10 +311,16 @@ private struct HomeTabToolbar: ViewModifier {
                     .fontWeight(.bold)
             }
             .foregroundStyle(GridironPalette.midnight)
-            .padding(.horizontal, 10)
+            // Tight, because the season pill next to it now spells out
+            // "Regular Season" and the bar has no slack left. Trimming padding
+            // here is far cheaper than losing the verb: a bare crown reads as a
+            // status badge, which is exactly what this button used to be and
+            // why it was rewritten.
+            .padding(.horizontal, 8)
             .padding(.vertical, 5)
             .background(Color.yellow)
             .clipShape(Capsule())
+            .fixedSize()
         }
         .accessibilityLabel("\(ctaLabel), unlock all features")
     }
@@ -332,6 +338,17 @@ private struct HomeTabToolbar: ViewModifier {
                 .foregroundStyle(.white.opacity(0.85))
         }
         .accessibilityLabel("Settings")
+    }
+
+    /// Gear then CTA, in the order they were declared as separate items.
+    @ViewBuilder
+    private var trailingControls: some View {
+        HStack(spacing: 10) {
+            settingsButton
+            if !store.isPro {
+                upgradeButton
+            }
+        }
     }
 
     func body(content: Content) -> some View {
@@ -355,22 +372,25 @@ private struct HomeTabToolbar: ViewModifier {
                 .modifier(GridironNavBar())
             }
             .toolbar {
-                // Declared before the CTA so the gear sits to its left.
+                // One trailing item holding both controls, not two items.
+                //
+                // Two separate `ToolbarItem`s are a group iOS may collapse into
+                // a "..." overflow, and it decides that from its own layout
+                // arithmetic rather than from the space actually free: widening
+                // the season pill to spell out "Regular Season" tipped it, and
+                // the CTA vanished into the menu with a hundred and twenty
+                // points of empty bar still sitting between the pill and the
+                // gear. Trimming the pill did not bring it back, because width
+                // was never really the trigger.
+                //
+                // A single item cannot be split, so both stay visible and the
+                // spacing between them is ours. Same reasoning as the leading
+                // pill above.
                 if #available(iOS 26.0, *) {
-                    ToolbarItem(placement: .topBarTrailing) { settingsButton }
+                    ToolbarItem(placement: .topBarTrailing) { trailingControls }
                         .sharedBackgroundVisibility(.hidden)
                 } else {
-                    ToolbarItem(placement: .topBarTrailing) { settingsButton }
-                }
-                if !store.isPro {
-                    // The yellow pill is its own capsule; suppress the iOS 26
-                    // Liquid Glass container so it doesn't read as a double-pill.
-                    if #available(iOS 26.0, *) {
-                        ToolbarItem(placement: .topBarTrailing) { upgradeButton }
-                            .sharedBackgroundVisibility(.hidden)
-                    } else {
-                        ToolbarItem(placement: .topBarTrailing) { upgradeButton }
-                    }
+                    ToolbarItem(placement: .topBarTrailing) { trailingControls }
                 }
             }
             // The toolbar CTA pitches; it doesn't hand over a price list. Same
