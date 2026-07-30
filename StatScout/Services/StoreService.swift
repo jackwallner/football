@@ -39,10 +39,33 @@ enum RevenueCatConfig {
 enum StatScoutSeason {
     /// The season the nightly pipeline is currently writing. Single source of
     /// truth for the current/historical split - the API filters, the two-tier
-    /// cache partition, and the free-tier gate all read this, so the yearly
-    /// rollover is a one-line change.
-    static let current = 2025
-    /// The only season available without Pro. Everything older is gated.
+    /// cache partition, and the free-tier gate all read this.
+    ///
+    /// Derived from the calendar rather than pinned to a literal, using the
+    /// same rule `backend/ingest.py::resolve_season` uses: an NFL season is
+    /// named for the year it kicks off in, so anything from September on
+    /// belongs to this year and anything before it to last year. A hard-coded
+    /// year meant a shipped build stopped seeing new data the moment the next
+    /// season started, and only a new App Store release could fix it - the
+    /// pipeline would be writing 2026 rows that no installed copy would ask
+    /// for.
+    ///
+    /// Floored at 2025 so this can never resolve to a season older than the
+    /// one the app shipped with, whatever the device clock says.
+    static let current: Int = {
+        let now = Calendar.current.dateComponents([.year, .month], from: .now)
+        guard let year = now.year, let month = now.month else { return 2025 }
+        return max(2025, month >= 9 ? year : year - 1)
+    }()
+
+    /// The only season available without Pro.
+    ///
+    /// Not simply `current`: in the weeks between a new season being named and
+    /// its first slate landing in the database there are no rows to show, and a
+    /// free user pinned to an empty year would open the app to a blank board
+    /// through the whole preseason. `DashboardViewModel` narrows this to the
+    /// newest season that actually has data, so the free tier follows the live
+    /// season by itself and never lands on an empty one.
     static let free = current
     /// Oldest season in the dataset. nflverse player stats run back to 1999;
     /// StatScout starts at 2000 for a clean round-number historical range.

@@ -79,6 +79,28 @@ struct CompareView: View {
     private var activeTeamSeasonA: Int { teamSeasonA ?? viewModel.selectedSeason }
     private var activeTeamSeasonB: Int { teamSeasonB ?? viewModel.selectedSeason }
 
+    /// The same club twice is a legitimate comparison - a franchise against its
+    /// own past is the whole point of holding a season picker under each slot.
+    /// Only the exactly-identical pair is refused, because that one compares a
+    /// roster with itself and every row would tie.
+    private var isSameTeamContext: Bool {
+        guard let teamA, let teamB else { return false }
+        return normalizedTeamAbbreviation(teamA) == normalizedTeamAbbreviation(teamB)
+            && activeTeamSeasonA == activeTeamSeasonB
+            && teamPhaseA == teamPhaseB
+    }
+
+    private var canCompareTeams: Bool {
+        teamA != nil && teamB != nil && !isSameTeamContext
+    }
+
+    /// Says why the button is off, rather than leaving a grey button with no
+    /// explanation - the fix (change one side's season) isn't guessable.
+    private var teamWarning: String? {
+        guard isSameTeamContext, let teamA else { return nil }
+        return "Both sides are \(teamFullName(teamA)) in \(SeasonLabel.text(activeTeamSeasonA)) \(teamPhaseA.label.lowercased()). Change one side's season or season type to compare."
+    }
+
     private func players(forSeason season: Int, phase: SeasonPhase) -> [Player] {
         viewModel.players(forSeason: season, phase: phase).sorted { $0.name < $1.name }
     }
@@ -218,24 +240,19 @@ struct CompareView: View {
             }()
             switch target {
             case .teamA, .teamB:
+                // Every club with data, including the one already in the other
+                // slot. Seahawks 2016 against Seahawks 2025 is one of the most
+                // natural questions this card can answer, and filtering the
+                // duplicate out made it unaskable: the slots both open on the
+                // selected season, so the team you wanted was missing from the
+                // list at the exact moment you went looking for it. The
+                // degenerate case (same club, same season, same phase) is
+                // handled at the Compare button instead, where it can say why.
                 CompareTeamPicker(
                     teams: teamsWithData(
                         season: context.season,
                         phase: context.phase
-                    ).filter {
-                        switch target {
-                        case .teamA:
-                            return $0 != teamB
-                                || context.season != activeTeamSeasonB
-                                || context.phase != teamPhaseB
-                        case .teamB:
-                            return $0 != teamA
-                                || context.season != activeTeamSeasonA
-                                || context.phase != teamPhaseA
-                        default:
-                            return true
-                        }
-                    }
+                    )
                 ) { selected in
                     if target == .teamA {
                         teamA = selected
@@ -669,8 +686,17 @@ struct CompareView: View {
                     )
                 }
 
+                if let teamWarning {
+                    Text(teamWarning)
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 Button {
-                    guard let teamA, let teamB else { return }
+                    guard let teamA, let teamB, canCompareTeams else { return }
                     teamComparisonRoute = TeamComparisonRoute(
                         teamA: teamA,
                         teamB: teamB,
@@ -686,14 +712,14 @@ struct CompareView: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 46)
                         .background(
-                            teamA != nil && teamB != nil
+                            canCompareTeams
                                 ? GridironPalette.turf
                                 : GridironPalette.inkTertiary
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
-                .disabled(teamA == nil || teamB == nil)
+                .disabled(!canCompareTeams)
 
             }
             .padding(16)

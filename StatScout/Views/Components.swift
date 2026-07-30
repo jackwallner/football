@@ -678,6 +678,12 @@ struct LeaderboardTableRow: View {
         }
         .frame(height: GridironGeo.rowHeight)
         .padding(.horizontal, GridironGeo.padInline)
+        // Banded rows, the same white / near-white alternation the Trends board
+        // and the standard-stats board already use. Fifty rows of one flat
+        // surface is where the eye loses its place tracking a name across to a
+        // number; the band is what carries it. Keyed on `rank` (1-based) so the
+        // first row is the plain surface and the card's top edge stays clean.
+        .background(rank % 2 == 1 ? GridironPalette.surface : GridironPalette.surfaceAlt)
         .contentShape(Rectangle())
     }
 }

@@ -24,6 +24,13 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # STATCAST_SEASON is passed through empty unless the repo variable is set, and
+  # empty is what we want: every script falls back to `resolve_season`, which
+  # reads the calendar (year if month >= 9, else year - 1). It used to carry a
+  # literal '2025' fallback, which would have quietly pinned the nightly run to
+  # the 2025 season forever - come week 1 of 2026 the workflow would still be
+  # re-ingesting a finished year and no new data would ever land. Set the repo
+  # variable only to force a specific season.
 
 jobs:
   ingest:
@@ -58,7 +65,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          STATCAST_SEASON: ${{ vars.STATCAST_SEASON || '2025' }}
+          STATCAST_SEASON: ${{ vars.STATCAST_SEASON }}
         run: |
           set -o pipefail
           python backend/ingest.py --season-type all 2>&1 | tee ingestion.log
@@ -106,7 +113,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          STATCAST_SEASON: ${{ vars.STATCAST_SEASON || '2025' }}
+          STATCAST_SEASON: ${{ vars.STATCAST_SEASON }}
           # A metric-set change only reaches already-ingested games via a full
           # re-ingest; the nightly path stays incremental from the last date.
           FULL_REINGEST: ${{ inputs.full_game_log_reingest }}
@@ -123,7 +130,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          STATCAST_SEASON: ${{ vars.STATCAST_SEASON || '2025' }}
+          STATCAST_SEASON: ${{ vars.STATCAST_SEASON }}
         run: |
           set -o pipefail
           python backend/rollup_recent_form.py 2>&1 | tee recent_form_rollup.log

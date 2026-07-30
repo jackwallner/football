@@ -5,18 +5,24 @@ struct PlayerProfileView: View {
     let player: Player
     let history: [Player]
     var allPlayers: [Player] = []
+    /// The live season as the loaded data sees it, not as the calendar does.
+    /// Drives the free-tier lock on the season menu and whether Recent form is
+    /// offered at all, both of which have to agree with the rest of the app
+    /// once a new season is named but hasn't been ingested yet.
+    var currentSeason: Int = StatScoutSeason.current
     var isHistoricalLoading = false
     var hasLoadedHistorical = true
     var historicalLoadingMessage = "Loading past seasons…"
     var historicalLoadingProgress = 0.12
     var loadHistorical: (() async -> Void)?
+    /// This player's own per-game rows. Both recent-form cards on this page read
+    /// them; the league's pre-aggregated week rollup is deliberately not wired
+    /// in here, because a page about one player should count his games, not the
+    /// league's weeks. See `standardRecentKeys`.
     var fetchGameLogs: ((Int, Int) async throws -> [PlayerGameLog])?
-    /// Pre-aggregated rolling window for this player, when one is loaded.
-    var recentFormLookup: ((Int, RecentWindow) -> RecentForm?)?
-    var loadRecentForm: ((RecentWindow) async -> Void)?
     var comparisonCatalog: ComparisonCatalog?
     @State private var showPercentileInfo = false
-    @State private var selectedTab: PlayerStatTab = .statcast
+    @State private var selectedTab: PlayerStatTab = .advanced
     @State private var selectedPercentileSeason: Int? = nil
     @State private var paywallTrigger: PaywallTrigger?
     @State private var showingPlayerPicker = false
@@ -28,6 +34,9 @@ struct PlayerProfileView: View {
     @State private var formDisplayMode: FormDisplayMode = .season
     @State private var recentWindowGames: Int = 5
     @State private var recentLogs: [PlayerGameLog] = []
+    /// "<playerId>-<season>" the loaded logs belong to, so two cards asking for
+    /// the same season share one fetch.
+    @State private var recentLogsKey: String?
     @State private var recentLoading = false
     @State private var recentLoadError: String?
     @State private var recentCurves: LeaguePercentileCurves?
@@ -44,8 +53,8 @@ struct PlayerProfileView: View {
     }
 
     enum PlayerStatTab: String, CaseIterable {
-        case statcast = "Percentiles"
-        case standard = "Standard Stats"
+        case advanced = "Advanced"
+        case standard = "Standard"
         case yearCompare = "Year Compare"
     }
 
@@ -117,8 +126,8 @@ struct PlayerProfileView: View {
                     .padding(.top, 12)
 
                 switch selectedTab {
-                case .statcast:
-                    statcastContent
+                case .advanced:
+                    advancedContent
                 case .standard:
                     standardContent
                 case .yearCompare:
@@ -218,22 +227,22 @@ struct PlayerProfileView: View {
 
     private var tabSelector: some View {
         HStack(spacing: 8) {
-            statcastTabButton
+            advancedTabButton
             standardTabButton
             yearCompareTabButton
         }
     }
 
-    private var statcastTabButton: some View {
-        let isSelected = selectedTab == .statcast
+    private var advancedTabButton: some View {
+        let isSelected = selectedTab == .advanced
         return Button(action: {
             withAnimation(.easeInOut(duration: 0.2)) {
-                selectedTab = .statcast
+                selectedTab = .advanced
             }
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
         }) {
-            Text(PlayerStatTab.statcast.rawValue)
+            Text(PlayerStatTab.advanced.rawValue)
                 .font(GridironType.bodyBold)
                 .foregroundStyle(isSelected ? .white : GridironPalette.ink)
                 .frame(maxWidth: .infinity)
@@ -287,7 +296,7 @@ struct PlayerProfileView: View {
         .buttonStyle(.plain)
     }
 
-    private var statcastContent: some View {
+    private var advancedContent: some View {
         VStack(spacing: 12) {
             headlineCard
             percentileRankingsCard
@@ -556,7 +565,7 @@ struct PlayerProfileView: View {
             if seasons.count > 1 {
                 Menu {
                     ForEach(seasons, id: \.self) { season in
-                        let isLocked = season != StatScoutSeason.free && !store.isPro
+                        let isLocked = season != currentSeason && !store.isPro
                         Button {
                             if isLocked {
                                 // Explicit tap on a locked season - always answer it.
@@ -713,7 +722,7 @@ struct PlayerProfileView: View {
     /// meaningful while viewing the current season. Historical seasons render
     /// season bars only.
     private var isCurrentSeasonActive: Bool {
-        (activeSeason ?? StatScoutSeason.current) == StatScoutSeason.current
+        (activeSeason ?? currentSeason) == currentSeason
     }
 
     /// The mode rows actually render in - forced back to `.season` on a
@@ -877,14 +886,21 @@ struct PlayerProfileView: View {
     private func loadRecentLogs() async {
         guard store.isPro, let fetch = fetchGameLogs,
               let season = activeSeason ?? player.season else { return }
+        // Two cards want these logs now (percentiles and standard stats) and
+        // each has its own task, so remember what is already in hand rather
+        // than refetching the same season the moment the user switches tabs.
+        let key = "\(player.playerId)-\(season)"
+        if recentLogsKey == key, !recentLogs.isEmpty { return }
         recentLoading = true
         recentLoadError = nil
         do {
             recentLogs = try await fetch(player.playerId, season)
+            recentLogsKey = key
         } catch {
             // Distinguish "no games" from "fetch failed" - otherwise a network
             // error renders as an honest-looking "No games in the last N days".
             recentLogs = []
+            recentLogsKey = nil
             recentLoadError = "Couldn't load recent games. Check your connection and try again."
         }
         recentLoading = false
@@ -975,18 +991,34 @@ struct PlayerProfileView: View {
             }
     }
 
-    /// Traditional stat label to the rollup's key. Games played and the
+    /// Traditional stat label to its per-game log key. Games played and the
     /// composite Cmp/Att and Rec/Tgt lines have no single-number window
     /// counterpart, so they keep their season row alone.
+    ///
+    /// These are `player_game_logs` keys, not `player_recent_form` ones, and the
+    /// difference is the point. The rollup this card used to read is keyed by
+    /// *league weeks*: picking "5 games" served the last five weeks of the
+    /// season, so a player who was inactive for two of them got a five-game
+    /// label over a three-game total, and a player on bye got a window that
+    /// quietly skipped a week. The percentile card on the next tab was already
+    /// summing this player's own last N game logs; the two cards disagreed
+    /// about what "last 5" meant. Now they don't.
     private static let standardRecentKeys: [String: String] = [
-        "PASS YDS": "pass_yards", "PASS TD": "pass_tds", "INT": "interceptions",
-        "CAR": "carries", "RUSH YDS": "rush_yards", "RUSH TD": "rush_tds",
-        "REC": "receptions", "REC YDS": "rec_yards", "REC TD": "rec_tds",
-        "TACKLES": "tackles", "SACKS": "sacks", "DEF INT": "def_ints",
+        "PASS YDS": "passing_yards", "PASS TD": "passing_tds", "INT": "interceptions",
+        "CAR": "carries", "RUSH YDS": "rushing_yards", "RUSH TD": "rushing_tds",
+        "REC": "receptions", "REC YDS": "receiving_yards", "REC TD": "receiving_tds",
+        "TACKLES": "tackles", "SACKS": "def_sacks", "DEF INT": "def_interceptions",
     ]
 
-    private var standardRecentForm: RecentForm? {
-        recentFormLookup?(player.playerId, standardWindow)
+    /// This player's own last N games, summed. Same `recentLogs` the percentile
+    /// card reads, so both tabs answer "last 5 games" with the same five games.
+    private var standardRecentWindow: RecentFormWindow? {
+        let span = standardWindow.rawValue
+        let windowLogs = Array(
+            recentLogs.sorted { $0.gameDate > $1.gameDate }.prefix(span)
+        )
+        guard !windowLogs.isEmpty else { return nil }
+        return RecentFormWindow.build(label: "Last \(span)", span: span, logs: windowLogs)
     }
 
     /// The recent-window version of one traditional stat, or nil when the window
@@ -994,7 +1026,7 @@ struct PlayerProfileView: View {
     /// distribution the season row uses, so both sit on one ruler.
     private func recentStandardMetric(for seasonMetric: Metric) -> Metric? {
         guard let key = Self.standardRecentKeys[seasonMetric.label],
-              let value = standardRecentForm?.metrics[key] else { return nil }
+              let value = standardRecentWindow?.metrics[key] else { return nil }
         let text = seasonMetric.label == "SACKS"
             ? String(format: "%.1f", value)
             : Int(value.rounded()).formatted(.number.grouping(.automatic))
@@ -1056,6 +1088,14 @@ struct PlayerProfileView: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
+        // Standard Stats is its own tab, so the percentile card's loader never
+        // runs while you are looking at this one. Without this the Recent /
+        // Both modes rendered season numbers under a "5 games" caption until
+        // you happened to visit the other tab first.
+        .task(id: "std-\(standardMode)-\(standardWindow.rawValue)-\(player.playerId)-\(activeSeason ?? 0)-\(store.isPro)") {
+            guard store.isPro, effectiveStandardMode != .season else { return }
+            await loadRecentLogs()
+        }
     }
 
     private var effectiveStandardMode: FormDisplayMode {
@@ -1073,9 +1113,6 @@ struct PlayerProfileView: View {
         .padding(.horizontal, GridironGeo.padInline)
         .padding(.vertical, 10)
         .background(GridironPalette.surfaceAlt)
-        .onChange(of: standardMode) { _, mode in
-            if mode != .season { Task { await loadRecentForm?(standardWindow) } }
-        }
     }
 
     private var standardWindowPicker: some View {
@@ -1086,9 +1123,6 @@ struct PlayerProfileView: View {
         .padding(.horizontal, GridironGeo.padInline)
         .padding(.bottom, 8)
         .background(GridironPalette.surfaceAlt)
-        .onChange(of: standardWindow) { _, window in
-            Task { await loadRecentForm?(window) }
-        }
     }
 
     @ViewBuilder

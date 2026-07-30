@@ -104,6 +104,11 @@ enum GridironGeo {
     static let padSection: CGFloat = 24
     static let rowHeight: CGFloat = 44
     static let rowHeightHeader: CGFloat = 28
+    /// Breathing room between the underlined position tabs and the first row of
+    /// inline controls under them. The tabs carry their own underline plus a
+    /// hairline, so a control butted straight up against them reads as part of
+    /// the tab strip rather than as the board's own filter.
+    static let controlRowGap: CGFloat = 10
 }
 
 /// NFL team primary colors, keyed by nflverse abbreviation.

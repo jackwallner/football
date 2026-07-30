@@ -185,7 +185,7 @@ struct TeamsView: View {
     /// paywalled year by a button labelled as the fix.
     private var latestUnlockedSeason: Int {
         viewModel.seasonsExcludingAllTime.first { !viewModel.isSeasonLocked($0) }
-            ?? StatScoutSeason.free
+            ?? viewModel.freeSeason
     }
 
     private var teamsLoadingState: some View {

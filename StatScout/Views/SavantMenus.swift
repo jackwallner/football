@@ -150,8 +150,31 @@ struct SeasonPhaseNavBar: ViewModifier {
     /// Merging them costs nothing in reach (it was always one tap to open a menu,
     /// and still is) and reads better besides: "2025 · Regular" is a single fact
     /// about what you're looking at, not two settings that happen to be adjacent.
+    ///
+    /// Season type comes *first*, and that ordering is the whole reason the
+    /// merge works. The season list is twenty-seven rows (All Time plus 2000
+    /// through the current year), which is far taller than a menu can show, so
+    /// with seasons on top the two phase rows sat below the fold: the control
+    /// existed, scrolled to the very bottom of a long list, and to anyone
+    /// opening the menu the playoffs simply weren't switchable. Two rows above
+    /// a scrolling list cost the season picker nothing and make the phase the
+    /// first thing you see.
     private var pills: some View {
         Menu {
+            Section("Season type") {
+                ForEach(SeasonPhase.allCases) { phase in
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        onSelectPhase(phase)
+                    } label: {
+                        if phase == selectedPhase {
+                            Label(phase.fullLabel, systemImage: "checkmark")
+                        } else {
+                            Text(phase.fullLabel)
+                        }
+                    }
+                }
+            }
             Section("Season") {
                 ForEach(seasons, id: \.self) { season in
                     Button {
@@ -166,20 +189,6 @@ struct SeasonPhaseNavBar: ViewModifier {
                             Label(SeasonLabel.text(season), systemImage: "checkmark")
                         } else {
                             Text(SeasonLabel.text(season))
-                        }
-                    }
-                }
-            }
-            Section("Season type") {
-                ForEach(SeasonPhase.allCases) { phase in
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        onSelectPhase(phase)
-                    } label: {
-                        if phase == selectedPhase {
-                            Label(phase.fullLabel, systemImage: "checkmark")
-                        } else {
-                            Text(phase.fullLabel)
                         }
                     }
                 }
