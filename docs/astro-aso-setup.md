@@ -3,8 +3,8 @@
 > Playbook: `~/ios/archive/aso/2026-05/astro-global-aso-go-2026.md` · say **"go"** to run the
 > full 91-store / 50-locale pipeline.
 
-Last **go** run: **not yet** (en-US staged manually 2026-07-29; global pass deferred pending
-approval)
+Last **go** run: **2026-07-29** — all 50 ASC locales optimized and uploaded to draft 1.0,
+Astro synced across stores. Pending Jack's approval, then build attach + submit.
 
 ## App
 
@@ -16,6 +16,12 @@ approval)
 | Bundle ID | `com.jackwallner.football` |
 | Draft ASC version | **1.0** (`PREPARE_FOR_SUBMISSION`) |
 | Live ASC version | none — never released |
+
+## Locales
+
+All **50** ASC locales are staged on draft 1.0. Per-locale names, subtitles, tiering and the
+word-sense corrections found in review: [`../aso-plan.md`](../aso-plan.md) §5. Screenshots are
+`en-US` only by design (ASC falls back to the primary language).
 
 ## Current draft metadata (en-US)
 

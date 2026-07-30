@@ -1,0 +1,1 @@
+nfl,gen,epa,gridiron,qb,fantasy,compare,player,teams,trends,passing,rushing,receiving,defense

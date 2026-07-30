@@ -2,20 +2,21 @@
 
 ## Current state (2026-07-29)
 
-**Only `en-US` is staged.** The 50-locale pass is deliberately deferred until the en-US listing
-is approved.
+**All 50 locales are staged on ASC draft 1.0.** Every locale has name, subtitle, keywords,
+promotional text and description. Screenshots exist in `en-US` only, deliberately — ASC falls
+back to the primary language, and baseball runs 50 live localizations the same way.
 
-The 49 non-English locale folders that shipped with this repo were **stale Baseball Savvy
-StatScout metadata** (MLB Statcast, xwOBA, Japanese baseball copy). They were never football
-content and would have created 49 baseball-branded localizations on the football listing.
-They are parked, not deleted:
+Tiering, rationale and the full per-locale table live in [`../aso-plan.md`](../aso-plan.md) §5.
+
+The 49 non-English folders that originally shipped in this repo were **stale Baseball Savvy
+StatScout metadata** (MLB Statcast, xwOBA, Japanese baseball copy). They were replaced wholesale,
+not edited. The originals are parked for reference:
 
 ```
 fastlane/metadata-locales-parked/     # 49 stale baseball locale dirs
 ```
 
-Do **not** move them back into `fastlane/metadata/` and upload. They get regenerated from the
-en-US source during the localization pass.
+Do **not** move them back into `fastlane/metadata/`.
 
 ## Backups
 
@@ -56,18 +57,19 @@ Use `scripts/fastlane-bin.sh` (fastlane **2.234+**). Do not use `/usr/local/bin/
 
 ### Deliverfile trap (hit on 2026-07-29)
 
-`fastlane/Deliverfile` is **`en-US` only** on purpose. The `languages([...])` list is what
-*creates* localizations in ASC, independent of what exists on disk. Restoring the full 50-language
-list while only `fastlane/metadata/en-US/` existed created **49 empty version localizations**
-(blank description, no screenshots, which blocks submission) and copied the en-US name/subtitle
-into all 50 appInfo localizations. They had to be deleted through the API:
+The `languages([...])` list is what *creates* localizations in ASC, **independent of what exists
+on disk**. Restoring the full 50-language list while only `fastlane/metadata/en-US/` existed
+created 49 empty version localizations (blank description, no screenshots, which blocks
+submission) and copied the en-US name/subtitle into all 50 appInfo records. They had to be
+deleted through the API:
 
 ```
 DELETE /v1/appStoreVersionLocalizations/<id>
 ```
 
-The full list is preserved in `fastlane/Deliverfile.all-locales`. Swap it in **only** when every
-language in it has real football copy on disk.
+`Deliverfile` now carries all 50 again, which is correct **because every listed locale has real
+copy on disk**. If you ever need an en-US-only upload, scope it back down first;
+`Deliverfile.all-locales` holds the full list.
 
 ## Screenshot gotcha
 
