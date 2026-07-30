@@ -14,9 +14,10 @@
 - **Niche is at the pop-5 floor** almost everywhere, same shape as baseball. Real traffic exists
   only at `football` 71, `nfl` 70, `fantasy` 62, `fantasy football` 57, `nfl stats` 28,
   `football stats` 24, `quarterback` 22, `gridiron` 18.
-- **`epa` is a homograph wall, not a metric term.** Pop 44 looks great until you read the SERP:
-  12/12 results are Environmental Protection Agency and HVAC EPA-608 exam prep apps. Removed
-  from the keyword field.
+- **`epa` is a homograph, so treat it as a combo token only.** Pop 44 looks great until you read
+  the SERP: 12/12 results are Environmental Protection Agency and HVAC EPA-608 exam prep apps.
+  Kept in the field at 4 characters purely for `football epa` (diff 15) and `epa per play`
+  (diff 23), never as a head term.
 - **US `football` intent is majority soccer.** NFL intent has to be captured through `nfl`
   tokens; `football analytics` is winnable precisely because only 0-rating soccer AI-betting
   apps hold it.
@@ -73,8 +74,8 @@ stats` · `next gen stats` · `nfl percentile` · `football rankings` · `qb sta
 stats` · `rushing stats` · `defense rankings` · `player comparison` · `football team stats` ·
 `fantasy football stats`
 
-**Never field-slot:** `epa`, `dfs`, `snap share`, `football app`, `american football`, `sports
-analytics`, `pro football` — homograph or authority walls despite popularity.
+**Never field-slot as heads:** `dfs`, `snap share`, `football app`, `american football`, `sports
+analytics`, `pro football`, `nfl statistics` — homograph or authority walls despite popularity.
 
 ### Name variant not taken
 
@@ -86,13 +87,13 @@ title. Revisit if `football stats` rank stalls past 200.
 
 ## 3. Astro state (2026-07-29)
 
-**US:** 84 keywords tracked on app id `119`.
+**US:** 98 keywords tracked on app id `119`.
 
 | Tag | Count | Keywords |
 |---|---:|---|
-| `deployed` | 10 | percentile, gen, cpoe, yac, compare players, player comparison, qb stats, passing stats, rushing stats, defense rankings |
-| `target` | 16 | football analytics, nfl analytics, advanced football stats, football percentiles, nfl percentiles, next gen stats, football stats app, football metrics, football research, football stat tracker, football compare, football gen stats, nfl stats, football stats, football efficiency, nfl percentile |
-| `wall` | 18 | epa, dfs, snap share, football app, nfl team stats, football players, nfl players, running back, target share, fantasy football tools, dynasty fantasy football, nfl next gen, american football, sports analytics, pro football, nfl rankings, football tracker, nfl stats app |
+| `deployed` | 13 | gen, epa, statistics, cpoe, yac, football trends, compare players, player comparison, qb stats, passing stats, rushing stats, defense rankings, percentile |
+| `target` | 19 | football epa, epa per play, football statistics, football analytics, nfl analytics, advanced football stats, football percentiles, nfl percentiles, next gen stats, football stats app, football metrics, football research, football stat tracker, football compare, football gen stats, nfl stats, football stats, football efficiency, nfl percentile |
+| `wall` | 23 | dfs, nfl statistics, stats, stat, stats app, player stats, sports statistics, snap share, football app, nfl team stats, football players, nfl players, running back, target share, fantasy football tools, dynasty fantasy football, nfl next gen, american football, sports analytics, pro football, nfl rankings, football tracker, nfl stats app |
 
 Astro cannot yet resolve real App Store ID `6792930447` (the listing has never been released).
 Re-point `scripts/.astro-app.json` and migrate tracking once it indexes.
@@ -110,11 +111,57 @@ percentiles**. It is currently underclaimed in the listing copy.
 
 ---
 
-## 5. Rollout
+## 5. Localization: when to translate, when to stay in English
+
+### What the baseball 50-locale pass actually returned
+
+Measured 2026-07-29 against the live Baseball Savvy StatScout listing:
+
+| Store | Result |
+|---|---|
+| `de` | **#1** `statcast perzentile`, **#1** `mlb statcast perzentile`, #4 `statcast`, #99 `mlb statcast` — the localized German long-tails do index and rank |
+| `jp` | **#1** `mlb statcast percentiles`, #2, #4, #5 on statcast phrases — and these are *English* tokens, because "Statcast" has no Japanese translation |
+| `mx` | `béisbol` (pop **32**, the one term with real traffic) → **rank 1000**. Not won. |
+
+The pattern: localization reliably wins pop-5 long-tails and reliably loses anything with actual
+search volume, because volume terms are decided by authority, not by translation. It costs
+almost nothing, so it is worth doing, but it should be budgeted as free optionality rather than
+as a growth channel.
+
+**Screenshots do not need localizing.** Baseball runs 50 live localizations with screenshots in
+`en-US` only; ASC falls back to the primary language. The 50-locale pass is metadata-only.
+
+### Tiering for an NFL app
+
+NFL demand is far more concentrated than baseball's. Spend effort accordingly.
+
+| Tier | Storefronts | Treatment |
+|---|---|---|
+| **1 — English, real NFL demand** | `en-US`, `en-GB`, `en-CA`, `en-AU` | English copy, but a **different keyword field per storefront**. Free extra surface. In GB/AU, "football" means soccer even harder than in the US, so `american football` (pop 9) and `nfl` carry the intent there while `football` is dead weight |
+| **2 — Real NFL following, non-English** | `de-DE`, `es-MX`, `pt-BR`, `ja`, `es-ES` | Hand-write native keywords. Germany is the largest NFL market outside North America; Mexico, Brazil and Spain all host regular-season games |
+| **3 — Everything else** | ~40 storefronts | Keep the **English** name/subtitle/description, localize the **keyword field only**. NFL terminology does not translate, and a machine-translated description converts worse than clean English for an audience already reading English football content |
+
+### The es-MX lever
+
+The **US storefront indexes English (U.S.) *and* Spanish (Mexico)**. `es-MX` is therefore not a
+Mexico play, it is a second 100-char keyword field aimed at the US market. Give it a genuinely
+different Spanish set (`estadisticas`, `futbol americano`, `mariscal de campo`, `temporada`)
+rather than a translation of the English one. Same mechanic applies to `fr-CA` in the Canadian
+storefront. Verify with rank tracking after launch rather than assuming.
+
+### Terms that must stay English in every locale
+
+`NFL` · `EPA` · `CPOE` · `YAC` · `QB` · `Next Gen` · `StatScout`. Translating these loses the
+query, and every serious NFL fan searches them in English regardless of storefront.
+
+---
+
+## 6. Rollout
 
 1. **Staged now:** en-US on ASC draft 1.0 (name, subtitle, keywords, promo, description,
-   8 screenshots at 1320x2868).
-2. **On approval:** 50-locale pass using the baseball methodology (native keywords, name/subtitle
-   dedupe, `aso-apply-locale-optimizations.py`, `astro-sync-all-stores.sh`,
-   `asc-finish-missed.sh`). See `docs/localization-aso.md`.
+   8 screenshots at 1320x2868, StatScout+ IAPs at $1.99 / $9.99 / $19.99).
+2. **On approval:** 50-locale pass using the tiering above (`aso-apply-locale-optimizations.py`,
+   `astro-sync-all-stores.sh`, `asc-finish-missed.sh`). Swap in
+   `fastlane/Deliverfile.all-locales` **only** once every listed locale has real copy on disk.
+   See `docs/localization-aso.md`.
 3. **go refine:** 7-14 days after the listing is live and rank data exists.

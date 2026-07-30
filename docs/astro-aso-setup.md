@@ -23,12 +23,14 @@ approval)
 |-------|-------|------:|
 | **Name** | Football Next: StatScout | 24/30 |
 | **Subtitle** | Advanced NFL Stats & Analytics | 30/30 |
-| **Keywords** | `gen,cpoe,yac,percentile,rankings,compare,player,passing,rushing,receiving,defense,qb,fantasy,teams` | 98/100 |
+| **Keywords** | `gen,epa,cpoe,yac,statistics,compare,player,passing,rushing,receiving,defense,qb,fantasy,teams,trends` | 100/100 |
 | **Screenshots** | 8 frames, 1320x2868, RGB | |
+| **IAP** | StatScout+ Monthly $1.99 · Yearly $9.99 (7-day trial) · Lifetime $19.99 | |
 
 Keywords intentionally **omit** `nfl`, `football`, `stats`, `analytics`, `advanced` — all
-indexed via name/subtitle (dedupe pass). They also omit `epa`: pop 44, but the SERP is 100%
-Environmental Protection Agency and HVAC exam-prep apps.
+indexed via name/subtitle (dedupe pass). `percentile` was dropped for `statistics` (pop 5 vs
+pop 20). `epa` is kept only as a combo token for `football epa` (diff 15); its standalone SERP is
+100% Environmental Protection Agency and HVAC exam prep.
 
 ## US Astro strategy
 
