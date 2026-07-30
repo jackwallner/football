@@ -5,6 +5,11 @@ XcodeGen project/scheme: `StatScout` (names kept to minimize churn), simulator
 device `agent-football` (UDID `93E5EECA-F542-4715-BA93-0EE303BE70A8`). Bundle id
 `com.jackwallner.football`, product name "Gridiron StatScout".
 
+**Naming, as of 2026-07-29:** App Store name is **"Football Next: StatScout"** (ASC app
+`6792930447`, draft 1.0, never released) — chosen for ASO. In-app it is still
+`PRODUCT_NAME: "Gridiron StatScout"`, home-screen `StatScout`, paid tier `StatScout+`.
+ASO plan: `aso-plan.md` · `docs/astro-aso-setup.md` · `docs/localization-aso.md`.
+
 **This repo is NOT the fastlane template canonical source** — that lives in the
 baseball StatScout repo. Metadata/screenshots here are app-specific.
 

@@ -1,67 +1,111 @@
-# aso-plan.md — Baseball Savvy StatScout ASO Plan
+# aso-plan.md — Football Next: StatScout ASO Plan
 
-> Written 2026-06-25. App: **Baseball Savvy StatScout** (ID `6763945657`, repo `~/baseball`). Methodology: `~/Desktop/aso.md`.
+> Written 2026-07-29. App: **Football Next: StatScout** (ASC ID `6792930447`, bundle
+> `com.jackwallner.football`, repo `~/football`). Astro tracking app id `119` (temporary;
+> Astro has not indexed the real listing yet). Methodology ported from `~/baseball/aso-plan.md`
+> and `~/ios/archive/aso/2026-05/astro-global-aso-go-2026.md`.
 
 ---
 
 ## 0. TL;DR
 
-- **Positioning:** MLB Statcast percentile ranks for hitters/pitchers/fielders — NOT fantasy, NOT live scores.
-- **Entire niche at pop-5 floor** except homograph walls (`scout` pop 58, `mlb` pop 62, `savant` pop 7 non-baseball).
-- **Strong early authority:** `statcast` #2, `baseball savant` #3, `mlb savant` #24 (↑85).
-- **US edit:** subtitle add `Ranks`; swap `era,leaderboard` → `percentile,analytics` (~18%).
+- **Positioning:** NFL advanced-stat percentile ranks for QB/RB/WR/TE/DEF, plus seasons back to
+  2000 and All-Time career percentiles. NOT fantasy projections, NOT live scores, NOT betting.
+- **Niche is at the pop-5 floor** almost everywhere, same shape as baseball. Real traffic exists
+  only at `football` 71, `nfl` 70, `fantasy` 62, `fantasy football` 57, `nfl stats` 28,
+  `football stats` 24, `quarterback` 22, `gridiron` 18.
+- **`epa` is a homograph wall, not a metric term.** Pop 44 looks great until you read the SERP:
+  12/12 results are Environmental Protection Agency and HVAC EPA-608 exam prep apps. Removed
+  from the keyword field.
+- **US `football` intent is majority soccer.** NFL intent has to be captured through `nfl`
+  tokens; `football analytics` is winnable precisely because only 0-rating soccer AI-betting
+  apps hold it.
+- **Exact phrase match in the app name is the real lever here**, not popularity. "Iron: Football
+  Stats" ranks #4 on `football stats` (pop 24, diff 78) on the strength of its name and a single
+  rating.
 
 ---
 
-## 1. Competitor tiers
+## 1. Competitor tiers (US)
 
 | Tier | Apps |
 |---|---|
-| **WALL** | MLB app (849k★), Ballpark, theScore, ESPN/Yahoo Fantasy, Sleeper |
-| **WINNABLE PEERS** | FanGraphs (279★), Ball Knowers (43★), StatMuse (69★), Baseball Lab (6★) |
-| **ADJACENT** | HOF Sports Stats, RotoGrinders, betting/DFS apps |
+| **WALL** | FotMob (168k★), OneFootball (211k★), Sofascore (76k★), LiveScore (48k★) — all soccer, all sitting on `football stats` |
+| **NFL WALL** | NFL app, ESPN, Yahoo Fantasy, Sleeper, Superfan Sports (8.5k★) |
+| **WINNABLE PEERS** | Iron: Football Stats (1★), Next Play Stats (0★), SportsQuant (0★), Gridiron Oracle (1★), BlueChip Fantasy (12★) |
+| **ADJACENT** | StatMuse (72★), HOF Sports Stats (10k★), Props.cash (7.6k★) — multi-sport research/props |
+
+The entire `football analytics` SERP is 0-1 rating apps. That is the crack in the wall.
 
 ---
 
-## 2. US metadata change (staged)
+## 2. US metadata (staged on ASC draft 1.0, 2026-07-29)
 
-**Current:**
-- subtitle: `MLB Statcast Percentiles`
-- keywords: `savant,xwoba,oaa,wrc,wrcplus,barrel,era,exit,velocity,hitting,pitching,fielding,metrics,leaderboard`
+| Field | Value | Count |
+|---|---|---:|
+| **Name** | `Football Next: StatScout` | 24/30 |
+| **Subtitle** | `Advanced NFL Stats & Analytics` | 30/30 |
+| **Keywords** | `gen,cpoe,yac,percentile,rankings,compare,player,passing,rushing,receiving,defense,qb,fantasy,teams` | 98/100 |
 
-**Change to:**
-- subtitle → `MLB Statcast Percentile Ranks`
-- keywords → `savant,xwoba,oaa,wrc,wrcplus,barrel,exit,velocity,hitting,pitching,fielding,metrics,percentile,analytics`
+### What changed and why
 
 | OUT | IN | Why |
 |---|---|---|
-| era | percentile | era = pop 9 homograph (non-baseball); strengthens percentile cluster |
-| leaderboard | analytics | `baseball analytics` newly covered #99 |
+| `Football Next Play: StatScout` | `Football Next: StatScout` | "Play" carried no search weight; frees 5 chars and keeps the Next Gen Stats association |
+| `epa` | — | Homograph wall: SERP is 100% EPA/HVAC, zero football |
+| `nfl`, `football` | — | Already indexed via name + subtitle; Apple indexes name + subtitle + keywords together, so duplicating them wasted ~11 chars |
+| `nextgen` | `gen` | Apple tokenizes on spaces. `nextgen` is a distinct token that never matches the query "next gen stats"; `gen` + name's "Next" + subtitle's "Stats" does |
+| — | `compare`, `player`, `teams` | `player comparison` diff 5, `compare players` diff 17, `football team stats` diff 5, and all three are shipped features |
 
-90/100 chars · ~18% swap.
+### Cross-field combinations this buys
 
-**Never field-slot:** `mlb`, `scout`, `velo`, `sports`, `war` as standalone heads — homograph/generic walls despite pop.
+`football stats` · `football analytics` · `nfl stats` · `nfl analytics` · `advanced football
+stats` · `next gen stats` · `nfl percentile` · `football rankings` · `qb stats` · `passing
+stats` · `rushing stats` · `defense rankings` · `player comparison` · `football team stats` ·
+`fantasy football stats`
+
+**Never field-slot:** `epa`, `dfs`, `snap share`, `football app`, `american football`, `sports
+analytics`, `pro football` — homograph or authority walls despite popularity.
+
+### Name variant not taken
+
+`Football Next: NFL Stats` (24/30) would put the higher-traffic exact phrase in the name, which
+is what carries Iron: Football Stats to #4. Rejected to keep the StatScout brand string in the
+title. Revisit if `football stats` rank stalls past 200.
 
 ---
 
-## 3. Astro state (done 2026-06-25, tag migration complete)
+## 3. Astro state (2026-07-29)
 
-**US:** 58 keywords · **global:** ~164. Legacy `priority`/`phrase` retired; homograph walls re-tracked.
+**US:** 84 keywords tracked on app id `119`.
 
-| Tag | Keywords |
-|---|---|
-| `deployed` | savant, xwoba, oaa, wrc, wrcplus, barrel, exit, velocity, hitting, pitching, fielding, metrics, percentile, analytics |
-| `target` | baseball savant, mlb savant, statcast, statcast percentiles, baseball percentiles, savant stats, baseball analytics |
-| `wall` | mlb, scout, velo, sports, war, sports analytics, baseball app |
+| Tag | Count | Keywords |
+|---|---:|---|
+| `deployed` | 10 | percentile, gen, cpoe, yac, compare players, player comparison, qb stats, passing stats, rushing stats, defense rankings |
+| `target` | 16 | football analytics, nfl analytics, advanced football stats, football percentiles, nfl percentiles, next gen stats, football stats app, football metrics, football research, football stat tracker, football compare, football gen stats, nfl stats, football stats, football efficiency, nfl percentile |
+| `wall` | 18 | epa, dfs, snap share, football app, nfl team stats, football players, nfl players, running back, target share, fantasy football tools, dynasty fantasy football, nfl next gen, american football, sports analytics, pro football, nfl rankings, football tracker, nfl stats app |
+
+Astro cannot yet resolve real App Store ID `6792930447` (the listing has never been released).
+Re-point `scripts/.astro-app.json` and migrate tracking once it indexes.
 
 ---
 
 ## 4. Growth lever
 
-`mlb savant` climbing on authority alone — prioritize ratings/reviews from stat-nerd audience over further keyword churn.
+Every app holding `football analytics` and the lower slots of `football stats` has 0-1 ratings.
+Authority, not keyword churn, decides this niche. Prioritize the in-app review funnel
+(`StatScout/Services/ReviewPromptTracker.swift`) over further keyword edits.
+
+The differentiator no competitor advertises: **seasons back to 2000 plus All-Time career
+percentiles**. It is currently underclaimed in the listing copy.
 
 ---
 
 ## 5. Rollout
 
-Next version. Manual release.
+1. **Staged now:** en-US on ASC draft 1.0 (name, subtitle, keywords, promo, description,
+   8 screenshots at 1320x2868).
+2. **On approval:** 50-locale pass using the baseball methodology (native keywords, name/subtitle
+   dedupe, `aso-apply-locale-optimizations.py`, `astro-sync-all-stores.sh`,
+   `asc-finish-missed.sh`). See `docs/localization-aso.md`.
+3. **go refine:** 7-14 days after the listing is live and rank data exists.
