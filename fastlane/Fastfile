@@ -33,7 +33,7 @@ platform :ios do
       key_filepath: ENV["ASC_KEY_PATH"]
     )
 
-    app = Spaceship::ConnectAPI::App.find("com.jackwallner.baseball")
+    app = Spaceship::ConnectAPI::App.find("com.jackwallner.football")
     version = app.get_edit_app_store_version
     UI.user_error!("No editable version found") unless version
 
@@ -85,21 +85,23 @@ platform :ios do
         demo_user: "N/A — no login, no account system",
         demo_password: "",
         notes: <<~NOTES
-          StatScout is a read-only baseball statistics viewer with no user accounts or sign-in.
+          StatScout is a read-only NFL statistics viewer with no user accounts or sign-in.
 
           Core flow:
-          1. Launch app — new users see onboarding; returning users land on leaderboard
-          2. Scroll leaderboard of ~800+ players with percentile rankings
-          3. Tap player for profile with visual metric bars, standard stats, and year compare
-          4. Filter by Hitting, Pitching, Fielding, Running categories
-          5. Browse Teams tab for team rosters
-          6. Metrics tab shows best/worst performers per category
+          1. Launch app - new users see onboarding; returning users land on the leaderboard
+          2. Scroll the leaderboard of qualified players with percentile rankings, filtered by QB, RB, WR, TE, DEF
+          3. Tap a player for a profile with visual percentile bars, standard stats, and year-over-year compare
+          4. Trends ranks the league by who is heating up or cooling off
+          5. Teams covers all 32 clubs, advanced and standard
+          6. Compare puts any two players side by side
 
-          Pro features (IAP via RevenueCat):
-          - Historical seasons, player comparisons, year-over-year tracking
-          - Test with Sandbox account via RevenueCat
+          StatScout+ features (IAP via RevenueCat):
+          - Trends, recent form, player comparisons, team scouting, seasons back to 2000, All-Time career percentiles
+          - Test with a Sandbox account via RevenueCat
 
-          Known: Light mode only. No shadows. No accounts. No social features.
+          Data: public nflverse / nflreadpy NFL statistics, refreshed nightly. Not affiliated with the NFL, any NFL team, or the NFLPA. No league, team, or player imagery is used.
+
+          Known: no accounts, no social features, no live scores, no play-by-play, no projections or betting content.
         NOTES
       },
       submission_information: {
