@@ -69,33 +69,23 @@ enum GridironType {
     // SF Pro is the single language face throughout the app. Semantic styles
     // keep the hierarchy coherent and participate in Dynamic Type.
     //
-    // Every style is *condensed*. The leaderboard row, the team page and the
-    // comparison columns are all ported from the baseball build, which draws
-    // them in RobotoCondensed - so the fixed column widths they inherited (42pt
-    // rank, 44pt team, 48pt value) were measured against a narrow face. Setting
-    // those same widths in stock-width SF Pro is what left the team abbreviation
-    // and the stat value looking squeezed: the glyphs are ~15% wider, so "WAS"
-    // plus its colour dot no longer clears 44pt and the value column started
-    // shrinking itself via minimumScaleFactor.
-    //
-    // `.width(.condensed)` is the fix rather than smaller point sizes or wider
-    // columns: it recovers the horizontal budget the layout was designed around
-    // while keeping the text styles, so Dynamic Type still scales everything.
-    static let playerName   = Font.system(.title2, design: .default, weight: .bold).width(.condensed)
-    static let pageTitle    = Font.system(.title3, design: .default, weight: .bold).width(.condensed)
-    static let sectionTitle = Font.system(.caption, design: .default, weight: .bold).width(.condensed)
-    static let cardTitle    = Font.system(.headline, design: .default, weight: .semibold).width(.condensed)
-    static let body         = Font.system(.subheadline, design: .default).width(.condensed)
-    static let bodyBold     = Font.system(.subheadline, design: .default, weight: .semibold).width(.condensed)
-    static let small        = Font.system(.caption, design: .default).width(.condensed)
-    static let smallBold    = Font.system(.caption, design: .default, weight: .semibold).width(.condensed)
-    static let micro        = Font.system(.caption2, design: .default, weight: .semibold).width(.condensed)
+    // Stock width, deliberately. Build 16 shipped these condensed to buy back
+    // the horizontal budget the ported-from-baseball column widths (42pt rank,
+    // 44pt team, 48pt value) were measured against in RobotoCondensed, but the
+    // condensed face read worse than the mild squeeze it fixed. If a column
+    // needs more room, widen that column rather than narrowing every glyph.
+    static let playerName   = Font.system(.title2, design: .default, weight: .bold)
+    static let pageTitle    = Font.system(.title3, design: .default, weight: .bold)
+    static let sectionTitle = Font.system(.caption, design: .default, weight: .bold)
+    static let cardTitle    = Font.system(.headline, design: .default, weight: .semibold)
+    static let body         = Font.system(.subheadline, design: .default)
+    static let bodyBold     = Font.system(.subheadline, design: .default, weight: .semibold)
+    static let small        = Font.system(.caption, design: .default)
+    static let smallBold    = Font.system(.caption, design: .default, weight: .semibold)
+    static let micro        = Font.system(.caption2, design: .default, weight: .semibold)
 
     // Monospacing is reserved for values and ranks so numeric columns remain
-    // stable while every word uses the same SF Pro hierarchy above. Width
-    // variants don't apply to the monospaced design, so these stay as-is - the
-    // tabular digits are already narrow and, more to the point, a stat column
-    // that changed width per-row would defeat the reason it's monospaced.
+    // stable while every word uses the same SF Pro hierarchy above.
     static let statHero  = Font.system(.title, design: .monospaced, weight: .bold).monospacedDigit()
     static let statLarge = Font.system(.title3, design: .monospaced, weight: .bold).monospacedDigit()
     static let statMed   = Font.system(.subheadline, design: .monospaced, weight: .semibold).monospacedDigit()
