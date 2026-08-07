@@ -111,6 +111,23 @@ final class DashboardViewModel {
         !isPro && season != freeSeason
     }
 
+    /// The one season Recent form is offered for.
+    ///
+    /// Recent is a rolling last-N-games window read off `player_recent_form`,
+    /// and that rollup is only kept for the live season now: a "last 3 games"
+    /// board for 2017 is a historical curiosity nobody opened, and the game
+    /// logs behind it were the single biggest thing in the database. Anchored
+    /// to `freeSeason` rather than the calendar for the same reason the free
+    /// tier is - through September the calendar has named a season the
+    /// database has no rows for yet, and Trends would sit empty for the whole
+    /// preseason.
+    var recentFormSeason: Int { freeSeason }
+
+    /// Whether Recent/Both controls should appear for this season at all.
+    /// False hides the control rather than locking it: it is not a Pro upsell,
+    /// the data does not exist.
+    func supportsRecentForm(_ season: Int) -> Bool { season == recentFormSeason }
+
     /// Switch season, and fetch what that season needs.
     ///
     /// Season history is loaded lazily - the launch path only fetches the live

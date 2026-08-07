@@ -18,6 +18,10 @@ struct TeamStandardCard: View {
     /// Every player in the season, used to build the thirty-two team lines.
     let leaguePlayers: [Player]
     let fetchTeamGameLogs: ((String, Int, Date) async throws -> [PlayerGameLog])?
+    /// False on a historical season: the per-game logs a rolling window is built
+    /// from are only kept for the live season, so the control is hidden rather
+    /// than offered and left to come back empty.
+    var supportsRecent: Bool = true
     let onUpgradeTap: () -> Void
 
     @State private var side: TeamRankingsCard.Side = .offense
@@ -71,6 +75,12 @@ struct TeamStandardCard: View {
         RecentWindow(rawValue: windowGames) ?? .five
     }
 
+    /// What the card actually renders. The toggle survives a season change (it
+    /// is view state, the season is a parameter), so a user who turned Recent on
+    /// for the live season and then walked back to 2018 would otherwise sit in
+    /// front of a permanently empty window.
+    private var isRecent: Bool { showingRecent && supportsRecent }
+
     // MARK: - Body
 
     var body: some View {
@@ -83,21 +93,23 @@ struct TeamStandardCard: View {
                     selection: $side
                 )
                 .segmentCount(TeamRankingsCard.Side.allCases.count)
-                GridironSegmented(
-                    segments: [
-                        .init(value: false, label: "Season"),
-                        .init(value: true, label: "Recent", isLocked: !store.isPro),
-                    ],
-                    selection: $showingRecent,
-                    onLockedTap: { _ in onUpgradeTap() }
-                )
-                .segmentCount(2)
+                if supportsRecent {
+                    GridironSegmented(
+                        segments: [
+                            .init(value: false, label: "Season"),
+                            .init(value: true, label: "Recent", isLocked: !store.isPro),
+                        ],
+                        selection: $showingRecent,
+                        onLockedTap: { _ in onUpgradeTap() }
+                    )
+                    .segmentCount(2)
+                }
             }
             .padding(.horizontal, GridironGeo.padInline)
             .padding(.vertical, 8)
             .background(GridironPalette.surfaceAlt)
 
-            if showingRecent {
+            if isRecent {
                 GridironSegmented(
                     segments: RecentWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
                     selection: Binding(
@@ -110,7 +122,7 @@ struct TeamStandardCard: View {
                 .background(GridironPalette.surfaceAlt)
             }
 
-            if showingRecent {
+            if isRecent {
                 recentContent
             } else {
                 seasonContent
@@ -122,8 +134,8 @@ struct TeamStandardCard: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
-        .task(id: "\(team)-\(season)-\(showingRecent)-\(store.isPro)") {
-            if showingRecent, store.isPro { await load() }
+        .task(id: "\(team)-\(season)-\(isRecent)-\(store.isPro)") {
+            if isRecent, store.isPro { await load() }
         }
     }
 
