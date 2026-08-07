@@ -8,10 +8,25 @@ import time
 import urllib.parse
 import urllib.request
 from collections import Counter
+from datetime import date
+
+
+def _resolve_season() -> int:
+    """The season the pipeline is currently writing.
+
+    Same rule as backend/ingest.py::resolve_season and the app's
+    StatScoutSeason.current: an NFL season is named for the year it kicks off
+    in, so September onward belongs to this year. This used to fall back to a
+    literal 2025, which would have silently exported the 2026 season as
+    "historical" and shipped a bundle with no current year in it.
+    """
+    today = date.today()
+    return today.year if today.month >= 9 else today.year - 1
+
 
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 KEY = os.environ["SUPABASE_ANON_KEY"]
-CURRENT_SEASON = int(os.environ.get("STATCAST_SEASON", "2025"))
+CURRENT_SEASON = int(os.environ.get("STATCAST_SEASON") or _resolve_season())
 OLDEST_SUPPORTED_SEASON = 2000
 # Career rollup sentinel, written by backend/rollup_all_time.py. It ships in the
 # historical bundle so "All Time" works on first launch rather than waiting on a

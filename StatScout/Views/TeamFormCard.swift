@@ -23,6 +23,10 @@ struct TeamRankingsCard: View {
     /// curve-build time.
     let leaguePlayers: [Player]
     let fetchTeamGameLogs: ((String, Int, Date) async throws -> [PlayerGameLog])?
+    /// False on a historical season: rolling windows are built from per-game
+    /// logs, and those are only kept for the live season now, so Recent/Both
+    /// are hidden rather than offered and left to come back empty.
+    var supportsRecent: Bool = true
     let onUpgradeTap: () -> Void
 
     @State private var side: Side = .offense
@@ -54,6 +58,11 @@ struct TeamRankingsCard: View {
         var usesRecent: Bool { self != .season }
     }
 
+    /// The mode actually rendered. `mode` is view state and the season is a
+    /// parameter, so a user who picked Recent on the live season and then walked
+    /// back to 2018 would otherwise sit in front of a permanently empty window.
+    private var effectiveMode: Mode { supportsRecent ? mode : .season }
+
     /// Smallest team-window play count we'll treat as trustworthy - below this we
     /// flag the window as a small sample.
     private let smallSamplePlaysThreshold = 40
@@ -77,11 +86,11 @@ struct TeamRankingsCard: View {
             .padding(.vertical, 8)
             .background(GridironPalette.surfaceAlt)
 
-            if mode.usesRecent {
+            if effectiveMode.usesRecent {
                 windowPicker
             }
 
-            switch mode {
+            switch effectiveMode {
             case .season: seasonBars
             case .recent: recentSection
             case .both: bothSection
@@ -93,8 +102,8 @@ struct TeamRankingsCard: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
-        .task(id: "\(team)-\(season)-\(mode.rawValue)-\(store.isPro)") {
-            if mode.usesRecent, store.isPro { await load() }
+        .task(id: "\(team)-\(season)-\(effectiveMode.rawValue)-\(store.isPro)") {
+            if effectiveMode.usesRecent, store.isPro { await load() }
         }
         .onAppear { rebuildCurves() }
         .onChange(of: leaguePlayers.count) { _, _ in rebuildCurves() }
@@ -124,18 +133,21 @@ struct TeamRankingsCard: View {
         )
     }
 
+    @ViewBuilder
     private var modePicker: some View {
-        GridironSegmented(
-            segments: Mode.allCases.map {
-                .init(
-                    value: $0,
-                    label: $0.rawValue,
-                    isLocked: !store.isPro && $0 != .season
-                )
-            },
-            selection: $mode,
-            onLockedTap: { _ in onUpgradeTap() }
-        )
+        if supportsRecent {
+            GridironSegmented(
+                segments: Mode.allCases.map {
+                    .init(
+                        value: $0,
+                        label: $0.rawValue,
+                        isLocked: !store.isPro && $0 != .season
+                    )
+                },
+                selection: $mode,
+                onLockedTap: { _ in onUpgradeTap() }
+            )
+        }
     }
 
     private var bothSection: some View {

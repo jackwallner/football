@@ -144,7 +144,17 @@ struct TeamView: View {
     }
 
     private var isRosterRecent: Bool {
-        rosterMode == .recent && store.isPro
+        rosterMode == .recent && store.isPro && supportsRecent
+    }
+
+    /// Recent form exists for the live season only: the rolling windows and the
+    /// per-game logs behind them are no longer kept for finished seasons, so
+    /// every Recent control on this screen is hidden (not locked) on a
+    /// historical one. Falls back to the calendar when there is no view model,
+    /// which is the previews-and-tests path.
+    private var supportsRecent: Bool {
+        viewModel.map { $0.supportsRecentForm(displaySeason) }
+            ?? (displaySeason == StatScoutSeason.current)
     }
 
     private var filteredPlayers: [Player] {
@@ -305,6 +315,7 @@ struct TeamView: View {
             players: players,
             leaguePlayers: leaguePlayers,
             fetchTeamGameLogs: fetchTeamGameLogs,
+            supportsRecent: supportsRecent,
             onUpgradeTap: { showingTrial = true }
         )
         .padding(.horizontal, 12)
@@ -431,14 +442,17 @@ struct TeamView: View {
         }
     }
 
+    @ViewBuilder
     private var rosterModePicker: some View {
-        GridironSegmented(
-            segments: RosterMode.allCases.map {
-                .init(value: $0, label: $0.rawValue, isLocked: !store.isPro && $0 == .recent)
-            },
-            selection: $rosterMode,
-            onLockedTap: { _ in trialTrigger = .recentForm }
-        )
+        if supportsRecent {
+            GridironSegmented(
+                segments: RosterMode.allCases.map {
+                    .init(value: $0, label: $0.rawValue, isLocked: !store.isPro && $0 == .recent)
+                },
+                selection: $rosterMode,
+                onLockedTap: { _ in trialTrigger = .recentForm }
+            )
+        }
     }
 
     private var rosterFiltersMenu: some View {
