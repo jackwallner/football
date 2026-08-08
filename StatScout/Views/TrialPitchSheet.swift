@@ -196,8 +196,13 @@ struct TrialPitchSheet: View {
             // The one surface App Review cited under 3.1.2(c), reviewing
             // 1.0 (19): this sheet's button read "Start 7-day free trial" in
             // the largest type on screen while "$9.99 / year" sat in grey micro
-            // text below it. `.billedAmountFirst` swaps that round. Nothing
-            // else in the app asks for it, because nothing else was cited.
+            // text below it. `.billedAmountFirst` swaps their ranking without
+            // dropping the trial: the button now leads with the billed amount
+            // and keeps "Starts with a 7-day free trial" under it in micro, and
+            // the disclosure states the price first and the trial second. The
+            // trial is still the pitch, it is just no longer the loudest thing
+            // on the sheet. Nothing else in the app asks for this emphasis,
+            // because nothing else was cited.
             PlusDirectCTA(trigger: trigger, emphasis: .billedAmountFirst)
 
             // Legal links and the way out share a row, because three stacked

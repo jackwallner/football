@@ -14,6 +14,7 @@
 		0E57D0D337381AEB2F905D79 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 80FA4CA4AA0C875123767D0C /* PrivacyInfo.xcprivacy */; };
 		13627AAB67147D0AE5954433 /* StandardStatsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EAE4FBE4CF576F735F06C7 /* StandardStatsTests.swift */; };
 		14FE0A5789F558B6C9BBCA6A /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9C629EF1C253BCEAF314EF /* RootTabView.swift */; };
+		17124CBBF816F46215922CCE /* TrendsTeaserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157E8C62374F49106683CF14 /* TrendsTeaserTests.swift */; };
 		189D1222312FEE374CFA4DEE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 147A7B626DB00162FDED79EA /* SettingsView.swift */; };
 		194BDDCA1D45B8E71852DF10 /* StandardStatsLeadersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9CBAD749A639F5A5ADCF10B /* StandardStatsLeadersView.swift */; };
 		1C05ED9E954E365E79E177AC /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57A36C805E9D0AB83292B6F7 /* PaywallView.swift */; };
@@ -98,6 +99,7 @@
 		0C2D78846A3531791CF22EA6 /* UpgradeCTATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeCTATests.swift; sourceTree = "<group>"; };
 		13A6D136EE3F7A2B36956CA4 /* YearComparePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearComparePreview.swift; sourceTree = "<group>"; };
 		147A7B626DB00162FDED79EA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		157E8C62374F49106683CF14 /* TrendsTeaserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendsTeaserTests.swift; sourceTree = "<group>"; };
 		15914E954BD86B91C09E5C88 /* StatcastAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatcastAPI.swift; sourceTree = "<group>"; };
 		18DC891CB6C0193D0FAAE5FE /* players-historical.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "players-historical.plist"; sourceTree = "<group>"; };
 		1E4FF70B13A65617E39C4E75 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
@@ -219,6 +221,7 @@
 				348129804486AD22EB3D6517 /* RecentFormWindowTests.swift */,
 				B2EAE4FBE4CF576F735F06C7 /* StandardStatsTests.swift */,
 				651F39025F6839FC272B2181 /* StatDirectionTests.swift */,
+				157E8C62374F49106683CF14 /* TrendsTeaserTests.swift */,
 				0C2D78846A3531791CF22EA6 /* UpgradeCTATests.swift */,
 				A722423BB05C1EA767098065 /* YearComparisonFeatureTests.swift */,
 				74A4C751088FF846CA40BB91 /* YearComparisonTests.swift */,
@@ -492,6 +495,7 @@
 				F87783F707F9A9C7CD06AD7F /* RecentFormWindowTests.swift in Sources */,
 				13627AAB67147D0AE5954433 /* StandardStatsTests.swift in Sources */,
 				A211C246D1B8BD2A42CF97B0 /* StatDirectionTests.swift in Sources */,
+				17124CBBF816F46215922CCE /* TrendsTeaserTests.swift in Sources */,
 				3CB3B900460AE06C13D3A1A3 /* UpgradeCTATests.swift in Sources */,
 				F6AE33EDC77A2F71DFC9A244 /* YearComparisonFeatureTests.swift in Sources */,
 				6E2C32BBB0EB793230693961 /* YearComparisonTests.swift in Sources */,
@@ -583,7 +587,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = StatScout/StatScout.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CURRENT_PROJECT_VERSION = 28;
+				CURRENT_PROJECT_VERSION = 29;
 				DEVELOPMENT_TEAM = YXG4MP6W39;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StatScout/Info.plist;
@@ -702,7 +706,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = StatScout/StatScout.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 28;
+				CURRENT_PROJECT_VERSION = 29;
 				DEVELOPMENT_TEAM = YXG4MP6W39;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StatScout/Info.plist;
