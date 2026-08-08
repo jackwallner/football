@@ -133,9 +133,12 @@ struct OnboardingCards: View {
     /// and charges the yearly plan. So it may only read as a purchase when
     /// there is a loaded package to name a price from, and the full auto-renew
     /// terms have to be on screen with it. Deriving both from the same optional
-    /// is what stops them drifting apart, which is exactly how this shipped
-    /// wrong: a hard-coded "Continue with StatScout+" over a disclosure that is
-    /// nil until products load is a paid button with no price anywhere near it.
+    /// is what stops them drifting apart, which is how this shipped wrong once:
+    /// a hard-coded "Continue with StatScout+" over a disclosure that is nil
+    /// until products load is a paid button with no price anywhere near it.
+    ///
+    /// The wording itself matches the approved baseball build. App Review cited
+    /// `TrialPitchSheet`, not this screen, so this one is left as it shipped.
     private var yearlyOffer: (label: String, disclosure: String)? {
         guard store.yearlyPackage != nil,
               let disclosure = store.yearlyCTADisclosureText else { return nil }

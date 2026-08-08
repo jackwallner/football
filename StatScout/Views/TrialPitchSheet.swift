@@ -193,7 +193,12 @@ struct TrialPitchSheet: View {
             // Same control as every other pitch in the app: it buys the yearly
             // plan in place (trial when eligible, paid otherwise) and carries
             // its own auto-renew disclosure and "See all plans" escape hatch.
-            PlusDirectCTA(trigger: trigger)
+            // The one surface App Review cited under 3.1.2(c), reviewing
+            // 1.0 (19): this sheet's button read "Start 7-day free trial" in
+            // the largest type on screen while "$9.99 / year" sat in grey micro
+            // text below it. `.billedAmountFirst` swaps that round. Nothing
+            // else in the app asks for it, because nothing else was cited.
+            PlusDirectCTA(trigger: trigger, emphasis: .billedAmountFirst)
 
             // Legal links and the way out share a row, because three stacked
             // secondary lines under a button is three lines of nothing.

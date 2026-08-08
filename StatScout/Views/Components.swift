@@ -771,6 +771,9 @@ struct PlusDirectCTA: View {
     var style: Style = .bar
     /// Hidden where the surrounding screen already offers plan choice.
     var showsAllPlansLink: Bool = true
+    /// `.billedAmountFirst` on the one surface App Review cited (see
+    /// `PriceEmphasis`). Everything else keeps the approved build's copy.
+    var emphasis: PriceEmphasis = .trialFirst
 
     @State private var isPurchasing = false
     @State private var statusMessage: String?
@@ -783,11 +786,11 @@ struct PlusDirectCTA: View {
             }
             .buttonStyle(.plain)
             .disabled(isPurchasing)
-            .accessibilityLabel(store.directCTALabel(for: trigger))
+            .accessibilityLabel(store.directCTALabel(for: trigger, emphasis: emphasis))
 
             // Full auto-renew terms sit beside the purchase point, because this
             // button *is* the purchase point now (Apple 3.1.2).
-            if let disclosure = store.yearlyCTADisclosureText ?? store.paywallBlurSubtext {
+            if let disclosure = store.yearlyCTADisclosureText(emphasis: emphasis) ?? store.paywallBlurSubtext {
                 Text(disclosure)
                     .font(GridironType.micro)
                     .tracking(0.3)
@@ -804,24 +807,11 @@ struct PlusDirectCTA: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            // "See all plans" and the legal links share one row. The blur gates
-            // are the only transacting surfaces in the app that carry no
-            // Terms/Privacy of their own (onboarding, the trial sheet and the
-            // plan picker each have their own pair), and a button that charges
-            // the card needs the EULA beside it, not two screens away.
-            if showsAllPlansLink || style == .capsule {
-                HStack(spacing: 12) {
-                    if showsAllPlansLink {
-                        Button("See all plans") { showingPlans = true }
-                    }
-                    if style == .capsule {
-                        Link("Terms", destination: StatScoutLegal.termsURL)
-                        Link("Privacy", destination: StatScoutLegal.privacyURL)
-                    }
-                }
-                .font(GridironType.micro)
-                .tracking(0.3)
-                .foregroundStyle(GridironPalette.inkSecondary)
+            if showsAllPlansLink {
+                Button("See all plans") { showingPlans = true }
+                    .font(GridironType.micro)
+                    .tracking(0.3)
+                    .foregroundStyle(GridironPalette.inkSecondary)
             }
         }
         .frame(maxWidth: .infinity)
@@ -844,7 +834,7 @@ struct PlusDirectCTA: View {
                 } else {
                     Image(systemName: "crown.fill")
                         .font(.system(size: 11))
-                    Text(store.directCTALabel(for: trigger))
+                    Text(store.directCTALabel(for: trigger, emphasis: emphasis))
                         .font(GridironType.bodyBold)
                 }
             }
@@ -855,7 +845,7 @@ struct PlusDirectCTA: View {
             .clipShape(Capsule())
         case .bar:
             ZStack {
-                Text(store.directCTALabel(for: trigger))
+                Text(store.directCTALabel(for: trigger, emphasis: emphasis))
                     .font(GridironType.bodyBold)
                     .opacity(isPurchasing ? 0 : 1)
                 if isPurchasing {
