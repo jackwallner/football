@@ -491,6 +491,36 @@ final class StoreService: NSObject, ObservableObject {
         return "\(isWinback ? "Restart" : "Try") StatScout+ for \(price)"
     }
 
+    /// The trial, kept on the button but demoted beneath the billed amount.
+    ///
+    /// 3.1.2(c) does not forbid selling the free trial, it forbids selling it
+    /// *more prominently* than what the user will be charged. So the
+    /// `.billedAmountFirst` button carries both: the price on the top line in
+    /// the button's own type, this one underneath in micro at reduced opacity.
+    /// Dropping the trial from the button entirely would have cleared the
+    /// guideline by giving up the pitch, which is a worse trade than sizing it
+    /// correctly.
+    ///
+    /// nil when there is no trial to name, and on a win-back for the same
+    /// reason `directCTALabel` never leads with one there.
+    func directCTATrialSubline(for trigger: PaywallTrigger, emphasis: PriceEmphasis) -> String? {
+        guard let yearly = yearlyPackage else { return nil }
+        return Self.directCTATrialSubline(
+            trial: isEligibleForIntroOffer(yearly) ? yearly.introOfferLabel : nil,
+            isWinback: trigger == .winback,
+            emphasis: emphasis
+        )
+    }
+
+    nonisolated static func directCTATrialSubline(
+        trial: String?,
+        isWinback: Bool,
+        emphasis: PriceEmphasis
+    ) -> String? {
+        guard emphasis == .billedAmountFirst, !isWinback, let trial else { return nil }
+        return "Starts with a \(trial)"
+    }
+
     /// One-line secondary caption shown under the CTA when a trial is offered,
     /// so the price after the trial isn't hidden.
     var paywallBlurSubtext: String? {

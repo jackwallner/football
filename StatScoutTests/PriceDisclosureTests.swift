@@ -12,10 +12,14 @@ import XCTest
 /// screen, while "$9.99 / year" sat in grey micro text beneath it, and the
 /// disclosure led with the trial as well.
 ///
-/// The fix is scoped to that sheet. `PriceEmphasis.trialFirst` is what every
-/// other surface here and in the approved baseball build ships, and it stays
-/// that way deliberately: you fix what was cited and leave what shipped alone.
-/// Both orderings are pinned below so neither can drift into the other.
+/// The fix is scoped to that sheet, and it demotes the trial rather than
+/// deleting it: the guideline is about ranking, not about whether a trial may
+/// be advertised at all. `.billedAmountFirst` puts the price on the button's
+/// primary line and keeps the trial on a subordinate one beneath it, in micro.
+/// `PriceEmphasis.trialFirst` is what every other surface here and in the
+/// approved baseball build ships, and it stays that way deliberately: you fix
+/// what was cited and leave what shipped alone. Both orderings are pinned below
+/// so neither can drift into the other.
 final class PriceDisclosureTests: XCTestCase {
 
     private let renewSentence = "Auto-renews unless cancelled at least 24 hours before the end of the current period."
@@ -31,6 +35,54 @@ final class PriceDisclosureTests: XCTestCase {
         XCTAssertEqual(label, "Subscribe for $9.99 / year")
         XCTAssertFalse(label.lowercased().contains("trial"), "The cited CTA must not promote the trial: \(label)")
         XCTAssertFalse(label.lowercased().contains("free"), "The cited CTA must not promote the trial: \(label)")
+    }
+
+    /// The trial is still pitched on the cited sheet, one rank down. Losing
+    /// this line would clear 3.1.2(c) by giving up the offer, which is not the
+    /// trade being made.
+    func testCitedSheetStillSellsTheTrialOnASubordinateLine() {
+        let subline = StoreService.directCTATrialSubline(
+            trial: "7-day free trial", isWinback: false, emphasis: .billedAmountFirst
+        )
+        XCTAssertEqual(subline, "Starts with a 7-day free trial")
+    }
+
+    /// The subordinate line belongs to the cited emphasis alone. On every other
+    /// surface the trial is already the button's primary label, and a second
+    /// copy underneath would be the same offer twice.
+    func testTrialSublineOnlyExistsWhereThePriceLeads() {
+        XCTAssertNil(
+            StoreService.directCTATrialSubline(
+                trial: "7-day free trial", isWinback: false, emphasis: .trialFirst
+            )
+        )
+        XCTAssertNil(
+            StoreService.directCTATrialSubline(
+                trial: nil, isWinback: false, emphasis: .billedAmountFirst
+            ),
+            "Nothing to name when there is no trial"
+        )
+        XCTAssertNil(
+            StoreService.directCTATrialSubline(
+                trial: "7-day free trial", isWinback: true, emphasis: .billedAmountFirst
+            ),
+            "A win-back has already used the trial"
+        )
+    }
+
+    /// The whole rejection was about which element is louder, so pin the pair:
+    /// the price is on the primary line, the trial only on the secondary one.
+    func testTheCitedButtonRanksThePriceAboveTheTrial() {
+        let label = StoreService.directCTALabel(
+            price: "$9.99 / year", trial: "7-day free trial",
+            isWinback: false, emphasis: .billedAmountFirst
+        )
+        let subline = StoreService.directCTATrialSubline(
+            trial: "7-day free trial", isWinback: false, emphasis: .billedAmountFirst
+        )
+        XCTAssertTrue(label.contains("$9.99 / year"))
+        XCTAssertFalse(subline?.contains("$9.99") ?? false, "The price belongs on the primary line only")
+        XCTAssertTrue(subline?.lowercased().contains("free trial") ?? false)
     }
 
     func testCitedSheetDisclosureLeadsWithTheBilledAmount() {

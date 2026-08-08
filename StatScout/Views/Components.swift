@@ -786,7 +786,14 @@ struct PlusDirectCTA: View {
             }
             .buttonStyle(.plain)
             .disabled(isPurchasing)
-            .accessibilityLabel(store.directCTALabel(for: trigger, emphasis: emphasis))
+            .accessibilityLabel(
+                [
+                    store.directCTALabel(for: trigger, emphasis: emphasis),
+                    store.directCTATrialSubline(for: trigger, emphasis: emphasis),
+                ]
+                .compactMap { $0 }
+                .joined(separator: ". ")
+            )
 
             // Full auto-renew terms sit beside the purchase point, because this
             // button *is* the purchase point now (Apple 3.1.2).
@@ -844,17 +851,30 @@ struct PlusDirectCTA: View {
             .background(GridironPalette.turf)
             .clipShape(Capsule())
         case .bar:
+            // Two lines only where the emphasis asks for it: the billed amount
+            // in the button's own type, the trial under it in micro at 85%
+            // white. Same button, same height budget; the trial is still sold,
+            // just not louder than the price (Apple 3.1.2(c)).
+            let subline = store.directCTATrialSubline(for: trigger, emphasis: emphasis)
             ZStack {
-                Text(store.directCTALabel(for: trigger, emphasis: emphasis))
-                    .font(GridironType.bodyBold)
-                    .opacity(isPurchasing ? 0 : 1)
+                VStack(spacing: 1) {
+                    Text(store.directCTALabel(for: trigger, emphasis: emphasis))
+                        .font(GridironType.bodyBold)
+                    if let subline {
+                        Text(subline)
+                            .font(GridironType.micro)
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                }
+                .opacity(isPurchasing ? 0 : 1)
                 if isPurchasing {
                     ProgressView().tint(.white)
                 }
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 50)
+            .frame(minHeight: 50)
+            .padding(.vertical, subline == nil ? 0 : 6)
             .background(GridironPalette.turf)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }

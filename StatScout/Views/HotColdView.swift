@@ -553,19 +553,29 @@ struct HotColdView: View {
     ///
     /// The faces are real players from the selected group's roster (season data
     /// is free, so nothing is being given away), picked and ordered by a seed
-    /// built from the metric, the direction and the window. That's what makes
-    /// the board visibly redraw when a picker moves: with a fixed cast the
-    /// twelve team colours stayed in exactly the same order no matter what the
-    /// controls said, which gives the game away immediately.
+    /// built from every control that can change the real board: the metric, the
+    /// direction, the window and the season. That's what makes the board
+    /// visibly redraw when a picker moves: with a fixed cast the twelve team
+    /// colours stayed in exactly the same order no matter what the controls
+    /// said, which gives the game away immediately.
+    ///
+    /// The seed goes at the *front* of the hashed string, not the end, and that
+    /// is load-bearing. `stableSeed` is a rolling `h*31 + c` hash, so a
+    /// character appended last contributes a value of 0-127 to a number spread
+    /// across 100,003: switching the window from 3 to 5 games moved every
+    /// player's seed by the same +2 and the sort came out in exactly the same
+    /// order. Only the week labels changed, under a first row that had visibly
+    /// re-ranked. Put the seed first and each of its characters is multiplied
+    /// by 31 once per following character, so one digit reshuffles everything.
     private var teaserRows: [TeaserRow] {
         let count = 18
-        let seedSuffix = "\(metric.key)-\(showingCold)-\(viewModel.recentWindow.rawValue)"
-        let roster = viewModel.players(forSeason: viewModel.selectedSeason)
+        let seed = "\(metric.key)-\(showingCold)-\(viewModel.recentWindow.rawValue)-\(selectedSeason)-\(selectedPhase.rawValue)"
+        let roster = viewModel.players(forSeason: selectedSeason)
             .filter { ($0.playerType ?? "") == side.playerType }
         let names: [(String, String, String)]
         if roster.count >= count {
             names = roster
-                .map { ($0, Self.stableSeed("\($0.playerId)-\(seedSuffix)")) }
+                .map { ($0, Self.stableSeed("\(seed)-\($0.playerId)")) }
                 .sorted { $0.1 < $1.1 }
                 .prefix(count)
                 .map { ($0.0.name, $0.0.team, $0.0.initials) }
@@ -583,20 +593,28 @@ struct HotColdView: View {
                 ("Player Seventeen", "DEN", "PS"), ("Player Eighteen", "NYJ", "PE"),
             ]
             names = placeholders
-                .map { ($0, Self.stableSeed("\($0.0)-\(seedSuffix)")) }
+                .map { ($0, Self.stableSeed("\(seed)-\($0.0)")) }
                 .sorted { $0.1 < $1.1 }
                 .map { $0.0 }
         }
         // Centre and spread the invented values on the metric's own scale, so a
         // percentage reads 58%→66% and a yardage total reads 240→380.
-        let base: Double
-        let swing: Double
+        let scale: Double
+        let spread: Double
         switch metric.decimals {
-        case 0:  base = 280;  swing = 130
-        case 2:  base = 0.12; swing = 0.22
-        default: base = metric.unit == "%" ? 58 : 7.2
-                 swing = metric.unit == "%" ? 12 : 2.4
+        case 0:  scale = 280;  spread = 130
+        case 2:  scale = 0.12; spread = 0.22
+        default: scale = metric.unit == "%" ? 58 : 7.2
+                 spread = metric.unit == "%" ? 12 : 2.4
         }
+        // The column has to move with the controls as well as the cast. A
+        // reshuffled set of faces over an identical ladder of numbers (the same
+        // 0.12 → 0.34 at rank two under every window) reads as a template being
+        // repainted, which is the same tell the fixed cast was. A few percent
+        // of seed-derived drift is enough for it to look recomputed.
+        let drift = Double(Self.stableSeed(seed) % 1_000) / 1_000
+        let base = scale * (0.9 + 0.2 * drift)
+        let swing = spread * (0.85 + 0.3 * drift)
         // Cooling off inverts the movement, and a lower-is-better metric
         // inverts it again: heating up on INT% means the number falls.
         let improving = !showingCold
@@ -604,10 +622,13 @@ struct HotColdView: View {
         let window = viewModel.recentWindow.rawValue
 
         return names.enumerated().map { index, who in
-            let decay = max(0.15, 1.0 - Double(index) * 0.045)
+            // Per-row wobble, bounded well inside the 0.045 decay step so the
+            // board still reads as ranked: rank one always moved furthest.
+            let wobble = Double(Self.stableSeed("\(seed)-\(who.0)") % 100) / 100 * 0.03 - 0.015
+            let decay = max(0.15, 1.0 - Double(index) * 0.045 + wobble)
             let move = swing * decay
             let then = base - sign * move / 2
-            let endWeek = 18 - index % 3
+            let endWeek = 18 - (index + Self.stableSeed(seed)) % 3
             return TeaserRow(
                 name: who.0,
                 team: who.1,
@@ -622,7 +643,21 @@ struct HotColdView: View {
 
     /// Deterministic across launches, unlike `hashValue`, so the preview doesn't
     /// reshuffle itself on a redraw.
-    private static func stableSeed(_ text: String) -> Int {
-        abs(text.unicodeScalars.reduce(7) { ($0 &* 31 &+ Int($1.value)) % 100_003 })
+    ///
+    /// FNV-1a with a murmur3 finalizer rather than the `h*31 + c` this used to
+    /// be. The old one was affine: every seed mapped the players' hashes by the
+    /// same `h*k + c`, so changing the seed rotated one fixed cyclic order
+    /// instead of producing a new one, and a seed that differed only in its
+    /// last character barely moved the sort at all. The finalizer is what makes
+    /// one flipped bit anywhere in the string change the whole result.
+    static func stableSeed(_ text: String) -> Int {
+        var hash: UInt64 = 0xcbf2_9ce4_8422_2325
+        for scalar in text.unicodeScalars {
+            hash = (hash ^ UInt64(scalar.value)) &* 0x100_0000_01b3
+        }
+        hash ^= hash >> 33
+        hash = hash &* 0xff51_afd7_ed55_8ccd
+        hash ^= hash >> 33
+        return Int(hash % 100_003)
     }
 }
