@@ -73,8 +73,18 @@ targets:
     platform: iOS
     sources:
       - path: StatScoutTests
+      # Test bundle only - the app never ships it, so the store it talks to on
+      # a device is the real one. SKTestSession loads it by URL from here, which
+      # is what lets the paywall-copy tests run under plain `xcodebuild test`
+      # without the scheme's StoreKit setting or the UI-test runner (broken on
+      # the shared agent-sim pool).
+      - path: StatScout.storekit
+        buildPhase: resources
     dependencies:
       - target: StatScout
+      - package: RevenueCat
+      - sdk: StoreKitTest.framework
+        weak: true
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
