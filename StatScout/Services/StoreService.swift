@@ -431,19 +431,35 @@ final class StoreService: NSObject, ObservableObject {
 
     func directCTALabel(for trigger: PaywallTrigger) -> String {
         if let yearly = yearlyPackage {
-            if trigger != .winback,
-               isEligibleForIntroOffer(yearly),
-               let trial = yearly.introOfferLabel {
-                return "Start \(trial)"
-            }
-            let verb = trigger == .winback ? "Restart" : "Try"
-            return "\(verb) StatScout+ for \(yearly.priceLabel)"
+            return Self.directCTALabel(
+                price: yearly.priceLabel,
+                trial: isEligibleForIntroOffer(yearly) ? yearly.introOfferLabel : nil,
+                isWinback: trigger == .winback
+            )
         }
         if let price = proPrice {
             let verb = trigger == .winback ? "Restart" : "Unlock"
             return "\(verb) StatScout+ for \(price)"
         }
         return trigger == .winback ? "Restart StatScout+" : "Unlock StatScout+"
+    }
+
+    /// The label on a button that transacts, as a pure function of the offer.
+    ///
+    /// Every such button in the app routes through here, and every branch names
+    /// either the trial or the price - there is deliberately no "Continue"
+    /// escape hatch, because a button that charges the card and says only
+    /// "Continue" is what got the first submission rejected. The pure form
+    /// keeps that guarantee testable without configuring RevenueCat in the
+    /// simulator, same as `upgradeCTALabel(trialAvailable:)` above.
+    ///
+    /// A win-back never leads with the trial: a lapsed subscriber has already
+    /// used it, so offering it again is a promise the App Store will not keep.
+    nonisolated static func directCTALabel(price: String, trial: String?, isWinback: Bool) -> String {
+        if !isWinback, let trial {
+            return "Start \(trial)"
+        }
+        return "\(isWinback ? "Restart" : "Try") StatScout+ for \(price)"
     }
 
     /// One-line secondary caption shown under the CTA when a trial is offered,
@@ -468,12 +484,33 @@ final class StoreService: NSObject, ObservableObject {
     /// to any direct-purchase CTA so the price (and trial terms, when offered)
     /// are present at the point of purchase.
     var yearlyCTADisclosureText: String? {
-        guard let yearly = yearlyPackage else { return nil }
-        let renew = "Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions."
-        if isEligibleForIntroOffer(yearly), let trial = yearly.introOfferLabel {
-            return "\(trial.capitalized), then \(yearly.priceLabel). \(renew)"
+        yearlyPackage.map(disclosureText(for:))
+    }
+
+    /// The disclosure for one package. The plan picker renders this for
+    /// whichever plan is selected; every one-tap CTA renders it for the yearly
+    /// one. Both go through here so the wording can only ever be wrong once.
+    func disclosureText(for package: Package) -> String {
+        Self.disclosureText(
+            price: package.priceLabel,
+            isSubscription: package.productKind != .lifetime,
+            trial: isEligibleForIntroOffer(package) ? package.introOfferLabel : nil
+        )
+    }
+
+    /// The disclosure copy, as a pure function of the facts a purchase point
+    /// has to state: what it costs, whether it renews, and what the trial is.
+    /// Pure so the exact wording is testable with no RevenueCat, no StoreKit
+    /// and no network - see `PriceDisclosureTests`.
+    nonisolated static func disclosureText(price: String, isSubscription: Bool, trial: String?) -> String {
+        guard isSubscription else {
+            return "\(price). One-time purchase. Lifetime access, no subscription."
         }
-        return "\(yearly.priceLabel). \(renew)"
+        let renew = "Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions."
+        if let trial {
+            return "\(trial.capitalized), then \(price). \(renew)"
+        }
+        return "\(price). \(renew)"
     }
 
     /// The monthly package, when present. Used as the anchor when computing
@@ -552,6 +589,17 @@ final class StoreService: NSObject, ObservableObject {
         // Compare) render without a sandbox purchase. Never compiled into Release.
         if ProcessInfo.processInfo.environment["FORCE_PRO"] == "1" {
             isPro = true
+            return
+        }
+        // Launch with `-MockProducts` to run the *whole app* with priced
+        // packages on a simulator. RevenueCat is deliberately never configured
+        // there, so without this every paywall surface renders with no price
+        // and no disclosure, which makes exactly the copy App Review checks the
+        // one thing that cannot be checked before upload. Loads the same mock
+        // packages the screenshot harness uses: no configure, no StoreKit, no
+        // network, so the prod project stays clean.
+        if ProcessInfo.processInfo.arguments.contains("-MockProducts") {
+            loadScreenshotProducts()
             return
         }
         #endif
@@ -721,19 +769,23 @@ final class StoreService: NSObject, ObservableObject {
                 paymentMode: .freeTrial, subscriptionPeriod: .init(value: 1, unit: .week),
                 numberOfPeriods: 1, type: .introductory)
         }
+        // US prices as configured in App Store Connect (verified 2026-08-07:
+        // monthly 1.99, yearly 9.99, both with a one-week free trial). Mock
+        // prices that do not match the real ones make every screenshot taken
+        // through this path a picture of copy nobody will ever be shown.
         let monthly = TestStoreProduct(
             localizedTitle: "Gridiron Pro Monthly", price: 1.99, currencyCode: "USD",
             localizedPriceString: "$1.99", productIdentifier: StatScoutProduct.monthly,
             productType: .autoRenewableSubscription, localizedDescription: "Gridiron Pro, billed monthly.",
             subscriptionPeriod: .init(value: 1, unit: .month), introductoryDiscount: weekTrial(), locale: locale)
         let yearly = TestStoreProduct(
-            localizedTitle: "Gridiron Pro Yearly", price: 14.99, currencyCode: "USD",
-            localizedPriceString: "$14.99", productIdentifier: StatScoutProduct.yearly,
+            localizedTitle: "Gridiron Pro Yearly", price: 9.99, currencyCode: "USD",
+            localizedPriceString: "$9.99", productIdentifier: StatScoutProduct.yearly,
             productType: .autoRenewableSubscription, localizedDescription: "Gridiron Pro, billed yearly.",
             subscriptionPeriod: .init(value: 1, unit: .year), introductoryDiscount: weekTrial(), locale: locale)
         let lifetime = TestStoreProduct(
-            localizedTitle: "Gridiron Pro Lifetime", price: 29.99, currencyCode: "USD",
-            localizedPriceString: "$29.99", productIdentifier: StatScoutProduct.lifetime,
+            localizedTitle: "Gridiron Pro Lifetime", price: 19.99, currencyCode: "USD",
+            localizedPriceString: "$19.99", productIdentifier: StatScoutProduct.lifetime,
             productType: .nonConsumable, localizedDescription: "Gridiron Pro, one-time purchase.",
             subscriptionPeriod: nil, introductoryDiscount: nil, locale: locale)
         products = [

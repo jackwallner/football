@@ -354,6 +354,68 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertFalse(vm.supportsRecentForm(StatScoutSeason.earliestRecentForm - 1))
     }
 
+    /// The floor is a fact about the database, not a preference.
+    ///
+    /// Verified against the live Football project on 2026-08-07:
+    /// `player_game_logs` and `player_recent_form` hold 2025 and nothing else
+    /// (16,745 and 3,607 rows; 2024 and earlier return zero). `player_snapshots`
+    /// still carries 2024 and back, which is why season boards reach further
+    /// than form boards do. Moving this constant down without re-ingesting the
+    /// per-game tables first puts an empty year in the Trends menu.
+    func testRecentFormFloorMatchesTheSeasonsTheRollupStillHolds() {
+        XCTAssertEqual(StatScoutSeason.earliestRecentForm, 2025)
+        XCTAssertLessThanOrEqual(
+            StatScoutSeason.earliestRecentForm,
+            StatScoutSeason.current,
+            "The floor can never sit above the live season, or Recent Form vanishes entirely"
+        )
+    }
+
+    /// The Thursday-after-kickoff moment, end to end.
+    ///
+    /// The calendar names the new season on 1 September, but the first rows do
+    /// not land until the opener has been played and the nightly job has run.
+    /// So the app spends those days on last season and then has to move by
+    /// itself when the new one appears - no new build, no relaunch, and no
+    /// blank board in between. Written in terms of `current` rather than literal
+    /// years because the whole point is that it survives the calendar rolling.
+    @MainActor
+    func testTheAppMovesToTheNewSeasonTheDayItsDataLands() async {
+        let lastSeason = StatScoutSeason.current - 1
+        let lastSeasonRows = makeCompleteSeasonPlayers(season: lastSeason, namePrefix: "LastYear")
+
+        // Before kickoff: the calendar has named the season, the database has
+        // nothing for it.
+        let preKickoff = DashboardViewModel(provider: MockProvider(players: lastSeasonRows))
+        await preKickoff.load()
+
+        XCTAssertEqual(preKickoff.freeSeason, lastSeason, "Before kickoff the app holds last season")
+        XCTAssertFalse(preKickoff.isSeasonLocked(lastSeason), "and leaves it free while it is the newest with data")
+        XCTAssertFalse(
+            preKickoff.availableSeasons.contains(StatScoutSeason.current),
+            "an empty season is never offered in the menu"
+        )
+
+        // Kickoff night: the ingest writes the new season, the next fetch sees it.
+        let postKickoff = DashboardViewModel(
+            provider: MockProvider(players: lastSeasonRows + makeCompleteCurrentPlayers())
+        )
+        await postKickoff.load()
+
+        XCTAssertEqual(postKickoff.freeSeason, StatScoutSeason.current, "and moves on by itself once rows land")
+        XCTAssertFalse(postKickoff.isSeasonLocked(StatScoutSeason.current))
+        XCTAssertTrue(postKickoff.isSeasonLocked(lastSeason), "last season becomes Pro, not gone")
+        XCTAssertTrue(postKickoff.availableSeasons.contains(lastSeason))
+
+        // Recent Form follows the live season and keeps the one before it, as
+        // far back as the rollup table still reaches.
+        XCTAssertEqual(postKickoff.recentFormSeasons.first, StatScoutSeason.current)
+        XCTAssertEqual(
+            postKickoff.recentFormSeasons,
+            [StatScoutSeason.current, lastSeason].filter { $0 >= StatScoutSeason.earliestRecentForm }
+        )
+    }
+
     /// With the live season present, nothing changes: the free season is it.
     @MainActor
     func testFreeSeasonIsTheCurrentSeasonOnceItHasData() async {

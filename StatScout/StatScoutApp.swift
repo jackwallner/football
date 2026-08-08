@@ -126,12 +126,31 @@ struct OnboardingCards: View {
     private var dataReady: Bool { viewModel.isReady }
     private var showsUpsellBlock: Bool { isLastPage && !store.isPro }
 
+    /// The label on the onboarding CTA and the disclosure above it are one
+    /// decision, not two.
+    ///
+    /// This button transacts: tapping it puts Apple's confirm sheet on screen
+    /// and charges the yearly plan. So it may only read as a purchase when
+    /// there is a loaded package to name a price from, and the full auto-renew
+    /// terms have to be on screen with it. Deriving both from the same optional
+    /// is what stops them drifting apart, which is exactly how this shipped
+    /// wrong: a hard-coded "Continue with StatScout+" over a disclosure that is
+    /// nil until products load is a paid button with no price anywhere near it.
+    private var yearlyOffer: (label: String, disclosure: String)? {
+        guard store.yearlyPackage != nil,
+              let disclosure = store.yearlyCTADisclosureText else { return nil }
+        return (store.directCTALabel(for: .onboarding), disclosure)
+    }
+
+    /// Falls back to a label that promises nothing, because with no package
+    /// there is no price to state - and `buyYearly` sends that tap to the plan
+    /// picker rather than to a purchase.
     private var proCTALabel: String {
-        "Continue with StatScout+"
+        yearlyOffer?.label ?? "Upgrade to StatScout+"
     }
 
     private var trialDisclosure: String? {
-        store.yearlyCTADisclosureText
+        yearlyOffer?.disclosure
     }
 
     var body: some View {
@@ -176,6 +195,16 @@ struct OnboardingCards: View {
                 await store.fetchProducts()
             }
         }
+        #if DEBUG
+        // Screenshot harness: open on the page that carries the purchase CTA,
+        // so the label and its disclosure can be captured without swiping a
+        // carousel the runner cannot reliably drive.
+        .onAppear {
+            if PaywallScreenshotMode.current == .onboarding {
+                currentPage = pages.count - 1
+            }
+        }
+        #endif
         .sheet(item: $paywallTrigger) { trigger in
             PaywallView(trigger: trigger)
         }

@@ -128,12 +128,33 @@ struct RootTabView: View {
             floatingTabBar
         }
         .ignoresSafeArea(edges: .bottom)
+        #if DEBUG
+        .onAppear {
+            if let tab = Tab.launchArgument { selection = tab.rawValue }
+        }
+        #endif
     }
 
     private enum Tab: Int, CaseIterable, Identifiable {
         case stats, trends, teams, compare
 
         var id: Int { rawValue }
+
+        #if DEBUG
+        /// Launch with `-StartTab trends|teams|compare` to open straight on a
+        /// tab. The Pro gates live two and four tabs in, and the UI-test runner
+        /// cannot reliably drive this app to them on the shared simulator pool
+        /// (it reports the app as not running while a plain `simctl launch` of
+        /// the same build is perfectly healthy). Screenshotting a gate is the
+        /// only way to see its price copy, so the way in has to not depend on
+        /// synthesised taps. Compiled out of Release.
+        static var launchArgument: Tab? {
+            let arguments = ProcessInfo.processInfo.arguments
+            guard let index = arguments.firstIndex(of: "-StartTab"),
+                  index + 1 < arguments.count else { return nil }
+            return allCases.first { $0.title.lowercased() == arguments[index + 1].lowercased() }
+        }
+        #endif
 
         var title: String {
             switch self {
