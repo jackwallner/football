@@ -428,22 +428,18 @@ struct PaywallView: View {
 
     // MARK: - Copy
 
-    /// Names the billed amount, never the trial.
-    ///
-    /// Was "Start Free Trial", which made the trial the largest pricing claim
-    /// on the paywall while the amount charged sat in small grey type on the
-    /// plan card. That inversion is what 3.1.2(c) rejected.
     private var ctaTitle: String {
         guard let package = selectedPackage else { return "Continue" }
-        if package.productKind == .lifetime { return "Unlock Lifetime for \(package.priceLabel)" }
-        return "Subscribe for \(package.priceLabel)"
+        if package.productKind == .lifetime { return "Unlock Lifetime" }
+        if store.isEligibleForIntroOffer(package) { return "Start Free Trial" }
+        return "Subscribe"
     }
 
     /// Apple 3.1.2 disclosure adjacent to the purchase button. Shared with every
     /// one-tap CTA in the app, so the plan picker and the pop-ups state the same
     /// terms for the same plan.
     private var disclosureText: String? {
-        selectedPackage.map(store.disclosureText(for:))
+        selectedPackage.map { store.disclosureText(for: $0) }
     }
 
     // MARK: - Actions
@@ -561,43 +557,31 @@ private struct PaywallPlanCard: View {
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.ink)
                         if isMostPopular {
-                            Text("POPULAR")
+                            Text("MOST POPULAR")
                                 .font(GridironType.micro)
                                 .foregroundStyle(.white)
-                                .lineLimit(1)
-                                .fixedSize()
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(GridironPalette.turf, in: Capsule())
                         }
                     }
-                    // Trial and savings are subordinate pricing elements under
-                    // 3.1.2(c): smallest type, muted, never the turf green that
-                    // used to make them the liveliest thing on the card while
-                    // the amount charged sat in grey beside them.
                     if showsTrialBadge, let trial = package.introOfferLabel {
                         Text(trial.capitalized)
                             .font(GridironType.micro)
-                            .foregroundStyle(GridironPalette.inkTertiary)
+                            .foregroundStyle(GridironPalette.turf)
                     } else if let savingsPercent {
                         Text("Save \(savingsPercent)% vs monthly")
                             .font(GridironType.micro)
-                            .foregroundStyle(GridironPalette.inkTertiary)
+                            .foregroundStyle(GridironPalette.turf)
                     }
                 }
 
                 Spacer(minLength: 8)
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    // The billed amount: the largest and highest-contrast
-                    // pricing element on the card, by a clear margin. It was
-                    // `smallBold` in `inkSecondary`, which left it smaller and
-                    // greyer than the calculated per-month figure underneath.
                     Text(package.priceLabel)
-                        .font(GridironType.statLarge)
-                        .foregroundStyle(GridironPalette.ink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.inkSecondary)
                     if let perMonthLabel {
                         HStack(spacing: 5) {
                             if let monthlyAnchorLabel, savingsPercent != nil {
@@ -608,7 +592,7 @@ private struct PaywallPlanCard: View {
                             }
                             Text("\(perMonthLabel)/mo")
                                 .font(GridironType.micro)
-                                .foregroundStyle(GridironPalette.inkTertiary)
+                                .foregroundStyle(GridironPalette.ink)
                         }
                     }
                 }
