@@ -27,14 +27,15 @@ struct HotColdView: View {
     @State private var metric: TrendMetric = TrendMetric.qbAdvanced[0]
     @State private var selectedSeason: Int
     @State private var selectedPhase: SeasonPhase
+    @State private var paywallTrigger: PaywallTrigger?
 
     init(viewModel: DashboardViewModel, isActive: Bool = true) {
         self.viewModel = viewModel
         self.isActive = isActive
-        // Trends is a live-season board, not a season browser: `player_recent_form`
-        // is only kept for the newest season now, so this opens on that season
-        // whatever the Stats tab is pointed at rather than inheriting a 2017
-        // selection that would render an empty board.
+        // Trends is a recent-seasons board, not a season browser:
+        // `player_recent_form` is only kept for the newest two seasons, so this
+        // opens on the live one whatever the Stats tab is pointed at rather than
+        // inheriting a 2017 selection that would render an empty board.
         _selectedSeason = State(initialValue: viewModel.recentFormSeason)
         _selectedPhase = State(initialValue: viewModel.selectedPhase)
     }
@@ -108,10 +109,10 @@ struct HotColdView: View {
         .modifier(
             SeasonPhaseNavBar(
                 title: "Trends",
-                // One season, not the full menu. Everything older than the live
+                // Two seasons, not the full menu. Everything older than last
                 // season has no recent-form rows to rank, so listing 2000-2024
                 // here offered twenty-five ways to reach an empty board.
-                seasons: [viewModel.recentFormSeason],
+                seasons: viewModel.recentFormSeasons,
                 selectedSeason: selectedSeason,
                 selectedPhase: selectedPhase,
                 isSeasonLocked: viewModel.isSeasonLocked,
@@ -146,6 +147,9 @@ struct HotColdView: View {
         // once the first fetch lands (and again on the September rollover).
         .onChange(of: viewModel.recentFormSeason) { _, season in
             selectedSeason = season
+        }
+        .sheet(item: $paywallTrigger) { trigger in
+            TrialPitchSheet(trigger: trigger)
         }
     }
 
@@ -218,12 +222,16 @@ struct HotColdView: View {
         return nil
     }
 
-    /// Only the live season is offered here, and it is never the locked one
-    /// (the free tier is pinned to exactly that season), so this is a straight
-    /// assignment - the paywall path a multi-season menu needed is gone.
+    /// Two seasons are offered, and the older one is Pro: the free tier is
+    /// pinned to the live season everywhere, Trends included. So the locked row
+    /// opens the paywall rather than doing nothing, the same as the Stats menu.
     private func selectSeason(_ season: Int) {
-        guard season == viewModel.recentFormSeason else { return }
-        selectedSeason = season
+        guard viewModel.supportsRecentForm(season) else { return }
+        if viewModel.isSeasonLocked(season) {
+            paywallTrigger = .lockedSeason(season)
+        } else {
+            selectedSeason = season
+        }
     }
 
     /// Matches the persistent underlined position row at the top of Stats.

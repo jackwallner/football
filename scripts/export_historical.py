@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
-"""Export current and historical NFL snapshots from Supabase for the iOS bundle."""
+"""Export current and historical NFL snapshots from Supabase for the iOS bundle.
 
+Ahead of a September rollover, run this with next season's number to fold the
+outgoing season into the historical archive before it becomes historical:
+
+    STATCAST_SEASON=2026 python3 scripts/export_historical.py --historical-only
+
+`--historical-only` is what makes that safe. The current-season export would
+otherwise go looking for a season that has not kicked off yet and fail
+validation on an empty result. The app tolerates a bundle carrying the still-live
+season (`TwoTierPlayerCache.loadHistoricalPlayers` filters it out until the
+calendar catches up), so the build can ship months early.
+"""
+
+import argparse
 import json
 import os
 import subprocess
@@ -172,6 +185,14 @@ def export(
     )
 
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument(
+    "--historical-only",
+    action="store_true",
+    help="Skip the current-season export (for a pre-rollover STATCAST_SEASON).",
+)
+args = parser.parse_args()
+
 os.makedirs("StatScout/Data", exist_ok=True)
 export(
     "players-historical",
@@ -182,9 +203,10 @@ export(
     )],
     {ALL_TIME_SEASON} | set(range(OLDEST_SUPPORTED_SEASON, CURRENT_SEASON)),
 )
-export(
-    "players-current",
-    [("season", f"eq.{CURRENT_SEASON}")],
-    {CURRENT_SEASON},
-    require_rate_metrics=True,
-)
+if not args.historical_only:
+    export(
+        "players-current",
+        [("season", f"eq.{CURRENT_SEASON}")],
+        {CURRENT_SEASON},
+        require_rate_metrics=True,
+    )
