@@ -34,7 +34,7 @@ final class DashboardViewModel {
 
     private var userSortMetric: String?
     var sortDescending = true
-    var selectedSeason: Int = StatScoutSeason.current
+    var selectedSeason: Int = StatScoutSeason.lastSeasonWithData
     var selectedPhase: SeasonPhase = .regular
 
     var sortLabel: String { currentSortMetric ?? "Top Metric" }
@@ -105,7 +105,7 @@ final class DashboardViewModel {
     /// `isSeasonLocked` is called once per row while a twenty-seven-entry season
     /// menu is being laid out - deriving it from a flatMap over every loaded
     /// season each time walked 33k rows per call and hung the app on launch.
-    private(set) var freeSeason: Int = StatScoutSeason.free
+    private(set) var freeSeason: Int = StatScoutSeason.lastSeasonWithData
 
     func isSeasonLocked(_ season: Int) -> Bool {
         !isPro && season != freeSeason
@@ -130,10 +130,13 @@ final class DashboardViewModel {
     /// the live season alone left a hole every September: Trends would go blank
     /// for the year you were actually still reading about.
     ///
-    /// Newest first, so a menu built from this needs no further sorting. Clamped
-    /// at `earliest` so the first supported season never offers the year below it.
+    /// Newest first, so a menu built from this needs no further sorting. Floored
+    /// at `earliestRecentForm`, the oldest season the rollup table still holds -
+    /// without that, "the one before" resolves to a year that was purged and the
+    /// menu offers a board that can only come back empty.
     var recentFormSeasons: [Int] {
-        [recentFormSeason, recentFormSeason - 1].filter { $0 >= StatScoutSeason.earliest }
+        [recentFormSeason, recentFormSeason - 1]
+            .filter { $0 >= StatScoutSeason.earliestRecentForm }
     }
 
     /// Whether Recent/Both controls should appear for this season at all.
@@ -897,6 +900,10 @@ final class DashboardViewModel {
         freeSeason = seasonsWithData
             .filter { $0 != StatScoutSeason.allTime && $0 <= StatScoutSeason.free }
             .max() ?? StatScoutSeason.free
+        // Remembered so the next launch opens on this season directly instead of
+        // starting at the calendar's answer and correcting itself once a fetch
+        // for a season that has not kicked off yet comes back empty.
+        StatScoutSeason.rememberSeasonWithData(freeSeason)
         if !seasonsWithData.contains(selectedSeason),
            let mostRecentUnlocked = seasonsWithData.sorted(by: >).first(where: { !isSeasonLocked($0) }) {
             // Only auto-jump to a season the user can actually view; a free user

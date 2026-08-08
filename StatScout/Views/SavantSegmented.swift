@@ -126,6 +126,16 @@ struct GridironChip: View {
     var isActive: Bool = false
     /// Draws the StatScout+ crown. The caller still owns what a tap does.
     var isLocked: Bool = false
+    /// Let the label shrink rather than force the row wider than its container.
+    ///
+    /// `fixedSize()` is right for a chip in a scrolling filter row, where being
+    /// squeezed down to a bare icon is the failure mode. It is wrong inside a
+    /// half-width column. Compare puts a season pill and a "Regular Season" pill
+    /// side by side in each of two columns, and four unshrinkable pills demand
+    /// more width than a phone has - so, because `fixedSize` propagates upward,
+    /// the *whole page* grew past the viewport and every row on it clipped at
+    /// both edges instead of the pills simply getting smaller.
+    var compressible: Bool = false
 
     private var glyphColor: Color {
         isActive ? .white : GridironPalette.inkSecondary
@@ -143,6 +153,9 @@ struct GridironChip: View {
                     .font(GridironType.smallBold)
                     .foregroundStyle(isActive ? .white : GridironPalette.ink)
                     .lineLimit(1)
+                    // Shrink before truncating: "Regular Sea…" reads as broken,
+                    // a slightly smaller "Regular Season" does not.
+                    .minimumScaleFactor(compressible ? 0.75 : 1)
             }
             if isLocked {
                 Image(systemName: "crown.fill")
@@ -162,7 +175,7 @@ struct GridironChip: View {
                     .foregroundStyle(isActive ? .white : GridironPalette.turf)
             }
         }
-        .fixedSize()
+        .fixedSize(horizontal: !compressible, vertical: true)
         .padding(.horizontal, title == nil ? 0 : 12)
         // An icon-only chip stays a circle rather than collapsing to a sliver.
         .frame(width: title == nil ? GridironControl.height : nil,

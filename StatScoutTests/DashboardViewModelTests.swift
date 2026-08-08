@@ -315,10 +315,11 @@ final class DashboardViewModelTests: XCTestCase {
 
     /// Recent form covers the live season and the one before it.
     ///
-    /// Last season keeps its form board on purpose. Pinning this to the live
+    /// Last season keeps its form board on purpose: pinning this to the live
     /// season alone meant Trends went blank every September for the year people
-    /// were still reading about, and the rollup for it is kept in the database
-    /// precisely so that doesn't happen.
+    /// were still reading about. Asserted as rules rather than as literal years
+    /// because both ends move - the live season rolls over on its own, and the
+    /// floor is wherever the per-game purge left the rollup table.
     @MainActor
     func testRecentFormCoversTheLiveSeasonAndTheOneBefore() async {
         let vm = DashboardViewModel(provider: MockProvider(players: makeCompleteCurrentPlayers()))
@@ -326,34 +327,31 @@ final class DashboardViewModelTests: XCTestCase {
         await vm.load()
 
         XCTAssertEqual(vm.recentFormSeason, StatScoutSeason.current)
-        XCTAssertEqual(
-            vm.recentFormSeasons,
-            [StatScoutSeason.current, StatScoutSeason.current - 1],
-            "Newest first, so a menu built from this needs no sorting"
-        )
-        XCTAssertTrue(vm.supportsRecentForm(StatScoutSeason.current))
-        XCTAssertTrue(vm.supportsRecentForm(StatScoutSeason.current - 1))
-        XCTAssertFalse(vm.supportsRecentForm(StatScoutSeason.current - 2))
+        XCTAssertEqual(vm.recentFormSeasons.first, vm.freeSeason, "Newest first")
+        XCTAssertLessThanOrEqual(vm.recentFormSeasons.count, 2)
+        XCTAssertEqual(vm.recentFormSeasons, vm.recentFormSeasons.sorted(by: >))
+        XCTAssertTrue(vm.supportsRecentForm(vm.freeSeason))
+        for season in vm.recentFormSeasons {
+            XCTAssertTrue(vm.supportsRecentForm(season))
+        }
         XCTAssertFalse(vm.supportsRecentForm(StatScoutSeason.allTime))
     }
 
-    /// The window follows the data, not the calendar: before the new season has
-    /// rows, "live and the one before" still means the two years that exist.
+    /// Never offer a season the rollup table no longer holds.
+    ///
+    /// The per-game tables were purged back to `earliestRecentForm`, so
+    /// "the one before the live season" has to stop there. It didn't, and the
+    /// Trends menu gained an entry whose board could only ever come back empty.
     @MainActor
-    func testRecentFormSeasonsFollowTheNewestSeasonWithData() async {
-        let stale = makeCompleteSeasonPlayers(
-            season: StatScoutSeason.current - 1,
-            namePrefix: "LastYear"
-        )
-        let vm = DashboardViewModel(provider: MockProvider(players: stale))
+    func testRecentFormNeverOffersAPurgedSeason() async {
+        let vm = DashboardViewModel(provider: MockProvider(players: makeCompleteCurrentPlayers()))
 
         await vm.load()
 
-        XCTAssertEqual(
-            vm.recentFormSeasons,
-            [StatScoutSeason.current - 1, StatScoutSeason.current - 2]
-        )
-        XCTAssertFalse(vm.supportsRecentForm(StatScoutSeason.current))
+        for season in vm.recentFormSeasons {
+            XCTAssertGreaterThanOrEqual(season, StatScoutSeason.earliestRecentForm)
+        }
+        XCTAssertFalse(vm.supportsRecentForm(StatScoutSeason.earliestRecentForm - 1))
     }
 
     /// With the live season present, nothing changes: the free season is it.
