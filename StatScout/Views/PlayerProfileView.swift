@@ -10,6 +10,10 @@ struct PlayerProfileView: View {
     /// offered at all, both of which have to agree with the rest of the app
     /// once a new season is named but hasn't been ingested yet.
     var currentSeason: Int = StatScoutSeason.current
+    /// Seasons Recent form is offered for, from
+    /// `DashboardViewModel.recentFormSeasons`. Nil means "just `currentSeason`",
+    /// which is the previews-and-tests path.
+    var recentFormSeasons: [Int]?
     var isHistoricalLoading = false
     var hasLoadedHistorical = true
     var historicalLoadingMessage = "Loading past seasons…"
@@ -628,11 +632,11 @@ struct PlayerProfileView: View {
             // Recent mode only makes sense for the live season - game logs are
             // only fetched for the current season, so on a historical season it
             // would always read "No games".
-            if store.isPro, isCurrentSeasonActive {
+            if store.isPro, supportsRecentForm {
                 formModePicker
             }
 
-            if formDisplayMode != .season, store.isPro, isCurrentSeasonActive {
+            if formDisplayMode != .season, store.isPro, supportsRecentForm {
                 recentWindowPicker
                 if recentLoading {
                     HStack(spacing: 10) {
@@ -701,15 +705,28 @@ struct PlayerProfileView: View {
     /// Recent-form is anchored to the current season's game logs, so it's only
     /// meaningful while viewing the current season. Historical seasons render
     /// season bars only.
-    private var isCurrentSeasonActive: Bool {
-        (activeSeason ?? currentSeason) == currentSeason
+    /// Whether Recent / Both are offered for the season on screen.
+    ///
+    /// Was "is this the live season", which stopped being the rule when Recent
+    /// form was widened to the live season *and the one before it*. Trends and
+    /// Teams both moved to `DashboardViewModel.recentFormSeasons`; this page did
+    /// not, so from the first 2026 game onwards a subscriber opening a 2025
+    /// profile would have found no Recent control on a season whose game logs
+    /// are right there, and which the Trends board two taps away still ranks.
+    ///
+    /// Falls back to the single-season rule when no list is supplied, which is
+    /// the previews-and-tests path.
+    private var supportsRecentForm: Bool {
+        let season = activeSeason ?? currentSeason
+        guard let recentFormSeasons else { return season == currentSeason }
+        return recentFormSeasons.contains(season)
     }
 
     /// The mode rows actually render in - forced back to `.season` on a
     /// historical season so a user who toggled Recent/Both doesn't see stale
     /// current-season windows against past-season bars.
     private var effectiveFormDisplayMode: FormDisplayMode {
-        isCurrentSeasonActive ? formDisplayMode : .season
+        supportsRecentForm ? formDisplayMode : .season
     }
 
     private var recentWindow: RecentFormWindow? {
@@ -1111,7 +1128,7 @@ struct PlayerProfileView: View {
 
             // Recent only means something on the season the rollup covers; on a
             // past season the window would always be empty.
-            if isCurrentSeasonActive {
+            if supportsRecentForm {
                 standardModePicker
                 if effectiveStandardMode != .season {
                     standardWindowPicker
@@ -1160,7 +1177,7 @@ struct PlayerProfileView: View {
     }
 
     private var effectiveStandardMode: FormDisplayMode {
-        (store.isPro && isCurrentSeasonActive) ? standardMode : .season
+        (store.isPro && supportsRecentForm) ? standardMode : .season
     }
 
     private var standardModePicker: some View {
