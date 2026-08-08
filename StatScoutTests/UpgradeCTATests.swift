@@ -2,12 +2,15 @@ import XCTest
 @testable import Gridiron_StatScout
 
 final class UpgradeCTATests: XCTestCase {
-    func testSaysTryFreeWhenATrialIsAvailable() {
-        XCTAssertEqual(StoreService.upgradeCTALabel(trialAvailable: true), "Try Free")
-    }
-
-    func testFallsBackToUpgradeWithoutATrial() {
-        XCTAssertEqual(StoreService.upgradeCTALabel(trialAvailable: false), "Upgrade")
+    /// Never "Try Free", trial or not. The entry-point pill appears on every
+    /// screen, so a trial promoted there is the loudest pricing claim in the
+    /// app, and it carries no billed amount to be subordinate to (3.1.2(c)).
+    func testEntryPointNeverPromotesTheTrial() {
+        for trialAvailable in [true, false] {
+            let label = StoreService.upgradeCTALabel(trialAvailable: trialAvailable)
+            XCTAssertEqual(label, "Upgrade")
+            XCTAssertFalse(label.lowercased().contains("free"))
+        }
     }
 
     func testOneLabelFitsEveryEntryPoint() {
