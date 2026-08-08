@@ -449,6 +449,7 @@ struct PlayerProfileDestination: ViewModifier {
                         phase: profilePhase
                     ),
                     currentSeason: viewModel.freeSeason,
+                    recentFormSeasons: viewModel.recentFormSeasons,
                     isHistoricalLoading: viewModel.isHistoricalLoading,
                     hasLoadedHistorical: viewModel.hasLoadedHistorical,
                     historicalLoadingMessage: viewModel.loadingMessage,
