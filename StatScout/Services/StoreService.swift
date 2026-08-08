@@ -412,18 +412,13 @@ final class StoreService: NSObject, ObservableObject {
     /// The short label every upgrade entry point uses: the nav-bar pill, the
     /// Settings row, the floating tab bar's crown.
     ///
-    /// Said "Try Free" when a trial was available. That put the most repeated,
-    /// highest-contrast trial promotion in the app on every single screen, in a
-    /// yellow pill that names no price at all. It sits just outside the purchase
-    /// flow 3.1.2(c) governs, but it is the first thing a reviewer re-reviewing
-    /// a trial-prominence rejection will look at, and it buys nothing that the
-    /// paywall behind it does not say better. One word either way.
-    ///
-    /// `trialAvailable` is kept in the signature because callers read it from
-    /// the store and the branch may come back if the guideline is ever read
-    /// differently; today both branches deliberately agree.
+    /// Matches the approved baseball build exactly. These are navigation
+    /// affordances that open the offer, not the offer itself, so they sit
+    /// outside the purchase flow 3.1.2(c) governs and App Review did not cite
+    /// them. The pure helper keeps the trial branch testable without
+    /// configuring RevenueCat in Simulator.
     nonisolated static func upgradeCTALabel(trialAvailable: Bool) -> String {
-        "Upgrade"
+        trialAvailable ? "Try Free" : "Upgrade"
     }
 
     var isYearlyTrialAvailable: Bool {
