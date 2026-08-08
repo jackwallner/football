@@ -409,10 +409,21 @@ final class StoreService: NSObject, ObservableObject {
         directCTALabel(for: .upgrade)
     }
 
-    /// The short label every upgrade entry point uses. The pure helper keeps
-    /// the trial branch testable without configuring RevenueCat in Simulator.
+    /// The short label every upgrade entry point uses: the nav-bar pill, the
+    /// Settings row, the floating tab bar's crown.
+    ///
+    /// Said "Try Free" when a trial was available. That put the most repeated,
+    /// highest-contrast trial promotion in the app on every single screen, in a
+    /// yellow pill that names no price at all. It sits just outside the purchase
+    /// flow 3.1.2(c) governs, but it is the first thing a reviewer re-reviewing
+    /// a trial-prominence rejection will look at, and it buys nothing that the
+    /// paywall behind it does not say better. One word either way.
+    ///
+    /// `trialAvailable` is kept in the signature because callers read it from
+    /// the store and the branch may come back if the guideline is ever read
+    /// differently; today both branches deliberately agree.
     nonisolated static func upgradeCTALabel(trialAvailable: Bool) -> String {
-        trialAvailable ? "Try Free" : "Upgrade"
+        "Upgrade"
     }
 
     var isYearlyTrialAvailable: Bool {
@@ -431,11 +442,7 @@ final class StoreService: NSObject, ObservableObject {
 
     func directCTALabel(for trigger: PaywallTrigger) -> String {
         if let yearly = yearlyPackage {
-            return Self.directCTALabel(
-                price: yearly.priceLabel,
-                trial: isEligibleForIntroOffer(yearly) ? yearly.introOfferLabel : nil,
-                isWinback: trigger == .winback
-            )
+            return Self.directCTALabel(price: yearly.priceLabel, isWinback: trigger == .winback)
         }
         if let price = proPrice {
             let verb = trigger == .winback ? "Restart" : "Unlock"
@@ -446,29 +453,32 @@ final class StoreService: NSObject, ObservableObject {
 
     /// The label on a button that transacts, as a pure function of the offer.
     ///
-    /// Every such button in the app routes through here, and every branch names
-    /// either the trial or the price - there is deliberately no "Continue"
-    /// escape hatch, because a button that charges the card and says only
-    /// "Continue" is what got the first submission rejected. The pure form
-    /// keeps that guarantee testable without configuring RevenueCat in the
-    /// simulator, same as `upgradeCTALabel(trialAvailable:)` above.
+    /// Always the billed amount, never the trial. This button carries the
+    /// largest, highest-contrast text in any purchase flow it appears in, so
+    /// whatever it names becomes the most conspicuous pricing element on
+    /// screen - and Guideline 3.1.2(c) requires that to be the amount the user
+    /// will actually be charged. It used to read "Start 7-day free trial",
+    /// which is exactly what App Review rejected 1.0 (19) for: the trial
+    /// promoted more prominently than the price.
     ///
-    /// A win-back never leads with the trial: a lapsed subscriber has already
-    /// used it, so offering it again is a promise the App Store will not keep.
-    nonisolated static func directCTALabel(price: String, trial: String?, isWinback: Bool) -> String {
-        if !isWinback, let trial {
-            return "Start \(trial)"
-        }
-        return "\(isWinback ? "Restart" : "Try") StatScout+ for \(price)"
+    /// The trial is not hidden, it is subordinated: it appears in the
+    /// disclosure directly beneath, in the smallest type on the screen, which
+    /// is the position and size the guideline asks for.
+    ///
+    nonisolated static func directCTALabel(price: String, isWinback: Bool) -> String {
+        "\(isWinback ? "Restart" : "Subscribe") for \(price)"
     }
 
-    /// One-line secondary caption shown under the CTA when a trial is offered,
-    /// so the price after the trial isn't hidden.
+    /// One-line secondary caption shown under the CTA when a trial is offered.
+    ///
+    /// Leads with the billed amount, not with "Then". The old wording put the
+    /// price in the shadow of a trial the button had already announced in much
+    /// larger type, which is the arrangement 3.1.2(c) forbids.
     var paywallBlurSubtext: String? {
         guard let yearly = products.first(where: { $0.productKind == .yearly }),
               isEligibleForIntroOffer(yearly),
               yearly.introOfferLabel != nil else { return nil }
-        return "Then \(yearly.priceLabel). Cancel anytime."
+        return "\(yearly.priceLabel), after a \(yearly.introOfferLabel ?? "free trial"). Cancel anytime."
     }
 
     /// The yearly package - the one-tap conversion target for every trial /
@@ -502,13 +512,17 @@ final class StoreService: NSObject, ObservableObject {
     /// has to state: what it costs, whether it renews, and what the trial is.
     /// Pure so the exact wording is testable with no RevenueCat, no StoreKit
     /// and no network - see `PriceDisclosureTests`.
+    ///
+    /// The billed amount comes first in every branch. It used to read
+    /// "7-Day Free Trial, then $9.99 / year", which led with the trial in the
+    /// one line of copy that exists to state the price.
     nonisolated static func disclosureText(price: String, isSubscription: Bool, trial: String?) -> String {
         guard isSubscription else {
             return "\(price). One-time purchase. Lifetime access, no subscription."
         }
         let renew = "Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions."
         if let trial {
-            return "\(trial.capitalized), then \(price). \(renew)"
+            return "\(price), billed after a \(trial). \(renew)"
         }
         return "\(price). \(renew)"
     }
