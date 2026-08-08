@@ -111,22 +111,35 @@ final class DashboardViewModel {
         !isPro && season != freeSeason
     }
 
-    /// The one season Recent form is offered for.
+    /// The season Recent form opens on: the live one.
     ///
-    /// Recent is a rolling last-N-games window read off `player_recent_form`,
-    /// and that rollup is only kept for the live season now: a "last 3 games"
-    /// board for 2017 is a historical curiosity nobody opened, and the game
-    /// logs behind it were the single biggest thing in the database. Anchored
-    /// to `freeSeason` rather than the calendar for the same reason the free
-    /// tier is - through September the calendar has named a season the
+    /// Anchored to `freeSeason` rather than the calendar for the same reason
+    /// the free tier is - through September the calendar has named a season the
     /// database has no rows for yet, and Trends would sit empty for the whole
     /// preseason.
     var recentFormSeason: Int { freeSeason }
 
+    /// The seasons Recent form is offered for: the live one and the one before it.
+    ///
+    /// Recent is a rolling last-N-games window read off `player_recent_form`,
+    /// and that rollup is not kept for all time: a "last 3 games" board for 2017
+    /// is a historical curiosity nobody opened, and the game logs behind it were
+    /// the single biggest thing in the database, so everything older was purged.
+    /// Last season survives the cut deliberately. A season does not stop being
+    /// worth a form board the moment the next one kicks off, and pinning this to
+    /// the live season alone left a hole every September: Trends would go blank
+    /// for the year you were actually still reading about.
+    ///
+    /// Newest first, so a menu built from this needs no further sorting. Clamped
+    /// at `earliest` so the first supported season never offers the year below it.
+    var recentFormSeasons: [Int] {
+        [recentFormSeason, recentFormSeason - 1].filter { $0 >= StatScoutSeason.earliest }
+    }
+
     /// Whether Recent/Both controls should appear for this season at all.
     /// False hides the control rather than locking it: it is not a Pro upsell,
     /// the data does not exist.
-    func supportsRecentForm(_ season: Int) -> Bool { season == recentFormSeason }
+    func supportsRecentForm(_ season: Int) -> Bool { recentFormSeasons.contains(season) }
 
     /// Switch season, and fetch what that season needs.
     ///

@@ -102,7 +102,22 @@ struct TwoTierPlayerCache: PlayerCaching {
         return []
     }
 
+    /// The historical tier, never including the live season.
+    ///
+    /// The bundled archive is regenerated *ahead* of a season rollover, so a
+    /// shipped build can carry the season that is still live when it installs.
+    /// Those rows are a frozen mid-season snapshot, and `loadHistoricalIfNeeded`
+    /// merges history over whatever is already loaded, so left in they would
+    /// overwrite the live feed with stale numbers the moment someone opened a
+    /// past season. Filtered on read rather than stripped from the archive: the
+    /// rows are wanted, just not yet, and they become the newest historical
+    /// season by themselves once the calendar rolls over. The career rollup
+    /// sits under season 0 and so is always kept.
     func loadHistoricalPlayers() -> [Player] {
+        loadHistoricalCandidates().filter { ($0.season ?? 0) < StatScoutSeason.current }
+    }
+
+    private func loadHistoricalCandidates() -> [Player] {
         let bundled = loadBundledPlayers(named: historicalBundleResourceName)
         let bundledIsComplete = bundled.map(PlayerSnapshotValidator.isCompleteHistorical) ?? false
 

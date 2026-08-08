@@ -313,6 +313,49 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertFalse(vm.availableSeasons.contains(StatScoutSeason.current))
     }
 
+    /// Recent form covers the live season and the one before it.
+    ///
+    /// Last season keeps its form board on purpose. Pinning this to the live
+    /// season alone meant Trends went blank every September for the year people
+    /// were still reading about, and the rollup for it is kept in the database
+    /// precisely so that doesn't happen.
+    @MainActor
+    func testRecentFormCoversTheLiveSeasonAndTheOneBefore() async {
+        let vm = DashboardViewModel(provider: MockProvider(players: makeCompleteCurrentPlayers()))
+
+        await vm.load()
+
+        XCTAssertEqual(vm.recentFormSeason, StatScoutSeason.current)
+        XCTAssertEqual(
+            vm.recentFormSeasons,
+            [StatScoutSeason.current, StatScoutSeason.current - 1],
+            "Newest first, so a menu built from this needs no sorting"
+        )
+        XCTAssertTrue(vm.supportsRecentForm(StatScoutSeason.current))
+        XCTAssertTrue(vm.supportsRecentForm(StatScoutSeason.current - 1))
+        XCTAssertFalse(vm.supportsRecentForm(StatScoutSeason.current - 2))
+        XCTAssertFalse(vm.supportsRecentForm(StatScoutSeason.allTime))
+    }
+
+    /// The window follows the data, not the calendar: before the new season has
+    /// rows, "live and the one before" still means the two years that exist.
+    @MainActor
+    func testRecentFormSeasonsFollowTheNewestSeasonWithData() async {
+        let stale = makeCompleteSeasonPlayers(
+            season: StatScoutSeason.current - 1,
+            namePrefix: "LastYear"
+        )
+        let vm = DashboardViewModel(provider: MockProvider(players: stale))
+
+        await vm.load()
+
+        XCTAssertEqual(
+            vm.recentFormSeasons,
+            [StatScoutSeason.current - 1, StatScoutSeason.current - 2]
+        )
+        XCTAssertFalse(vm.supportsRecentForm(StatScoutSeason.current))
+    }
+
     /// With the live season present, nothing changes: the free season is it.
     @MainActor
     func testFreeSeasonIsTheCurrentSeasonOnceItHasData() async {

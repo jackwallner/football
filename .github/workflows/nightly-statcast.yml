@@ -135,24 +135,19 @@ jobs:
           set -o pipefail
           python backend/rollup_recent_form.py 2>&1 | tee recent_form_rollup.log
 
-      # Recent Form is a live-season feature, so the two per-game tables behind
-      # it keep one season only. Runs after the rollup, and cuts on the newest
-      # season actually present rather than the calendar, so last season's rows
-      # survive until the first game of the new one has landed.
+      # No prune step, on purpose. `backend/prune_history.py` is kept as a
+      # manual tool (see its docstring) rather than run nightly.
       #
-      # Skipped on a backfill: a range re-ingest is the one case where older
-      # seasons are being written on purpose, and pruning them in the same run
-      # would delete the work as it finished.
-      - name: Prune per-game history to the live season
-        if: inputs.backfill_seasons == ''
-        shell: bash
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          set -o pipefail
-          python backend/prune_history.py 2>&1 | tee prune_history.log
-
+      # The one-off purge already took the per-game tables down to the newest
+      # season, and nothing here ever writes an older one: both the game-log
+      # ingest and the rollup run against the resolved current season. So
+      # through the 2026 season these tables can only ever hold 2025 and 2026,
+      # about 26 MB a season, which is a rounding error against the 500 MB
+      # budget. A nightly DELETE that has nothing to delete is pure risk: it
+      # would have fired on the Sept 9 opener and dropped 2025's rows while the
+      # app still called 2025 the live season (the app waits for 30 teams of
+      # new-season data before switching). Prune again in a later offseason if
+      # the size ever justifies it.
       - name: Upload artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
