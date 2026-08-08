@@ -5,13 +5,21 @@ struct PaywallScreenshotHarness: View {
     let mode: PaywallScreenshotMode
     @StateObject private var store = StoreService.shared
 
+    @State private var onboardingComplete = false
+
     var body: some View {
         Group {
-            if mode == .trial {
+            switch mode {
+            case .trial:
                 trialBackdrop {
                     TrialPitchSheet(trigger: .upgrade)
                 }
-            } else {
+            case .onboarding:
+                OnboardingCards(
+                    viewModel: DashboardViewModel(),
+                    hasCompletedOnboarding: $onboardingComplete
+                )
+            case .monthly, .yearly, .lifetime:
                 PaywallView(trigger: .upgrade)
             }
         }

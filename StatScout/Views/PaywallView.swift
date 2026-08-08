@@ -435,18 +435,11 @@ struct PaywallView: View {
         return "Subscribe"
     }
 
-    /// Apple 3.1.2 disclosure adjacent to the purchase button.
+    /// Apple 3.1.2 disclosure adjacent to the purchase button. Shared with every
+    /// one-tap CTA in the app, so the plan picker and the pop-ups state the same
+    /// terms for the same plan.
     private var disclosureText: String? {
-        guard let package = selectedPackage else { return nil }
-        let price = package.priceLabel
-        if package.productKind == .lifetime {
-            return "\(price). One-time purchase. Lifetime access, no subscription."
-        }
-        let renew = "Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions."
-        if store.isEligibleForIntroOffer(package), let trial = package.introOfferLabel {
-            return "\(trial.capitalized), then \(price). \(renew)"
-        }
-        return "\(price). \(renew)"
+        selectedPackage.map(store.disclosureText(for:))
     }
 
     // MARK: - Actions
@@ -459,7 +452,7 @@ struct PaywallView: View {
                 selectedPackage = store.products.first { $0.productKind == .monthly }
             case .lifetime:
                 selectedPackage = store.products.first { $0.productKind == .lifetime }
-            case .yearly, .trial:
+            case .yearly, .trial, .onboarding:
                 selectedPackage = store.products.first { $0.productKind == .yearly }
             }
             return
