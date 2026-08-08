@@ -765,7 +765,8 @@ struct CompareView: View {
                 ) {
                     GridironInlinePill(
                         systemImage: "calendar",
-                        title: SeasonLabel.text(season)
+                        title: SeasonLabel.text(season),
+                        compressible: true
                     )
                 }
 
@@ -775,7 +776,8 @@ struct CompareView: View {
                 ) {
                     GridironInlinePill(
                         systemImage: nil,
-                        title: phase.label
+                        title: phase.label,
+                        compressible: true
                     )
                 }
             }
@@ -837,7 +839,11 @@ struct CompareView: View {
                         }
                     }
                 ) {
-                    GridironInlinePill(systemImage: "calendar", title: SeasonLabel.text(season))
+                    GridironInlinePill(
+                        systemImage: "calendar",
+                        title: SeasonLabel.text(season),
+                        compressible: true
+                    )
                 }
                 .accessibilityLabel("Season for \(player?.name ?? placeholder)")
 
@@ -847,7 +853,8 @@ struct CompareView: View {
                 ) {
                     GridironInlinePill(
                         systemImage: nil,
-                        title: phase.label
+                        title: phase.label,
+                        compressible: true
                     )
                 }
             }

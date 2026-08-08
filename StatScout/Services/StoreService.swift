@@ -67,6 +67,44 @@ enum StatScoutSeason {
     /// newest season that actually has data, so the free tier follows the live
     /// season by itself and never lands on an empty one.
     static let free = current
+
+    /// Oldest season with per-game history, and so the floor for Recent Form.
+    ///
+    /// `player_game_logs` and the rollup built from it were purged back to 2025
+    /// once; nothing older exists to rank. Without this floor, "the live season
+    /// and the one before it" resolves to a year with no rows the moment the
+    /// live season is the oldest one there is, and Trends offers a menu entry
+    /// that can only ever draw an empty board.
+    static let earliestRecentForm = 2025
+
+    /// The newest season the app has actually seen data for, remembered across
+    /// launches. Falls back to the calendar on a fresh install.
+    ///
+    /// The calendar names a new season on 1 September, but the first game is not
+    /// played until the following week - so for those days `current` is a year
+    /// the database has nothing for. Seeding the season from the calendar meant
+    /// the app opened on a season that does not exist yet and only corrected
+    /// itself once the fetch came back empty, flashing the wrong year in the
+    /// header on the way. Remembering the last season with data holds the app on
+    /// last season until the new one genuinely arrives, which is the day after
+    /// kickoff rather than the first of the month.
+    ///
+    /// Clamped to `free` so a stale value can never put the app *ahead* of the
+    /// calendar, and floored at `earliest` so a zeroed default (the sentinel
+    /// `UserDefaults` returns for a missing key) reads as "nothing remembered".
+    static var lastSeasonWithData: Int {
+        let remembered = UserDefaults.standard.integer(forKey: lastSeasonWithDataKey)
+        guard remembered >= earliest else { return free }
+        return min(remembered, free)
+    }
+
+    static func rememberSeasonWithData(_ season: Int) {
+        guard season >= earliest else { return }
+        UserDefaults.standard.set(season, forKey: lastSeasonWithDataKey)
+    }
+
+    private static let lastSeasonWithDataKey = "statscout.lastSeasonWithData"
+
     /// Oldest season in the dataset. nflverse player stats run back to 1999;
     /// StatScout starts at 2000 for a clean round-number historical range.
     /// The bundled players-historical.plist ships all of it, so the season

@@ -279,13 +279,17 @@ struct GridironInlinePill: View {
     let systemImage: String?
     let title: String
     var isLocked: Bool = false
+    /// See `GridironChip.compressible`: set it where two of these share a
+    /// half-width column, as they do in each Compare slot.
+    var compressible: Bool = false
 
     var body: some View {
         GridironChip(
             title: title,
             systemImage: systemImage,
             trailing: .chevron,
-            isLocked: isLocked
+            isLocked: isLocked,
+            compressible: compressible
         )
     }
 }
