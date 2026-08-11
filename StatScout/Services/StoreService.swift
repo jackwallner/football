@@ -583,6 +583,25 @@ final class StoreService: NSObject, ObservableObject {
         }
     }
 
+    /// Onboarding pitches the monthly plan, not the yearly one. The trial is
+    /// identical on both, so the smaller number is the smaller commitment to
+    /// agree to before the user has seen the app work; the yearly plan is what
+    /// `PaywallView` sells, where the savings are visible next to it.
+    var onboardingMonthlyCTALabel: String {
+        guard let monthly = monthlyPackage else { return "Upgrade to StatScout+" }
+        return Self.directCTALabel(
+            price: monthly.priceLabel,
+            trial: isEligibleForIntroOffer(monthly) ? monthly.introOfferLabel : nil,
+            isWinback: false
+        )
+    }
+
+    /// Full Apple-3.1.2 auto-renew disclosure for the monthly plan, for the
+    /// onboarding CTA that buys it directly.
+    var onboardingMonthlyDisclosureText: String? {
+        monthlyPackage.map { disclosureText(for: $0) }
+    }
+
     /// The monthly package, when present. Used as the anchor when computing
     /// yearly savings % and rendering a strike-through monthly-equivalent price.
     var monthlyPackage: Package? {
@@ -839,23 +858,25 @@ final class StoreService: NSObject, ObservableObject {
                 paymentMode: .freeTrial, subscriptionPeriod: .init(value: 1, unit: .week),
                 numberOfPeriods: 1, type: .introductory)
         }
-        // US prices as configured in App Store Connect (verified 2026-08-07:
-        // monthly 1.99, yearly 9.99, both with a one-week free trial). Mock
-        // prices that do not match the real ones make every screenshot taken
-        // through this path a picture of copy nobody will ever be shown.
+        // US prices as configured in App Store Connect (verified 2026-08-11
+        // against the price rise that took effect 2026-08-10: monthly 5.99,
+        // yearly 29.99, lifetime 59.99, both subscriptions with a one-week free
+        // trial). Mock prices that do not match the real ones make every
+        // screenshot taken through this path a picture of copy nobody will ever
+        // be shown.
         let monthly = TestStoreProduct(
-            localizedTitle: "Gridiron Pro Monthly", price: 1.99, currencyCode: "USD",
-            localizedPriceString: "$1.99", productIdentifier: StatScoutProduct.monthly,
+            localizedTitle: "Gridiron Pro Monthly", price: 5.99, currencyCode: "USD",
+            localizedPriceString: "$5.99", productIdentifier: StatScoutProduct.monthly,
             productType: .autoRenewableSubscription, localizedDescription: "Gridiron Pro, billed monthly.",
             subscriptionPeriod: .init(value: 1, unit: .month), introductoryDiscount: weekTrial(), locale: locale)
         let yearly = TestStoreProduct(
-            localizedTitle: "Gridiron Pro Yearly", price: 9.99, currencyCode: "USD",
-            localizedPriceString: "$9.99", productIdentifier: StatScoutProduct.yearly,
+            localizedTitle: "Gridiron Pro Yearly", price: 29.99, currencyCode: "USD",
+            localizedPriceString: "$29.99", productIdentifier: StatScoutProduct.yearly,
             productType: .autoRenewableSubscription, localizedDescription: "Gridiron Pro, billed yearly.",
             subscriptionPeriod: .init(value: 1, unit: .year), introductoryDiscount: weekTrial(), locale: locale)
         let lifetime = TestStoreProduct(
-            localizedTitle: "Gridiron Pro Lifetime", price: 19.99, currencyCode: "USD",
-            localizedPriceString: "$19.99", productIdentifier: StatScoutProduct.lifetime,
+            localizedTitle: "Gridiron Pro Lifetime", price: 59.99, currencyCode: "USD",
+            localizedPriceString: "$59.99", productIdentifier: StatScoutProduct.lifetime,
             productType: .nonConsumable, localizedDescription: "Gridiron Pro, one-time purchase.",
             subscriptionPeriod: nil, introductoryDiscount: nil, locale: locale)
         products = [

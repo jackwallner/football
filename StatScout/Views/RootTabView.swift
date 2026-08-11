@@ -414,11 +414,12 @@ private struct HomeTabToolbar: ViewModifier {
                     ToolbarItem(placement: .topBarTrailing) { trailingControls }
                 }
             }
-            // The toolbar CTA pitches; it doesn't hand over a price list. Same
-            // sheet as every other in-app offer, so "Try Free" leads to the
-            // trial in one more tap rather than to a plan comparison.
+            // The one place that opens the full plan picker. Every other pitch
+            // in the app interrupts something the user reached for, so it stays
+            // a half sheet; this pill is the user going looking for the offer,
+            // and someone who taps it wants to see what the plans cost.
             .sheet(item: $paywallTrigger) { trigger in
-                TrialPitchSheet(trigger: trigger)
+                PaywallView(trigger: trigger)
             }
     }
 }

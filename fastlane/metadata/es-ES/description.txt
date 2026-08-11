@@ -26,7 +26,7 @@ PRIVACIDAD PRIMERO
 Sin cuentas. Sin registro. Sin anuncios. Sin rastreo de terceros.
 
 Detalles de la suscripción
-StatScout+ está disponible como suscripción con renovación automática (mensual 1.99 USD / anual 9.99 USD con 7 días gratis) o como compra única Lifetime (19.99 USD). El cargo se hace a tu Apple ID al confirmar. Las suscripciones se renuevan automáticamente salvo que se cancelen al menos 24 horas antes del final del periodo. Administra o cancela cuando quieras en Ajustes > Apple ID > Suscripciones.
+StatScout+ está disponible como suscripción de renovación automática (mensual o anual, ambas con 7 días de prueba gratis) o como compra única Lifetime. Los precios se muestran en la app antes de comprar y varían según la región. El pago se carga a tu Apple ID al confirmar. Las suscripciones se renuevan automáticamente salvo que se cancelen al menos 24 horas antes de que termine el periodo en curso. Gestiona o cancela cuando quieras en Ajustes → Apple ID → Suscripciones.
 
 Política de privacidad: https://jackwallner.github.io/football/privacy-policy.html
 Términos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
