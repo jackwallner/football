@@ -130,7 +130,7 @@ struct OnboardingCards: View {
     /// decision, not two.
     ///
     /// This button transacts: tapping it puts Apple's confirm sheet on screen
-    /// and charges the yearly plan. So it may only read as a purchase when
+    /// and charges the monthly plan. So it may only read as a purchase when
     /// there is a loaded package to name a price from, and the full auto-renew
     /// terms have to be on screen with it. Deriving both from the same optional
     /// is what stops them drifting apart, which is how this shipped wrong once:
@@ -139,21 +139,21 @@ struct OnboardingCards: View {
     ///
     /// The wording itself matches the approved baseball build. App Review cited
     /// `TrialPitchSheet`, not this screen, so this one is left as it shipped.
-    private var yearlyOffer: (label: String, disclosure: String)? {
-        guard store.yearlyPackage != nil,
-              let disclosure = store.yearlyCTADisclosureText else { return nil }
-        return (store.directCTALabel(for: .onboarding), disclosure)
+    private var monthlyOffer: (label: String, disclosure: String)? {
+        guard store.monthlyPackage != nil,
+              let disclosure = store.onboardingMonthlyDisclosureText else { return nil }
+        return (store.onboardingMonthlyCTALabel, disclosure)
     }
 
     /// Falls back to a label that promises nothing, because with no package
-    /// there is no price to state - and `buyYearly` sends that tap to the plan
+    /// there is no price to state - and `buyMonthly` sends that tap to the plan
     /// picker rather than to a purchase.
     private var proCTALabel: String {
-        yearlyOffer?.label ?? "Upgrade to StatScout+"
+        monthlyOffer?.label ?? "Upgrade to StatScout+"
     }
 
     private var trialDisclosure: String? {
-        yearlyOffer?.disclosure
+        monthlyOffer?.disclosure
     }
 
     var body: some View {
@@ -271,7 +271,7 @@ struct OnboardingCards: View {
                     getStartedButton(prominent: true)
                 } else {
                     Button {
-                        buyYearly()
+                        buyMonthly()
                     } label: {
                         ZStack {
                             Text(proCTALabel)
@@ -381,12 +381,12 @@ struct OnboardingCards: View {
         .buttonStyle(.plain)
     }
 
-    // One-tap conversion: buy the yearly plan in place, trial when eligible,
+    // One-tap conversion: buy the monthly plan in place, trial when eligible,
     // straight purchase otherwise, never a second paywall. PaywallView is only
     // the emergency fallback when products didn't load. Success flips
     // store.isPro, which finishes onboarding via the onChange handler.
-    private func buyYearly() {
-        guard let yearly = store.yearlyPackage else {
+    private func buyMonthly() {
+        guard let monthly = store.monthlyPackage else {
             paywallTrigger = .onboarding
             return
         }
@@ -395,7 +395,7 @@ struct OnboardingCards: View {
         Task { @MainActor in
             defer { isStartingTrial = false }
             do {
-                switch try await store.purchase(yearly) {
+                switch try await store.purchase(monthly) {
                 case .purchased:
                     break
                 case .pending:

@@ -7,7 +7,7 @@ import XCTest
 /// The purchase flow, run against a real StoreKit implementation.
 ///
 /// Every other price test in this repo asserts our copy functions against
-/// hand-typed fixtures: feed in "$9.99 / year" and "7-day free trial", check
+/// hand-typed fixtures: feed in "$29.99 / year" and "7-day free trial", check
 /// the sentence that comes out. That proves the formatting and nothing about
 /// whether the store ever produces those two strings. The 1.0 (19) rejection
 /// was a copy problem, and the copy is assembled from store data, so the half
@@ -94,15 +94,15 @@ final class StoreKitPurchaseTests: XCTestCase {
     func testTheStoreSellsExactlyTheThreePlansTheAppOffers() async throws {
         let products = try await storeProducts()
         XCTAssertEqual(Set(products.keys), Set(StatScoutProduct.all))
-        XCTAssertEqual(products[StatScoutProduct.yearly]?.displayPrice, "$9.99")
-        XCTAssertEqual(products[StatScoutProduct.monthly]?.displayPrice, "$1.99")
-        XCTAssertEqual(products[StatScoutProduct.lifetime]?.displayPrice, "$19.99")
+        XCTAssertEqual(products[StatScoutProduct.yearly]?.displayPrice, "$29.99")
+        XCTAssertEqual(products[StatScoutProduct.monthly]?.displayPrice, "$5.99")
+        XCTAssertEqual(products[StatScoutProduct.lifetime]?.displayPrice, "$59.99")
         XCTAssertEqual(products[StatScoutProduct.lifetime]?.type, .nonConsumable)
     }
 
-    /// Both subscriptions carry the trial. The fleet rule is that monthly keeps
-    /// its intro offer even though the CTA defaults to yearly, because the
-    /// metric being optimized is trial starts.
+    /// Both subscriptions carry the trial, which is what lets onboarding pitch
+    /// the monthly plan and the in-app sheets pitch the yearly one without
+    /// either promising a trial the store would refuse.
     func testBothSubscriptionsOfferTheSevenDayTrial() async throws {
         let products = try await storeProducts()
         for identifier in [StatScoutProduct.yearly, StatScoutProduct.monthly] {
@@ -122,12 +122,12 @@ final class StoreKitPurchaseTests: XCTestCase {
 
     /// The end of the 3.1.2(c) chain: real `Product` → `StoreProduct` →
     /// `Package` → the two strings on the button and the disclosure under it.
-    /// If StoreKit ever returns something other than a $9.99 yearly with a
+    /// If StoreKit ever returns something other than a $29.99 yearly with a
     /// one-week trial, this fails here instead of in App Review.
     func testTheCitedSheetsCopyIsRightAgainstRealStoreData() async throws {
         let yearly = try await package(for: StatScoutProduct.yearly)
 
-        XCTAssertEqual(yearly.priceLabel, "$9.99 / year")
+        XCTAssertEqual(yearly.priceLabel, "$29.99 / year")
         XCTAssertEqual(yearly.introOfferLabel, "7-day free trial")
 
         XCTAssertEqual(
@@ -135,7 +135,7 @@ final class StoreKitPurchaseTests: XCTestCase {
                 price: yearly.priceLabel, trial: yearly.introOfferLabel,
                 isWinback: false, emphasis: .billedAmountFirst
             ),
-            "Subscribe for $9.99 / year"
+            "Subscribe for $29.99 / year"
         )
         XCTAssertEqual(
             StoreService.directCTATrialSubline(
@@ -148,7 +148,7 @@ final class StoreKitPurchaseTests: XCTestCase {
                 price: yearly.priceLabel, isSubscription: true,
                 trial: yearly.introOfferLabel, emphasis: .billedAmountFirst
             ),
-            "$9.99 / year, billed after a 7-day free trial. \(renewSentence) \(cancelSentence)"
+            "$29.99 / year, billed after a 7-day free trial. \(renewSentence) \(cancelSentence)"
         )
     }
 
@@ -168,12 +168,12 @@ final class StoreKitPurchaseTests: XCTestCase {
     /// auto-renew sentence.
     func testTheLifetimePlanIsNeverDescribedAsRenewing() async throws {
         let lifetime = try await package(for: StatScoutProduct.lifetime)
-        XCTAssertEqual(lifetime.priceLabel, "$19.99")
+        XCTAssertEqual(lifetime.priceLabel, "$59.99")
         XCTAssertNil(lifetime.introOfferLabel)
         let text = StoreService.disclosureText(
             price: lifetime.priceLabel, isSubscription: false, trial: nil
         )
-        XCTAssertEqual(text, "$19.99. One-time purchase. Lifetime access, no subscription.")
+        XCTAssertEqual(text, "$59.99. One-time purchase. Lifetime access, no subscription.")
         XCTAssertFalse(text.contains("Auto-renews"))
     }
 
@@ -190,7 +190,7 @@ final class StoreKitPurchaseTests: XCTestCase {
             StoreService.directCTALabel(
                 price: yearly.priceLabel, trial: nil, isWinback: false, emphasis: .billedAmountFirst
             ),
-            "Subscribe for $9.99 / year"
+            "Subscribe for $29.99 / year"
         )
         XCTAssertNil(
             StoreService.directCTATrialSubline(
@@ -201,7 +201,7 @@ final class StoreKitPurchaseTests: XCTestCase {
             StoreService.disclosureText(
                 price: yearly.priceLabel, isSubscription: true, trial: nil, emphasis: .billedAmountFirst
             ),
-            "$9.99 / year. \(renewSentence) \(cancelSentence)"
+            "$29.99 / year. \(renewSentence) \(cancelSentence)"
         )
     }
 
@@ -213,7 +213,7 @@ final class StoreKitPurchaseTests: XCTestCase {
             price: yearly.priceLabel, trial: yearly.introOfferLabel,
             isWinback: true, emphasis: .billedAmountFirst
         )
-        XCTAssertEqual(label, "Restart for $9.99 / year")
+        XCTAssertEqual(label, "Restart for $29.99 / year")
         XCTAssertNil(
             StoreService.directCTATrialSubline(
                 trial: yearly.introOfferLabel, isWinback: true, emphasis: .billedAmountFirst

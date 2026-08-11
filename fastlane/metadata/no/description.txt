@@ -29,7 +29,7 @@ PRIVACY-FIRST
 No accounts. No sign-up. No ads. No third-party tracking. The app makes only the network requests needed for NFL statistics and optional purchase verification.
 
 Subscription Details
-StatScout+ is available as an auto-renewing subscription (Monthly $1.99 / Yearly $9.99 with a 7-day free trial) or a one-time Lifetime purchase ($19.99). Payment is charged to your Apple ID at confirmation. Subscriptions auto-renew unless canceled at least 24 hours before the end of the period; a free trial converts to a paid subscription unless canceled before it ends. Manage or cancel anytime in Settings > Apple ID > Subscriptions.
+StatScout+ er tilgjengelig som abonnement med automatisk fornyelse (månedlig eller årlig, begge med 7 dagers gratis prøveperiode) eller som et engangskjøp av Lifetime. Prisene vises i appen før du kjøper, og varierer fra region til region. Betalingen belastes Apple-ID-en din ved bekreftelse. Abonnementer fornyes automatisk med mindre de sies opp minst 24 timer før inneværende periode er over. Administrer eller si opp når som helst under Innstillinger → Apple-ID → Abonnementer.
 
 Privacy Policy: https://jackwallner.github.io/football/privacy-policy.html
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
