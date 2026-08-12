@@ -771,9 +771,9 @@ struct PlusDirectCTA: View {
     var style: Style = .bar
     /// Hidden where the surrounding screen already offers plan choice.
     var showsAllPlansLink: Bool = true
-    /// `.billedAmountFirst` on the one surface App Review cited (see
-    /// `PriceEmphasis`). Everything else keeps the approved build's copy.
-    var emphasis: PriceEmphasis = .trialFirst
+    /// The billed amount leads on every purchase surface. A trial may still be
+    /// shown, but only as the subordinate second line.
+    var emphasis: PriceEmphasis = .billedAmountFirst
 
     @State private var isPurchasing = false
     @State private var statusMessage: String?

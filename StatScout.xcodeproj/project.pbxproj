@@ -632,7 +632,7 @@
 				SDKROOT = iphoneos;
 				SUPABASE_ANON_KEY = "$(SUPABASE_ANON_KEY)";
 				SUPABASE_URL = "$(SUPABASE_URL)";
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -752,7 +752,7 @@
 				SDKROOT = iphoneos;
 				SUPABASE_ANON_KEY = "$(SUPABASE_ANON_KEY)";
 				SUPABASE_URL = "$(SUPABASE_URL)";
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

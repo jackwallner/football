@@ -119,7 +119,7 @@ struct RootTabView: View {
         ZStack(alignment: .bottom) {
             ForEach(Tab.allCases) { tab in
                 tabContent(tab)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: 900, maxHeight: .infinity)
                     .opacity(selection == tab.rawValue ? 1 : 0)
                     .allowsHitTesting(selection == tab.rawValue)
                     .accessibilityHidden(selection != tab.rawValue)
@@ -127,6 +127,8 @@ struct RootTabView: View {
 
             floatingTabBar
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .ignoresSafeArea(edges: .bottom)
         #if DEBUG
         .onAppear {

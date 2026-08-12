@@ -12,20 +12,16 @@ import XCTest
 /// screen, while "$9.99 / year" sat in grey micro text beneath it, and the
 /// disclosure led with the trial as well.
 ///
-/// The fix is scoped to that sheet, and it demotes the trial rather than
-/// deleting it: the guideline is about ranking, not about whether a trial may
-/// be advertised at all. `.billedAmountFirst` puts the price on the button's
-/// primary line and keeps the trial on a subordinate one beneath it, in micro.
-/// `PriceEmphasis.trialFirst` is what every other surface here and in the
-/// approved baseball build ships, and it stays that way deliberately: you fix
-/// what was cited and leave what shipped alone. Both orderings are pinned below
-/// so neither can drift into the other.
+/// The fix applies to every transactional surface and demotes the trial rather
+/// than deleting it. `.billedAmountFirst` puts the price on the button's primary
+/// line and keeps the trial on a subordinate one beneath it, in micro. The old
+/// trial-first ordering remains testable but is never the live default.
 final class PriceDisclosureTests: XCTestCase {
 
     private let renewSentence = "Auto-renews unless cancelled at least 24 hours before the end of the current period."
     private let cancelSentence = "Manage or cancel in Settings › Apple ID › Subscriptions."
 
-    // MARK: - The cited sheet: billed amount first
+    // MARK: - Every purchase surface: billed amount first
 
     func testCitedSheetCTANamesTheBilledAmountAndNotTheTrial() {
         let label = StoreService.directCTALabel(
@@ -119,20 +115,30 @@ final class PriceDisclosureTests: XCTestCase {
         }
     }
 
-    // MARK: - Everywhere else: unchanged from the approved build
+    // MARK: - Trial-first formatting is never the live default
 
-    func testUncitedSurfacesKeepTheApprovedCopy() {
+    func testDefaultCopyLeadsWithTheBilledAmountEverywhere() {
         XCTAssertEqual(
             StoreService.directCTALabel(price: "$9.99 / year", trial: "7-day free trial", isWinback: false),
-            "Start 7-day free trial"
+            "Subscribe for $9.99 / year"
         )
         XCTAssertEqual(
             StoreService.directCTALabel(price: "$9.99 / year", trial: nil, isWinback: false),
-            "Try StatScout+ for $9.99 / year"
+            "Subscribe for $9.99 / year"
         )
         XCTAssertEqual(
             StoreService.disclosureText(price: "$9.99 / year", isSubscription: true, trial: "7-day free trial"),
-            "7-Day Free Trial, then $9.99 / year. \(renewSentence) \(cancelSentence)"
+            "$9.99 / year, billed after a 7-day free trial. \(renewSentence) \(cancelSentence)"
+        )
+    }
+
+    func testTrialFirstFormattingRequiresAnExplicitOptIn() {
+        XCTAssertEqual(
+            StoreService.directCTALabel(
+                price: "$9.99 / year", trial: "7-day free trial",
+                isWinback: false, emphasis: .trialFirst
+            ),
+            "Start 7-day free trial"
         )
     }
 
