@@ -214,18 +214,23 @@ struct PaywallView: View {
 
     private var content: some View {
         ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                heroHeader
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                VStack(spacing: 0) {
+                    heroHeader
 
-                VStack(spacing: 16) {
-                    featureList
-                    trustRow
-                    planCards
-                    purchaseSection
+                    VStack(spacing: 16) {
+                        featureList
+                        trustRow
+                        planCards
+                        purchaseSection
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 20)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 20)
+                .frame(maxWidth: 680)
+                Spacer(minLength: 0)
             }
         }
         .ignoresSafeArea(edges: .top)
@@ -355,16 +360,24 @@ struct PaywallView: View {
         VStack(spacing: 10) {
             Button(action: startPurchase) {
                 ZStack {
-                    Text(ctaTitle)
-                        .font(GridironType.bodyBold)
-                        .foregroundStyle(.white)
-                        .opacity(isPurchasing ? 0 : 1)
+                    VStack(spacing: 1) {
+                        Text(ctaTitle)
+                            .font(GridironType.bodyBold)
+                        if let ctaSubline {
+                            Text(ctaSubline)
+                                .font(GridironType.micro)
+                                .foregroundStyle(.white.opacity(0.82))
+                        }
+                    }
+                    .foregroundStyle(.white)
+                    .opacity(isPurchasing ? 0 : 1)
                     if isPurchasing {
                         ProgressView().tint(.white)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 50)
+                .frame(minHeight: 54)
+                .padding(.vertical, ctaSubline == nil ? 0 : 4)
                 .background(GridironPalette.turf)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
@@ -431,15 +444,22 @@ struct PaywallView: View {
     private var ctaTitle: String {
         guard let package = selectedPackage else { return "Continue" }
         if package.productKind == .lifetime { return "Unlock Lifetime" }
-        if store.isEligibleForIntroOffer(package) { return "Start Free Trial" }
-        return "Subscribe"
+        return "Subscribe for \(package.priceLabel)"
+    }
+
+    private var ctaSubline: String? {
+        guard let package = selectedPackage,
+              package.productKind != .lifetime,
+              store.isEligibleForIntroOffer(package),
+              let trial = package.introOfferLabel else { return nil }
+        return "Starts with a \(trial)"
     }
 
     /// Apple 3.1.2 disclosure adjacent to the purchase button. Shared with every
     /// one-tap CTA in the app, so the plan picker and the pop-ups state the same
     /// terms for the same plan.
     private var disclosureText: String? {
-        selectedPackage.map { store.disclosureText(for: $0) }
+        selectedPackage.map { store.disclosureText(for: $0, emphasis: .billedAmountFirst) }
     }
 
     // MARK: - Actions
@@ -565,14 +585,10 @@ private struct PaywallPlanCard: View {
                                 .background(GridironPalette.turf, in: Capsule())
                         }
                     }
-                    if showsTrialBadge, let trial = package.introOfferLabel {
-                        Text(trial.capitalized)
-                            .font(GridironType.micro)
-                            .foregroundStyle(GridironPalette.turf)
-                    } else if isMostPopular {
+                    if isMostPopular {
                         Text("Best value")
                             .font(GridironType.micro)
-                            .foregroundStyle(GridironPalette.turf)
+                            .foregroundStyle(GridironPalette.inkTertiary)
                     }
                 }
 
@@ -580,8 +596,8 @@ private struct PaywallPlanCard: View {
 
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(package.priceLabel)
-                        .font(GridironType.smallBold)
-                        .foregroundStyle(GridironPalette.inkSecondary)
+                        .font(GridironType.cardTitle)
+                        .foregroundStyle(GridironPalette.ink)
                     if let perMonthLabel {
                         HStack(spacing: 5) {
                             if let monthlyAnchorLabel, savingsPercent != nil {
@@ -592,8 +608,13 @@ private struct PaywallPlanCard: View {
                             }
                             Text("\(perMonthLabel)/mo")
                                 .font(GridironType.micro)
-                                .foregroundStyle(GridironPalette.ink)
+                                .foregroundStyle(GridironPalette.inkTertiary)
                         }
+                    }
+                    if showsTrialBadge, let trial = package.introOfferLabel {
+                        Text(trial.capitalized)
+                            .font(GridironType.micro)
+                            .foregroundStyle(GridironPalette.inkTertiary)
                     }
                 }
             }

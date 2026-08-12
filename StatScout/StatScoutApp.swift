@@ -137,8 +137,8 @@ struct OnboardingCards: View {
     /// a hard-coded "Continue with StatScout+" over a disclosure that is nil
     /// until products load is a paid button with no price anywhere near it.
     ///
-    /// The wording itself matches the approved baseball build. App Review cited
-    /// `TrialPitchSheet`, not this screen, so this one is left as it shipped.
+    /// The billed amount leads here too, so every transactional surface follows
+    /// the same App Store pricing hierarchy.
     private var monthlyOffer: (label: String, disclosure: String)? {
         guard store.monthlyPackage != nil,
               let disclosure = store.onboardingMonthlyDisclosureText else { return nil }
@@ -192,6 +192,7 @@ struct OnboardingCards: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 32)
             }
+            .frame(maxWidth: 700)
         }
         .task {
             if store.currentOffering == nil {

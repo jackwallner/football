@@ -152,15 +152,15 @@ final class StoreKitPurchaseTests: XCTestCase {
         )
     }
 
-    /// The uncited surfaces still render the approved build's wording, and they
-    /// render it from the same real product.
-    func testTheUncitedSurfacesCopyIsRightAgainstRealStoreData() async throws {
+    /// Every purchase surface uses the same billed-amount-first default against
+    /// the same real product.
+    func testEverySurfaceCopyIsRightAgainstRealStoreData() async throws {
         let yearly = try await package(for: StatScoutProduct.yearly)
         XCTAssertEqual(
             StoreService.directCTALabel(
                 price: yearly.priceLabel, trial: yearly.introOfferLabel, isWinback: false
             ),
-            "Start 7-day free trial"
+            "Subscribe for $9.99 / year"
         )
     }
 

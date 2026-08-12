@@ -193,16 +193,8 @@ struct TrialPitchSheet: View {
             // Same control as every other pitch in the app: it buys the yearly
             // plan in place (trial when eligible, paid otherwise) and carries
             // its own auto-renew disclosure and "See all plans" escape hatch.
-            // The one surface App Review cited under 3.1.2(c), reviewing
-            // 1.0 (19): this sheet's button read "Start 7-day free trial" in
-            // the largest type on screen while "$9.99 / year" sat in grey micro
-            // text below it. `.billedAmountFirst` swaps their ranking without
-            // dropping the trial: the button now leads with the billed amount
-            // and keeps "Starts with a 7-day free trial" under it in micro, and
-            // the disclosure states the price first and the trial second. The
-            // trial is still the pitch, it is just no longer the loudest thing
-            // on the sheet. Nothing else in the app asks for this emphasis,
-            // because nothing else was cited.
+            // The billed amount is the primary line on every purchase surface.
+            // The trial remains visible only as subordinate copy.
             PlusDirectCTA(trigger: trigger, emphasis: .billedAmountFirst)
 
             // Legal links and the way out share a row, because three stacked

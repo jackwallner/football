@@ -176,21 +176,10 @@ final class PaywallGate: ObservableObject {
     }
 }
 
-/// Which half of a trial offer a purchase surface leads with.
-///
-/// One switch, deliberately, rather than two sets of copy that can drift.
-///
-/// `.trialFirst` is what every surface in this app and in the approved baseball
-/// build ships: "Start 7-day free trial", with the price in the disclosure
-/// beneath. `.billedAmountFirst` puts the amount charged in the button and
-/// demotes the trial to second place in the disclosure, which is what
-/// Guideline 3.1.2(c) requires.
-///
-/// Only `TrialPitchSheet` asks for `.billedAmountFirst`, because that is the
-/// one screen App Review screenshotted when it rejected 1.0 (19). Everything
-/// else stays byte-identical to the build that is already approved, on the
-/// principle that you fix what was cited and leave what shipped alone. If
-/// another surface is ever cited, this is a one-word change at its call site.
+/// Which part of an introductory offer gets the primary visual position.
+/// Every live purchase surface uses `billedAmountFirst` for Guideline 3.1.2(c).
+/// `trialFirst` remains only so the pure formatting helpers can guard against a
+/// future regression in tests.
 enum PriceEmphasis {
     case trialFirst
     case billedAmountFirst
@@ -423,8 +412,8 @@ final class StoreService: NSObject, ObservableObject {
     }
 
     /// CTA label for the blurred contextual paywalls (Year Compare, Player
-    /// Compare). Leads with the yearly free-trial offer when available so the
-    /// upsell emphasizes the low-friction option instead of the lifetime price.
+    /// Compare). The localized yearly amount leads, with any trial shown below
+    /// it by the purchase control.
     var paywallBlurCTA: String {
         directCTALabel(for: .upgrade)
     }
@@ -455,7 +444,7 @@ final class StoreService: NSObject, ObservableObject {
         Self.upgradeCTALabel(trialAvailable: isYearlyTrialAvailable)
     }
 
-    func directCTALabel(for trigger: PaywallTrigger, emphasis: PriceEmphasis = .trialFirst) -> String {
+    func directCTALabel(for trigger: PaywallTrigger, emphasis: PriceEmphasis = .billedAmountFirst) -> String {
         if let yearly = yearlyPackage {
             return Self.directCTALabel(
                 price: yearly.priceLabel,
@@ -480,7 +469,7 @@ final class StoreService: NSObject, ObservableObject {
         price: String,
         trial: String?,
         isWinback: Bool,
-        emphasis: PriceEmphasis = .trialFirst
+        emphasis: PriceEmphasis = .billedAmountFirst
     ) -> String {
         if emphasis == .trialFirst, !isWinback, let trial {
             return "Start \(trial)"
@@ -542,7 +531,7 @@ final class StoreService: NSObject, ObservableObject {
     /// Full Apple-3.1.2 auto-renew disclosure for the yearly plan, shown next
     /// to any direct-purchase CTA so the price (and trial terms, when offered)
     /// are present at the point of purchase.
-    func yearlyCTADisclosureText(emphasis: PriceEmphasis = .trialFirst) -> String? {
+    func yearlyCTADisclosureText(emphasis: PriceEmphasis = .billedAmountFirst) -> String? {
         yearlyPackage.map { disclosureText(for: $0, emphasis: emphasis) }
     }
 
@@ -551,7 +540,7 @@ final class StoreService: NSObject, ObservableObject {
     /// The disclosure for one package. The plan picker renders this for
     /// whichever plan is selected; every one-tap CTA renders it for the yearly
     /// one. Both go through here so the wording can only ever be wrong once.
-    func disclosureText(for package: Package, emphasis: PriceEmphasis = .trialFirst) -> String {
+    func disclosureText(for package: Package, emphasis: PriceEmphasis = .billedAmountFirst) -> String {
         Self.disclosureText(
             price: package.priceLabel,
             isSubscription: package.productKind != .lifetime,
@@ -568,7 +557,7 @@ final class StoreService: NSObject, ObservableObject {
         price: String,
         isSubscription: Bool,
         trial: String?,
-        emphasis: PriceEmphasis = .trialFirst
+        emphasis: PriceEmphasis = .billedAmountFirst
     ) -> String {
         guard isSubscription else {
             return "\(price). One-time purchase. Lifetime access, no subscription."
