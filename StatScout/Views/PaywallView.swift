@@ -360,24 +360,16 @@ struct PaywallView: View {
         VStack(spacing: 10) {
             Button(action: startPurchase) {
                 ZStack {
-                    VStack(spacing: 1) {
-                        Text(ctaTitle)
-                            .font(GridironType.bodyBold)
-                        if let ctaSubline {
-                            Text(ctaSubline)
-                                .font(GridironType.micro)
-                                .foregroundStyle(.white.opacity(0.82))
-                        }
-                    }
-                    .foregroundStyle(.white)
-                    .opacity(isPurchasing ? 0 : 1)
+                    Text(ctaTitle)
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(.white)
+                        .opacity(isPurchasing ? 0 : 1)
                     if isPurchasing {
                         ProgressView().tint(.white)
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 54)
-                .padding(.vertical, ctaSubline == nil ? 0 : 4)
                 .background(GridironPalette.turf)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
@@ -443,16 +435,7 @@ struct PaywallView: View {
 
     private var ctaTitle: String {
         guard let package = selectedPackage else { return "Continue" }
-        if package.productKind == .lifetime { return "Unlock Lifetime" }
-        return "Subscribe for \(package.priceLabel)"
-    }
-
-    private var ctaSubline: String? {
-        guard let package = selectedPackage,
-              package.productKind != .lifetime,
-              store.isEligibleForIntroOffer(package),
-              let trial = package.introOfferLabel else { return nil }
-        return "Starts with a \(trial)"
+        return store.planPickerCTALabel(for: package)
     }
 
     /// Apple 3.1.2 disclosure adjacent to the purchase button. Shared with every

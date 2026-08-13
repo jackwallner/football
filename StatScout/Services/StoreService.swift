@@ -480,6 +480,31 @@ final class StoreService: NSObject, ObservableObject {
         return "\(isWinback ? "Restart" : "Try") StatScout+ for \(price)"
     }
 
+    /// The plan picker's own button label, which names no price at all.
+    ///
+    /// `PaywallView` is the one surface where the billed amount is already the
+    /// largest, highest-contrast element on screen: the selected plan card
+    /// renders it in `statLarge`/`ink` directly above the button, and the
+    /// disclosure directly below leads with it. Repeating it inside the button
+    /// bought nothing and cost the offer, so the button names the action
+    /// instead. Nothing here promotes the trial over a price the button does not
+    /// state, which is the ordering 3.1.2(c) governs.
+    ///
+    /// Matches the approved `Baseball Savvy StatScout` ladder verbatim. Every
+    /// other app in the fleet names a price in a purchase button only as the
+    /// fallback for a user with no trial left; none do it when a trial applies.
+    nonisolated static func planPickerCTALabel(isLifetime: Bool, trialEligible: Bool) -> String {
+        if isLifetime { return "Unlock Lifetime" }
+        return trialEligible ? "Start Free Trial" : "Subscribe"
+    }
+
+    func planPickerCTALabel(for package: Package) -> String {
+        Self.planPickerCTALabel(
+            isLifetime: package.productKind == .lifetime,
+            trialEligible: isEligibleForIntroOffer(package) && package.introOfferLabel != nil
+        )
+    }
+
     /// The trial, kept on the button but demoted beneath the billed amount.
     ///
     /// 3.1.2(c) does not forbid selling the free trial, it forbids selling it
