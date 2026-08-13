@@ -12,10 +12,16 @@ import XCTest
 /// screen, while "$9.99 / year" sat in grey micro text beneath it, and the
 /// disclosure led with the trial as well.
 ///
-/// The fix applies to every transactional surface and demotes the trial rather
-/// than deleting it. `.billedAmountFirst` puts the price on the button's primary
-/// line and keeps the trial on a subordinate one beneath it, in micro. The old
-/// trial-first ordering remains testable but is never the live default.
+/// The fix applies to every one-tap transactional surface and demotes the trial
+/// rather than deleting it. `.billedAmountFirst` puts the price on the button's
+/// primary line and keeps the trial on a subordinate one beneath it, in micro.
+/// The old trial-first ordering remains testable but is never the live default.
+///
+/// `PaywallView` is the deliberate exception, and it clears the guideline a
+/// different way: its button names no price *and* no trial-versus-price
+/// ordering to get wrong, because the selected plan card carries the billed
+/// amount in `statLarge`/`ink` immediately above it and the disclosure leads
+/// with the same amount immediately below. See `planPickerCTALabel`.
 final class PriceDisclosureTests: XCTestCase {
 
     private let renewSentence = "Auto-renews unless cancelled at least 24 hours before the end of the current period."
@@ -111,6 +117,52 @@ final class PriceDisclosureTests: XCTestCase {
                         "\"\(label)\" promotes the trial in the most prominent element on screen"
                     )
                 }
+            }
+        }
+    }
+
+    // MARK: - The plan picker's own button
+
+    /// The plan picker states the action, not the offer. Naming neither the
+    /// price nor a competing claim is what keeps it outside 3.1.2(c): there is
+    /// no ordering to get wrong when the button advertises no amount at all.
+    func testPlanPickerCTANamesTheActionNotTheOffer() {
+        XCTAssertEqual(
+            StoreService.planPickerCTALabel(isLifetime: false, trialEligible: true),
+            "Start Free Trial"
+        )
+        XCTAssertEqual(
+            StoreService.planPickerCTALabel(isLifetime: false, trialEligible: false),
+            "Subscribe"
+        )
+        XCTAssertEqual(
+            StoreService.planPickerCTALabel(isLifetime: true, trialEligible: false),
+            "Unlock Lifetime"
+        )
+    }
+
+    /// A non-consumable has no introductory offer to start, so eligibility must
+    /// never leak a trial promise onto the lifetime button.
+    func testLifetimePlanNeverOffersATrial() {
+        XCTAssertEqual(
+            StoreService.planPickerCTALabel(isLifetime: true, trialEligible: true),
+            "Unlock Lifetime"
+        )
+    }
+
+    /// No branch may carry a currency amount. The billed amount belongs to the
+    /// plan card and the disclosure, both of which render it larger than this
+    /// button's own type.
+    func testPlanPickerCTANeverCarriesAPrice() {
+        for isLifetime in [true, false] {
+            for trialEligible in [true, false] {
+                let label = StoreService.planPickerCTALabel(
+                    isLifetime: isLifetime, trialEligible: trialEligible
+                )
+                XCTAssertFalse(
+                    label.contains(where: { $0.isNumber }) || label.contains("$"),
+                    "\"\(label)\" states an amount the plan card already ranks above it"
+                )
             }
         }
     }
