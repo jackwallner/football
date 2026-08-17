@@ -1,118 +1,171 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms of Use - Football Next: StatScout</title>
-    <meta name="description" content="StatScout terms of use. Simple, fair terms for our NFL analytics app.">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Football Next: StatScout Terms of Use</title>
+    <meta name="description" content="Football Next: StatScout Terms of Use" />
     <style>
-        :root {
-            --bg: #fafafa; --bg-elevated: #ffffff; --text: #1d1d1f;
-            --text-secondary: #6e6e73; --text-tertiary: #86868b;
-            --accent: #d32f2f; --border: rgba(0,0,0,0.06);
-            --radius: 18px; --max-width: 700px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+      :root {
+        color-scheme: light dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 32px 20px 64px;
+        font:
+          16px/1.65 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: #1d1d1f;
+        background: #fafafa;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 32px;
+        line-height: 1.15;
+      }
+      h2 {
+        margin: 32px 0 8px;
+        font-size: 21px;
+      }
+      p,
+      li {
+        color: #4f5157;
+      }
+      a {
+        color: #075ec7;
+      }
+      .date {
+        margin: 0 0 28px;
+        color: #6e6e73;
+        font-size: 14px;
+      }
+      .card {
+        margin-top: 32px;
+        padding: 18px 20px;
+        border-radius: 14px;
+        background: #fff;
+        border: 1px solid #e5e5e7;
+      }
+      .nav {
+        margin-bottom: 28px;
+        font-size: 14px;
+      }
+      footer {
+        margin-top: 40px;
+        color: #6e6e73;
+        font-size: 13px;
+      }
+      @media (prefers-color-scheme: dark) {
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-            color: var(--text); background: var(--bg);
-            -webkit-font-smoothing: antialiased; line-height: 1.6;
+          color: #f5f5f7;
+          background: #111214;
         }
-        .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
-        nav {
-            padding: 16px 0; border-bottom: 1px solid var(--border);
-            background: rgba(250,250,250,0.85); backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 10;
+        p,
+        li {
+          color: #c6c7cb;
         }
-        nav .container { display: flex; align-items: center; justify-content: space-between; }
-        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 17px; }
-        .nav-brand::before {
-            content: ""; display: inline-block; width: 28px; height: 28px;
-            background: var(--accent); border-radius: 8px;
+        .date,
+        footer {
+          color: #a1a1a6;
         }
-        .nav-links { display: flex; gap: 8px; }
-        .nav-link { font-size: 14px; text-decoration: none; color: var(--text); padding: 6px 14px; border-radius: 980px; font-weight: 500; }
-        .nav-link:hover { background: rgba(0,0,0,0.04); }
-        .page-header { padding: 60px 0 20px; }
-        .page-header h1 { font-size: 36px; font-weight: 700; letter-spacing: -1px; margin-bottom: 4px; }
-        .page-header .date { color: var(--text-secondary); font-size: 15px; }
-        .content { padding-bottom: 80px; }
-        .content h2 { font-size: 22px; font-weight: 600; margin-top: 40px; margin-bottom: 12px; }
-        .content p { color: var(--text-secondary); margin-bottom: 12px; font-size: 15px; }
-        .content strong { color: var(--text); font-weight: 600; }
-        .content a { color: #0066cc; text-decoration: none; }
-        footer { text-align: center; padding: 40px 24px; font-size: 12px; color: var(--text-tertiary); border-top: 1px solid var(--border); }
-        footer a { color: var(--text-tertiary); text-decoration: none; margin: 0 10px; }
+        .card {
+          background: #1c1c1e;
+          border-color: #38383a;
+        }
+        a {
+          color: #66aaff;
+        }
+      }
     </style>
-</head>
-<body>
-    <nav>
-        <div class="container">
-            <a class="nav-brand" href="index.html">Football Next: StatScout</a>
-            <div class="nav-links">
-                <a class="nav-link" href="index.html">Home</a>
-                <a class="nav-link" href="support.html">Support</a>
-                <a class="nav-link" href="privacy-policy.html">Privacy</a>
-            </div>
-        </div>
-    </nav>
+  </head>
+  <body>
+    <main>
+      <nav class="nav">
+        <a href="index.html">Back to Football Next: StatScout</a> ·
+        <a href="support.html">Support</a> ·
+        <a href="privacy-policy.html">Privacy</a> ·
+        <a href="terms.html">Terms</a>
+      </nav>
+      <h1>Football Next: StatScout Terms of Use</h1>
+      <p class="date">Last updated: August 17, 2026</p>
 
-    <header class="page-header">
-        <div class="container">
-            <h1>Terms of Use</h1>
-            <p class="date">Last updated: May 13, 2026</p>
-        </div>
-    </header>
+      <h2>Agreement</h2>
+      <p>
+        By using Football Next: StatScout, you agree to these Terms of Use and
+        Apple's
+        <a
+          href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+          >Standard Licensed Application End User License Agreement</a
+        >. If you do not agree, do not use the app.
+      </p>
+      <h2>Service</h2>
+      <p>
+        Football Next: StatScout provides visual NFL player rankings,
+        comparisons, and profiles using publicly available statistics. It is for
+        general informational and entertainment purposes. The app is not
+        affiliated with, authorized by, or endorsed by the National Football
+        League, any NFL team, or the NFLPA.
+      </p>
 
-    <main class="content">
-        <div class="container">
-            <h2>Acceptance of Terms</h2>
-            <p>By using StatScout, you agree to these terms. If you do not agree, please do not use the app.</p>
-
-            <h2>Description of Service</h2>
-            <p>StatScout provides visual percentile rankings and leaderboards for NFL players using publicly available play-by-play and Next Gen Stats data. The app is for informational and entertainment purposes only.</p>
-
-            <h2>In-App Purchases &amp; Subscriptions</h2>
-            <p>StatScout offers the following optional Pro purchases, each of which unlocks the same Pro features (historical seasons, player comparisons, and year-over-year tracking):</p>
-            <ul style="padding-left: 24px; margin-bottom: 16px; color: var(--text-secondary); font-size: 15px;">
-                <li><strong>Monthly subscription</strong> — auto-renewing, billed once per month.</li>
-                <li><strong>Yearly subscription</strong> — auto-renewing, billed once per year, includes an introductory free trial for eligible new subscribers.</li>
-                <li><strong>Lifetime</strong> — a single non-consumable purchase.</li>
-            </ul>
-            <p>Pricing is displayed in the App Store and in the in-app paywall in your local currency before purchase.</p>
-
-            <h2>Billing &amp; Auto-Renewal</h2>
-            <p>All purchases are processed by Apple through the App Store and are charged to the payment method on your Apple ID at confirmation of purchase.</p>
-            <p>Auto-renewing subscriptions automatically renew at the end of each billing period at the price disclosed at the time of purchase, unless auto-renew is turned off at least <strong>24 hours before the end of the current period</strong>. Your account will be charged for renewal within 24 hours prior to the end of the current period.</p>
-            <p>You can manage your subscriptions and turn off auto-renewal at any time by going to your Apple ID account settings on your device (<em>Settings &rarr; [your name] &rarr; Subscriptions</em>). Cancelling stops future renewals; access to Pro features continues until the end of the current paid period.</p>
-
-            <h2>Free Trial</h2>
-            <p>If you start the yearly subscription with a free trial, the trial automatically converts into a paid subscription at the trial's end unless you cancel before the trial ends. The free trial is available only to eligible new subscribers as determined by Apple. Any unused portion of a free trial is forfeited when you purchase a subscription.</p>
-
-            <h2>Refunds</h2>
-            <p>Purchases and subscriptions are non-refundable except as required by applicable law or by Apple's refund policies. Refund requests are handled by Apple at <a href="https://reportaproblem.apple.com/">reportaproblem.apple.com</a>.</p>
-
-            <h2>Restore Purchases</h2>
-            <p>If you have previously purchased Pro on the same Apple ID, you can re-unlock Pro on any device by tapping <em>Restore Purchases</em> in the in-app About screen.</p>
-
-            <h2>Intellectual Property</h2>
-            <p>All NFL statistics displayed in StatScout are sourced from publicly available data. Team names and abbreviations are used for identification and informational purposes only. StatScout is not affiliated with, authorized, or endorsed by the National Football League (NFL), any NFL team, or the NFLPA.</p>
-
-            <h2>Disclaimer</h2>
-            <p>StatScout is provided "as is" without warranties of any kind. We strive for accuracy but do not guarantee the completeness or accuracy of the statistics displayed.</p>
-
-            <h2>Contact</h2>
-            <p>Questions about these terms? Contact <strong><a href="mailto:jackwallner+ff@gmail.com">jackwallner+ff@gmail.com</a></strong></p>
-        </div>
+      <h2>StatScout+</h2>
+      <p>
+        StatScout+ includes monthly and yearly auto-renewing subscriptions and a
+        one-time lifetime purchase. Prices, billing periods, and any
+        introductory offer are shown in the App Store and in the app before
+        purchase and may vary by region. A free trial or introductory offer is
+        available only to eligible accounts when Apple displays it.
+      </p>
+      <p>
+        Payment is charged to your Apple Account at confirmation. A subscription
+        renews automatically unless canceled at least 24 hours before the
+        current period ends. Renewal is charged within 24 hours before the
+        period ends. Manage or cancel it in Settings, your name, Subscriptions.
+        Any unused trial portion is forfeited when you buy a subscription.
+        Refund requests go to
+        <a href="https://reportaproblem.apple.com/">Apple</a>.
+      </p>
+      <p>
+        Use Restore Purchases in the app when available. Canceling stops future
+        renewal, and access continues through the paid period.
+      </p>
+      <h2>Disclaimer</h2>
+      <p>
+        Football Next: StatScout is provided as available for general
+        informational or entertainment purposes. We do not guarantee
+        uninterrupted operation, accuracy, or a particular result.
+      </p>
+      <h2>Changes</h2>
+      <p>
+        We may update these terms when the app or its services change. The
+        current version is posted on this page.
+      </p>
+      <h2>Content accuracy</h2>
+      <p>
+        Data may be delayed, incomplete, or incorrect. Do not rely on the app as
+        an official score, roster, betting, or financial source.
+      </p>
+      <div class="card">
+        <strong>Contact</strong>
+        <p>
+          Questions about this page? Email
+          <a href="mailto:jackwallner+ff@gmail.com">jackwallner+ff@gmail.com</a
+          >.
+        </p>
+      </div>
+      <footer>
+        <a href="index.html">Home</a> · <a href="support.html">Support</a> ·
+        <a href="privacy-policy.html">Privacy</a> ·
+        <a href="terms.html">Terms</a>
+      </footer>
     </main>
-
-    <footer>
-        <p>&copy; 2026 Jack Wallner</p>
-        <div style="margin-top: 10px;">
-            <a href="index.html">Home</a>
-            <a href="support.html">Support</a>
-            <a href="privacy-policy.html">Privacy</a>
-        </div>
-    </footer>
-</body>
+  </body>
 </html>
