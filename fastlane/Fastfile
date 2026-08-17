@@ -37,15 +37,32 @@ platform :ios do
     version = app.get_edit_app_store_version
     UI.user_error!("No editable version found") unless version
 
-    release_notes = "Now includes year-over-year metric tracking: tap the year toggle on any player profile to see how their percentiles shifted season to season. Also includes player comparison mode and historical season loading for Pro subscribers."
-    promo_text = "Visual Statcast percentile rankings and MLB Savant-style metrics. See where every qualified player ranks across Hitting, Pitching, Fielding, and Running."
-
+    # Read the copy from fastlane/metadata rather than carrying literals here.
+    #
+    # These were hardcoded, and they were the *baseball* app's: "Visual Statcast
+    # percentile rankings and MLB Savant-style metrics ... Hitting, Pitching,
+    # Fielding, and Running", left behind when this repo was forked. Running this
+    # lane would have pushed MLB copy onto a live NFL listing, in eleven locales,
+    # with nothing on screen to suggest it had happened. The metadata directory is
+    # the single source of truth for every other locale already; there is no
+    # reason for these eleven to be the exception.
     deprecated = %w[bn-BD gu-IN kn-IN ml-IN mr-IN or-IN pa-IN sl-SI ta-IN te-IN ur-PK]
+    meta = File.expand_path("metadata", __dir__)
+
+    def read_meta(meta, locale, file)
+      path = File.join(meta, locale, file)
+      path = File.join(meta, "en-US", file) unless File.exist?(path)
+      UI.user_error!("missing metadata: #{file}") unless File.exist?(path)
+      File.read(path).strip
+    end
 
     version.get_app_store_version_localizations.each do |loc|
       next unless deprecated.include?(loc.locale)
       UI.message("Filling #{loc.locale}...")
-      loc.update(attributes: { whatsNew: release_notes, promotionalText: promo_text })
+      loc.update(attributes: {
+        whatsNew: read_meta(meta, loc.locale, "release_notes.txt"),
+        promotionalText: read_meta(meta, loc.locale, "promotional_text.txt")
+      })
     end
 
     UI.success("All deprecated locales filled.")
