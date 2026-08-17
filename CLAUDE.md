@@ -13,14 +13,21 @@ ASO plan: `aso-plan.md` · `docs/astro-aso-setup.md` · `docs/localization-aso.m
 **This repo is NOT the fastlane template canonical source** — that lives in the
 baseball StatScout repo. Metadata/screenshots here are app-specific.
 
-**Live 1.0 screenshots have duplicates** (as of 2026-08-17): the en-US
-`APP_IPHONE_67` set holds 10 shots because `01_qb_leaders.png` and
-`02_player_profile.png` were each uploaded twice, and `APP_IPAD_PRO_3GEN_129`
-holds `09_ipad_qb_leaders.png` twice. `fastlane/screenshots/en-US` is clean (9
-files, one each), so this was a partial re-upload, not a source problem. ASC
-refuses `DELETE /appScreenshots/{id}` on a submitted version (409
-`STATE_ERROR`), so the fix is the next draft version: `upload_metadata` already
-passes `overwrite_screenshots`, which clears the sets and re-uploads the 9.
+**Duplicate screenshots, fixed in 1.1.0** (2026-08-17): live 1.0 shipped the
+en-US `APP_IPHONE_67` set with 10 shots (`01_qb_leaders.png` and
+`02_player_profile.png` twice) and `APP_IPAD_PRO_3GEN_129` with 2 (the same file
+twice), from a partial re-upload — `fastlane/screenshots/en-US` was always clean
+at 9 files. ASC refuses `DELETE /appScreenshots/{id}` on a submitted version
+(409 `STATE_ERROR`), so it could only be fixed on a draft; the 1.1.0 draft
+inherited the dupes and they were deleted there. **Verify after any screenshot
+upload** — walk `appScreenshotSets` and compare `sourceFileChecksum`, because a
+partial `deliver` run appends rather than replaces and nothing warns you.
+
+**ASC draft versions:** `scripts/asc-ensure-draft-version.py` treats
+`ASC_DRAFT_VERSION` as *bump from here*, so passing `1.1.0` creates **1.1.1**.
+And a draft cannot be deleted once any build exists for the platform (409
+`STATE_ERROR`) — but an editable version's `versionString` **is** patchable, so
+`PATCH /appStoreVersions/{id}` is how you land on the exact number you wanted.
 
 **App Store reviews:** enjoyment funnel in `StatScout/Services/ReviewPromptTracker.swift`
 (passive triggers: 3rd+ player profile open, Pro player comparison). feedback
