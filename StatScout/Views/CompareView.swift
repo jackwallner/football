@@ -34,6 +34,17 @@ struct TeamComparisonRoute: Hashable {
 struct CompareView: View {
     @EnvironmentObject private var store: StoreService
     let viewModel: DashboardViewModel
+    /// Whether the Compare tab is the one on screen.
+    ///
+    /// All four tabs are mounted at once (see `RootTabView.tabView`, which keeps
+    /// each tab's navigation stack and scroll position alive by toggling opacity
+    /// rather than swapping views). That means this view's `onAppear` fires at
+    /// launch even when the user is looking at Stats - and it kicked off the
+    /// historical decode, so every Pro user paid 33k rows of it on every cold
+    /// launch, competing with the board they were actually waiting for, for a tab
+    /// they might never open. `HotColdView` already takes this flag for the same
+    /// reason; Compare never got it.
+    var isActive: Bool = true
 
     private enum PickerTarget: Identifiable {
         case playerA, playerB, yearPlayer, teamA, teamB
@@ -61,8 +72,9 @@ struct CompareView: View {
     @State private var teamPhaseB: SeasonPhase
     @State private var teamComparisonRoute: TeamComparisonRoute?
 
-    init(viewModel: DashboardViewModel) {
+    init(viewModel: DashboardViewModel, isActive: Bool = true) {
         self.viewModel = viewModel
+        self.isActive = isActive
         _seasonA = State(initialValue: viewModel.selectedSeason)
         _seasonB = State(initialValue: viewModel.selectedSeason)
         _phaseA = State(initialValue: viewModel.selectedPhase)
@@ -212,10 +224,14 @@ struct CompareView: View {
         .sheet(isPresented: $showingFollowSheet) {
             FollowPlayersSheet(viewModel: viewModel)
         }
-        .onAppear {
-            if store.isPro, !viewModel.hasLoadedHistorical, !viewModel.isHistoricalLoading {
-                Task { await viewModel.loadHistoricalIfNeeded() }
-            }
+        // Keyed on `isActive` rather than a bare `onAppear`, so the preload waits
+        // until the tab is actually opened. It still runs ahead of the user
+        // picking a player, which is the point of preloading at all.
+        .task(id: "\(isActive)-\(store.isPro)") {
+            guard isActive, store.isPro,
+                  !viewModel.hasLoadedHistorical,
+                  !viewModel.isHistoricalLoading else { return }
+            await viewModel.loadHistoricalIfNeeded()
         }
         .task(
             id: "\(activeSeasonA)-\(phaseA.rawValue)-\(activeSeasonB)-\(phaseB.rawValue)-\(activeTeamSeasonA)-\(teamPhaseA.rawValue)-\(activeTeamSeasonB)-\(teamPhaseB.rawValue)"

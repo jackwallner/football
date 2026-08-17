@@ -247,7 +247,10 @@ struct RootTabView: View {
             // CompareView declares its own ComparisonRoute / YearCompareRoute
             // destinations, so StandardDestinations is intentionally omitted
             // here to avoid a duplicate navigationDestination for the same type.
-            CompareView(viewModel: viewModel)
+            CompareView(
+                viewModel: viewModel,
+                isActive: selection == Tab.compare.rawValue
+            )
                 .navigationTitle("Compare")
                 .navigationBarTitleDisplayMode(.inline)
                 .modifier(GridironNavBar())
