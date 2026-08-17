@@ -12,7 +12,8 @@ struct RecentFormCard: View {
     /// sits on the same ruler as the season bar. Filtered to the player's type
     /// at curve-build time.
     let leaguePlayers: [Player]
-    let fetchGameLogs: ((Int, Int) async throws -> [PlayerGameLog])?
+    /// (playerId, season, phase).
+    let fetchGameLogs: ((Int, Int, SeasonPhase) async throws -> [PlayerGameLog])?
     let onUpgradeTap: () -> Void
 
     @State private var logs: [PlayerGameLog] = []
@@ -20,6 +21,10 @@ struct RecentFormCard: View {
     @State private var loadError: String?
     @State private var windowGames: Int = 5
     @State private var curves: LeaguePercentileCurves?
+
+    /// The phase the card's games come from - the profile is scoped to
+    /// whichever phase the user arrived on, and the player row carries it.
+    private var seasonPhase: SeasonPhase { player.seasonPhase }
 
     private var category: MetricCategory { player.primaryCategory }
     private var isDefense: Bool { category == .defense }
@@ -307,7 +312,7 @@ struct RecentFormCard: View {
         loading = true
         loadError = nil
         do {
-            let result = try await fetch(player.playerId, season)
+            let result = try await fetch(player.playerId, season, seasonPhase)
             logs = result
         } catch {
             if !isTaskCancellation(error) {

@@ -6,7 +6,8 @@ struct TeamView: View {
     let players: [Player]
     var season: Int? = nil
     var viewModel: DashboardViewModel? = nil
-    var fetchTeamGameLogs: ((String, Int, Date) async throws -> [PlayerGameLog])? = nil
+    /// (team, season, phase, since).
+    var fetchTeamGameLogs: ((String, Int, SeasonPhase, Date) async throws -> [PlayerGameLog])? = nil
     @State private var selectedTab: TeamTab = .advanced
     @State private var searchText = ""
     @State private var isSearching = false
@@ -62,6 +63,13 @@ struct TeamView: View {
 
     private var leaguePlayers: [Player] {
         viewModel?.seasonPlayers ?? []
+    }
+
+    /// The phase the whole page is reading. Every roster number already comes
+    /// from `seasonPlayers`, which is filtered by it; the cards need it too so
+    /// their game-log windows come from the same half of the year.
+    private var displayPhase: SeasonPhase {
+        viewModel?.selectedPhase ?? .regular
     }
 
     private var sortMetric: (label: String, category: MetricCategory)? {
@@ -248,7 +256,12 @@ struct TeamView: View {
         .onChange(of: displaySeason) { _, _ in
             applyDefaultDirectionIfMetricChanged()
         }
-        .task(id: "\(rosterMode.rawValue)-\(rosterWindow.rawValue)-\(displaySeason)-\(store.isPro)") {
+        // Same reasoning for the phase: a playoff roster carries a different set
+        // of metrics than the regular season's, so the sort chip has to re-resolve.
+        .onChange(of: viewModel?.selectedPhase) { _, _ in
+            applyDefaultDirectionIfMetricChanged()
+        }
+        .task(id: "\(rosterMode.rawValue)-\(rosterWindow.rawValue)-\(displaySeason)-\(viewModel?.selectedPhase.rawValue ?? "")-\(store.isPro)") {
             guard isRosterRecent else { return }
             await viewModel?.loadRecentFormIfNeeded(window: rosterWindow)
         }
@@ -293,6 +306,7 @@ struct TeamView: View {
             TeamRankingsCard(
                 team: team,
                 season: displaySeason,
+                seasonPhase: displayPhase,
                 players: players,
                 leaguePlayers: leaguePlayers,
                 fetchTeamGameLogs: fetchTeamGameLogs,
@@ -312,6 +326,7 @@ struct TeamView: View {
         TeamStandardCard(
             team: team,
             season: displaySeason,
+            seasonPhase: displayPhase,
             players: players,
             leaguePlayers: leaguePlayers,
             fetchTeamGameLogs: fetchTeamGameLogs,
@@ -649,25 +664,38 @@ struct TeamView: View {
         Self.allTeamAbbrs.sorted { teamFullName($0).localizedCompare(teamFullName($1)) == .orderedAscending }
     }
 
+    /// Season *and* season type, the same one control the Stats / Trends / Teams
+    /// bars carry. This was a season-only menu, which left the playoffs
+    /// unreachable from the one Teams screen most sessions actually see: every
+    /// number on this page is filtered by `selectedPhase`, and the Teams tab
+    /// pushes straight into your favorite club on first visit, so the phase
+    /// control back on the list was never passed through.
     private func navSeasonMenu(viewModel: DashboardViewModel) -> some View {
-        SeasonMenu(
+        SeasonPhasePicker(
             // A single team page, so no All Time - see
             // `seasonsExcludingAllTime` for why a career row can't be
             // attributed to one franchise.
             seasons: viewModel.seasonsExcludingAllTime,
-            selected: viewModel.selectedSeason,
-            isLocked: { viewModel.isSeasonLocked($0) },
-            onSelect: { season in
+            selectedSeason: viewModel.selectedSeason,
+            selectedPhase: viewModel.selectedPhase,
+            isSeasonLocked: { viewModel.isSeasonLocked($0) },
+            onSelectSeason: { season in
                 if viewModel.isSeasonLocked(season) {
                     trialTrigger = .lockedSeason(season)
                 } else {
                     viewModel.selectedSeason = season
                 }
-            }
+            },
+            onSelectPhase: { viewModel.selectedPhase = $0 }
         ) {
+            // No glyph and the short year alone: the team name in the principal
+            // slot is long ("Jacksonville Jaguars"), and spelling the phase out
+            // here as well tipped the bar into sweeping the trailing item into a
+            // "..." overflow. The pill still says which phase it is, just in the
+            // shortest form that reads as a season type.
             GridironNavPill(
-                systemImage: "calendar",
                 title: SeasonLabel.text(viewModel.selectedSeason)
+                    + (viewModel.selectedPhase == .playoffs ? " · Playoffs" : "")
             )
         }
     }

@@ -14,10 +14,13 @@ struct TeamStandardCard: View {
     @EnvironmentObject private var store: StoreService
     let team: String
     let season: Int
+    /// See `TeamRankingsCard.seasonPhase`.
+    var seasonPhase: SeasonPhase = .regular
     let players: [Player]
     /// Every player in the season, used to build the thirty-two team lines.
     let leaguePlayers: [Player]
-    let fetchTeamGameLogs: ((String, Int, Date) async throws -> [PlayerGameLog])?
+    /// (team, season, phase, since).
+    let fetchTeamGameLogs: ((String, Int, SeasonPhase, Date) async throws -> [PlayerGameLog])?
     /// False on a historical season: the per-game logs a rolling window is built
     /// from are only kept for the live season, so the control is hidden rather
     /// than offered and left to come back empty.
@@ -134,7 +137,7 @@ struct TeamStandardCard: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
-        .task(id: "\(team)-\(season)-\(isRecent)-\(store.isPro)") {
+        .task(id: "\(team)-\(season)-\(seasonPhase.rawValue)-\(isRecent)-\(store.isPro)") {
             if isRecent, store.isPro { await load() }
         }
     }
@@ -561,9 +564,10 @@ struct TeamStandardCard: View {
         loadError = nil
         do {
             // Wide enough to cover the longest window plus byes, then trimmed to
-            // the last N distinct game dates in `sideLogs`.
-            let since = Calendar.current.date(byAdding: .day, value: -120, to: .now) ?? .now
-            logs = try await fetch(team, season, since)
+            // the last N distinct game dates in `sideLogs`. Anchored to the
+            // season's own end, not to today - see `gameLogWindowStart`.
+            let since = StatScoutSeason.gameLogWindowStart(season: season)
+            logs = try await fetch(team, season, seasonPhase, since)
         } catch {
             loadError = "Couldn't load team form. Pull to refresh."
         }

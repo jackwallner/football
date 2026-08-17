@@ -429,10 +429,10 @@ struct OnboardingCards: View {
             title: "Find Insights\nFast",
             description: "Four tabs cover every angle of the game. See what's happening across the league in seconds.",
             bullets: [
-                BulletItem(text: "Stats: sort the league, leaders, best and worst", icon: "checkmark.circle.fill", color: GridironPalette.turf),
-                BulletItem(text: "Trends: who's heating up and cooling off", icon: "checkmark.circle.fill", color: GridironPalette.turf),
-                BulletItem(text: "Teams: browse any roster, see who's hot", icon: "checkmark.circle.fill", color: GridironPalette.turf),
-                BulletItem(text: "Compare: stack two players head-to-head", icon: "checkmark.circle.fill", color: GridironPalette.turf)
+                BulletItem(text: "Stats: leaders, best and worst", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Trends: heating up, cooling off", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Teams: any roster, any season", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Compare: two players side by side", icon: "checkmark.circle.fill", color: GridironPalette.turf)
             ]
         ),
         OnboardingPage(
@@ -440,10 +440,10 @@ struct OnboardingCards: View {
             title: "Go Deeper\nwith StatScout+",
             description: "Season numbers tell you who's good. StatScout+ tells you who's good right now, and lets you prove it.",
             bullets: [
-                BulletItem(text: "The Trends board: the league ranked by who's moving", icon: "flame.fill", color: GridironPalette.turf),
-                BulletItem(text: "Last 3 / 5 / 8 game form on any player or team", icon: "chart.bar.fill", color: GridironPalette.turf),
-                BulletItem(text: "Head-to-head matchups across every percentile", icon: "person.2.fill", color: GridironPalette.turf),
-                BulletItem(text: "Every season back to 2000, plus year-over-year", icon: "calendar.badge.clock", color: GridironPalette.turf)
+                BulletItem(text: "Trends: the league ranked by form", icon: "flame.fill", color: GridironPalette.turf),
+                BulletItem(text: "Last 3 / 5 / 8 games, any player", icon: "chart.bar.fill", color: GridironPalette.turf),
+                BulletItem(text: "Head-to-head on every percentile", icon: "person.2.fill", color: GridironPalette.turf),
+                BulletItem(text: "Seasons back to 2000, year over year", icon: "calendar.badge.clock", color: GridironPalette.turf)
             ]
         )
     ]
@@ -455,19 +455,34 @@ struct OnboardingCard: View {
     let description: String
     let bullets: [BulletItem]
 
+    /// Sized to fit the shortest page slot, which is the last one.
+    ///
+    /// A `TabView` page gets whatever height is left over, and on the StatScout+
+    /// page the block below it is enormous - CTA, price disclosure paragraph,
+    /// Terms/Privacy, purchase button, status line, about 440pt of it. The card
+    /// wanted more than the ~370pt that leaves, so SwiftUI compressed it: every
+    /// one of the four benefit bullets collapsed to a single truncated line
+    /// ("The Trends board: the league ranked by…") and the page-index dots landed
+    /// on top of the fourth. The one screen whose entire job is to say what
+    /// StatScout+ is could not say any of it.
+    ///
+    /// So the art is smaller, the rhythm is tighter, the bullets are short enough
+    /// to set on one line at the default text size, and they wrap rather than
+    /// truncate if a larger one pushes them over. Losing 20pt of illustration is
+    /// nothing next to losing the copy.
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer(minLength: 12)
+        VStack(spacing: 16) {
+            Spacer(minLength: 0)
 
             ZStack {
                 StatcastBarBackdrop()
-                    .frame(width: 220, height: 120)
+                    .frame(width: 200, height: 104)
                 ZStack {
                     Circle()
                         .fill(GridironPalette.midnight)
-                        .frame(width: 96, height: 96)
+                        .frame(width: 84, height: 84)
                     Image(systemName: icon)
-                        .font(.system(size: 42, weight: .semibold))
+                        .font(.system(size: 36, weight: .semibold))
                         .foregroundStyle(.white)
                 }
                 .shadow(color: GridironPalette.midnight.opacity(0.25), radius: 12, y: 4)
@@ -493,12 +508,18 @@ struct OnboardingCard: View {
                         Text(bullet.text)
                             .font(GridironType.body)
                             .foregroundStyle(GridironPalette.ink)
+                            // Wrap, never truncate. A benefit that ends in an
+                            // ellipsis is worse than one set on two lines.
+                            .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
                     }
                 }
             }
-            .padding(.horizontal, 36)
+            .padding(.horizontal, 24)
             .padding(.top, 4)
+            // Clears the page-index dots, which the `TabView` draws inside its
+            // own bottom edge and so on top of whatever the card put there.
+            .padding(.bottom, 28)
 
             Spacer()
         }

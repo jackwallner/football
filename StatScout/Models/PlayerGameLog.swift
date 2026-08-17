@@ -5,6 +5,16 @@ import Foundation
 struct PlayerGameLog: Codable, Hashable, Sendable {
     let playerId: Int
     let season: Int
+    /// Regular season or playoffs.
+    ///
+    /// The row has always carried this (`player_game_logs.season_type`); nothing
+    /// read it, and nothing filtered on it either, so every "last N games" window
+    /// in the app was built from whichever games happened most recently
+    /// regardless of phase. For a club that reached the playoffs that meant the
+    /// *Regular Season* board's last five games were mostly playoff games - the
+    /// postseason is what sits at the top of a date-descending list - and the
+    /// Playoffs board padded its short run out with December.
+    let seasonPhase: SeasonPhase
     let gameDate: Date
     let playerType: String
     let team: String?
@@ -18,6 +28,7 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey {
         case playerId = "player_id"
         case season
+        case seasonPhase = "season_type"
         case gameDate = "game_date"
         case playerType = "player_type"
         case team
@@ -31,6 +42,9 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         playerId = try c.decode(Int.self, forKey: .playerId)
         season = try c.decode(Int.self, forKey: .season)
+        // Defaulted rather than required: the fixtures in the test suite predate
+        // the column, and a row with no phase is a regular-season row.
+        seasonPhase = try c.decodeIfPresent(SeasonPhase.self, forKey: .seasonPhase) ?? .regular
         playerType = try c.decode(String.self, forKey: .playerType)
         team = try c.decodeIfPresent(String.self, forKey: .team)
         opponent = try c.decodeIfPresent(String.self, forKey: .opponent)
@@ -59,6 +73,7 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(playerId, forKey: .playerId)
         try c.encode(season, forKey: .season)
+        try c.encode(seasonPhase, forKey: .seasonPhase)
         try c.encode(playerType, forKey: .playerType)
         try c.encodeIfPresent(team, forKey: .team)
         try c.encodeIfPresent(opponent, forKey: .opponent)

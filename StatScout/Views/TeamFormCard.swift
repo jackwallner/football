@@ -16,13 +16,20 @@ struct TeamRankingsCard: View {
     @EnvironmentObject private var store: StoreService
     let team: String
     let season: Int
+    /// Which half of the year the roster's numbers come from. The rolling window
+    /// is built from game logs, and those have to be filtered to the same phase
+    /// the season bars are showing - a playoff club's five most recent games are
+    /// its playoff games, so an unfiltered window put January football under a
+    /// "Regular Season" heading.
+    var seasonPhase: SeasonPhase = .regular
     /// The roster for this team/season.
     let players: [Player]
     /// League pool used to build the value→percentile curve so the team bar sits
     /// on the same ruler as individual players' bars. Filtered per side at
     /// curve-build time.
     let leaguePlayers: [Player]
-    let fetchTeamGameLogs: ((String, Int, Date) async throws -> [PlayerGameLog])?
+    /// (team, season, phase, since).
+    let fetchTeamGameLogs: ((String, Int, SeasonPhase, Date) async throws -> [PlayerGameLog])?
     /// False on a historical season: rolling windows are built from per-game
     /// logs, and those are only kept for the live season now, so Recent/Both
     /// are hidden rather than offered and left to come back empty.
@@ -102,7 +109,7 @@ struct TeamRankingsCard: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
-        .task(id: "\(team)-\(season)-\(effectiveMode.rawValue)-\(store.isPro)") {
+        .task(id: "\(team)-\(season)-\(seasonPhase.rawValue)-\(effectiveMode.rawValue)-\(store.isPro)") {
             if effectiveMode.usesRecent, store.isPro { await load() }
         }
         .onAppear { rebuildCurves() }
@@ -502,10 +509,11 @@ struct TeamRankingsCard: View {
         loading = true
         loadError = nil
         do {
-            // Pull a wide window (last ~120 days of the season) so the client can
-            // slice the most recent 1 / 3 / 5 games out of it.
-            let since = Calendar.current.date(byAdding: .day, value: -120, to: .now) ?? .now
-            logs = try await fetch(team, season, since)
+            // Pull a wide window (the last ~120 days of the season) so the client
+            // can slice the most recent 3 / 5 / 8 games out of it. Anchored to the
+            // season's own end, not to today - see `gameLogWindowStart`.
+            let since = StatScoutSeason.gameLogWindowStart(season: season)
+            logs = try await fetch(team, season, seasonPhase, since)
         } catch {
             if !isTaskCancellation(error) {
                 loadError = "Couldn't load team form. Check your connection and try again."
