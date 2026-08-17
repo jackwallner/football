@@ -458,8 +458,12 @@ struct PlayerProfileDestination: ViewModifier {
                     historicalLoadingMessage: viewModel.loadingMessage,
                     historicalLoadingProgress: viewModel.loadingProgress,
                     loadHistorical: { await viewModel.loadHistoricalIfNeeded() },
-                    fetchGameLogs: { id, season in
-                        try await viewModel.fetchGameLogs(playerId: id, season: season)
+                    fetchGameLogs: { id, season, phase in
+                        try await viewModel.fetchGameLogs(
+                            playerId: id,
+                            season: season,
+                            seasonPhase: phase
+                        )
                     },
                     comparisonCatalog: ComparisonCatalog(
                         viewModel: viewModel,
@@ -483,8 +487,13 @@ private struct StandardDestinations: ViewModifier {
                     players: viewModel.players(forTeam: dest.abbr),
                     season: viewModel.selectedSeason,
                     viewModel: viewModel,
-                    fetchTeamGameLogs: { team, season, since in
-                        try await viewModel.fetchTeamGameLogs(team: team, season: season, sinceDate: since)
+                    fetchTeamGameLogs: { team, season, phase, since in
+                        try await viewModel.fetchTeamGameLogs(
+                            team: team,
+                            season: season,
+                            seasonPhase: phase,
+                            sinceDate: since
+                        )
                     }
                 )
                     .modifier(GridironNavBar())

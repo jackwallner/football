@@ -96,7 +96,15 @@ struct AboutView: View {
                         Text(store.isPro ? "StatScout+ Unlocked" : "Free Version")
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.ink)
-                        Text(store.isPro ? "All StatScout+ features are active." : "Unlock historical seasons and year-over-year comparisons.")
+                        // Named to match `PaywallView.proFeatures`. This used to
+                        // promise "historical seasons and year-over-year
+                        // comparisons" and stop there, undercounting the
+                        // subscription by three features (Trends, recent form,
+                        // head-to-head) on the one screen a user reaches by
+                        // going looking for the offer.
+                        Text(store.isPro
+                             ? "All StatScout+ features are active."
+                             : "Unlock Trends, recent form, head-to-head and every season back to 2000.")
                             .font(GridironType.small)
                             .foregroundStyle(GridironPalette.inkSecondary)
                     }
@@ -364,39 +372,132 @@ struct StatGlossaryView: View {
         return order.filter { category in entries.contains { $0.category == category } }
     }
 
+    /// A `ScrollView` of cards, not a `List` with `.searchable`.
+    ///
+    /// Two things were wrong with the system version. The app draws its own
+    /// floating tab bar over every screen, including pushed ones - and on iOS 26
+    /// `.searchable` puts the search field at the *bottom* of the screen, so the
+    /// field materialised underneath the tab bar with its lower half clipped off.
+    /// Nothing about the search was reachable. And the grouped `List` was the one
+    /// screen in the app rendering system chrome instead of the card idiom
+    /// everything else uses, so it read as a different app.
+    ///
+    /// The in-content `SearchField` is the same control the Teams tab and the
+    /// team roster already use, it sits where the reader's eye starts, and it
+    /// cannot collide with the tab bar.
     var body: some View {
-        List {
-            Section {
+        ScrollView {
+            VStack(spacing: 12) {
+                SearchField(text: $searchText, prompt: "Search stats")
+
                 Text("Values come from nflverse player statistics and NFL Next Gen Stats. Percentiles are calculated separately for qualifying players in each season and season type.")
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
-            }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 4)
 
-            ForEach(categories, id: \.self) { category in
-                Section(category) {
-                    ForEach(entries.filter { $0.category == category }) { entry in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(entry.label)
-                                .font(GridironType.bodyBold)
-                                .foregroundStyle(GridironPalette.ink)
-                            Text(entry.description)
-                                .font(GridironType.small)
-                                .foregroundStyle(GridironPalette.inkSecondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(.vertical, 4)
+                if entries.isEmpty {
+                    ContentUnavailableView {
+                        Label("No stats found", systemImage: "magnifyingglass")
+                    } description: {
+                        Text("Nothing matches \"\(searchText)\". Try a stat's abbreviation, like YAC or EPA.")
+                    }
+                    .padding(.vertical, 40)
+                } else {
+                    ForEach(categories, id: \.self) { category in
+                        categoryCard(category)
                     }
                 }
-            }
 
-            Section("Sources") {
-                Link("NFL Next Gen Stats Glossary", destination: URL(string: "https://nextgenstats.nfl.com/glossary")!)
-                Link("nflreadpy Player Stats", destination: URL(string: "https://nflreadpy.nflverse.com/api/load_functions/#nflreadpy.load_player_stats")!)
+                sourcesCard
             }
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
+            // Scroll-under spacer for the floating tab bar, same as every other
+            // scrolling screen.
+            Color.clear.frame(height: 88)
         }
-        .searchable(text: $searchText, prompt: "Search stats")
+        .scrollDismissesKeyboard(.interactively)
+        .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationTitle("Stat Glossary")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func categoryCard(_ category: String) -> some View {
+        VStack(spacing: 0) {
+            GridironSectionBar(title: category.uppercased())
+
+            let rows = entries.filter { $0.category == category }
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, entry in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(entry.label)
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(GridironPalette.ink)
+                    Text(entry.description)
+                        .font(GridironType.small)
+                        .foregroundStyle(GridironPalette.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(GridironGeo.padCard)
+                .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
+                .overlay(
+                    Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
+                    alignment: .bottom
+                )
+            }
+        }
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+    }
+
+    private var sourcesCard: some View {
+        VStack(spacing: 0) {
+            GridironSectionBar(title: "SOURCES")
+            sourceRow(
+                "NFL Next Gen Stats Glossary",
+                url: URL(string: "https://nextgenstats.nfl.com/glossary")!
+            )
+            sourceRow(
+                "nflreadpy Player Stats",
+                url: URL(string: "https://nflreadpy.nflverse.com/api/load_functions/#nflreadpy.load_player_stats")!,
+                isLast: true
+            )
+        }
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+    }
+
+    private func sourceRow(_ title: String, url: URL, isLast: Bool = false) -> some View {
+        Link(destination: url) {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.turf)
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(GridironPalette.inkTertiary)
+            }
+            .padding(GridironGeo.padCard)
+            .background(GridironPalette.surface)
+            .overlay(
+                Rectangle()
+                    .fill(isLast ? Color.clear : GridironPalette.divider)
+                    .frame(height: GridironGeo.hairline),
+                alignment: .bottom
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 

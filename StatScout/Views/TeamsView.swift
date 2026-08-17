@@ -275,7 +275,11 @@ struct TeamsView: View {
                     Label(noDataForSeason ? "No teams available" : "No teams found", systemImage: "magnifyingglass")
                 } description: {
                     Text(noDataForSeason
-                         ? "No teams have player data for the \(SeasonLabel.text(viewModel.selectedSeason)) season. Try selecting a different season from the Leaders tab."
+                         // Names the control, not a tab. There is no "Leaders"
+                         // tab (it is "Stats"), and the fix has not lived on
+                         // another screen since the season moved into the nav
+                         // bar - it is the pill at the top of this one.
+                         ? "No teams have player data for the \(SeasonLabel.text(viewModel.selectedSeason)) season. Pick another season from the pill at the top of the screen."
                          : "Try a different search term.")
                 }
                 .padding(.vertical, 48)

@@ -239,15 +239,38 @@ final class DashboardViewModel {
     /// Fetch per-game logs for a single player. Powers the Recent Form card.
     /// The VM is a passthrough so the card stays UI-only and we do not
     /// have to thread the provider through every PlayerProfileView caller.
-    func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog] {
-        try await provider.fetchGameLogs(playerId: playerId, season: season)
+    ///
+    /// The phase is a parameter rather than read off `selectedPhase` because a
+    /// player page carries its own: opening a 2025 playoff profile from a
+    /// regular-season board has to fetch that player's playoff games, not the
+    /// tab's.
+    func fetchGameLogs(
+        playerId: Int,
+        season: Int,
+        seasonPhase: SeasonPhase
+    ) async throws -> [PlayerGameLog] {
+        try await provider.fetchGameLogs(
+            playerId: playerId,
+            season: season,
+            seasonPhase: seasonPhase
+        )
     }
 
     /// Team-scoped game logs since `sinceDate`. The TeamRankingsCard caps at 30
     /// days so we don't pull the whole season for an aggregate we only ever
     /// slice into 7/15/30 day windows.
-    func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog] {
-        try await provider.fetchTeamGameLogs(team: team, season: season, sinceDate: sinceDate)
+    func fetchTeamGameLogs(
+        team: String,
+        season: Int,
+        seasonPhase: SeasonPhase,
+        sinceDate: Date
+    ) async throws -> [PlayerGameLog] {
+        try await provider.fetchTeamGameLogs(
+            team: team,
+            season: season,
+            seasonPhase: seasonPhase,
+            sinceDate: sinceDate
+        )
     }
 
     init(provider: StatcastProviding, cache: PlayerCaching? = nil) {

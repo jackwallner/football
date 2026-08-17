@@ -81,6 +81,77 @@ struct SeasonPhaseMenu<Trigger: View>: View {
     }
 }
 
+/// Season and season type in a single menu, behind whatever trigger the caller
+/// draws.
+///
+/// Season type comes *first*, and that ordering is the whole reason one menu
+/// can hold both. The season list is twenty-seven rows (All Time plus 2000
+/// through the current year), which is far taller than a menu can show, so with
+/// seasons on top the two phase rows sat below the fold: the control existed,
+/// scrolled to the very bottom of a long list, and to anyone opening the menu
+/// the playoffs simply weren't switchable. Two rows above a scrolling list cost
+/// the season picker nothing and make the phase the first thing you see.
+///
+/// Shared by the tab nav bars and the team page. The team page used to carry a
+/// season-only `SeasonMenu`, which is how a screen whose every number is filtered
+/// by `selectedPhase` ended up with no way to reach the playoffs - and because
+/// the Teams tab pushes straight into your favorite club on first visit, that
+/// was the *only* Teams screen most sessions ever saw.
+struct SeasonPhasePicker<Trigger: View>: View {
+    let seasons: [Int]
+    let selectedSeason: Int
+    let selectedPhase: SeasonPhase
+    let isSeasonLocked: (Int) -> Bool
+    let onSelectSeason: (Int) -> Void
+    let onSelectPhase: (SeasonPhase) -> Void
+    @ViewBuilder let label: () -> Trigger
+
+    var body: some View {
+        Menu {
+            Section("Season type") {
+                ForEach(SeasonPhase.allCases) { phase in
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        onSelectPhase(phase)
+                    } label: {
+                        if phase == selectedPhase {
+                            Label(phase.label, systemImage: "checkmark")
+                        } else {
+                            Text(phase.label)
+                        }
+                    }
+                }
+            }
+            Section("Season") {
+                ForEach(seasons, id: \.self) { season in
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        onSelectSeason(season)
+                    } label: {
+                        // A locked year keeps its crown and still routes the tap,
+                        // so it can pitch that specific season.
+                        if isSeasonLocked(season) {
+                            Label(SeasonLabel.text(season), systemImage: "crown.fill")
+                        } else if season == selectedSeason {
+                            Label(SeasonLabel.text(season), systemImage: "checkmark")
+                        } else {
+                            Text(SeasonLabel.text(season))
+                        }
+                    }
+                }
+            }
+        } label: {
+            label()
+        }
+        // Newest season first is the order the array already carries; without
+        // this UIKit reverses it for menus that open upward.
+        .menuOrder(.fixed)
+        .gridironMenuAppearance()
+        .accessibilityLabel("Season and season type")
+        .accessibilityValue(SeasonLabel.text(selectedSeason) + ", " + selectedPhase.label)
+    }
+}
+
 /// Season + phase context in the navigation bar itself, alongside the tab's
 /// title.
 ///
@@ -151,49 +222,16 @@ struct SeasonPhaseNavBar: ViewModifier {
     /// and still is) and reads better besides: "2025 · Regular" is a single fact
     /// about what you're looking at, not two settings that happen to be adjacent.
     ///
-    /// Season type comes *first*, and that ordering is the whole reason the
-    /// merge works. The season list is twenty-seven rows (All Time plus 2000
-    /// through the current year), which is far taller than a menu can show, so
-    /// with seasons on top the two phase rows sat below the fold: the control
-    /// existed, scrolled to the very bottom of a long list, and to anyone
-    /// opening the menu the playoffs simply weren't switchable. Two rows above
-    /// a scrolling list cost the season picker nothing and make the phase the
-    /// first thing you see.
+    /// See `SeasonPhasePicker` for why season type sits above the season list.
     private var pills: some View {
-        Menu {
-            Section("Season type") {
-                ForEach(SeasonPhase.allCases) { phase in
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        onSelectPhase(phase)
-                    } label: {
-                        if phase == selectedPhase {
-                            Label(phase.label, systemImage: "checkmark")
-                        } else {
-                            Text(phase.label)
-                        }
-                    }
-                }
-            }
-            Section("Season") {
-                ForEach(seasons, id: \.self) { season in
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        onSelectSeason(season)
-                    } label: {
-                        // A locked year keeps its crown and still routes the tap,
-                        // so it can pitch that specific season.
-                        if isSeasonLocked(season) {
-                            Label(SeasonLabel.text(season), systemImage: "crown.fill")
-                        } else if season == selectedSeason {
-                            Label(SeasonLabel.text(season), systemImage: "checkmark")
-                        } else {
-                            Text(SeasonLabel.text(season))
-                        }
-                    }
-                }
-            }
-        } label: {
+        SeasonPhasePicker(
+            seasons: seasons,
+            selectedSeason: selectedSeason,
+            selectedPhase: selectedPhase,
+            isSeasonLocked: isSeasonLocked,
+            onSelectSeason: onSelectSeason,
+            onSelectPhase: onSelectPhase
+        ) {
             // No calendar glyph.
             //
             // Spelling the phase out in full ("Regular Season", not "Regular")
@@ -208,10 +246,6 @@ struct SeasonPhaseNavBar: ViewModifier {
                 title: SeasonLabel.text(selectedSeason) + " · " + selectedPhase.label
             )
         }
-        .menuOrder(.fixed)
-        .gridironMenuAppearance()
-        .accessibilityLabel("Season and season type")
-        .accessibilityValue(SeasonLabel.text(selectedSeason) + ", " + selectedPhase.label)
     }
 }
 

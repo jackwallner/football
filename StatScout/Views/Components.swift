@@ -220,6 +220,9 @@ struct DualMetricBar: View {
 struct SearchField: View {
     @Binding var text: String
     var focusOnAppear: Bool = false
+    /// What this field searches. Defaults to the leaderboard's answer because
+    /// that is where most of them live; the glossary searches stats.
+    var prompt: String = "Search players or teams"
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -228,7 +231,7 @@ struct SearchField: View {
                 .foregroundStyle(GridironPalette.inkSecondary)
             ZStack(alignment: .leading) {
                 if text.isEmpty {
-                    Text("Search players or teams")
+                    Text(prompt)
                         .font(GridironType.body)
                         .foregroundStyle(GridironPalette.inkSecondary)
                         .allowsHitTesting(false)

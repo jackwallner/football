@@ -23,7 +23,9 @@ struct PlayerProfileView: View {
     /// them; the league's pre-aggregated week rollup is deliberately not wired
     /// in here, because a page about one player should count his games, not the
     /// league's weeks. See `standardRecentKeys`.
-    var fetchGameLogs: ((Int, Int) async throws -> [PlayerGameLog])?
+    /// (playerId, season, phase). The phase is part of the request, not a
+    /// post-filter: see `PlayerGameLog.seasonPhase`.
+    var fetchGameLogs: ((Int, Int, SeasonPhase) async throws -> [PlayerGameLog])?
     var comparisonCatalog: ComparisonCatalog?
     @State private var showPercentileInfo = false
     @State private var selectedTab: PlayerStatTab = .advanced
@@ -81,6 +83,10 @@ struct PlayerProfileView: View {
     private var phaseHistory: [Player] {
         history.filter { $0.seasonPhase == player.seasonPhase }
     }
+
+    /// The phase this profile is reading, for the game-log fetch and its cache
+    /// key. The season selector moves within a phase, never across one.
+    private var activePhase: SeasonPhase { player.seasonPhase }
 
     /// Season *and* phase.
     ///
@@ -952,12 +958,16 @@ struct PlayerProfileView: View {
         // Two cards want these logs now (percentiles and standard stats) and
         // each has its own task, so remember what is already in hand rather
         // than refetching the same season the moment the user switches tabs.
-        let key = "\(player.playerId)-\(season)"
+        // The phase belongs in the key. Without it, opening a player's regular
+        // season and then his playoffs reused the first fetch's games under the
+        // second heading - the cache said "same player, same season, already have
+        // it" about two different sets of football.
+        let key = "\(player.playerId)-\(season)-\(activePhase.rawValue)"
         if recentLogsKey == key, !recentLogs.isEmpty { return }
         recentLoading = true
         recentLoadError = nil
         do {
-            recentLogs = try await fetch(player.playerId, season)
+            recentLogs = try await fetch(player.playerId, season, activePhase)
             recentLogsKey = key
         } catch {
             // Distinguish "no games" from "fetch failed" - otherwise a network

@@ -12,8 +12,17 @@ protocol StatcastProviding: Sendable {
     func fetchPlayers() async throws -> [Player]
     func fetchHistoricalPlayers() async throws -> [Player]
     func fetchCurrentPlayers() async throws -> [Player]
-    func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog]
-    func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog]
+    func fetchGameLogs(
+        playerId: Int,
+        season: Int,
+        seasonPhase: SeasonPhase
+    ) async throws -> [PlayerGameLog]
+    func fetchTeamGameLogs(
+        team: String,
+        season: Int,
+        seasonPhase: SeasonPhase,
+        sinceDate: Date
+    ) async throws -> [PlayerGameLog]
     func fetchRecentForm(
         season: Int,
         seasonPhase: SeasonPhase,
@@ -78,13 +87,25 @@ struct StatcastAPI: StatcastProviding {
         ])
     }
 
-    func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog] {
+    /// One player's games, filtered to a single season *and phase*.
+    ///
+    /// The phase filter is not cosmetic. Playoff games are the newest rows a
+    /// season has, so without it a date-descending "last five games" for a club
+    /// that reached January was mostly playoff football no matter which phase the
+    /// user had selected - and a Playoffs board, which has at most four games to
+    /// work with, quietly topped itself up with December.
+    func fetchGameLogs(
+        playerId: Int,
+        season: Int,
+        seasonPhase: SeasonPhase
+    ) async throws -> [PlayerGameLog] {
         let endpoint = baseURL
             .appending(path: "rest/v1/player_game_logs")
             .appending(queryItems: [
                 URLQueryItem(name: "select", value: "*"),
                 URLQueryItem(name: "player_id", value: "eq.\(playerId)"),
                 URLQueryItem(name: "season", value: "eq.\(season)"),
+                URLQueryItem(name: "season_type", value: "eq.\(seasonPhase.rawValue)"),
                 URLQueryItem(name: "order", value: "game_date.desc"),
             ])
         var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData)
@@ -102,7 +123,14 @@ struct StatcastAPI: StatcastProviding {
         return rows.compactMap(\.value)
     }
 
-    func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog] {
+    /// A whole roster's games since `sinceDate`, filtered to one phase. Same
+    /// reasoning as `fetchGameLogs`.
+    func fetchTeamGameLogs(
+        team: String,
+        season: Int,
+        seasonPhase: SeasonPhase,
+        sinceDate: Date
+    ) async throws -> [PlayerGameLog] {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.timeZone = TimeZone(identifier: "America/New_York")
@@ -118,6 +146,7 @@ struct StatcastAPI: StatcastProviding {
                     URLQueryItem(name: "select", value: "*"),
                     URLQueryItem(name: "team", value: "eq.\(team)"),
                     URLQueryItem(name: "season", value: "eq.\(season)"),
+                    URLQueryItem(name: "season_type", value: "eq.\(seasonPhase.rawValue)"),
                     URLQueryItem(name: "game_date", value: "gte.\(sinceString)"),
                     URLQueryItem(name: "order", value: "game_date.desc"),
                     URLQueryItem(name: "limit", value: String(pageSize)),
@@ -311,8 +340,17 @@ struct OfflineStatcastAPI: StatcastProviding {
     func fetchPlayers() async throws -> [Player] { [] }
     func fetchHistoricalPlayers() async throws -> [Player] { [] }
     func fetchCurrentPlayers() async throws -> [Player] { [] }
-    func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog] { [] }
-    func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog] { [] }
+    func fetchGameLogs(
+        playerId: Int,
+        season: Int,
+        seasonPhase: SeasonPhase
+    ) async throws -> [PlayerGameLog] { [] }
+    func fetchTeamGameLogs(
+        team: String,
+        season: Int,
+        seasonPhase: SeasonPhase,
+        sinceDate: Date
+    ) async throws -> [PlayerGameLog] { [] }
     func fetchRecentForm(
         season: Int,
         seasonPhase: SeasonPhase,
@@ -335,11 +373,20 @@ struct PreviewStatcastAPI: StatcastProviding {
         SampleData.players.filter { ($0.season ?? 0) >= StatScoutSeason.current }
     }
 
-    func fetchGameLogs(playerId: Int, season: Int) async throws -> [PlayerGameLog] {
+    func fetchGameLogs(
+        playerId: Int,
+        season: Int,
+        seasonPhase: SeasonPhase
+    ) async throws -> [PlayerGameLog] {
         []
     }
 
-    func fetchTeamGameLogs(team: String, season: Int, sinceDate: Date) async throws -> [PlayerGameLog] {
+    func fetchTeamGameLogs(
+        team: String,
+        season: Int,
+        seasonPhase: SeasonPhase,
+        sinceDate: Date
+    ) async throws -> [PlayerGameLog] {
         []
     }
 
