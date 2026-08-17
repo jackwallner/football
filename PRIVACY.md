@@ -1,38 +1,31 @@
-# StatScout Privacy Policy
+# Football Next: StatScout Privacy Policy
 
-Last Updated: May 13, 2026
+Last updated: August 17, 2026
 
-StatScout is built with privacy as a core principle. Our approach to your data is simple: **We do not collect, store, or share your personal information.**
+Football Next: StatScout is a read-only NFL statistics app. It does not require an account.
 
-### 1. Data Collection
-StatScout does not collect any personal data. We do not require account creation, and we do not collect names, email addresses, phone numbers, or any other identifying information.
+## Data used by the app
 
-### 2. Usage Tracking
-The app does not use any third-party analytics or tracking pixels. We do not track your search history, the players you view, or your location.
+StatScout fetches publicly available NFL statistics from a Supabase-hosted database. Network requests necessarily include technical information such as an IP address, request time, user agent, and response status for delivery, security, and reliability. We do not use that information to build a profile or track users across apps.
 
-### 3. Data Storage
-All app preferences (such as your selected category) are stored locally on your device and are not transmitted to our servers.
+Filters, selected categories, and other app preferences remain on the device. StatScout does not collect names, email addresses, contacts, photos, location, health data, search history, or player-view history. It does not use advertising or analytics SDKs.
 
-### 4. In-App Purchases & Subscriptions
-StatScout offers optional Pro purchases:
+## Purchases and subscriptions
 
-- **Monthly subscription** — auto-renewing
-- **Yearly subscription** — auto-renewing, with an introductory free trial
-- **Lifetime** — one-time, non-consumable purchase
+StatScout+ includes monthly and yearly auto-renewing subscriptions and a one-time lifetime purchase. Monthly and yearly plans may include a 7-day introductory free trial for eligible accounts, as shown by Apple at purchase. Apple processes payment. RevenueCat verifies purchases and entitlement status and may process an anonymous app user ID, transaction and entitlement information, and limited technical app or device context. It does not receive football activity or personal contact information. See [RevenueCat's privacy policy](https://www.revenuecat.com/privacy/).
 
-All payment processing is handled securely by Apple through the App Store. StatScout does not collect or store your payment information. Auto-renewing subscriptions automatically renew at the end of each period unless cancelled at least 24 hours before the end of the current period. You can manage and cancel subscriptions at any time from your Apple ID Subscriptions settings. Free trials convert to a paid subscription unless cancelled before the trial ends.
+## Sharing, retention, and deletion
 
-Purchase offerings and entitlement status are verified through RevenueCat, our subscription-management provider, so the app can unlock Pro features across launches and devices. RevenueCat receives a randomly generated app user ID, device-level identifiers, and your App Store purchase history in order to verify entitlements. RevenueCat does not receive your name, email, or any identifier you provided to Apple. See [RevenueCat's privacy policy](https://www.revenuecat.com/privacy/) for details.
+We do not sell personal information or share it for advertising. Local preferences remain until you delete them or remove the app. Supabase and Apple may retain technical and transaction records under their own policies. Contact [jackwallner+ff@gmail.com](mailto:jackwallner+ff@gmail.com) for a privacy request.
 
-### 5. Third-Party Services
-StatScout fetches publicly available baseball statistics from our database hosted on Supabase. These requests transmit only the technical information necessary to fulfill the request (such as your IP address, which is standard for any internet communication) and are not linked to any personal identity by StatScout.
+## Children and changes
 
-### 6. Children's Privacy
-StatScout does not knowingly collect information from children. The app does not collect information from any user.
+Football Next: StatScout is not directed to children under 13 and does not knowingly collect personal information from children. We may update this policy when the app or its services change.
 
-### 7. Terms of Use
-By using StatScout you also agree to the [Terms of Use](https://jackwallner.github.io/baseball/terms.html), which describe billing, auto-renewal, and cancellation for the subscription products listed above.
+## Terms
 
-### 8. Contact
-If you have any questions about this Privacy Policy, please contact us at:
-**support@statscout.app**
+See the [Terms of Use](https://jackwallner.github.io/football/terms.html) for billing, auto-renewal, cancellation, and refunds.
+
+## Contact
+
+[jackwallner+ff@gmail.com](mailto:jackwallner+ff@gmail.com)
