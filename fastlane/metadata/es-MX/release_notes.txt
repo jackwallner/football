@@ -1,1 +1,7 @@
-Bienvenido a StatScout. Percentiles visuales de la NFL en pase, carrera, recepción y defensa, actualizados cada noche.
+Playoffs en todas las páginas de equipo. El selector de tipo de temporada ahora te acompaña dentro de la página de un club, así que los números de postemporada de un roster se leen igual que los de la temporada regular.
+
+Forma reciente corregida. Las ventanas de los últimos 3 / 5 / 8 partidos funcionan en una temporada terminada en lugar de quedarse vacías, y ya no mezclan partidos de temporada regular y playoffs.
+
+Un glosario que sí se encuentra. Cada página de jugador y de equipo ahora enlaza con las definiciones de todas las estadísticas de la app, y la búsqueda del glosario funciona.
+
+Además: los selectores de temporada de la página Comparar ya no cortan el año, y las pantallas de introducción ya no se recortan.

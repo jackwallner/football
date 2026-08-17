@@ -1,1 +1,7 @@
-Willkommen bei StatScout. Visuelle NFL-Perzentile für Passing, Rushing, Receiving und Defense, jede Nacht aktualisiert.
+Playoffs auf jeder Team-Seite. Die Umschaltung der Saisonart gilt jetzt auch auf der Seite eines Clubs, sodass sich die Playoff-Zahlen eines Kaders genauso lesen lassen wie die der regulären Saison.
+
+Aktuelle Form korrigiert. Die Fenster der letzten 3 / 5 / 8 Spiele funktionieren auch in einer abgeschlossenen Saison statt leer zu bleiben, und sie vermischen reguläre Saison und Playoffs nicht mehr.
+
+Ein Glossar, das man findet. Jede Spieler- und Team-Seite verlinkt jetzt auf die Definitionen aller Statistiken, und die Suche im Glossar funktioniert.
+
+Außerdem: Die Saisonauswahl auf der Vergleichsseite schneidet das Jahr nicht mehr ab, und die Einführungsseiten werden nicht mehr abgeschnitten.

@@ -150,6 +150,10 @@ struct PlayerProfileView: View {
                     yearCompareContent
                 }
 
+                StatGlossaryLink()
+                    .padding(.horizontal, 12)
+                    .padding(.top, 12)
+
                 Color.clear.frame(height: 88)
             }
         }

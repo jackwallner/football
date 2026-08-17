@@ -221,6 +221,10 @@ struct TeamView: View {
                     rosterContent
                 }
 
+                StatGlossaryLink()
+                    .padding(.horizontal, 12)
+                    .padding(.top, 12)
+
                 // Lets content scroll under the floating tab bar so the last
                 // rows aren't trapped behind it - matches Dashboard.
                 Color.clear.frame(height: 88)

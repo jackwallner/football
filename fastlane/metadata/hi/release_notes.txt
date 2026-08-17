@@ -1,1 +1,7 @@
-Welcome to StatScout. Visual NFL percentile rankings for passing, rushing, receiving, and defense, refreshed nightly. Browse leaderboards, open a player profile, track recent form, and compare players with StatScout+.
+Playoffs on every team page. The season type switch now follows you into a club's page, so a roster's postseason numbers read the same way its regular season does.
+
+Recent form fixed. Last 3 / 5 / 8 game windows work on a finished season instead of coming back empty, and they no longer mix regular season and playoff games into one window.
+
+A stat glossary you can find. Every player and team page now links to definitions for every stat in the app, and the glossary's own search works.
+
+Also: the Compare page's season pickers no longer cut off the year, and the intro screens no longer truncate.
