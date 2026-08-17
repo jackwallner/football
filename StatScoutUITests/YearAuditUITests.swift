@@ -17,6 +17,12 @@ final class YearAuditUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments += ["-hasCompletedOnboarding", "YES"]
+        // Pro, because the premise is "every season the menu offers draws a
+        // board" and a free user can reach exactly one of them. Without this the
+        // "at least two seasons" assertion below is unsatisfiable by design, and
+        // it duly failed with `["2024": "Unlock 2024"]` - the paywall's own copy,
+        // captured as though it were a player.
+        app.launchEnvironment["FORCE_PRO"] = "1"
         app.launch()
     }
 
@@ -25,12 +31,17 @@ final class YearAuditUITests: XCTestCase {
         // Row cells expose the player's name as their first static text; the
         // header row ("RANK"/"PLAYER") is excluded by skipping known labels.
         let ignored: Set<String> = ["RANK", "PLAYER", "TEAM"]
+        // A locked season replaces the rows with an upsell, and "Unlock 2024"
+        // contains a space just like a name does, so it satisfied every other
+        // rule here and got recorded as the season's top player.
+        let upsellPrefixes = ["Unlock", "Start ", "Try ", "See all"]
         for index in 0..<min(app.staticTexts.count, 40) {
             let text = app.staticTexts.element(boundBy: index)
             guard text.exists else { continue }
             let label = text.label.trimmingCharacters(in: .whitespaces)
             guard !label.isEmpty,
                   !ignored.contains(label.uppercased()),
+                  !upsellPrefixes.contains(where: { label.hasPrefix($0) }),
                   label.contains(" ")           // "Drake Maye", not "QB" or "0.31"
             else { continue }
             return label
@@ -111,9 +122,13 @@ final class YearAuditUITests: XCTestCase {
             return XCTFail("Season pill not found")
         }
 
-        let allTime = app.buttons["All Time"]
+        // "All since 2000", not "All Time" - see `SeasonLabel.text`, which
+        // renamed it deliberately because "All Time" claimed a century of
+        // football the data does not have. The test kept asking for the old
+        // label and so reported a missing menu row that was there all along.
+        let allTime = app.buttons[SeasonLabelText.allTime]
         guard allTime.waitForExistence(timeout: 5) else {
-            return XCTFail("All Time should be offered in the season menu")
+            return XCTFail("\(SeasonLabelText.allTime) should be offered in the season menu")
         }
         allTime.tap()
 
@@ -126,4 +141,10 @@ final class YearAuditUITests: XCTestCase {
         let appeared = board.waitForExistence(timeout: 30) || paywall.waitForExistence(timeout: 5)
         XCTAssertTrue(appeared, "All Time should show a board or the upgrade sheet")
     }
+}
+
+/// The season labels this suite addresses by text, kept next to the tests that
+/// use them so a rename in `SeasonLabel` has exactly one place to land here.
+enum SeasonLabelText {
+    static let allTime = "All since 2000"
 }
