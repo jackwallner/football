@@ -748,6 +748,57 @@ struct BlurGateUnlock: View {
     }
 }
 
+// MARK: - Stat Glossary Link
+
+/// Quiet "what do these mean?" footer, for the bottom of any screen that puts
+/// abbreviated stats in front of the reader.
+///
+/// The glossary already held a definition for every metric in the app and there
+/// was exactly one way in: Settings, behind the gear, two taps from anywhere.
+/// So the one moment a reader wants it - looking at a CPOE bar and wondering
+/// what CPOE is - was the moment it was furthest away, and nothing on the screen
+/// suggested it existed at all.
+///
+/// A footer rather than a badge on every row: the question is "what is all this",
+/// asked once, not "what is this one" asked forty times, and forty ⓘ glyphs down
+/// a percentile card would compete with the bars they annotate. Scrolling to the
+/// end of the page is already what someone does when they have run out of things
+/// to read.
+///
+/// Sits inside whatever `NavigationStack` hosts it, so the back button returns to
+/// the page you were reading rather than dumping you in Settings.
+struct StatGlossaryLink: View {
+    var body: some View {
+        NavigationLink {
+            StatGlossaryView()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(GridironPalette.turf)
+                Text("What do these stats mean?")
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.turf)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(GridironPalette.inkTertiary)
+            }
+            .padding(GridironGeo.padCard)
+            .frame(maxWidth: .infinity)
+            .background(GridironPalette.surface)
+            .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+            .overlay(
+                RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                    .stroke(GridironPalette.hairline, lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Stat glossary")
+        .accessibilityHint("Definitions for every stat in StatScout")
+    }
+}
+
 // MARK: - One-tap StatScout+ CTA
 
 /// The app's only in-place conversion control, and the reason there is no
