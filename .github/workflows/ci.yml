@@ -42,11 +42,31 @@ jobs:
       # healthy. That is a harness problem on a hosted runner, and pretending
       # otherwise is what produced the `|| true` in the first place. Run it
       # locally when touching navigation; see StatScoutUITests/SeasonPickerUITests.
+      # The destination is resolved, not hardcoded.
+      #
+      # It used to say `name=iPhone 16`, and that device is not installed on the
+      # runner image any more (only `iPhone 16e` is) - so xcodebuild failed on
+      # destination resolution before running a single test, and `|| true`
+      # reported it as a pass. The job had been testing nothing at all. A pinned
+      # device name is guaranteed to rot every time Apple ships a phone; picking
+      # the newest available iPhone cannot.
       - name: Build and test
         run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available --json | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for runtime in sorted(devices, reverse=True):
+              for device in devices[runtime]:
+                  if device.get('isAvailable') and device['name'].startswith('iPhone'):
+                      print(device['udid'])
+                      raise SystemExit
+          raise SystemExit('no available iPhone simulator on this runner')
+          ")
+          xcrun simctl list devices available | grep -m1 "$UDID" || true
           xcodebuild -project StatScout.xcodeproj \
             -scheme StatScout \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination "id=$UDID" \
             -only-testing:StatScoutTests \
             test
         env:
