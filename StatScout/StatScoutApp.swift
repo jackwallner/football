@@ -8,6 +8,14 @@ struct StatScoutApp: App {
 
     init() {
         ReviewPromptTracker.recordAppLaunch()
+        ConversionDiagnostics.recordAppOpen()
+        #if DEBUG
+        if RevenueCatProbe.isEnabled {
+            // Same entry point the real paywall screens call, so what this
+            // proves is the actual path and not a parallel one.
+            StoreService.shared.trackPaywallImpression(id: RevenueCatProbe.impressionID)
+        }
+        #endif
         guard let urlString = Self.configValue(for: "SUPABASE_URL"),
               let url = URL(string: urlString),
               let key = Self.configValue(for: "SUPABASE_ANON_KEY") else {
