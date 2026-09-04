@@ -29,8 +29,8 @@ targets:
         DEVELOPMENT_TEAM: YXG4MP6W39
         PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.football
         PRODUCT_NAME: "Gridiron StatScout"
-        MARKETING_VERSION: "1.1.0"
-        CURRENT_PROJECT_VERSION: "35"
+        MARKETING_VERSION: "1.1.1"
+        CURRENT_PROJECT_VERSION: "38"
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: StatScout/Info.plist
         CODE_SIGN_ENTITLEMENTS: StatScout/StatScout.entitlements
