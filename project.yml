@@ -103,6 +103,24 @@ targets:
         TEST_TARGET_NAME: StatScout
 
 schemes:
+  # The paywall purchase probe, on its own scheme so the app is NOT built as a
+  # unit-test host. The StatScout scheme includes StatScoutTests, which makes
+  # Xcode embed Testing.framework and the XCTest frameworks into the app bundle
+  # -- and then the app dies at launch with
+  # "Library not loaded: @rpath/lib_TestingInterop.dylib", before any of this
+  # app's own code runs. Nothing to do with the paywall.
+  StatScoutUITests:
+    build:
+      targets:
+        StatScout: all
+        StatScoutUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - StatScoutUITests
+    run:
+      config: Debug
+
   StatScout:
     build:
       targets:
