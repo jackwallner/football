@@ -12,6 +12,6 @@ StatScout+ features (IAP via RevenueCat):
 - Trends, recent form, player comparisons, team scouting, seasons back to 2000, All-Time career percentiles
 - Test with a Sandbox account via RevenueCat
 
-Data: public nflverse / nflreadpy NFL statistics, refreshed nightly. Not affiliated with the NFL, any NFL team, or the NFLPA. No league, team, or player imagery is used anywhere in the app or the screenshots.
+Data: public nflverse / nflreadpy NFL statistics, refreshed nightly. Not affiliated with the NFL, any NFL team, or the NFLPA. No league, team, or player imagery is used.
 
 Known: no accounts, no social features, no live scores, no play-by-play, no projections or betting content.

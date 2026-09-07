@@ -1,1 +1,1 @@
-estadistiques,futbol,america,analisi,jugadors,comparar,temporada,epa,qb,equips,defensa
+nfl,estadístiques,jugadors,epa,cpoe,yac,comparar,passada,cursa,recepció,defensa,classificació

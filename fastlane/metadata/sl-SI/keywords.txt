@@ -1,1 +1,1 @@
-statistika,ameriski,nogomet,analiza,igralci,primerjava,sezona,epa,qb,ekipe,obramba
+nfl,statistika,igralci,epa,cpoe,yac,primerjava,podaje,teki,sprejemi,obramba,lestvica

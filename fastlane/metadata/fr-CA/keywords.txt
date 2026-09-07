@@ -1,1 +1,1 @@
-statistiques,americain,analyse,joueurs,comparer,saison,epa,qb,equipes,course,percentile
+nfl,stats,joueurs,epa,cpoe,yac,comparatif,passe,course,réception,défense,classement

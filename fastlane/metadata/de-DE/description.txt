@@ -1,34 +1,9 @@
-Wer führt die Liga wirklich an?
-Ranke NFL-Spieler nach fortgeschrittenen Metriken, lies ein vollständiges Perzentil-Profil mit einem Tipp und verfolge, wer gerade in Form kommt.
+Mehr als der Boxscore: Spieler-Ranglisten und Profile der aktuellen Saison kostenlos, mit erweiterten Kennzahlen sowie Pass-, Lauf-, Fang- und Defensivwerten.
 
-StatScout bündelt EPA pro Spielzug, CPOE, YAC over Expected, Lauf-Effizienz, Receiving-Produktion, Defense-Leistung und die klassischen Box-Score-Zahlen in einer schnellen iPhone-App.
+StatScout+ ergänzt Ligatrends, aktuelle Form, Spielervergleiche, Teamanalysen und Saisons bis 2000. Vergleiche zwei Spieler oder die Saisons eines Spielers. Neue Statistiken folgen verfügbaren Quelldaten. Kein Live-Ticker oder Fantasy-Teammanager.
 
-VISUELLE PERZENTILE
-Jede Metrik erscheint als Balken mit farbigem Marker, von Rost (0. Perzentil) über Sand (50.) bis Rasengrün (100.).
+Unabhängige App, nicht mit NFL, ihren Teams oder NFLPA verbunden.
 
-VOLLSTÄNDIGE SPIELERPROFILE
-Perzentil-Ranglisten für Passing, Rushing, Receiving und Defense, Umschalten zwischen fortgeschrittenen Metriken und Standardstatistiken, dazu die Form der letzten Spiele.
-
-NÄCHTLICHE UPDATES
-Die Daten werden jede Nacht aktualisiert, immer aktuell bis zum Ende der Vorwoche.
-
-BESTENLISTEN UND FILTER
-Die gesamte Liga, gefiltert nach Passing, Rushing, Receiving oder Defense. Sortieren, suchen, antippen.
-
-STATSCOUT+
-- Trends: die ganze Liga danach sortiert, wer heiß läuft und wer abkühlt
-- Recent Form: die letzten 3 / 5 / 8 Spiele
-- Spielervergleich: zwei Spieler nebeneinander oder ein Spieler über mehrere Jahre
-- Team-Scouting: alle 32 Klubs
-- Historie: jede Saison zurück bis 2000, plus All-Time-Karriereperzentile
-
-PRIVATSPHÄRE ZUERST
-Keine Konten. Keine Anmeldung. Keine Werbung. Kein Tracking durch Dritte.
-
-Abo-Details
-StatScout+ ist als automatisch verlängerbares Abo (monatlich oder jährlich, beide mit 7 Tagen kostenlosem Test) oder als einmaliger Lifetime-Kauf erhältlich. Die Preise werden vor dem Kauf in der App angezeigt und unterscheiden sich je nach Region. Die Zahlung wird bei der Bestätigung über deine Apple-ID abgebucht. Abos verlängern sich automatisch, sofern sie nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums gekündigt werden. Verwalten oder kündigen kannst du jederzeit unter Einstellungen → Apple-ID → Abos.
-
-Datenschutz: https://jackwallner.github.io/football/privacy-policy.html
+Das Monatsabo kostet US$1.99, das Jahresabo US$9.99. Beide verlängern sich automatisch und enthalten bei Berechtigung eine 7-tägige kostenlose Probe. Apple belastet deinen Apple Account bei Bestätigung des Kaufs oder nach einer berechtigten Probe. Ohne Berechtigung erfolgt die Belastung bei Bestätigung. Die Verlängerung wird innerhalb der letzten 24 Stunden vor Periodenende berechnet. Verwalte oder kündige mindestens 24 Stunden vor Periodenende unter Einstellungen › Apple Account › Abonnements. Preise variieren je nach Region und werden vor dem Kauf angezeigt.
+Datenschutzerklärung: https://jackwallner.github.io/football/privacy-policy.html
 Nutzungsbedingungen (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-
-StatScout steht in keiner Verbindung zur National Football League (NFL), zu einem NFL-Team oder zur NFLPA und wird von diesen weder autorisiert noch unterstützt. Spieler- und Teamnamen sowie Statistiken dienen ausschließlich der Identifikation und Information.

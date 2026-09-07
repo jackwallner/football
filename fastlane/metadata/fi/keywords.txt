@@ -1,1 +1,1 @@
-tilastot,amerikkalainen,jalkapallo,analyysi,pelaajat,vertaa,kausi,epa,qb,joukkueet
+nfl,tilastot,pelaajat,epa,cpoe,yac,vertailu,heitot,juoksu,vastaanotto,puolustus,ranking

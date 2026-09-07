@@ -1,1 +1,1 @@
-statistici,fotbal,american,analiza,jucatori,comparatie,sezon,epa,qb,echipe,aparare
+nfl,statistici,jucători,epa,cpoe,yac,comparare,pase,alergare,recepții,apărare,clasament
