@@ -1,1 +1,1 @@
-analisis,mariscal,campo,jugadores,temporada,comparar,epa,cpoe,pases,carreras,defensa,equipos,liga
+nfl,estadísticas,jugadores,epa,cpoe,yac,comparar,pase,carrera,recepción,defensa,ranking

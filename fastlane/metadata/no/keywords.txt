@@ -1,1 +1,1 @@
-statistikk,amerikansk,fotball,analyse,spillere,sammenlign,sesong,epa,qb,lag,forsvar
+nfl,statistikk,spillere,epa,cpoe,yac,sammenlign,pasninger,løp,mottak,forsvar,tabell

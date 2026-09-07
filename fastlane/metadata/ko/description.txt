@@ -1,37 +1,9 @@
-See who leads beyond the box score.
-Rank NFL players by advanced metrics, read a full percentile profile in one tap, and track who is heating up or cooling off right now.
+점수 그 이상을 보세요. 현재 시즌 선수 순위와 프로필을 무료로 이용하고, 고급 지표와 패스, 러싱, 리시빙, 수비 기록을 함께 확인하세요.
 
-StatScout puts EPA per play, CPOE, YAC over expected, rushing efficiency, receiving production, defensive impact, and the familiar box-score totals in one fast iPhone app.
+StatScout+는 리그 추세, 최근 컨디션, 선수 비교, 팀 분석, 2000년 이후 시즌을 추가합니다. 두 선수 또는 한 선수의 시즌을 비교하세요. 통계는 원본 데이터가 제공되는 대로 업데이트됩니다. 실시간 점수 서비스나 판타지 팀 관리 앱이 아닙니다.
 
-VISUAL PERCENTILES
-Every metric displays as a horizontal percentile bar with a colored marker. The color shifts continuously from rust (0th percentile) through sand (50th) to turf green (100th), so you can spot elite performers instantly.
+NFL, 소속 팀, NFLPA와 제휴하지 않은 독립 앱입니다.
 
-COMPLETE PLAYER PROFILES
-Tap any player to see the full picture: percentile rankings across Passing, Rushing, Receiving, and Defense, a switch between advanced metrics and standard season stats, and recent form game by game.
-
-NIGHTLY UPDATES
-Our data feed refreshes every night, pulling the latest percentile rankings and standard stats for qualified players. What you see is always current through the previous week's games.
-
-LEADERBOARDS AND FILTERS
-Browse the full league leaderboard filtered by Passing, Rushing, Receiving, or Defense. Sort and search across every active player. Tap any row to open the full profile.
-
-STATSCOUT+
-Unlock the rest of the app with StatScout+:
-- Trends: the whole league ranked by who is heating up and cooling off
-- Recent Form: last 3 / 5 / 8 games on any player, club or leaderboard
-- Player Comparisons: any two players side by side, or one player year over year
-- Team Scouting: advanced and standard stats for all 32 clubs
-- Historical Seasons: every year back to 2000, plus All-Time career percentiles
-
-Choose Monthly, Yearly (with free trial), or Lifetime. One purchase covers everything.
-
-PRIVACY-FIRST
-No accounts. No sign-up. No ads. No third-party tracking. The app makes only the network requests needed for NFL statistics and optional purchase verification.
-
-Subscription Details
-StatScout+는 자동 갱신 구독(월간 또는 연간, 모두 7일 무료 체험 포함) 또는 일회성 Lifetime 구입으로 이용할 수 있습니다. 가격은 구입 전 앱에 표시되며 지역에 따라 다릅니다. 결제는 확인 시 Apple ID로 청구됩니다. 현재 기간 종료 최소 24시간 전에 취소하지 않으면 구독이 자동으로 갱신됩니다. 설정 → Apple ID → 구독에서 언제든지 관리하거나 취소할 수 있습니다.
-
-Privacy Policy: https://jackwallner.github.io/football/privacy-policy.html
-Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-
-StatScout is not affiliated with, authorized, endorsed by, or sponsored by the National Football League (NFL), any NFL team, or the NFLPA. Player names, team names, and statistics are used for identification and informational purposes only.
+월간 요금제는 US$1.99, 연간 요금제는 US$9.99입니다. 두 요금제 모두 자동 갱신되며, 대상자에게는 7일 무료 체험이 제공됩니다. Apple은 구매 확인 시 또는 대상 무료 체험 후 Apple 계정에 청구합니다. 대상이 아니면 확인 시 청구합니다. 갱신 요금은 현재 기간 종료 전 24시간 이내에 청구됩니다. 기간 종료 최소 24시간 전까지 설정 › Apple 계정 › 구독에서 관리하거나 취소하세요. 가격은 지역별로 다르며 구매 전에 표시됩니다.
+개인정보 처리방침: https://jackwallner.github.io/football/privacy-policy.html
+이용 약관 (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

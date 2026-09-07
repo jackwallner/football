@@ -1,1 +1,1 @@
-statisztika,amerikai,foci,elemzes,jatekosok,osszehasonlitas,szezon,epa,qb,csapatok
+nfl,statisztika,játékosok,epa,cpoe,yac,összehasonlítás,passz,futás,elkapás,védelem,rangsor

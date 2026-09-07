@@ -1,1 +1,1 @@
-statistiky,americky,futbal,analyza,hraci,porovnanie,sezona,epa,qb,timy,obrana
+nfl,štatistiky,hráči,epa,cpoe,yac,porovnanie,prihrávky,behy,príjem,obrana,rebríčky

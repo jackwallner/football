@@ -1,1 +1,1 @@
-statistik,bola,sepak,amerika,analisis,pemain,perbandingan,musim,epa,qb,pasukan
+nfl,statistik,pemain,quarterback,epa,cpoe,yac,bandingan,hantaran,larian,penerimaan,pertahanan

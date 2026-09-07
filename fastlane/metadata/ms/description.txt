@@ -1,37 +1,9 @@
-See who leads beyond the box score.
-Rank NFL players by advanced metrics, read a full percentile profile in one tap, and track who is heating up or cooling off right now.
+Lihat lebih daripada skor. Ranking dan profil pemain musim semasa percuma, dengan metrik lanjutan serta statistik hantaran, larian, penerimaan dan pertahanan.
 
-StatScout puts EPA per play, CPOE, YAC over expected, rushing efficiency, receiving production, defensive impact, and the familiar box-score totals in one fast iPhone app.
+StatScout+ menambah trend, prestasi terkini, perbandingan, analisis pasukan dan musim sejak 2000. Bandingkan dua pemain atau musim seorang pemain. Statistik mengikut ketersediaan data sumber. Bukan perkhidmatan skor langsung atau pengurus pasukan fantasy.
 
-VISUAL PERCENTILES
-Every metric displays as a horizontal percentile bar with a colored marker. The color shifts continuously from rust (0th percentile) through sand (50th) to turf green (100th), so you can spot elite performers instantly.
+Aplikasi bebas, tidak bersekutu dengan NFL, pasukannya atau NFLPA.
 
-COMPLETE PLAYER PROFILES
-Tap any player to see the full picture: percentile rankings across Passing, Rushing, Receiving, and Defense, a switch between advanced metrics and standard season stats, and recent form game by game.
-
-NIGHTLY UPDATES
-Our data feed refreshes every night, pulling the latest percentile rankings and standard stats for qualified players. What you see is always current through the previous week's games.
-
-LEADERBOARDS AND FILTERS
-Browse the full league leaderboard filtered by Passing, Rushing, Receiving, or Defense. Sort and search across every active player. Tap any row to open the full profile.
-
-STATSCOUT+
-Unlock the rest of the app with StatScout+:
-- Trends: the whole league ranked by who is heating up and cooling off
-- Recent Form: last 3 / 5 / 8 games on any player, club or leaderboard
-- Player Comparisons: any two players side by side, or one player year over year
-- Team Scouting: advanced and standard stats for all 32 clubs
-- Historical Seasons: every year back to 2000, plus All-Time career percentiles
-
-Choose Monthly, Yearly (with free trial), or Lifetime. One purchase covers everything.
-
-PRIVACY-FIRST
-No accounts. No sign-up. No ads. No third-party tracking. The app makes only the network requests needed for NFL statistics and optional purchase verification.
-
-Subscription Details
-StatScout+ ditawarkan sebagai langganan yang diperbaharui secara automatik (Bulanan atau Tahunan, kedua-duanya dengan percubaan percuma 7 hari) atau sebagai pembelian Lifetime sekali sahaja. Harga dipaparkan dalam app sebelum anda membeli dan berbeza mengikut wilayah. Bayaran dicaj ke Apple ID anda semasa pengesahan. Langganan diperbaharui secara automatik melainkan dibatalkan sekurang-kurangnya 24 jam sebelum tempoh semasa berakhir. Urus atau batalkan bila-bila masa di Tetapan → Apple ID → Langganan.
-
-Privacy Policy: https://jackwallner.github.io/football/privacy-policy.html
-Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-
-StatScout is not affiliated with, authorized, endorsed by, or sponsored by the National Football League (NFL), any NFL team, or the NFLPA. Player names, team names, and statistics are used for identification and informational purposes only.
+Pelan bulanan berharga US$1.99 dan pelan tahunan berharga US$9.99. Kedua-duanya diperbaharui secara automatik dan menawarkan percubaan percuma 7 hari jika layak. Apple mengenakan caj pada Akaun Apple anda apabila anda mengesahkan pembelian atau selepas percubaan yang layak. Jika tidak layak, caj dikenakan semasa pengesahan. Caj pembaharuan dikenakan dalam tempoh 24 jam sebelum tempoh semasa tamat. Urus atau batalkan di Tetapan › Akaun Apple › Langganan sekurang-kurangnya 24 jam sebelum tempoh tamat. Harga berbeza mengikut rantau dan dipaparkan sebelum pembelian.
+Dasar Privasi: https://jackwallner.github.io/football/privacy-policy.html
+Syarat Penggunaan (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

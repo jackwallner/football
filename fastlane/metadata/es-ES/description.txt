@@ -1,34 +1,9 @@
-¿Quién manda realmente en la liga?
-Ordena a los jugadores de la NFL por métricas avanzadas, abre un perfil completo de percentiles con un toque y sigue quién está encendido en este momento.
+Ve más allá del marcador. Consulta gratis clasificaciones y perfiles de la temporada actual, con métricas avanzadas y estadísticas de pase, carrera, recepción y defensa.
 
-StatScout reúne EPA por jugada, CPOE, YAC sobre lo esperado, eficiencia de carrera, producción de recepción, impacto defensivo y los números tradicionales en una app rápida para iPhone.
+StatScout+ añade tendencias, forma reciente, comparaciones, análisis de equipos y temporadas desde 2000. Compara dos jugadores o las temporadas de uno. Las estadísticas se actualizan cuando hay nuevos datos de origen. No es un marcador en directo ni un gestor fantasy.
 
-PERCENTILES VISUALES
-Cada métrica se muestra como una barra con un marcador de color, del óxido (percentil 0) a la arena (50) y al verde césped (100).
+App independiente, no afiliada a la NFL, sus equipos ni la NFLPA.
 
-PERFILES COMPLETOS
-Percentiles en Pase, Carrera, Recepción y Defensa, cambio entre métricas avanzadas y estadísticas estándar, y forma reciente partido a partido.
-
-ACTUALIZACIONES CADA NOCHE
-Los datos se actualizan todas las noches, siempre al día hasta los partidos de la semana anterior.
-
-TABLAS Y FILTROS
-Toda la liga filtrada por Pase, Carrera, Recepción o Defensa. Ordena, busca y abre cualquier perfil.
-
-STATSCOUT+
-- Tendencias: la liga entera ordenada por quién sube y quién baja
-- Forma reciente: últimos 3 / 5 / 8 partidos
-- Comparaciones: dos jugadores lado a lado, o un jugador año con año
-- Scouting de equipos: los 32 clubes
-- Historial: cada temporada desde 2000, más percentiles de carrera de todos los tiempos
-
-PRIVACIDAD PRIMERO
-Sin cuentas. Sin registro. Sin anuncios. Sin rastreo de terceros.
-
-Detalles de la suscripción
-StatScout+ está disponible como suscripción de renovación automática (mensual o anual, ambas con 7 días de prueba gratis) o como compra única Lifetime. Los precios se muestran en la app antes de comprar y varían según la región. El pago se carga a tu Apple ID al confirmar. Las suscripciones se renuevan automáticamente salvo que se cancelen al menos 24 horas antes de que termine el periodo en curso. Gestiona o cancela cuando quieras en Ajustes → Apple ID → Suscripciones.
-
+El plan mensual cuesta US$1.99 y el anual US$9.99. Ambos se renuevan automáticamente e incluyen una prueba gratis de 7 días si eres elegible. Apple cobra en tu Cuenta de Apple al confirmar la compra o después de una prueba elegible. Si no eres elegible, cobra al confirmar. El cargo de renovación se realiza dentro de las 24 horas anteriores al final del periodo. Gestiona o cancela en Ajustes › Cuenta de Apple › Suscripciones al menos 24 horas antes del final. Los precios varían según la región y se muestran antes de comprar.
 Política de privacidad: https://jackwallner.github.io/football/privacy-policy.html
 Términos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-
-StatScout no está afiliado, autorizado, respaldado ni patrocinado por la National Football League (NFL), ningún equipo de la NFL o la NFLPA. Los nombres de jugadores y equipos y las estadísticas se usan solo con fines de identificación e información.
