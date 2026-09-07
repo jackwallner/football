@@ -1,9 +1,37 @@
-Več kot rezultat. Brezplačne lestvice in profili trenutne sezone z naprednimi merami ter statistiko podaj, tekov, sprejemov in obrambe.
+See who leads beyond the box score.
+Rank NFL players by advanced metrics, read a full percentile profile in one tap, and track who is heating up or cooling off right now.
 
-StatScout+ dodaja trende, zadnjo formo, primerjave, analize ekip in sezone od leta 2000. Primerjajte dva igralca ali sezone enega igralca. Statistike sledijo razpoložljivosti izvornih podatkov. Ni storitev rezultatov v živo ali upravitelj fantasy ekipe.
+StatScout puts EPA per play, CPOE, YAC over expected, rushing efficiency, receiving production, defensive impact, and the familiar box-score totals in one fast iPhone app.
 
-Neodvisna aplikacija brez povezave z NFL, njenimi ekipami ali NFLPA.
+VISUAL PERCENTILES
+Every metric displays as a horizontal percentile bar with a colored marker. The color shifts continuously from rust (0th percentile) through sand (50th) to turf green (100th), so you can spot elite performers instantly.
 
-Mesečni paket stane US$1.99, letni pa US$9.99. Oba se samodejno podaljšujeta in ob upravičenosti vključujeta 7-dnevni brezplačni preizkus. Apple ob potrditvi nakupa ali po upravičenem preizkusu bremeni tvoj račun Apple. Če nisi upravičen, se bremenitev izvede ob potrditvi. Strošek podaljšanja se zaračuna v 24 urah pred koncem trenutnega obdobja. Upravljaj ali prekliči v Nastavitve › Račun Apple › Naročnine vsaj 24 ur pred koncem. Cene se razlikujejo glede na regijo in so prikazane pred nakupom.
-Pravilnik o zasebnosti: https://jackwallner.github.io/football/privacy-policy.html
-Pogoji uporabe (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+COMPLETE PLAYER PROFILES
+Tap any player to see the full picture: percentile rankings across Passing, Rushing, Receiving, and Defense, a switch between advanced metrics and standard season stats, and recent form game by game.
+
+NIGHTLY UPDATES
+Our data feed refreshes every night, pulling the latest percentile rankings and standard stats for qualified players. What you see is always current through the previous week's games.
+
+LEADERBOARDS AND FILTERS
+Browse the full league leaderboard filtered by Passing, Rushing, Receiving, or Defense. Sort and search across every active player. Tap any row to open the full profile.
+
+STATSCOUT+
+Unlock the rest of the app with StatScout+:
+- Trends: the whole league ranked by who is heating up and cooling off
+- Recent Form: last 3 / 5 / 8 games on any player, club or leaderboard
+- Player Comparisons: any two players side by side, or one player year over year
+- Team Scouting: advanced and standard stats for all 32 clubs
+- Historical Seasons: every year back to 2000, plus All-Time career percentiles
+
+Choose Monthly, Yearly (with free trial), or Lifetime. One purchase covers everything.
+
+PRIVACY-FIRST
+No accounts. No sign-up. No ads. No third-party tracking. The app makes only the network requests needed for NFL statistics and optional purchase verification.
+
+Subscription Details
+StatScout+ je na voljo kot samodejno obnavljajoča se naročnina (mesečna ali letna, obe s 7-dnevnim brezplačnim preizkusom) ali kot enkratni nakup Lifetime. Cene so prikazane v aplikaciji pred nakupom in se razlikujejo glede na regijo. Plačilo se ob potrditvi zaračuna na vaš Apple ID. Naročnine se samodejno obnovijo, razen če jih prekličete vsaj 24 ur pred koncem tekočega obdobja. Upravljajte ali prekličite jih kadar koli v Nastavitve → Apple ID → Naročnine.
+
+Privacy Policy: https://jackwallner.github.io/football/privacy-policy.html
+Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+StatScout is not affiliated with, authorized, endorsed by, or sponsored by the National Football League (NFL), any NFL team, or the NFLPA. Player names, team names, and statistics are used for identification and informational purposes only.

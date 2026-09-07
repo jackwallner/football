@@ -1,9 +1,37 @@
-স্কোরের বাইরে দেখুন। বর্তমান মৌসুমের খেলোয়াড় র‍্যাঙ্কিং ও প্রোফাইল বিনামূল্যে দেখুন, উন্নত মাপ এবং পাসিং, রাশিং, রিসিভিং ও ডিফেন্সের তথ্যসহ।
+See who leads beyond the box score.
+Rank NFL players by advanced metrics, read a full percentile profile in one tap, and track who is heating up or cooling off right now.
 
-StatScout+ প্রবণতা, সাম্প্রতিক ফর্ম, তুলনা, দল বিশ্লেষণ ও ২০০০ সাল থেকে মৌসুমগুলো যোগ করে। দুই খেলোয়াড় বা একজনের মৌসুম তুলনা করুন। উৎসের তথ্য পেলে পরিসংখ্যান আপডেট হয়। এটি লাইভ স্কোর বা ফ্যান্টাসি দল পরিচালনার সেবা নয়।
+StatScout puts EPA per play, CPOE, YAC over expected, rushing efficiency, receiving production, defensive impact, and the familiar box-score totals in one fast iPhone app.
 
-স্বাধীন অ্যাপ, NFL, তার দল বা NFLPA-এর সঙ্গে যুক্ত নয়।
+VISUAL PERCENTILES
+Every metric displays as a horizontal percentile bar with a colored marker. The color shifts continuously from rust (0th percentile) through sand (50th) to turf green (100th), so you can spot elite performers instantly.
 
-মাসিক প্ল্যানের দাম US$1.99 এবং বার্ষিক প্ল্যানের দাম US$9.99। দুটিই স্বয়ংক্রিয়ভাবে নবায়ন হয়, যোগ্য হলে প্রতিটিতে 7 দিনের বিনামূল্যের ট্রায়াল থাকে। কেনাকাটা নিশ্চিত করার সময়, অথবা যোগ্য ট্রায়াল শেষে, Apple আপনার Apple Account-এ চার্জ করবে। যোগ্য না হলে নিশ্চিত করার সময়ই চার্জ হবে। মেয়াদ শেষের আগের 24 ঘণ্টার মধ্যে নবায়নের চার্জ নেওয়া হয়। মেয়াদ শেষ হওয়ার অন্তত 24 ঘণ্টা আগে Settings › Apple Account › Subscriptions থেকে বাতিল করুন। দাম অঞ্চলভেদে বদলায় এবং কেনার আগে দেখানো হয়।
-গোপনীয়তা নীতি: https://jackwallner.github.io/football/privacy-policy.html
-ব্যবহারের শর্ত (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+COMPLETE PLAYER PROFILES
+Tap any player to see the full picture: percentile rankings across Passing, Rushing, Receiving, and Defense, a switch between advanced metrics and standard season stats, and recent form game by game.
+
+NIGHTLY UPDATES
+Our data feed refreshes every night, pulling the latest percentile rankings and standard stats for qualified players. What you see is always current through the previous week's games.
+
+LEADERBOARDS AND FILTERS
+Browse the full league leaderboard filtered by Passing, Rushing, Receiving, or Defense. Sort and search across every active player. Tap any row to open the full profile.
+
+STATSCOUT+
+Unlock the rest of the app with StatScout+:
+- Trends: the whole league ranked by who is heating up and cooling off
+- Recent Form: last 3 / 5 / 8 games on any player, club or leaderboard
+- Player Comparisons: any two players side by side, or one player year over year
+- Team Scouting: advanced and standard stats for all 32 clubs
+- Historical Seasons: every year back to 2000, plus All-Time career percentiles
+
+Choose Monthly, Yearly (with free trial), or Lifetime. One purchase covers everything.
+
+PRIVACY-FIRST
+No accounts. No sign-up. No ads. No third-party tracking. The app makes only the network requests needed for NFL statistics and optional purchase verification.
+
+Subscription Details
+StatScout+ স্বয়ংক্রিয়ভাবে নবায়নযোগ্য সাবস্ক্রিপশন (মাসিক বা বার্ষিক, দুটোতেই ৭ দিনের ফ্রি ট্রায়াল) অথবা একবারের Lifetime কেনার মাধ্যমে পাওয়া যায়। দাম কেনার আগে অ্যাপে দেখানো হয় এবং অঞ্চলভেদে আলাদা হয়। নিশ্চিত করার সময় আপনার Apple ID থেকে টাকা কাটা হয়। চলতি মেয়াদ শেষ হওয়ার অন্তত ২৪ ঘণ্টা আগে বাতিল না করলে সাবস্ক্রিপশন স্বয়ংক্রিয়ভাবে নবায়ন হয়। যেকোনো সময় Settings → Apple ID → Subscriptions থেকে পরিচালনা বা বাতিল করুন।
+
+Privacy Policy: https://jackwallner.github.io/football/privacy-policy.html
+Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+StatScout is not affiliated with, authorized, endorsed by, or sponsored by the National Football League (NFL), any NFL team, or the NFLPA. Player names, team names, and statistics are used for identification and informational purposes only.
