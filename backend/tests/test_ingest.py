@@ -113,6 +113,25 @@ def test_qualifies():
     assert not ingest.qualifies({"games": 7}, "Defense", "def")
 
 
+def test_week_one_of_a_live_season_qualifies_on_a_prorated_bar():
+    # The 2026 opener: one game played, nobody near 150 attempts.
+    agg = pd.DataFrame({"games": [1, 1, 1]})
+    scale = ingest.qualification_scale(agg, 2026)
+    assert scale == pytest.approx(1 / 17)
+    assert ingest.qualifies({"attempts": 33}, "Passing", "qb", scale=scale)
+    assert not ingest.qualifies({"attempts": 2}, "Passing", "qb", scale=scale)
+    assert ingest.qualifies({"carries": 10}, "Rushing", "rb", scale=scale)
+    assert ingest.qualifies({"targets": 3}, "Receiving", "wr", scale=scale)
+    assert ingest.qualifies({"games": 1}, "Defense", "def", scale=scale)
+    assert not ingest.qualifies({"games": 0}, "Defense", "def", scale=scale)
+
+
+def test_a_finished_season_keeps_its_full_qualification_bar():
+    assert ingest.qualification_scale(pd.DataFrame({"games": [17, 12]}), 2025) == 1.0
+    assert ingest.qualification_scale(pd.DataFrame({"games": [16, 9]}), 2019) == 1.0
+    assert ingest.qualification_scale(pd.DataFrame(), 2026) == 1.0
+
+
 def test_postseason_uses_phase_appropriate_qualification_floors():
     assert ingest.qualifies({"attempts": 20}, "Passing", "qb", "POST")
     assert ingest.qualifies({"carries": 8}, "Rushing", "rb", "POST")
