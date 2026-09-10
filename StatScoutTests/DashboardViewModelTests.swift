@@ -7,7 +7,7 @@ final class DashboardViewModelTests: XCTestCase {
         let players: [Player] = [
             Player(
                 playerId: 1, name: "A", team: "KC", position: "QB", handedness: "",
-                updatedAt: Date(), season: 2025, playerType: "qb",
+                updatedAt: Date(), season: StatScoutSeason.current, playerType: "qb",
                 metrics: [
                     Metric(id: "m1", label: "TD", value: "26", percentile: 90, category: .passing)
                 ],
@@ -16,7 +16,7 @@ final class DashboardViewModelTests: XCTestCase {
             ),
             Player(
                 playerId: 2, name: "B", team: "PHI", position: "RB", handedness: "",
-                updatedAt: Date(), season: 2025, playerType: "rb",
+                updatedAt: Date(), season: StatScoutSeason.current, playerType: "rb",
                 metrics: [
                     Metric(id: "m2", label: "TD", value: "13", percentile: 85, category: .rushing)
                 ],
@@ -177,7 +177,7 @@ final class DashboardViewModelTests: XCTestCase {
     func testSortLabelReflectsCategory() async {
         // Passers with a Pass Yds metric
         let passers = [
-            Player(playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", updatedAt: Date(), season: 2025, playerType: "qb", source: "nflreadpy",
+            Player(playerId: 1, name: "A", team: "KC", position: "QB", handedness: "", updatedAt: Date(), season: StatScoutSeason.current, playerType: "qb", source: "nflreadpy",
                    metrics: [Metric(id: "m1", label: "Pass Yds", value: "4,000", percentile: 90, category: .passing)], standardStats: [], games: [])
         ]
 
@@ -190,7 +190,7 @@ final class DashboardViewModelTests: XCTestCase {
 
         // Test with rushers
         let rushers = [
-            Player(playerId: 2, name: "B", team: "PHI", position: "RB", handedness: "", updatedAt: Date(), season: 2025, playerType: "rb", source: "nflreadpy",
+            Player(playerId: 2, name: "B", team: "PHI", position: "RB", handedness: "", updatedAt: Date(), season: StatScoutSeason.current, playerType: "rb", source: "nflreadpy",
                    metrics: [Metric(id: "m1", label: "Rush Yds", value: "1,500", percentile: 85, category: .rushing)], standardStats: [], games: [])
         ]
         let vmRushing = DashboardViewModel(provider: MockProvider(players: rushers))
@@ -220,7 +220,7 @@ final class DashboardViewModelTests: XCTestCase {
     func testRushingSortUsesAvailableMetrics() async {
         let back = Player(
             playerId: 1, name: "Test RB", team: "PHI", position: "RB",
-            handedness: "", updatedAt: Date(), season: 2025, playerType: "rb", source: "nflreadpy",
+            handedness: "", updatedAt: Date(), season: StatScoutSeason.current, playerType: "rb", source: "nflreadpy",
             metrics: [
                 Metric(id: "m1", label: "Rush Yds", value: "1,500", percentile: 85, category: .rushing),
                 Metric(id: "m2", label: "Y/C", value: "5.2", percentile: 70, category: .rushing)
@@ -288,15 +288,14 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertFalse(vm.isSeasonLocked(StatScoutSeason.allTime))
     }
 
-    /// The free season follows the data, not the calendar.
+    /// The free season is the calendar's season, even before its data lands.
     ///
-    /// `StatScoutSeason.current` is derived from the date now, so from September
-    /// onwards it names a season the pipeline may not have written a single row
-    /// for yet. Pinning the free tier to it there would open the app on an empty
-    /// board for the whole preseason, so it falls back to the newest season that
-    /// actually loaded.
+    /// Baseball StatScout's model: the live season is free and the default for
+    /// everyone from the day it starts; every earlier season is StatScout+. It
+    /// used to trail the data, which kept 2025 free and 2026 hidden after the
+    /// 2026 opener had been played.
     @MainActor
-    func testFreeSeasonFallsBackToTheNewestSeasonWithData() async {
+    func testFreeSeasonIsTheCalendarSeasonEvenBeforeItsDataLands() async {
         let stale = makeCompleteSeasonPlayers(
             season: StatScoutSeason.current - 1,
             namePrefix: "LastYear"
@@ -305,12 +304,26 @@ final class DashboardViewModelTests: XCTestCase {
 
         await vm.load()
 
-        XCTAssertEqual(vm.freeSeason, StatScoutSeason.current - 1)
-        XCTAssertFalse(vm.isSeasonLocked(StatScoutSeason.current - 1))
-        // And the menu stops at the newest season that exists, rather than
-        // offering an empty year above a full one.
-        XCTAssertEqual(vm.availableSeasons.first, StatScoutSeason.allTime)
-        XCTAssertFalse(vm.availableSeasons.contains(StatScoutSeason.current))
+        XCTAssertEqual(vm.freeSeason, StatScoutSeason.current)
+        XCTAssertEqual(vm.selectedSeason, StatScoutSeason.current)
+        XCTAssertTrue(vm.isSeasonLocked(StatScoutSeason.current - 1))
+        XCTAssertTrue(vm.availableSeasons.contains(StatScoutSeason.current))
+    }
+
+    /// Week 1: two teams have played. The live season is still the default,
+    /// for Pro too, and its thin board is what shows.
+    @MainActor
+    func testAThinLiveSeasonIsStillTheDefault() async {
+        let lastSeason = makeCompleteSeasonPlayers(season: StatScoutSeason.current - 1, namePrefix: "LastYear")
+        let opener = makeCompleteCurrentPlayers(namePrefix: "Opener").filter { ["NE", "SEA"].contains($0.team) }
+        let vm = DashboardViewModel(provider: MockProvider(players: lastSeason + opener))
+        vm.isPro = true
+
+        await vm.load()
+
+        XCTAssertEqual(vm.selectedSeason, StatScoutSeason.current)
+        XCTAssertFalse(vm.isSeasonLocked(StatScoutSeason.current))
+        XCTAssertTrue(vm.players.contains { $0.season == StatScoutSeason.current })
     }
 
     /// Recent form covers the live season and the one before it.
@@ -371,30 +384,13 @@ final class DashboardViewModelTests: XCTestCase {
         )
     }
 
-    /// The Thursday-after-kickoff moment, end to end.
-    ///
-    /// The calendar names the new season on 1 September, but the first rows do
-    /// not land until the opener has been played and the nightly job has run.
-    /// So the app spends those days on last season and then has to move by
-    /// itself when the new one appears - no new build, no relaunch, and no
-    /// blank board in between. Written in terms of `current` rather than literal
-    /// years because the whole point is that it survives the calendar rolling.
+    /// Kickoff, end to end: once the new season's rows land, it is the free
+    /// season and last season is Pro. Written in terms of `current` rather than
+    /// literal years because it has to survive the calendar rolling.
     @MainActor
     func testTheAppMovesToTheNewSeasonTheDayItsDataLands() async {
         let lastSeason = StatScoutSeason.current - 1
         let lastSeasonRows = makeCompleteSeasonPlayers(season: lastSeason, namePrefix: "LastYear")
-
-        // Before kickoff: the calendar has named the season, the database has
-        // nothing for it.
-        let preKickoff = DashboardViewModel(provider: MockProvider(players: lastSeasonRows))
-        await preKickoff.load()
-
-        XCTAssertEqual(preKickoff.freeSeason, lastSeason, "Before kickoff the app holds last season")
-        XCTAssertFalse(preKickoff.isSeasonLocked(lastSeason), "and leaves it free while it is the newest with data")
-        XCTAssertFalse(
-            preKickoff.availableSeasons.contains(StatScoutSeason.current),
-            "an empty season is never offered in the menu"
-        )
 
         // Kickoff night: the ingest writes the new season, the next fetch sees it.
         let postKickoff = DashboardViewModel(
@@ -531,16 +527,15 @@ final class DashboardViewModelTests: XCTestCase {
     }
 
     @MainActor
-    func testLoadSnapsSelectedSeasonToAvailableData() async {
-        let player2025 = Player(
-            playerId: 1, name: "Player 2025", team: "NYY", position: "RF", handedness: "R/R",
-            updatedAt: Date(), season: 2025, metrics: [], standardStats: [], games: []
+    func testLoadNeverSnapsAwayFromTheLiveSeason() async {
+        let lastSeason = Player(
+            playerId: 1, name: "Last Season", team: "KC", position: "QB", handedness: "",
+            updatedAt: Date(), season: StatScoutSeason.current - 1, metrics: [], standardStats: [], games: []
         )
-        let vm = DashboardViewModel(provider: MockProvider(players: [player2025]))
-        // Default selectedSeason is the current year. If the data only has 2025, load should snap.
-        vm.selectedSeason = 2030
+        let vm = DashboardViewModel(provider: MockProvider(players: [lastSeason]))
+        vm.isPro = true
         await vm.load()
-        XCTAssertEqual(vm.selectedSeason, 2025)
+        XCTAssertEqual(vm.selectedSeason, StatScoutSeason.current)
     }
 
     @MainActor

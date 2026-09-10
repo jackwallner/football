@@ -145,8 +145,8 @@ jobs:
       # about 26 MB a season, which is a rounding error against the 500 MB
       # budget. A nightly DELETE that has nothing to delete is pure risk: it
       # would have fired on the Sept 9 opener and dropped 2025's rows while the
-      # app still called 2025 the live season (the app waits for 30 teams of
-      # new-season data before switching). Prune again in a later offseason if
+      # app still shipped builds that called 2025 the live season. Prune again
+      # in a later offseason if
       # the size ever justifies it.
       - name: Upload artifacts on failure
         if: failure()
