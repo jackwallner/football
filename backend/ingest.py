@@ -26,6 +26,7 @@ season; ``--season N`` overrides both.
 
 import argparse
 import logging
+import math
 import os
 import sys
 from datetime import datetime, timezone
@@ -100,6 +101,27 @@ CAREER_POST_QUAL_CARRIES = 60
 CAREER_POST_QUAL_TARGETS = 40
 CAREER_POST_QUAL_RECEPTIONS = 25
 CAREER_POST_QUAL_GAMES = 6
+# The single-season thresholds describe a finished season. A season in progress
+# is held to the same bar prorated by how much of it has been played, otherwise
+# nobody clears 150 attempts in week 1 and the live season has no rows at all
+# until mid-October. 16 games a season through 2020, 17 from 2021.
+SEVENTEEN_GAME_FIRST_SEASON = 2021
+
+
+def qualification_scale(agg: pd.DataFrame, season: int) -> float:
+    """Fraction of a full regular season played so far, capped at 1.
+
+    Measured as the most games any player has appeared in, which tracks the
+    number of weeks played. A finished season always scales to 1, so every past
+    season keeps exactly the thresholds it was ranked on.
+    """
+    if agg.empty or "games" not in agg.columns:
+        return 1.0
+    full = 17 if season >= SEVENTEEN_GAME_FIRST_SEASON else 16
+    played = pd.to_numeric(agg["games"], errors="coerce").max()
+    if pd.isna(played) or played <= 0:
+        return 1.0
+    return min(1.0, float(played) / full)
 
 # Weekly counting stats summed to season totals.
 SUM_COLS = [
@@ -310,6 +332,7 @@ def qualifies(
     player_type: str,
     season_type: str = "REG",
     career: bool = False,
+    scale: float = 1.0,
 ) -> bool:
     """Whether a player clears the qualification threshold for a category.
 
@@ -317,6 +340,9 @@ def qualifies(
     postseason run (a handful of games, so the bar drops), a career (roughly
     three starting seasons, so it rises), and a *playoff* career, which is a
     career measured in games rather than seasons.
+
+    ``scale`` prorates the full-season tier for a season still being played
+    (see ``qualification_scale``); the other tiers ignore it.
     """
     def _num(col: str) -> float:
         val = row.get(col)
@@ -335,7 +361,9 @@ def qualifies(
     ) -> float:
         if career:
             return career_post if postseason else career_value
-        return post if postseason else season
+        if postseason:
+            return post
+        return max(1, math.ceil(season * scale)) if scale < 1 else season
 
     if category == "Passing":
         return _num("attempts") >= _threshold(
@@ -688,6 +716,7 @@ def build_snapshot_rows(
     season: int,
     now: datetime,
     season_type: str = "REG",
+    qual_scale: float = 1.0,
 ) -> list[dict]:
     """Build player_snapshots rows from an aggregated (id-indexed) DataFrame.
 
@@ -732,6 +761,7 @@ def build_snapshot_rows(
                 str(row.get("player_type") or ""),
                 season_type,
                 career=career,
+                scale=qual_scale,
             )
         ]
         if not qual_ids:
@@ -951,7 +981,10 @@ def main() -> None:
         any_rows = False
         for phase in phases:
             agg = build_agg_for_season(season, phase)
-            rows = build_snapshot_rows(agg, season, now, phase)
+            scale = qualification_scale(agg, season) if phase == "REG" else 1.0
+            if scale < 1:
+                logger.info("Season in progress: qualification prorated to %.2f.", scale)
+            rows = build_snapshot_rows(agg, season, now, phase, qual_scale=scale)
             if not rows:
                 if phase == "POST":
                     logger.info("No postseason rows for %s yet.", season)
