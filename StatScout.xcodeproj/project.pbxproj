@@ -47,6 +47,7 @@
 		74B3141C99DE044EECFC3928 /* MetricCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 918C7323DB9AE6711E8FB291 /* MetricCoverageTests.swift */; };
 		782034DA45CB4865169FAC3A /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = ECC29156729E44AD4F7721D1 /* RevenueCat */; };
 		7FB54B900D718DB5EA583C97 /* SeasonPickerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6EF83C10DB1C4887277F68 /* SeasonPickerUITests.swift */; };
+		87FCA2CBD23BD6254A28429E /* ConversionDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C79D4B6DD51D2FFCEE7E45 /* ConversionDiagnostics.swift */; };
 		882B19DAA2CDCB0931A3D971 /* MetricAggregationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3ED5C39610593199876A2FB /* MetricAggregationTests.swift */; };
 		942E9F7D87D52799D23B6738 /* StatScout.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 320FD0ADFE27C50B872F6000 /* StatScout.storekit */; };
 		97ADF393CE14DE856A50A0B5 /* StatScoutApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB59368024F23FBC63D833E /* StatScoutApp.swift */; };
@@ -72,8 +73,10 @@
 		D301316C6B07B213D27409B6 /* FollowPlayersSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 010E2231E8DE30734FAF333D /* FollowPlayersSheet.swift */; };
 		D3DAADB476B1D20557FF32A4 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372D20325E276F7B6CAA3798 /* StatsView.swift */; };
 		DBAED006FBC8ACCE2A4D49FD /* StoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F817C1759417F135E7CD20C2 /* StoreService.swift */; };
+		DD94DB0E328E4A929185BC69 /* PaywallFunnelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3ACCAE6ED2788F0378F5DF /* PaywallFunnelTests.swift */; };
 		DE3E81E46D644C2617940B7E /* PlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC2DEECB438987B32405C3A /* PlayerTests.swift */; };
 		F341C68173E63893D81C1AD6 /* PaywallScreenshotHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = C09B5BA2F2442F748C0FC062 /* PaywallScreenshotHarness.swift */; };
+		F3563F2B7F48DF97E111BC47 /* PaywallFunnelUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A66FC0340626BB4D22AA18 /* PaywallFunnelUITests.swift */; };
 		F6AE33EDC77A2F71DFC9A244 /* YearComparisonFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A722423BB05C1EA767098065 /* YearComparisonFeatureTests.swift */; };
 		F7175DB88FA0286F66E2A8ED /* players-historical.plist in Resources */ = {isa = PBXBuildFile; fileRef = 18DC891CB6C0193D0FAAE5FE /* players-historical.plist */; };
 		F87783F707F9A9C7CD06AD7F /* RecentFormWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 348129804486AD22EB3D6517 /* RecentFormWindowTests.swift */; };
@@ -130,6 +133,7 @@
 		57A36C805E9D0AB83292B6F7 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		5915A8F24A5447D26C221603 /* StatScout.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StatScout.entitlements; sourceTree = "<group>"; };
 		5BC5EE3CB654E37FE99FE844 /* StatScoutComprehensiveUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatScoutComprehensiveUITests.swift; sourceTree = "<group>"; };
+		5D3ACCAE6ED2788F0378F5DF /* PaywallFunnelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallFunnelTests.swift; sourceTree = "<group>"; };
 		5DC2DEECB438987B32405C3A /* PlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerTests.swift; sourceTree = "<group>"; };
 		6029BCBF6CD96B24E1EF3DDB /* TeamFormCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamFormCard.swift; sourceTree = "<group>"; };
 		645E5E03FB3FD048BA8F563F /* RecentFormScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentFormScreenshotUITests.swift; sourceTree = "<group>"; };
@@ -149,6 +153,7 @@
 		80FA4CA4AA0C875123767D0C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		82D4BEC37C8EF5436239336D /* RecentFormCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentFormCard.swift; sourceTree = "<group>"; };
 		8E9C629EF1C253BCEAF314EF /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		90C79D4B6DD51D2FFCEE7E45 /* ConversionDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionDiagnostics.swift; sourceTree = "<group>"; };
 		91414B3D597831487B630032 /* MetricLeadersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricLeadersView.swift; sourceTree = "<group>"; };
 		918C7323DB9AE6711E8FB291 /* MetricCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCoverageTests.swift; sourceTree = "<group>"; };
 		91C19D405CAFF37040ED3835 /* TrendMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendMetric.swift; sourceTree = "<group>"; };
@@ -166,6 +171,7 @@
 		C62780264C15B926A095378C /* ReviewPromptTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptTracker.swift; sourceTree = "<group>"; };
 		C7699F37BE47BC9BE5A5A4B1 /* StatScoutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = StatScoutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3ED5C39610593199876A2FB /* MetricAggregationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricAggregationTests.swift; sourceTree = "<group>"; };
+		D8A66FC0340626BB4D22AA18 /* PaywallFunnelUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallFunnelUITests.swift; sourceTree = "<group>"; };
 		DB9BD208212A80E565D98E52 /* MetricCoverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCoverage.swift; sourceTree = "<group>"; };
 		DE81BA97A394EF8D27C6BCF8 /* ReviewPromptSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptSheet.swift; sourceTree = "<group>"; };
 		E07A772C0BC9828B22A7CE51 /* FavoritesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesStore.swift; sourceTree = "<group>"; };
@@ -239,6 +245,7 @@
 				201451741378F756541C4BAC /* GameLogWindowTests.swift */,
 				D3ED5C39610593199876A2FB /* MetricAggregationTests.swift */,
 				918C7323DB9AE6711E8FB291 /* MetricCoverageTests.swift */,
+				5D3ACCAE6ED2788F0378F5DF /* PaywallFunnelTests.swift */,
 				5DC2DEECB438987B32405C3A /* PlayerTests.swift */,
 				2465A0297E76FA4725698DA2 /* PriceDisclosureTests.swift */,
 				348129804486AD22EB3D6517 /* RecentFormWindowTests.swift */,
@@ -275,6 +282,7 @@
 		7EDC7D0E9E4273221B5AFF44 /* StatScoutUITests */ = {
 			isa = PBXGroup;
 			children = (
+				D8A66FC0340626BB4D22AA18 /* PaywallFunnelUITests.swift */,
 				645E5E03FB3FD048BA8F563F /* RecentFormScreenshotUITests.swift */,
 				7D6EF83C10DB1C4887277F68 /* SeasonPickerUITests.swift */,
 				5BC5EE3CB654E37FE99FE844 /* StatScoutComprehensiveUITests.swift */,
@@ -316,6 +324,7 @@
 		C13D4BF64FC7CE5A7B9F7842 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				90C79D4B6DD51D2FFCEE7E45 /* ConversionDiagnostics.swift */,
 				E07A772C0BC9828B22A7CE51 /* FavoritesStore.swift */,
 				346E3D39DDC5F6FDD387016B /* PlayerCache.swift */,
 				C62780264C15B926A095378C /* ReviewPromptTracker.swift */,
@@ -528,6 +537,7 @@
 				6155B4BCD2048B55024BD3D4 /* GameLogWindowTests.swift in Sources */,
 				882B19DAA2CDCB0931A3D971 /* MetricAggregationTests.swift in Sources */,
 				74B3141C99DE044EECFC3928 /* MetricCoverageTests.swift in Sources */,
+				DD94DB0E328E4A929185BC69 /* PaywallFunnelTests.swift in Sources */,
 				DE3E81E46D644C2617940B7E /* PlayerTests.swift in Sources */,
 				1DFD19772DC05280C4E44489 /* PriceDisclosureTests.swift in Sources */,
 				F87783F707F9A9C7CD06AD7F /* RecentFormWindowTests.swift in Sources */,
@@ -548,6 +558,7 @@
 				6C9C8F6436C494C96CD05A41 /* AppStoreReviewLinks.swift in Sources */,
 				C2B134691749FA08C2DFDA6A /* CompareView.swift in Sources */,
 				53AAA361EDCCDA0BB2681CD8 /* Components.swift in Sources */,
+				87FCA2CBD23BD6254A28429E /* ConversionDiagnostics.swift in Sources */,
 				A6741F572242D827B65EF326 /* DashboardView.swift in Sources */,
 				B254FB702E1FD23611E5472B /* DashboardViewModel.swift in Sources */,
 				CDA064F24B601616E69CC6CF /* FavoritesStore.swift in Sources */,
@@ -597,6 +608,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F3563F2B7F48DF97E111BC47 /* PaywallFunnelUITests.swift in Sources */,
 				2E76F817A9CCC7A440662F57 /* RecentFormScreenshotUITests.swift in Sources */,
 				7FB54B900D718DB5EA583C97 /* SeasonPickerUITests.swift in Sources */,
 				AB2B246F8DF32AF7AF3AEE0B /* StatScoutComprehensiveUITests.swift in Sources */,
@@ -626,7 +638,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = StatScout/StatScout.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 39;
 				DEVELOPMENT_TEAM = YXG4MP6W39;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StatScout/Info.plist;
@@ -634,7 +646,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jackwallner.football;
 				PRODUCT_NAME = "Gridiron StatScout";
 				SDKROOT = iphoneos;
@@ -745,7 +757,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = StatScout/StatScout.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 39;
 				DEVELOPMENT_TEAM = YXG4MP6W39;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StatScout/Info.plist;
@@ -753,7 +765,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jackwallner.football;
 				PRODUCT_NAME = "Gridiron StatScout";
 				PROVISIONING_PROFILE_SPECIFIER = "$(PROVISIONING_PROFILE_SPECIFIER)";
