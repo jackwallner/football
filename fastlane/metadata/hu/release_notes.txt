@@ -1,1 +1,1 @@
-Frissített App Store-információk és előfizetési diagnosztika.
+Elindult a 2026-os szezon: minden játékos, aki játszott, már az első héttől szerepel a rangsorban, éjszakánként frissítve. A View > Qualified opcióval csak az elegendő játékidővel rendelkező játékosok jelennek meg.

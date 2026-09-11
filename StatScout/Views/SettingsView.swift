@@ -344,7 +344,7 @@ struct StatGlossaryView: View {
         .init(id: "rushing-car", label: "Car", category: "Rushing", description: "Rushing attempts, also called carries."),
         .init(id: "receiving-rec-tgt", label: "Rec/Tgt", category: "Receiving", description: "Receptions and targets."),
         .init(id: "receiving-tgt", label: "Tgt", category: "Receiving", description: "Pass attempts directed at the receiver."),
-        .init(id: "percentile", label: "Percentile", category: "General", description: "A 1–100 rank among qualifying players in the same season, season type, and stat category. Higher is always better after lower-is-better stats are inverted."),
+        .init(id: "percentile", label: "Percentile", category: "General", description: "A 1–100 rank among players in the same season, season type, and stat category. Higher is always better after lower-is-better stats are inverted."),
     ]
 
     private var entries: [GlossaryEntry] {
@@ -390,7 +390,7 @@ struct StatGlossaryView: View {
             VStack(spacing: 12) {
                 SearchField(text: $searchText, prompt: "Search stats")
 
-                Text("Values come from nflverse player statistics and NFL Next Gen Stats. Percentiles are calculated separately for qualifying players in each season and season type.")
+                Text("Values come from nflverse player statistics and NFL Next Gen Stats. Percentiles are calculated separately for each season and season type. The current season ranks everyone who has played; past seasons rank qualifying players.")
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)

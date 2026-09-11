@@ -1285,7 +1285,7 @@ struct PercentileInfoSheet: View {
                     }
                     .padding(.vertical, 8)
 
-                    Text("Data refreshes nightly from public NFL advanced-stats leaderboards. Not all metrics are available for every player due to qualifying thresholds.")
+                    Text("Data refreshes nightly from public NFL advanced-stats leaderboards. Not every metric is tracked for every player.")
                         .font(GridironType.small)
                         .foregroundStyle(GridironPalette.inkTertiary)
                 }
