@@ -200,8 +200,7 @@ struct TeamView: View {
         case .all:
             return true
         case .qualified:
-            guard let selectedCategory else { return !player.metrics.isEmpty }
-            return player.metrics.contains { $0.category == selectedCategory }
+            return DashboardViewModel.hasQualifyingMetric(player, in: selectedCategory)
         }
     }
 
