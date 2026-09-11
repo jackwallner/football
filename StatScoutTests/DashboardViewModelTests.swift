@@ -326,6 +326,40 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertTrue(vm.players.contains { $0.season == StatScoutSeason.current })
     }
 
+    /// The live season ships players under the bar. All (the default) shows
+    /// them; Qualified hides them only when the user picks it.
+    @MainActor
+    func testQualifiedFilterHonoursTheLiveSeasonFlag() async {
+        let starter = Player(
+            playerId: 1, name: "Starter", team: "NE", position: "QB", handedness: "",
+            updatedAt: Date(), season: StatScoutSeason.current, playerType: "qb",
+            metrics: [Metric(id: "s", label: "EPA/Play", value: "0.10", percentile: 60, category: .passing, qualified: true)],
+            standardStats: [], games: []
+        )
+        let backup = Player(
+            playerId: 2, name: "Backup", team: "SEA", position: "QB", handedness: "",
+            updatedAt: Date(), season: StatScoutSeason.current, playerType: "qb",
+            metrics: [Metric(id: "b", label: "EPA/Play", value: "0.90", percentile: 99, category: .passing, qualified: false)],
+            standardStats: [], games: []
+        )
+        let vm = DashboardViewModel(provider: MockProvider(players: [starter, backup]))
+        await vm.load()
+
+        XCTAssertEqual(vm.qualifierLevel, .all)
+        XCTAssertEqual(Set(vm.leaderboard.map(\.name)), ["Starter", "Backup"])
+        vm.qualifierLevel = .qualified
+        XCTAssertEqual(vm.leaderboard.map(\.name), ["Starter"])
+    }
+
+    func testMetricDecodesWithAndWithoutTheQualifiedFlag() throws {
+        let json = #"""
+        [{"id":"a","label":"EPA/Play","value":"0.1","percentile":50,"category":"Passing","qualified":false},
+         {"id":"b","label":"EPA/Play","value":"0.2","percentile":60,"category":"Passing"}]
+        """#
+        let metrics = try JSONDecoder().decode([Metric].self, from: Data(json.utf8))
+        XCTAssertEqual(metrics.map(\.qualified), [false, nil])
+    }
+
     /// Recent form covers the live season and the one before it.
     ///
     /// Last season keeps its form board on purpose: pinning this to the live

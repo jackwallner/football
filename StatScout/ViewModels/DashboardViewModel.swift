@@ -575,20 +575,24 @@ final class DashboardViewModel {
         }
     }
 
-    var qualifierLevel: QualifierLevel = .qualified
+    /// No minimum unless the user picks one: the live season ships every player
+    /// who has played, and the early weeks are nothing but small samples.
+    var qualifierLevel: QualifierLevel = .all
 
     func isQualified(_ player: Player, for category: MetricCategory?) -> Bool {
         switch qualifierLevel {
         case .all:
             return true
         case .qualified:
-            // The pipeline only assigns percentiles to players who meet the
-            // per-category qualification thresholds, so "has a percentile in this
-            // category" is the authoritative signal.
-            if let category {
-                return player.metrics.contains { $0.category == category }
-            }
-            return !player.metrics.isEmpty
+            return Self.hasQualifyingMetric(player, in: category)
+        }
+    }
+
+    /// The live season flags each metric; past seasons only ever shipped
+    /// qualifying rows, so there a metric's presence is the signal.
+    static func hasQualifyingMetric(_ player: Player, in category: MetricCategory?) -> Bool {
+        player.metrics.contains {
+            (category == nil || $0.category == category) && $0.qualified != false
         }
     }
 

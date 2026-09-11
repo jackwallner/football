@@ -191,6 +191,10 @@ struct Metric: Identifiable, Codable, Hashable, Sendable {
     let value: String
     let percentile: Int
     let category: MetricCategory
+    /// Whether the player clears the (prorated) qualification bar for this
+    /// metric. Only the live season ships it, because only the live season ships
+    /// players under the bar; nil means the row exists because it qualified.
+    var qualified: Bool? = nil
 }
 
 struct StandardStat: Identifiable, Codable, Hashable, Sendable {
