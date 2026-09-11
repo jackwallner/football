@@ -427,6 +427,34 @@ def _build_rows(weekly_df, ngs_p, ngs_r, ngs_rec):
     return ingest.build_snapshot_rows(agg, 2025, NOW)
 
 
+def test_live_season_ships_every_player_with_a_qualified_flag(
+    weekly_df, ngs_passing_df, ngs_rushing_df, ngs_receiving_df
+):
+    agg = ingest.aggregate_seasons(weekly_df, 2025)
+    agg = ingest.merge_ngs(agg, ngs_passing_df, ngs_rushing_df, ngs_receiving_df, 2025)
+    agg["image_url"] = None
+    rows = ingest.build_snapshot_rows(agg, 2025, NOW, live=True)
+    by_id = {r["id"]: r for r in rows}
+
+    # The sub-threshold WR (id 5, 5 targets) ships, flagged unqualified.
+    receiving = [m for m in by_id[5]["metrics"] if m["category"] == "Receiving"]
+    assert receiving
+    assert not any(m["qualified"] for m in receiving)
+    # The QB clears the passing bar but not the rushing one; both lines ship.
+    qb = by_id[1]["metrics"]
+    assert all(m["qualified"] for m in qb if m["category"] == "Passing")
+    assert [m for m in qb if m["category"] == "Rushing"]
+    assert not any(m["qualified"] for m in qb if m["category"] == "Rushing")
+
+
+def test_has_opportunity_needs_volume_and_a_matching_type():
+    assert ingest.has_opportunity({"attempts": 1}, "Passing", "qb")
+    assert not ingest.has_opportunity({"attempts": 0}, "Passing", "qb")
+    assert not ingest.has_opportunity({"carries": 3}, "Rushing", "k")
+    assert ingest.has_opportunity({"games": 1}, "Defense", "def")
+    assert not ingest.has_opportunity({"games": 1}, "Defense", "wr")
+
+
 def test_build_snapshot_rows_shape(weekly_df, ngs_passing_df, ngs_rushing_df, ngs_receiving_df):
     rows = _build_rows(weekly_df, ngs_passing_df, ngs_rushing_df, ngs_receiving_df)
     by_id = {r["id"]: r for r in rows}

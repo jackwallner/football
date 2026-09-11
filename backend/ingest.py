@@ -326,6 +326,40 @@ def rank_percentiles(series: pd.Series, inverted: bool) -> dict[int, int]:
     return {int(pid): max(1, min(100, int(round(pct * 100)))) for pid, pct in ranks.items()}
 
 
+LIVE_OFFENSE_TYPES = {"qb", "rb", "wr", "te"}
+
+
+def has_opportunity(row: Any, category: str, player_type: str) -> bool:
+    """Whether a player has any volume at all in a category.
+
+    The live season ships every player who has played, not just those over the
+    qualification bar: the app's "Qualified" filter is a choice the user makes,
+    and in the early weeks nobody is over the full-season bar. One attempt,
+    carry, target or game is data; zero is not (a receiver with no carries has
+    no rushing line to rank).
+    """
+    def _num(col: str) -> float:
+        val = row.get(col)
+        try:
+            return float(val) if val is not None and not pd.isna(val) else 0.0
+        except (ValueError, TypeError):
+            return 0.0
+
+    if category == "Defense":
+        return player_type == "def" and _num("games") >= 1
+    if player_type not in LIVE_OFFENSE_TYPES:
+        return False
+    if category == "Passing":
+        return _num("attempts") >= 1
+    if category == "Rushing":
+        return _num("carries") >= 1
+    if category == "Receiving":
+        if not bool(row.get("targets_reliable", True)):
+            return _num("receptions") >= 1
+        return _num("targets") >= 1
+    return False
+
+
 def qualifies(
     row: Any,
     category: str,
@@ -616,7 +650,11 @@ def merge_ngs(
     return agg
 
 
-def merge_pfr_defense(agg: pd.DataFrame, pfr_def: pd.DataFrame) -> pd.DataFrame:
+def merge_pfr_defense(
+    agg: pd.DataFrame,
+    pfr_def: pd.DataFrame,
+    rate_thresholds: bool = True,
+) -> pd.DataFrame:
     """Join PFR advanced defensive stats onto ``agg`` and derive their rates.
 
     Pure: an id-indexed PFR frame in, augmented ``agg`` out. ``pfr_def`` is
@@ -635,7 +673,34 @@ def merge_pfr_defense(agg: pd.DataFrame, pfr_def: pd.DataFrame) -> pd.DataFrame:
         if column in agg.columns:
             agg[column] = pd.to_numeric(agg[column], errors="coerce") * 100
 
-    return apply_def_rate_thresholds(agg)
+    return apply_def_rate_thresholds(agg) if rate_thresholds else agg
+
+
+# Defensive rate columns and the volume each one is measured over. The live
+# season keeps these rates at any volume and flags the thin ones instead of
+# nulling them (see ``def_rate_volume_ok``).
+DEF_RATE_GATES = {
+    "def_cmp_pct_allowed": ("def_targets_allowed", QUAL_DEF_TARGETS),
+    "def_yds_per_tgt_allowed": ("def_targets_allowed", QUAL_DEF_TARGETS),
+    "def_rating_allowed": ("def_targets_allowed", QUAL_DEF_TARGETS),
+    "def_missed_tkl_pct": ("def_combined_tackles", QUAL_DEF_TACKLES),
+}
+
+
+def def_rate_volume_ok(row: Any, column: str, scale: float = 1.0) -> bool:
+    """Whether a defensive rate clears its (prorated) volume bar."""
+    gate = DEF_RATE_GATES.get(column)
+    if gate is None:
+        return True
+    volume_col, threshold = gate
+    try:
+        volume = float(row.get(volume_col))
+    except (TypeError, ValueError):
+        return False
+    if pd.isna(volume):
+        return False
+    bar = max(1, math.ceil(threshold * scale)) if scale < 1 else threshold
+    return volume >= bar
 
 
 def apply_def_rate_thresholds(agg: pd.DataFrame) -> pd.DataFrame:
@@ -717,11 +782,16 @@ def build_snapshot_rows(
     now: datetime,
     season_type: str = "REG",
     qual_scale: float = 1.0,
+    live: bool = False,
 ) -> list[dict]:
     """Build player_snapshots rows from an aggregated (id-indexed) DataFrame.
 
-    Percentiles are computed per (category) among qualified players only, and
-    a player receives every category's metrics for which they qualify.
+    Past seasons: percentiles are computed per category among qualified players
+    only, and a player receives every category's metrics for which they qualify.
+
+    The live season (``live``): no minimum. Every player with any volume in a
+    category is ranked and shipped, and each metric carries ``qualified`` (the
+    bar prorated by ``qual_scale``) so the app's Qualified filter still works.
     """
     if agg.empty:
         return []
@@ -764,16 +834,24 @@ def build_snapshot_rows(
                 scale=qual_scale,
             )
         ]
-        if not qual_ids:
+        if live:
+            ranked_ids = [
+                int(pid) for pid, row in agg.iterrows()
+                if has_opportunity(row, category, str(row.get("player_type") or ""))
+            ]
+        else:
+            ranked_ids = qual_ids
+        if not ranked_ids:
             continue
-        sub = agg.loc[qual_ids]
+        qualified_ids = set(qual_ids)
+        sub = agg.loc[ranked_ids]
 
         pct_maps: dict[str, dict[int, int]] = {}
         for mid, _label, col, _fmt, inverted in defs:
             if col in sub.columns:
                 pct_maps[mid] = rank_percentiles(sub[col], inverted)
 
-        for pid in qual_ids:
+        for pid in ranked_ids:
             row = agg.loc[pid]
             player = _ensure(pid, row)
             for mid, label, col, fmt, _inverted in defs:
@@ -785,13 +863,16 @@ def build_snapshot_rows(
                 percentile = pct_maps.get(mid, {}).get(pid)
                 if percentile is None:
                     continue
-                player["metrics"].append({
+                metric = {
                     "id": f"{category.lower()}-{pid}-{mid}",
                     "label": label,
                     "value": format_value(raw, fmt),
                     "percentile": percentile,
                     "category": category,
-                })
+                }
+                if live:
+                    metric["qualified"] = pid in qualified_ids and def_rate_volume_ok(row, col, qual_scale)
+                player["metrics"].append(metric)
 
     snapshots = [p for p in players.values() if p["metrics"]]
     return snapshots
@@ -906,6 +987,7 @@ def load_pfr_defense(season: int) -> pd.DataFrame:
 def build_agg_for_season(
     season: int,
     season_type: str = "REG",
+    live: bool = False,
 ) -> pd.DataFrame:
     """Fetch nflverse data and produce the fully-merged aggregate DataFrame."""
     logger.info("Loading weekly player stats for %s...", season)
@@ -937,7 +1019,7 @@ def build_agg_for_season(
     # season_type column to split on - so the postseason board keeps the
     # traditional defensive stats and simply has no advanced rows.
     if season_type == "REG":
-        agg = merge_pfr_defense(agg, load_pfr_defense(season))
+        agg = merge_pfr_defense(agg, load_pfr_defense(season), rate_thresholds=not live)
     else:
         logger.info("Skipping PFR advanced defence for %s POST (regular season only).", season)
 
@@ -973,6 +1055,7 @@ def main() -> None:
 
     client = create_client(url, key)
     season = resolve_season(args.season)
+    live = season == DEFAULT_SEASON
     now = datetime.now(UTC)
 
     phases = ("REG", "POST") if args.season_type == "all" else (args.season_type,)
@@ -980,11 +1063,11 @@ def main() -> None:
     try:
         any_rows = False
         for phase in phases:
-            agg = build_agg_for_season(season, phase)
+            agg = build_agg_for_season(season, phase, live=live)
             scale = qualification_scale(agg, season) if phase == "REG" else 1.0
-            if scale < 1:
-                logger.info("Season in progress: qualification prorated to %.2f.", scale)
-            rows = build_snapshot_rows(agg, season, now, phase, qual_scale=scale)
+            if live:
+                logger.info("Live season: every player ships; Qualified flag bar at %.2f of a season.", scale)
+            rows = build_snapshot_rows(agg, season, now, phase, qual_scale=scale, live=live)
             if not rows:
                 if phase == "POST":
                     logger.info("No postseason rows for %s yet.", season)
