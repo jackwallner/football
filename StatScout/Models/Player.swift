@@ -423,8 +423,8 @@ enum PlayerPositionGroup: String, CaseIterable, Identifiable, Hashable, Sendable
 
     var cohortDescription: String {
         switch self {
-        case .defense: return "Among qualifying defensive players"
-        default: return "Among qualifying \(rawValue)s"
+        case .defense: return "Among defensive players"
+        default: return "Among \(rawValue)s"
         }
     }
 

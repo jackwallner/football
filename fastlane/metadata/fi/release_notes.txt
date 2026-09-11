@@ -1,1 +1,1 @@
-App Storen tiedot ja tilausten diagnostiikka päivitetty.
+Kausi 2026 on käynnissä: jokainen pelannut pelaaja on rankingissa ensimmäisestä viikosta alkaen, ja tiedot päivittyvät joka yö. Valitse View > Qualified nähdäksesi vain pelaajat, joilla on riittävästi peliaikaa.
