@@ -65,6 +65,19 @@ def test_fingerprint_ignores_probe_time_and_tracks_asset_generation():
     assert fingerprint_assets([base]) != fingerprint_assets([changed])
 
 
+def test_schedule_republish_does_not_start_a_new_generation():
+    stats = AssetProbe(
+        "stats_player_week", "stats_player", "stats_player_week_2026.parquet", True,
+        "timestamp", "asset", 200, "2026-09-12 08:52:24 EDT", '"one"', "date", "10",
+    )
+    schedule = AssetProbe(
+        "schedule", "schedules", "games.parquet", True,
+        "timestamp", "asset", 200, "2026-09-12 17:36:26 EDT", '"a"', "date", "20",
+    )
+    republished = AssetProbe(**{**schedule.__dict__, "etag": '"b"', "timestamp": "2026-09-12 18:06:16 EDT"})
+    assert fingerprint_assets([stats, schedule]) == fingerprint_assets([stats, republished])
+
+
 def test_optional_asset_failure_does_not_block_core_probe():
     result = probe_sources(2018, client=FakeHTTP(missing_optional=True))
     assert result.ready
