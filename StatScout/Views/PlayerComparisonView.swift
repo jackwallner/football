@@ -303,13 +303,18 @@ struct PlayerComparisonView: View {
             .background(GridironPalette.surfaceAlt)
 
             ForEach(Array(standardComparison.enumerated()), id: \.element.label) { index, item in
+                let winner = StandardStatSemantics.winner(
+                    label: item.label,
+                    left: item.a,
+                    right: item.b
+                )
                 HStack(spacing: 8) {
                     Text(item.label)
                         .font(GridironType.smallBold)
                         .foregroundStyle(GridironPalette.ink)
                         .frame(width: 82, alignment: .leading)
-                    aggregateValue(item.a)
-                    aggregateValue(item.b)
+                    aggregateValue(item.a, isWinner: winner == .left)
+                    aggregateValue(item.b, isWinner: winner == .right)
                 }
                 .frame(height: GridironGeo.rowHeight)
                 .padding(.horizontal, GridironGeo.padInline)
@@ -330,12 +335,23 @@ struct PlayerComparisonView: View {
         )
     }
 
-    private func aggregateValue(_ value: String?) -> some View {
-        Text(value ?? "-")
-            .font(GridironType.statMed)
-            .foregroundStyle(value == nil ? GridironPalette.inkTertiary : GridironPalette.turf)
-            .monospacedDigit()
-            .frame(maxWidth: .infinity)
+    private func aggregateValue(_ value: String?, isWinner: Bool) -> some View {
+        HStack(spacing: 4) {
+            if isWinner {
+                Image(systemName: "trophy.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(Color.yellow)
+            }
+            Text(value ?? "-")
+                .font(GridironType.statMed)
+                .foregroundStyle(
+                    value == nil
+                        ? GridironPalette.inkTertiary
+                        : (isWinner ? GridironPalette.turf : GridironPalette.inkSecondary)
+                )
+                .monospacedDigit()
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var playerHeadlines: some View {
@@ -385,11 +401,12 @@ struct PlayerComparisonView: View {
             .accessibilityHint("Opens \(player.name)'s page")
 
             if let catalog {
-                SeasonMenu(
+                SeasonPhasePicker(
                     seasons: catalog.seasons,
-                    selected: player.season ?? 0,
-                    isLocked: { catalog.isSeasonLocked($0) },
-                    onSelect: { season in
+                    selectedSeason: player.season ?? 0,
+                    selectedPhase: player.seasonPhase,
+                    isSeasonLocked: { catalog.isSeasonLocked($0) },
+                    onSelectSeason: { season in
                         if catalog.isSeasonLocked(season) {
                             showingTrial = true
                         } else {
@@ -400,18 +417,8 @@ struct PlayerComparisonView: View {
                                 catalog: catalog
                             )
                         }
-                    }
-                ) {
-                    GridironInlinePill(
-                        systemImage: "calendar",
-                        title: player.season.map(String.init) ?? "-"
-                    )
-                }
-                .accessibilityLabel("Season for \(player.name)")
-
-                SeasonPhaseMenu(
-                    selected: player.seasonPhase,
-                    onSelect: { phase in
+                    },
+                    onSelectPhase: { phase in
                         move(
                             target,
                             to: player.season ?? 0,
@@ -421,11 +428,13 @@ struct PlayerComparisonView: View {
                     }
                 ) {
                     GridironInlinePill(
-                        systemImage: "football.fill",
-                        title: player.seasonPhase.label
+                        systemImage: nil,
+                        title: "\(player.season.map(SeasonLabel.text) ?? "-") · \(player.seasonPhase.label)",
+                        compressible: true
                     )
+                    .frame(maxWidth: .infinity)
                 }
-                .accessibilityLabel("Season type for \(player.name)")
+                .accessibilityLabel("Season and season type for \(player.name)")
 
                 Button {
                     picker = target

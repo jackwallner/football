@@ -1005,11 +1005,6 @@ struct PlayerProfileView: View {
         }
     }
 
-    /// Stats where a lower number is the better outcome. Only one on a football
-    /// line: interceptions thrown. A defender's takeaways are their own label
-    /// ("Def INT") and read the normal way round.
-    private static let lowerIsBetterStandard: Set<String> = ["INT"]
-
     /// Counting stats. Ranking these is honest but playing-time driven, a
     /// backup's 2 rushing touchdowns isn't a talent signal, so they're grouped
     /// separately from the rate stats and captioned as volume.
@@ -1027,31 +1022,28 @@ struct PlayerProfileView: View {
     /// The pipeline publishes percentiles for the advanced metrics but not for
     /// the traditional line, so these are computed here: a player's position in
     /// the distribution of every same-position player who has the stat. Returns
-    /// nil below a usable pool size rather than drawing a bar off five samples.
-    private func standardStatPercentile(label: String, value: Double) -> Int? {
+    /// a midpoint percentile for every existing value, even when only a small
+    /// early-season cohort has played.
+    private func standardStatPercentile(
+        label: String,
+        value: String
+    ) -> Int {
         let key = label.uppercased()
-        let myType = player.playerType?.lowercased()
-        let values: [Double] = allPlayers.compactMap { other in
-            guard other.playerType?.lowercased() == myType else { return nil }
+        let peers = allPlayers.filter {
+            $0.positionGroup == displayedPlayer.positionGroup
+        }
+        let values: [String] = peers.compactMap { other in
             guard let stat = other.standardStats?.first(where: { $0.label.uppercased() == key })
             else { return nil }
-            return DashboardViewModel.rawNumeric(stat.value)
+            return stat.value
         }
-        guard values.count >= 20 else { return nil }
-
-        // Midpoint rank, so a cluster of identical values lands mid-band
-        // instead of all sharing the top of it.
-        let below = values.reduce(0) { $0 + ($1 < value ? 1 : 0) }
-        let equal = values.reduce(0) { $0 + ($1 == value ? 1 : 0) }
-        let raw = (Double(below) + Double(equal) / 2) / Double(values.count) * 100
-        let oriented = Self.lowerIsBetterStandard.contains(key) ? 100 - raw : raw
-        return max(1, min(100, Int(oriented.rounded())))
+        return StandardStatSemantics.percentile(
+            label: label,
+            value: value,
+            peerValues: values
+        )
     }
 
-    /// Standard stats rendered as the same `Metric` the percentile card uses, so
-    /// both tabs read on one ruler. Stats with too small a league pool, and the
-    /// composite ones like Cmp/Att that aren't a single number, keep their value
-    /// but get no bar.
     /// The data's own spelling of a stat, given the uppercased one this card
     /// displays.
     ///
@@ -1067,17 +1059,19 @@ struct PlayerProfileView: View {
             .first { $0.label.uppercased() == displayLabel }?.label ?? displayLabel
     }
 
+    /// Standard stats rendered as the same `Metric` the percentile card uses, so
+    /// both tabs read on one ruler. Composite values such as Cmp/Att and Rec/Tgt
+    /// rank by their rate rather than by the leading count.
     private func standardMetrics(counting: Bool) -> [Metric] {
         (displayedPlayer.standardStats ?? [])
             .filter { Self.countingStats.contains($0.label.uppercased()) == counting }
             .map { stat in
-                let pct = DashboardViewModel.rawNumeric(stat.value)
-                    .flatMap { standardStatPercentile(label: stat.label, value: $0) }
+                let pct = standardStatPercentile(label: stat.label, value: stat.value)
                 return Metric(
                     id: "std-\(stat.label)",
                     label: stat.label.uppercased(),
                     value: stat.value,
-                    percentile: pct ?? 0,
+                    percentile: pct,
                     category: Self.standardCategory(for: stat.label, fallback: standardFallbackCategory).metricCategory
                 )
             }
@@ -1126,7 +1120,10 @@ struct PlayerProfileView: View {
             id: "std-recent-\(seasonMetric.label)",
             label: seasonMetric.label,
             value: text,
-            percentile: standardStatPercentile(label: seasonMetric.label, value: value) ?? 0,
+            percentile: standardStatPercentile(
+                label: seasonMetric.label,
+                value: text
+            ),
             category: seasonMetric.category
         )
     }

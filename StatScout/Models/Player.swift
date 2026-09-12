@@ -203,6 +203,67 @@ struct StandardStat: Identifiable, Codable, Hashable, Sendable {
     let value: String
 }
 
+/// Shared meaning for the compact values in `standard_stats`.
+///
+/// The feed stores completions/attempts and receptions/targets as display-ready
+/// pairs. Treating the leading component as the numeric value made `8/11` rank
+/// as eight instead of a 72.7% catch rate in both profile and comparison UI.
+enum StandardStatSemantics {
+    enum Winner: Equatable {
+        case left
+        case right
+    }
+
+    static func numericValue(label: String, value: String) -> Double? {
+        switch label.uppercased() {
+        case "CMP/ATT", "REC/TGT":
+            let parts = value.split(separator: "/", maxSplits: 1)
+            guard parts.count == 2,
+                  let numerator = metricNumericValue(String(parts[0])),
+                  let denominator = metricNumericValue(String(parts[1])),
+                  denominator > 0 else { return nil }
+            return numerator / denominator * 100
+        default:
+            return metricNumericValue(value)
+        }
+    }
+
+    static func higherIsBetter(label: String) -> Bool {
+        label.uppercased() != "INT"
+    }
+
+    /// Midpoint rank against every peer carrying the same stat. A single
+    /// available value is the middle of its one-player cohort, never an absent
+    /// percentile. The caller supplies one season and position group.
+    static func percentile(label: String, value: String, peerValues: [String]) -> Int {
+        guard let currentValue = numericValue(label: label, value: value) else {
+            return 50
+        }
+        var values = peerValues.compactMap {
+            numericValue(label: label, value: $0)
+        }
+        if values.isEmpty { values = [currentValue] }
+
+        let below = values.reduce(0) { $0 + ($1 < currentValue ? 1 : 0) }
+        let equal = values.reduce(0) { $0 + ($1 == currentValue ? 1 : 0) }
+        let raw = (Double(below) + Double(equal) / 2) / Double(values.count) * 100
+        let oriented = higherIsBetter(label: label) ? raw : 100 - raw
+        return max(1, min(100, Int(oriented.rounded())))
+    }
+
+    static func winner(label: String, left: String?, right: String?) -> Winner? {
+        guard let left,
+              let right,
+              let leftValue = numericValue(label: label, value: left),
+              let rightValue = numericValue(label: label, value: right),
+              leftValue != rightValue else { return nil }
+        let leftWins = higherIsBetter(label: label)
+            ? leftValue > rightValue
+            : leftValue < rightValue
+        return leftWins ? .left : .right
+    }
+}
+
 /// Pulls the leading number out of a formatted feed value: `"6.2%"` -> 6.2,
 /// `"3,322"` -> 3322, `"+2.3"` -> 2.3.
 ///
