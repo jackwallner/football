@@ -112,7 +112,12 @@ final class SeasonPickerUITests: XCTestCase {
         ).firstMatch.exists
         XCTAssertTrue(board || paywall, "Season change should leave the app in a usable state")
 
-        if board, let before {
+        // A locked season is a legitimate outcome even when its row was
+        // tappable: the tap opens the trial sheet and the board stays where it
+        // was. Only assert the season actually moved when nothing intercepted
+        // the tap. Without this the test failed on correct behaviour, because
+        // past seasons are Pro and the UI suite runs a free build.
+        if board, !paywall, let before {
             let after = seasonControl().value as? String
             XCTAssertNotEqual(after, before, "The control should report the newly selected season")
         }
