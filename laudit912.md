@@ -615,3 +615,354 @@ The recommended sequence is to measure and fingerprint the source first, trigger
 - [nflverse data refresh notes](https://github.com/nflverse/nflverse-data/blob/main/README.Rmd)
 - [nflverse scheduled PBP and stats workflow](https://github.com/nflverse/nflverse-pbp/blob/master/.github/workflows/update_data.yaml)
 - [GitHub Actions billing and usage](https://docs.github.com/en/actions/concepts/billing-and-usage)
+
+# Mobile user-experience reviewer supplement
+
+Reviewer: skeptical iOS product and UX review
+
+Focus: a mobile user checking on Sunday immediately after a game, including refresh timing, foreground behavior, loading, errors, stale data, caching, manual refresh, partial stats, and accessible communication.
+
+## Mobile verdict
+
+The current app has the right instinct in one important area: it protects a complete cached dataset when a remote response is incomplete. The user experience does not yet make that protection legible. A user can see old data without knowing it is old, see no recent games while the source is still pending, or see refreshed snapshot data beside cached recent form.
+
+The mobile requirement should be framed as “show the newest trustworthy revision as soon as it is published, and explain the wait before then.” A final advanced metric cannot be promised at the final whistle because the source itself usually needs time. The 2025 Sunday regular-season source timing was a median of 1.91 hours and a P90 of 2.70 hours. The app should use that reality to provide a clear pending state rather than pretending the data is either instantly final or completely unavailable.
+
+The minimum acceptable experience is:
+
+1. Load the last known-good data immediately.
+2. Check the shared refresh state when the app opens or returns to foreground.
+3. Show a visible, plain-language status next to the data.
+4. Invalidate snapshots, recent form, team logs, and player logs as one refresh revision.
+5. Keep old content visible while checking or retrying.
+6. Never turn source-pending data into a misleading “no games” result.
+7. Give every stats surface a refresh action.
+
+## What a Sunday user expects
+
+The user does not think in terms of parquet releases, Supabase rows, or separate snapshot and rollup jobs. Their mental model is:
+
+- The game ended.
+- The app should know soon.
+- If it does not know yet, the app should say why.
+- When the numbers arrive, the screen should update without requiring a scavenger hunt.
+- If the data is delayed or unavailable, previously useful numbers should remain available and visibly dated.
+
+The product should distinguish three moments:
+
+| Moment | What the user wants | What the system can honestly provide |
+| --- | --- | --- |
+| Final whistle | A confirmation that the app is tracking the game | Pending source state and last complete data |
+| Source publication | Updated player and game data | Pipeline should process and validate promptly |
+| App foreground or refresh | New results on the current screen | Shared refresh and cache invalidation |
+
+The current implementation has no user-visible object that connects those moments.
+
+## Current mobile evidence
+
+| Finding | Evidence | UX consequence |
+| --- | --- | --- |
+| Foreground refresh only calls the main load | StatScout/StatScoutApp.swift:108-115 | Returning to the app can refresh snapshots without refreshing dependent recent form |
+| Recent-form cache returns when a window is already loaded | StatScout/ViewModels/DashboardViewModel.swift:426-486, especially :444 | Trends may keep showing a pre-game result |
+| Profile recent logs use local cache state | StatScout/Views/PlayerProfileView.swift:959-984 | A player profile can retain old recent games after a background return |
+| Team form uses local task and load state | StatScout/Views/TeamFormCard.swift:100-116, :506-523 | Team roster and team form can update at different times |
+| Dashboard has pull-to-refresh | StatScout/Views/DashboardView.swift:22-42 | One surface has recovery behavior, other data surfaces do not |
+| Trends has no refresh control | StatScout/Views/HotColdView.swift:77-150, :274-311 | A Pro user cannot refresh where the stale data is visible |
+| Team view has no shared refresh control | StatScout/Views/TeamView.swift:207-270 | Team users may need to leave the screen to try again |
+| Profile has loading, error, and no-games states | StatScout/Views/PlayerProfileView.swift:642-673 | Pending source data can be mistaken for no player activity |
+| RecentFormCard has a player-only task identity | StatScout/Views/RecentFormCard.swift:49-65 | Season or phase changes should be regression-tested for stale task reuse |
+| Coverage is mainly exposed in Settings/About | StatScout/Views/SettingsView.swift:157-200 | Freshness is hidden from the decision surface |
+| Existing data suppresses the main loading indicator during refresh | StatScout/ViewModels/DashboardViewModel.swift:770-844 | Foreground work is silent |
+| Current cache can live for 48 hours | StatScout/Services/PlayerCache.swift:8-16, :63-103 | Useful offline behavior can look current if age is not shown |
+| API fetches bypass URL cache but have no explicit retry policy | StatScout/Services/StatcastAPI.swift:97-326 | A transient failure can become a visible error too quickly |
+| All tabs remain mounted | StatScout/Views/RootTabView.swift:114-126 | Navigation state is preserved, but so are view-local stale caches |
+| There is no background task or push refresh path | StatScout/StatScoutApp.swift and repository-wide search | A closed app cannot be expected to update until the next launch or foreground |
+
+## Sunday journey audit
+
+### 1. User opens the app while the game is still finishing
+
+Expected:
+
+The app should not claim that final advanced stats are available. It should show the latest complete dataset and, if the schedule says a game is in progress or recently ended, a calm “updating” state.
+
+Current risk:
+
+The main dashboard can show existing data, but there is no shared game-aware status. The user has no way to tell whether the displayed week includes the game.
+
+Recommendation:
+
+Show the last complete coverage point and a non-blocking “Game data is still arriving” status. Do not block the app or replace the content with a blank spinner.
+
+### 2. User opens the app minutes after the final whistle
+
+Expected:
+
+The app should check for a new refresh revision. If the source is not ready, it should explain that final advanced stats are still pending and give the last complete game or week.
+
+Current risk:
+
+The current once-daily workflow may not have updated Supabase yet. The app can only fetch what is there and does not know whether the upstream source is pending or the pipeline is broken.
+
+Recommendation:
+
+Read the central refresh status. Show pending versus failed separately. Set a next-check time or a simple “We will keep checking” message.
+
+### 3. User manually pulls to refresh
+
+Expected:
+
+The refresh should check the source-backed status, keep the current content visible, and return a meaningful result.
+
+Current risk:
+
+Pull-to-refresh is only on Dashboard. On Dashboard, existing data makes isLoading false, so the refresh may be visually subtle. On other screens there may be no action.
+
+Recommendation:
+
+Use one shared refresh coordinator. Expose it from a banner button everywhere. Keep native pull-to-refresh where available, but do not make it the only way to recover.
+
+### 4. User remains on Trends while data becomes ready
+
+Expected:
+
+The screen should update the 3, 5, and 8-game windows or clearly show that its current data is still through the previous week.
+
+Current risk:
+
+HotColdView.swift:123-150 calls loadRecentFormIfNeeded. DashboardViewModel.swift:444 returns existing recent-form cache. A foreground snapshot refresh does not guarantee that the Trends cache changes.
+
+Recommendation:
+
+Attach recent-form cache validity to the active refresh revision. When the revision changes, invalidate the affected windows and reload the active Trends view. Show “Updated through Week N” after completion.
+
+### 5. User visits a player profile after refresh
+
+Expected:
+
+Snapshot metrics and recent-game form should describe the same season, phase, and source revision.
+
+Current risk:
+
+PlayerProfileView.swift:959-984 uses local state and a local cache key. RecentFormCard.swift:49-65 uses a narrow task identity. A failed request can also end in an ambiguous no-games presentation.
+
+Recommendation:
+
+Use a shared source revision and explicit pending state. Render “No qualifying games” only after the source is known ready for that game/week.
+
+### 6. User checks later that night after a source delay
+
+Expected:
+
+The app should show new data if ready, or clearly say it is still waiting. Repeated manual attempts should not create confusing duplicate work.
+
+Current risk:
+
+The pipeline can be delayed until the next daily schedule. GitHub schedule timing is best effort. The app has no next-check or last-check display near the relevant data.
+
+Recommendation:
+
+Display “Last checked” and “Stats through” separately. If the newest source revision is ready, reload. If not, retain the last complete state.
+
+## Loading, error, stale, and partial-state review
+
+A single Boolean such as isLoading cannot represent the states the user needs. The app needs a typed status model or equivalent shared state.
+
+| State | Meaning | Content behavior | User action |
+| --- | --- | --- | --- |
+| Ready | The newest validated revision is live | Show normal content and coverage | Optional refresh |
+| Checking | A check or refresh is in progress | Keep current content visible, show activity | Wait or cancel if supported |
+| Pending | A completed game is expected, but the source is not ready | Show last complete data with pending message | Check again |
+| Partial | Some relevant source data arrived, but the completeness gate is not met | Keep last complete data as primary; optionally show progress | Check again later |
+| Stale | The newest expected revision is late beyond the normal window | Show cached content with age and warning | Retry |
+| Offline | The device cannot reach the service | Show cached or bundled content with offline label | Retry when connected |
+| Failed with data | The latest attempt failed, but a prior valid revision exists | Keep prior content and explain failure | Retry |
+| Failed without data | No cached or bundled valid data exists | Show recovery state and diagnosis | Retry or continue offline |
+
+The app should never use “No games in the last N games” as a substitute for Pending or Partial. That text is appropriate only after source readiness is established and the player genuinely has no qualifying rows.
+
+## Recommended user-facing flow
+
+### Initial launch
+
+1. Render the newest valid disk or bundled dataset immediately.
+2. Show a compact status line with “Stats through [game/date/week].”
+3. Fetch the refresh state and compare its active revision to the displayed revision.
+4. If a newer ready revision exists, refresh the core data and active screen.
+5. If the state is pending or partial, leave the current content in place and show the reason.
+6. If the state is failed or stale, show the age and a retry action.
+
+The initial cached render should not wait for the network.
+
+### Foreground return
+
+1. Check whether the last foreground check is within the throttle window.
+2. If it is not, fetch the shared refresh state.
+3. If the active revision is unchanged and status is ready, do not reload every screen.
+4. If the revision changed, invalidate snapshot, recent-form, team-log, and player-log caches.
+5. Reload the active screen and update its coverage label.
+6. If the source is pending, show a non-blocking pending message rather than a generic error.
+7. If the request failed, leave content in place and show “Last checked” plus retry.
+
+A five-minute routine throttle is a reasonable starting point. During an active pending window, the status can be checked more frequently because the check should be lightweight.
+
+### Manual refresh
+
+The same action should serve Dashboard pull-to-refresh, an explicit banner button, and any retry button:
+
+- Deduplicate concurrent requests.
+- Show a checking indicator without clearing content.
+- Return a typed result: unchanged, updated, pending, partial, stale, offline, or failed.
+- Update the shared status regardless of which screen initiated the action.
+- Invalidate dependent caches only after a new validated revision is available.
+
+### When new data becomes ready
+
+The user should receive a subtle, non-blocking confirmation:
+
+“New game data is available. Player form updated through Week 2.”
+
+On Trends, Teams, and Profile, the active screen should update without forcing the user back to Dashboard. The visible revision and coverage label should change together.
+
+## Recommended freshness component
+
+A shared status row should appear near the top of Dashboard, Trends, Teams, profiles, and stats boards. It should be compact in the normal ready state and expand for pending or failed states.
+
+Normal state:
+
+“Stats through Week 2, Sunday 4:25 PM. Updated 8 minutes ago.”
+
+Pending state:
+
+“The game ended, but advanced stats are still arriving. Showing complete data through Week 1. Check again.”
+
+Partial state:
+
+“Some Week 2 data is available. We are waiting for the complete game set before updating recent form.”
+
+Stale state:
+
+“Showing saved data through Week 1. The latest source update is later than usual.”
+
+Offline state:
+
+“You are offline. Showing saved data through Sunday.”
+
+The component should include:
+
+- an accessible status label;
+- coverage date or week;
+- optional last-checked timestamp;
+- refresh or retry action;
+- no color-only meaning;
+- no Pro gate for the basic status.
+
+Settings can retain the detailed source and pipeline timestamps, but it should not be the only place where freshness is explained. “Nightly Refresh” should become “Data updates” if the cadence changes.
+
+## Persona-specific mobile concerns
+
+### Sunday casual fan
+
+Needs a fast, calm answer and may not know that advanced stats have a source delay. The key failure is ambiguity. The app should say “still arriving” instead of showing an apparently current but old number.
+
+### Sunday fantasy analyst
+
+Needs a trustworthy boundary. The key failure is partial data appearing complete. Show game count and last complete coverage when a week is not ready.
+
+### Pro Trends user
+
+Paid specifically for recent form. The key failure is the Dashboard updating while Trends remains cached. A successful refresh must invalidate all active recent-form windows.
+
+### Pro player-profile user
+
+Needs season, phase, and window consistency. The key failure is stale or mismatched local task state. The card should expose its coverage and source revision indirectly through the shared status.
+
+### Team follower
+
+Wants roster and team form to update together. The key failure is separate local team tasks. Use one team-level refresh action and a single coverage label.
+
+### Free user
+
+Needs to understand freshness without an upsell. Pending and stale status should be available in the free experience, with advanced source detail optional.
+
+### Offline user
+
+Needs useful data more than a blank error. Preserve cached content, show its age and coverage, and make retry safe.
+
+### VoiceOver user
+
+Needs status conveyed as text, not color or animation. Announce material transitions such as pending to ready, and ensure the refresh button identifies its action and current state.
+
+### Large Dynamic Type user
+
+Needs the pending explanation and coverage date to remain readable. Avoid truncating the status into a generic ellipsis. The action should remain reachable without precision scrolling.
+
+### Returning user who leaves the app open
+
+May stay on one tab through multiple source updates. The key failure is stale retained view state. A shared refresh revision must reach retained tabs, not only newly created views.
+
+## Mobile acceptance criteria
+
+### Visibility and trust
+
+- Every data screen identifies the last complete game, date, or week.
+- Every screen can distinguish ready, checking, pending, partial, stale, offline, and failed.
+- Pending source data is never described as no games or final stats.
+- A failed refresh leaves the last known-good content visible when it exists.
+- The age of cached or stale content is visible in plain language.
+- “Last checked” is not presented as equivalent to “stats through.”
+
+### Foreground and cache behavior
+
+- Returning to foreground checks the shared refresh state subject to a documented throttle.
+- A new active revision invalidates snapshot, recent-form, team-log, and player-log caches.
+- Trends, Team, and Profile update while the user remains on those screens.
+- The app does not issue overlapping equivalent refreshes from foreground and manual refresh.
+- A source revision with the same game count but a newer timestamp can still invalidate caches and update corrections.
+- Changing player, season, phase, or window cannot reuse an incompatible task result.
+
+### Refresh affordances
+
+- Dashboard retains pull-to-refresh.
+- Trends, Teams, profiles, Standard Stats, Best/Worst, and Compare have an equivalent refresh or retry action where the content can be stale.
+- A refresh action reports unchanged, updated, pending, partial, stale, offline, or failed rather than only stopping a spinner.
+- Existing content remains visible during refresh.
+
+### Accessibility
+
+- VoiceOver reads the status category, coverage, and action.
+- Status does not rely on color alone.
+- Dynamic Type does not truncate the essential status or retry action.
+- A status transition from pending to ready is announced once, without repeated announcements on every render.
+- The loading indicator has a meaningful label.
+
+### Validation and testability
+
+- View-model tests cover each status state and all transitions.
+- Tests cover foreground refresh while Trends, Team, and Profile state are already mounted.
+- Tests cover source pending versus a genuinely empty player result.
+- UI tests cover the banner, refresh action, stale content, and accessibility labels.
+- Test fixtures can simulate the first 2026 game being source-ready while the app pipeline is not yet run.
+- Test fixtures can simulate the 67-row partial source observed in current 2026 runs.
+- The existing CI gap for UI tests is tracked and does not silently remove coverage for this journey.
+
+## Product and implementation boundary
+
+This supplement makes recommendations only. It does not authorize or include changes to Swift, Python, GitHub Actions, Supabase, or tests.
+
+The immediate product decision should be the freshness contract:
+
+- The app promises the newest trustworthy source-backed data, not instant final metrics.
+- The normal Sunday expectation is roughly three hours or less when the source behaves normally.
+- The app explains pending data before that point and stale data after the normal window.
+- The backend owns completeness; the app owns clear communication and cache invalidation.
+- A MacBook is not required for cost control. GitHub Actions remains the recommended primary worker, with a Mac dispatcher considered only after measured scheduler lag.
+
+No code changes are included in this reviewer supplement.
+
+## Audit artifact verification
+
+- Markdown whitespace check passed with git diff --check.
+- A repository-wide check found no em dash added by this task.
+- The backend test command was attempted from backend with python3 -m pytest tests. Collection was blocked by the environment because nflreadpy is not installed. No application code was changed to work around that dependency issue.
+- Existing unrelated working-tree changes remain outside this document. The task-owned diff is laudit912.md only.
