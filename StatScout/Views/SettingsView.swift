@@ -4,6 +4,7 @@ struct AboutView: View {
     @EnvironmentObject private var store: StoreService
     let lastUpdated: Date?
     var dataCoverage: DataCoverage?
+    var freshness: DataFreshness?
     var onRequestReview: (() -> Void)?
     @State private var paywallTrigger: PaywallTrigger?
 
@@ -164,20 +165,28 @@ struct AboutView: View {
     /// Week 12". Weeks lead because that is the unit the sport and the rest of
     /// the app count in; the date follows for anyone who wants it.
     private var gamesThroughText: String {
-        guard let dataCoverage else { return "-" }
-        let stamp = dataCoverage.asOf.formatted(.dateTime.month(.abbreviated).day())
-        guard let week = dataCoverage.week else { return stamp }
-        let phase = dataCoverage.phase == .playoffs ? " (playoffs)" : ""
+        guard let coverage = freshness?.coverage ?? dataCoverage else { return "-" }
+        let stamp = coverage.asOf.formatted(.dateTime.month(.abbreviated).day())
+        guard let week = coverage.week else { return stamp }
+        let phase = coverage.phase == .playoffs ? " (playoffs)" : ""
         return "Week \(week)\(phase) · \(stamp)"
+    }
+
+    private var checkedText: String {
+        (freshness?.checkedAt ?? lastUpdated)?.formatted(date: .long, time: .shortened) ?? "-"
+    }
+
+    private var sourcePublishedText: String? {
+        freshness?.sourcePublishedAt?.formatted(date: .long, time: .shortened)
     }
 
     private var refreshCard: some View {
         VStack(spacing: 0) {
             GridironSectionBar(title: "DATA")
             row(
-                icon: "moon.stars.fill",
-                title: "Nightly Refresh",
-                subtitle: "Refreshed each night using publicly available NFL play-by-play and Next Gen Stats data."
+                icon: "arrow.triangle.2.circlepath",
+                title: "Data Updates",
+                subtitle: "Checks for new NFL player data throughout the season."
             )
             Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
             row(
@@ -188,9 +197,17 @@ struct AboutView: View {
             Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
             row(
                 icon: "clock.arrow.circlepath",
-                title: "Last Refreshed",
-                subtitle: lastUpdated.map { $0.formatted(date: .long, time: .shortened) } ?? "-"
+                title: "Last Checked",
+                subtitle: checkedText
             )
+            if let sourcePublishedText {
+                Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
+                row(
+                    icon: "cloud.sun.fill",
+                    title: "Source Published",
+                    subtitle: sourcePublishedText
+                )
+            }
         }
         .background(GridironPalette.surface)
         .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))

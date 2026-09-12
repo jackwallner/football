@@ -29,23 +29,13 @@ protocol StatcastProviding: Sendable {
         windowWeeks: Int
     ) async throws -> [RecentForm]
     func fetchDataCoverage(season: Int) async throws -> DataCoverage?
+    func fetchDataFreshness(season: Int) async throws -> DataFreshness?
 }
 
-/// Which games the numbers cover, as opposed to when the rows were written.
-///
-/// The two come apart every single night here, and more starkly than in a sport
-/// that plays daily: the nightly job runs seven times a week against a source
-/// that publishes once, so six of those runs rewrite every row without closing
-/// out a new game. Settings reported the write stamp alone and so said "Last
-/// Updated: today" on a Thursday whose newest game was Sunday's, while the
-/// Trends header two taps away correctly said "Through Week 12". Reporting the
-/// coverage alongside the refresh is what makes the pair readable.
-struct DataCoverage: Sendable, Equatable {
-    /// Date of the last game included.
-    let asOf: Date
-    /// NFL week number of that game, when the rollup carries one.
-    let week: Int?
-    let phase: SeasonPhase
+extension StatcastProviding {
+    /// Older test and preview providers do not need to know about the optional
+    /// status endpoint. A missing implementation is treated as unavailable.
+    func fetchDataFreshness(season: Int) async throws -> DataFreshness? { nil }
 }
 
 struct StatcastAPI: StatcastProviding {
@@ -276,6 +266,35 @@ struct StatcastAPI: StatcastProviding {
             week: row.end_week,
             phase: row.season_type.flatMap(SeasonPhase.init(rawValue:)) ?? .regular
         )
+    }
+
+    /// Reads the active, validated publisher revision. The backend exposes one
+    /// current row through `data_refresh_status`; a missing table is harmless so
+    /// app versions can roll out before the status migration reaches production.
+    func fetchDataFreshness(season: Int) async throws -> DataFreshness? {
+        let endpoint = baseURL
+            .appending(path: "rest/v1/data_refresh_status")
+            .appending(queryItems: [
+                URLQueryItem(name: "season", value: "eq.\(season)"),
+                URLQueryItem(name: "order", value: "published_at.desc.nullslast,last_checked_at.desc"),
+                URLQueryItem(name: "limit", value: "1"),
+            ])
+        var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(apiKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        // A status endpoint is optional during rollout. Do not turn its absence
+        // into a player-data error or block the last known-good dataset.
+        if httpResponse.statusCode == 404 { return nil }
+        guard 200..<300 ~= httpResponse.statusCode else {
+            throw URLError(.badServerResponse)
+        }
+        return try JSONDecoder.statScout.decode([DataFreshness].self, from: data).first
     }
 
     private func fetchPlayers(queryItems filters: [URLQueryItem]) async throws -> [Player] {

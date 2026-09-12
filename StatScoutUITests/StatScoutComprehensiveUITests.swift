@@ -81,10 +81,17 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         ).firstMatch
         guard row.waitForExistence(timeout: 30) else { return false }
         row.tap()
-        // The profile's own tab strip, once the push has settled. On the same
-        // budget as the board itself: a debug build is slow enough that 15s
-        // turned "the transition is still animating" into "no profile opened".
-        return waitUntilHittable(app.buttons["Advanced"].firstMatch, timeout: Self.loadTimeout)
+        // Anchor on a control that exists nowhere else.
+        //
+        // Not the profile's "Advanced" tab: a team page carries its own
+        // Advanced / Standard / Roster strip, so with the Teams tab mounted
+        // `app.buttons["Advanced"].firstMatch` can resolve to that one, which
+        // is never hittable while a profile is on screen - and the wait then
+        // times out on a profile that opened perfectly well.
+        return waitUntilHittable(
+            app.buttons["Compare with another player"].firstMatch,
+            timeout: Self.loadTimeout
+        )
     }
 
     // MARK: - DashboardView Tests

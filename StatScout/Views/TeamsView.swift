@@ -77,6 +77,11 @@ struct TeamsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
+                if viewModel.selectedSeason == viewModel.freeSeason && viewModel.selectedPhase == .regular {
+                    DataFreshnessView(viewModel: viewModel)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 8)
+                }
                 if StatScoutSeason.isAllTime(viewModel.selectedSeason) {
                     allTimeUnavailableState
                 } else if isInitiallyLoading {

@@ -235,8 +235,8 @@ struct YearComparisonView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(item.metricLabel): \(priorYear) \(item.percentileB)th percentile, "
-                + "\(recentYear) \(item.percentileA)th percentile"
+            "\(item.metricLabel): \(priorYear) \(item.percentileB.ordinalString) percentile, "
+                + "\(recentYear) \(item.percentileA.ordinalString) percentile"
         )
         .frame(height: 48)
         .padding(.horizontal, GridironGeo.padInline)

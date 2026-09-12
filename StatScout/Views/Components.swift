@@ -78,7 +78,7 @@ struct OverallPercentileBadge: View {
         .frame(width: size, height: size)
         .background(GridironPalette.color(forPercentile: percentile))
         .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusBadge))
-        .accessibilityLabel("Overall \(percentile)th percentile, \(tierDescription)")
+        .accessibilityLabel("Overall \(percentile.ordinalString) percentile, \(tierDescription)")
     }
 }
 
@@ -106,7 +106,7 @@ struct MetricBar: View {
     var showValue: Bool = true
 
     private var accessibilityLabel: String {
-        let valueText = metric.value.isEmpty ? "\(metric.percentile)th percentile" : "\(metric.value), \(metric.percentile)th percentile"
+        let valueText = metric.value.isEmpty ? "\(metric.percentile.ordinalString) percentile" : "\(metric.value), \(metric.percentile.ordinalString) percentile"
         return "\(metric.label): \(valueText)"
     }
 
@@ -980,6 +980,20 @@ extension Array {
     func chunked(into size: Int) -> [[Element]] {
         stride(from: 0, to: count, by: size).map {
             Array(self[$0..<Swift.min($0 + size, count)])
+        }
+    }
+}
+
+extension Int {
+    /// "1st", "22nd", "93rd", "11th": VoiceOver reads percentile ranks aloud.
+    var ordinalString: String {
+        let tens = self % 100
+        if (11...13).contains(tens) { return "\(self)th" }
+        switch self % 10 {
+        case 1: return "\(self)st"
+        case 2: return "\(self)nd"
+        case 3: return "\(self)rd"
+        default: return "\(self)th"
         }
     }
 }

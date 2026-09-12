@@ -219,6 +219,7 @@ struct CompareView: View {
             Color.clear.frame(height: 88)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .refreshable { await viewModel.load() }
         .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingFollowSheet) {

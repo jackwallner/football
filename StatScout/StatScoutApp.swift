@@ -23,6 +23,14 @@ struct StatScoutApp: App {
             }
         }
         #endif
+        #if DEBUG
+        if ScreenshotFixtureAPI.isEnabled {
+            ScreenshotFixtureAPI.prepareUserDefaults()
+            self.api = ScreenshotFixtureAPI()
+            StoreService.shared.start()
+            return
+        }
+        #endif
         guard let urlString = Self.configValue(for: "SUPABASE_URL"),
               let url = URL(string: urlString),
               let key = Self.configValue(for: "SUPABASE_ANON_KEY") else {
@@ -90,7 +98,13 @@ struct ContentView: View {
     @State private var viewModel: DashboardViewModel
 
     init(api: any StatcastProviding) {
-        _viewModel = State(initialValue: DashboardViewModel(provider: api, cache: TwoTierPlayerCache()))
+        let cache: PlayerCaching?
+        #if DEBUG
+        cache = ScreenshotFixtureAPI.isEnabled ? nil : TwoTierPlayerCache()
+        #else
+        cache = TwoTierPlayerCache()
+        #endif
+        _viewModel = State(initialValue: DashboardViewModel(provider: api, cache: cache))
     }
 
     var body: some View {
@@ -112,7 +126,7 @@ struct ContentView: View {
         }
         .onAppear { viewModel.applyProState(store.isPro) }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-            Task { await viewModel.load() }
+            Task { await viewModel.refreshOnForeground() }
         }
         .onChange(of: store.isPro) { _, isPro in
             viewModel.applyProState(isPro)
