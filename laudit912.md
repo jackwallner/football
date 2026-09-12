@@ -8,6 +8,12 @@ Scope: read-only review of the current NFL data pipeline, upstream publication t
 
 No application or workflow implementation is included in this audit.
 
+## Review panel provenance
+
+This document consolidates received read-only Luna 5.6 Max review passes covering pipeline correctness, source timing, operations and cost, backend and iOS architecture, Sunday user journeys, accessibility, caching, and persona-specific behavior.
+
+The agent service accepted the completed review passes. Additional parallel slots were rejected after the workspace thread limit was reached, so this document does not claim that every requested slot ran. No review pass was authorized to modify application or workflow code.
+
 ## Executive finding
 
 The current system is a once-daily, best-effort refresh. It is not event-aware:
@@ -1160,7 +1166,7 @@ The existing foreground reload and API cache-bypass behavior are sufficient for 
 
 ### Persona review
 
-These are independent review lenses applied directly in this audit because a callable subagent runtime was unavailable.
+These are the persona lenses consolidated from the received Luna 5.6 Max review passes. Additional requested parallel slots were unavailable after the workspace thread limit was reached, so this table does not claim that every requested slot ran.
 
 | Persona | Primary need | Risk in current flow | Recommended response |
 | --- | --- | --- | --- |
