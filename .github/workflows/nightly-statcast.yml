@@ -2,15 +2,20 @@ name: Nightly NFL Refresh
 
 on:
   schedule:
-    # nflverse publishes its data mirror on a weekly cadence (games are once a
-    # week per team), unlike Statcast which updates nightly during an MLB
-    # season — so one run a night is enough here; there's no second pass to
-    # add the way baseball's workflow needed one.
-    - cron: "0 9 * * *"
+    # GitHub schedule dispatch is best effort.  The durable source fingerprint
+    # and the daily safety pass make a delayed dispatch converge on the next
+    # check.  The first schedule covers the active NFL months; the second is a
+    # cheap offseason safety check.
+    - cron: "*/30 * * 9-12,1-2 *"
+    - cron: "0 10 * 3-8 *"
   workflow_dispatch:
     inputs:
+      force:
+        description: "Run a full current-season refresh even when source metadata is unchanged"
+        type: boolean
+        default: false
       full_game_log_reingest:
-        description: "Re-ingest per-game logs from season start (needed after a metric-set change)"
+        description: "Compatibility alias for a full current-season refresh"
         type: boolean
         default: false
       backfill_seasons:
@@ -24,24 +29,60 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  # STATCAST_SEASON is passed through empty unless the repo variable is set, and
-  # empty is what we want: every script falls back to `resolve_season`, which
-  # reads the calendar (year if month >= 9, else year - 1). It used to carry a
-  # literal '2025' fallback, which would have quietly pinned the nightly run to
-  # the 2025 season forever - come week 1 of 2026 the workflow would still be
-  # re-ingesting a finished year and no new data would ever land. Set the repo
-  # variable only to force a specific season.
+  # STATCAST_SEASON is passed through empty unless the repo variable is set.
+  # Empty keeps the existing calendar resolver: year if month >= 9, otherwise
+  # year - 1.
+
+concurrency:
+  group: nfl-data-refresh
+  cancel-in-progress: false
 
 jobs:
-  ingest:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      season: ${{ steps.source-probe.outputs.season }}
+      ready: ${{ steps.source-probe.outputs.ready }}
+      changed: ${{ steps.source-probe.outputs.changed }}
+      refresh_id: ${{ steps.source-probe.outputs.refresh_id }}
+      fingerprint: ${{ steps.source-probe.outputs.fingerprint }}
+      source_published_at: ${{ steps.source-probe.outputs.source_published_at }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Probe nflverse source generations
+        id: source-probe
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STATCAST_SEASON: ${{ vars.STATCAST_SEASON }}
+          FORCE_REFRESH: ${{ inputs.force || inputs.full_game_log_reingest || inputs.backfill_seasons != '' || inputs.rollup_all_time }}
+        run: |
+          set -o pipefail
+          args=()
+          if [ "$FORCE_REFRESH" = "true" ]; then
+            args+=(--force)
+          fi
+          python backend/source_probe.py --github-output "$GITHUB_OUTPUT" "${args[@]}" 2>&1 | tee source_probe.log
+
+  refresh:
+    if: needs.probe.outputs.changed == 'true'
+    needs: probe
     runs-on: ubuntu-latest
     permissions:
       contents: read
       issues: write
-    # The nightly incremental path is quick. A full game-log re-ingest walks
-    # the whole season's weekly stats plus the recent-form rollup and needs
-    # more headroom. A season backfill plus the career rollup needs far more
-    # again: the rollup alone reads every season from 2000 on.
+    # Full current-season rebuilds are source-complete and still small.  Keep
+    # room for an explicit historical backfill or career rollup below.
     timeout-minutes: 180
     steps:
       - name: Check out repository
@@ -57,22 +98,24 @@ jobs:
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
 
-      - name: Run tests
+      - name: Run backend tests
         run: PYTHONPATH=backend python -m pytest backend/tests
 
-      - name: Run NFL snapshot ingestion
+      - name: Build and atomically publish current season
         shell: bash
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           STATCAST_SEASON: ${{ vars.STATCAST_SEASON }}
+          REFRESH_ID: ${{ needs.probe.outputs.refresh_id }}
+          SEASON: ${{ needs.probe.outputs.season }}
         run: |
           set -o pipefail
-          python backend/ingest.py --season-type all 2>&1 | tee ingestion.log
+          python backend/refresh.py --refresh-id "$REFRESH_ID" --season "$SEASON" 2>&1 | tee refresh.log
 
-      # Adding a metric source (PFR advanced defence, weekly CPOE) only reaches
-      # seasons that are re-ingested, so a range backfill is a manual, explicit
-      # step rather than something the nightly path does on its own.
+      # Adding a metric source only reaches seasons explicitly requested.  The
+      # event path above remains current-season only and does not rewrite the
+      # historical bundle or career rollup on every probe.
       - name: Backfill season range
         if: inputs.backfill_seasons != ''
         shell: bash
@@ -108,46 +151,6 @@ jobs:
           set -o pipefail
           python backend/rollup_all_time.py --season-type all 2>&1 | tee all_time.log
 
-      - name: Run per-game ingestion (Recent Form data)
-        shell: bash
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          STATCAST_SEASON: ${{ vars.STATCAST_SEASON }}
-          # A metric-set change only reaches already-ingested games via a full
-          # re-ingest; the nightly path stays incremental from the last date.
-          FULL_REINGEST: ${{ inputs.full_game_log_reingest }}
-        run: |
-          set -o pipefail
-          if [ "$FULL_REINGEST" = "true" ]; then
-            python backend/ingest_game_logs.py --full 2>&1 | tee game_logs_ingestion.log
-          else
-            python backend/ingest_game_logs.py 2>&1 | tee game_logs_ingestion.log
-          fi
-
-      - name: Roll up rolling windows (last 3/5/8 weeks)
-        shell: bash
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          STATCAST_SEASON: ${{ vars.STATCAST_SEASON }}
-        run: |
-          set -o pipefail
-          python backend/rollup_recent_form.py 2>&1 | tee recent_form_rollup.log
-
-      # No prune step, on purpose. `backend/prune_history.py` is kept as a
-      # manual tool (see its docstring) rather than run nightly.
-      #
-      # The one-off purge already took the per-game tables down to the newest
-      # season, and nothing here ever writes an older one: both the game-log
-      # ingest and the rollup run against the resolved current season. So
-      # through the 2026 season these tables can only ever hold 2025 and 2026,
-      # about 26 MB a season, which is a rounding error against the 500 MB
-      # budget. A nightly DELETE that has nothing to delete is pure risk: it
-      # would have fired on the Sept 9 opener and dropped 2025's rows while the
-      # app still shipped builds that called 2025 the live season. Prune again
-      # in a later offseason if
-      # the size ever justifies it.
       - name: Upload artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -156,7 +159,10 @@ jobs:
           path: |
             backend/tests/
             backend/*.py
-            ingestion.log
+            source_probe.log
+            refresh.log
+            backfill.log
+            all_time.log
 
       - name: Notify on failure
         if: failure()
@@ -168,6 +174,6 @@ jobs:
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: 'Nightly NFL ingestion failed',
-              body: ':warning: Nightly NFL ingestion failed, check [run logs](https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ')'
+              title: 'NFL data refresh failed',
+              body: ':warning: NFL data refresh failed, check [run logs](https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ')'
             })

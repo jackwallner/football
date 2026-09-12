@@ -988,10 +988,18 @@ def build_agg_for_season(
     season: int,
     season_type: str = "REG",
     live: bool = False,
+    weekly_frame: Optional[pd.DataFrame] = None,
+    enrichment_status: Optional[dict[str, str]] = None,
 ) -> pd.DataFrame:
-    """Fetch nflverse data and produce the fully-merged aggregate DataFrame."""
+    """Fetch nflverse data and produce the fully-merged aggregate DataFrame.
+
+    ``weekly_frame`` and ``enrichment_status`` are used by the event-aware
+    publisher.  The normal command-line ingest keeps the original behavior,
+    while the publisher can share one core download across REG and POST and
+    publish core stats when an optional enrichment source is temporarily late.
+    """
     logger.info("Loading weekly player stats for %s...", season)
-    weekly = _to_pandas(nfl.load_player_stats([season]))
+    weekly = weekly_frame if weekly_frame is not None else _to_pandas(nfl.load_player_stats([season]))
     logger.info("Weekly rows: %d", len(weekly))
 
     agg = aggregate_seasons(weekly, season, season_type)
@@ -1001,27 +1009,50 @@ def build_agg_for_season(
 
     if season >= NGS_FIRST_SEASON:
         logger.info("Loading Next Gen Stats for %s...", season)
-        ngs_pass = _to_pandas(nfl.load_nextgen_stats([season], stat_type="passing"))
-        ngs_rush = _to_pandas(nfl.load_nextgen_stats([season], stat_type="rushing"))
-        ngs_rec = _to_pandas(nfl.load_nextgen_stats([season], stat_type="receiving"))
-        agg = merge_ngs(
-            agg,
-            ngs_pass,
-            ngs_rush,
-            ngs_rec,
-            season,
-            season_type,
-        )
+        try:
+            ngs_pass = _to_pandas(nfl.load_nextgen_stats([season], stat_type="passing"))
+            ngs_rush = _to_pandas(nfl.load_nextgen_stats([season], stat_type="rushing"))
+            ngs_rec = _to_pandas(nfl.load_nextgen_stats([season], stat_type="receiving"))
+            agg = merge_ngs(
+                agg,
+                ngs_pass,
+                ngs_rush,
+                ngs_rec,
+                season,
+                season_type,
+            )
+            if enrichment_status is not None:
+                enrichment_status["ngs"] = "ready" if any(
+                    not frame.empty for frame in (ngs_pass, ngs_rush, ngs_rec)
+                ) else "pending"
+        except Exception:
+            if enrichment_status is None:
+                raise
+            logger.exception("Failed to load Next Gen Stats; publishing core stats as degraded.")
+            enrichment_status["ngs"] = "degraded"
     else:
         logger.info("Skipping Next Gen Stats for %s (available since %s).", season, NGS_FIRST_SEASON)
+        if enrichment_status is not None:
+            enrichment_status["ngs"] = "not_applicable"
 
     # PFR's advanced defensive table is regular season only - it carries no
     # season_type column to split on - so the postseason board keeps the
     # traditional defensive stats and simply has no advanced rows.
     if season_type == "REG":
-        agg = merge_pfr_defense(agg, load_pfr_defense(season), rate_thresholds=not live)
+        try:
+            pfr = load_pfr_defense(season)
+            agg = merge_pfr_defense(agg, pfr, rate_thresholds=not live)
+            if enrichment_status is not None:
+                enrichment_status["pfr"] = "ready" if not pfr.empty else "pending"
+        except Exception:
+            if enrichment_status is None:
+                raise
+            logger.exception("Failed to load PFR advanced defense; publishing core stats as degraded.")
+            enrichment_status["pfr"] = "degraded"
     else:
         logger.info("Skipping PFR advanced defence for %s POST (regular season only).", season)
+        if enrichment_status is not None:
+            enrichment_status["pfr"] = "not_applicable"
 
     headshots = load_headshots()
     agg["image_url"] = [headshots.get(int(pid)) for pid in agg.index]

@@ -18,6 +18,7 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r backend/requirements.txt
       - run: PYTHONPATH=backend python -m pytest backend/tests
+      - run: python -m unittest discover -s scripts/tests -v
 
   ios-build:
     runs-on: macos-latest

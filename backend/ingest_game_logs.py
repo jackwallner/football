@@ -240,6 +240,11 @@ def build_game_log_rows(
             "player_id": pid,
             "season": season,
             "season_type": str(r.get("season_type") or "REG"),
+            # Keep the upstream game identity alongside the date.  The legacy
+            # primary key remains date based for app compatibility, while the
+            # refresh publisher uses this value to prove that a new source
+            # generation did not silently drop a game already in production.
+            "game_id": str(r.get("game_id") or ""),
             "game_date": game_date,
             "player_type": player_type or "def",
             "team": str(r.get("team") or ""),
@@ -284,7 +289,10 @@ def _upsert(client, rows: list[dict]) -> None:
             raise
 
 
-def _load_ngs_lookups(season: int) -> tuple[dict, dict, dict]:
+def _load_ngs_lookups(
+    season: int,
+    enrichment_status: Optional[dict[str, str]] = None,
+) -> tuple[dict, dict, dict]:
     """Load and index the three weekly NGS frames, or empty dicts if unusable.
 
     NGS data doesn't exist before 2016, and a fetch failure here shouldn't
@@ -293,6 +301,8 @@ def _load_ngs_lookups(season: int) -> tuple[dict, dict, dict]:
     """
     if season < NGS_FIRST_SEASON:
         logger.info("Skipping weekly Next Gen Stats for %s (available since %s).", season, NGS_FIRST_SEASON)
+        if enrichment_status is not None:
+            enrichment_status["ngs"] = "not_applicable"
         return {}, {}, {}
     try:
         logger.info("Loading weekly Next Gen Stats for %s...", season)
@@ -306,9 +316,15 @@ def _load_ngs_lookups(season: int) -> tuple[dict, dict, dict]:
             "  NGS weekly rows indexed: passing=%d rushing=%d receiving=%d",
             len(pass_lookup), len(rush_lookup), len(rec_lookup),
         )
+        if enrichment_status is not None:
+            enrichment_status["ngs"] = "ready" if any(
+                (pass_lookup, rush_lookup, rec_lookup)
+            ) else "pending"
         return pass_lookup, rush_lookup, rec_lookup
     except Exception:
         logger.exception("Failed to load weekly Next Gen Stats; continuing without them.")
+        if enrichment_status is not None:
+            enrichment_status["ngs"] = "degraded"
         return {}, {}, {}
 
 
