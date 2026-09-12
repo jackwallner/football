@@ -203,7 +203,7 @@ struct StandardStatsLeadersView: View {
                             .font(.system(size: 8, weight: .bold))
                             .foregroundStyle(GridironPalette.turf)
                     }
-                    .frame(width: 80, alignment: .trailing)
+                    .frame(width: 100, alignment: .trailing)
                 }
                 .frame(height: GridironGeo.rowHeightHeader)
                 .padding(.horizontal, GridironGeo.padInline)
@@ -278,11 +278,21 @@ struct StandardStatsLeadersView: View {
                 }
                 .frame(width: 44, alignment: .leading)
 
-                Text(statDisplay(for: player))
-                    .font(GridironType.statMed)
-                    .foregroundStyle(GridironPalette.turf)
-                    .frame(width: 70, alignment: .trailing)
-                    .monospacedDigit()
+                HStack(spacing: 8) {
+                    PercentileBarMini(percentile: percentile(for: player))
+                        .frame(width: 34)
+                    Text(statDisplay(for: player))
+                        .font(GridironType.statMed)
+                        .foregroundStyle(GridironPalette.turf)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(width: 58, alignment: .trailing)
+                        .monospacedDigit()
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(
+                    "\(selectedStat): \(statDisplay(for: player)), \(percentile(for: player))th percentile"
+                )
             }
             .frame(height: GridironGeo.rowHeight)
             .padding(.horizontal, GridironGeo.padInline)
@@ -317,7 +327,21 @@ struct StandardStatsLeadersView: View {
 
     private func numericStat(for player: Player) -> Double? {
         guard let stat = standardStat(for: player) else { return nil }
-        return DashboardViewModel.rawNumeric(stat.value)
+        // Via the shared semantics so a paired value (Cmp/Att, Rec/Tgt) sorts
+        // on its rate rather than on the count in front of the slash.
+        return StandardStatSemantics.numericValue(label: stat.label, value: stat.value)
+    }
+
+    /// Every row on this board has the stat it is ranked by - that is the
+    /// filter - so every row can carry a percentile, drawn against the same
+    /// position cohort the profile's traditional bars use.
+    private func percentile(for player: Player) -> Int {
+        guard let stat = standardStat(for: player) else { return 50 }
+        return StandardStatSemantics.percentile(
+            label: stat.label,
+            value: stat.value,
+            peerValues: filteredPlayers.compactMap { standardStat(for: $0)?.value }
+        )
     }
 
     private func statDisplay(for player: Player) -> String {

@@ -68,4 +68,63 @@ final class StandardStatsTests: XCTestCase {
             50
         )
     }
+
+    func testPercentileRanksAgainstWhicheverPeersHaveTheStat() {
+        // Week one: two peers, and a value that beats one of them.
+        XCTAssertEqual(
+            StandardStatSemantics.percentile(
+                label: "Rush Yds",
+                value: "80",
+                peerValues: ["80", "20"]
+            ),
+            75
+        )
+        // A cohort of one is the middle of its own distribution, never 0.
+        XCTAssertEqual(
+            StandardStatSemantics.percentile(
+                label: "Rush Yds",
+                value: "80",
+                peerValues: ["80"]
+            ),
+            50
+        )
+        // Direction still applies with a thin pool: fewer picks is better.
+        XCTAssertGreaterThan(
+            StandardStatSemantics.percentile(
+                label: "INT",
+                value: "0",
+                peerValues: ["0", "3"]
+            ),
+            StandardStatSemantics.percentile(
+                label: "INT",
+                value: "3",
+                peerValues: ["0", "3"]
+            )
+        )
+    }
+
+    func testPercentileIsNeverZeroForAnExistingValue() {
+        // The floor the profile, the team card and the boards all rely on: a
+        // stat that exists always lands on a drawable 1-100 bar.
+        for value in ["0", "1", "250", "0.0%"] {
+            let pct = StandardStatSemantics.percentile(
+                label: "Rec Yds",
+                value: value,
+                peerValues: ["0", "1", "250", "999"]
+            )
+            XCTAssertGreaterThanOrEqual(pct, 1, "\(value) produced \(pct)")
+            XCTAssertLessThanOrEqual(pct, 100, "\(value) produced \(pct)")
+        }
+    }
+
+    func testLeagueCurveInterpolatesFromTwoPoints() {
+        // Was nil below five points, which dropped the Recent Form bar
+        // entirely in an opening week.
+        let curve = LeaguePercentileCurve(points: [(100, 20), (300, 80)])
+        XCTAssertNotNil(curve)
+        XCTAssertEqual(curve?.percentile(for: 200), 50)
+        XCTAssertEqual(curve?.percentile(for: 50), 20)
+        XCTAssertEqual(curve?.percentile(for: 400), 80)
+        XCTAssertNil(LeaguePercentileCurve(points: [(100, 20)]))
+    }
 }

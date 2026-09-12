@@ -316,6 +316,15 @@ struct PlayerComparisonView: View {
                     aggregateValue(item.a, isWinner: winner == .left)
                     aggregateValue(item.b, isWinner: winner == .right)
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(
+                    standardRowAccessibilityLabel(
+                        label: item.label,
+                        left: item.a,
+                        right: item.b,
+                        winner: winner
+                    )
+                )
                 .frame(height: GridironGeo.rowHeight)
                 .padding(.horizontal, GridironGeo.padInline)
                 .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
@@ -335,12 +344,35 @@ struct PlayerComparisonView: View {
         )
     }
 
+    /// Spoken form of one standard-totals row: both numbers and who leads,
+    /// because the trophy that carries that on screen is decoration and is
+    /// hidden from VoiceOver.
+    private func standardRowAccessibilityLabel(
+        label: String,
+        left: String?,
+        right: String?,
+        winner: StandardStatSemantics.Winner?
+    ) -> String {
+        let leftName = a.name
+        let rightName = b.name
+        var parts = [
+            "\(label): \(leftName) \(left ?? "no data"), \(rightName) \(right ?? "no data")"
+        ]
+        switch winner {
+        case .left: parts.append("\(leftName) leads")
+        case .right: parts.append("\(rightName) leads")
+        case nil: break
+        }
+        return parts.joined(separator: ", ")
+    }
+
     private func aggregateValue(_ value: String?, isWinner: Bool) -> some View {
         HStack(spacing: 4) {
             if isWinner {
                 Image(systemName: "trophy.fill")
                     .font(.system(size: 9, weight: .bold))
                     .foregroundStyle(Color.yellow)
+                    .accessibilityHidden(true)
             }
             Text(value ?? "-")
                 .font(GridironType.statMed)
@@ -548,7 +580,6 @@ struct PlayerComparisonView: View {
                 let hasValue = !m.value.isEmpty
                 let comparable = other.map { $0.percentile > 0 || !$0.value.isEmpty } ?? false
                 let isWinner = comparable && (other.map { m.percentile > $0.percentile } ?? false)
-                let pctColor = GridironPalette.color(forPercentile: m.percentile)
                 let pctTextColor = GridironPalette.textColor(forPercentile: m.percentile)
                 VStack(spacing: 4) {
                     HStack(spacing: 4) {
@@ -556,6 +587,7 @@ struct PlayerComparisonView: View {
                             Image(systemName: "trophy.fill")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(Color.yellow)
+                                .accessibilityHidden(true)
                         }
                         Text(hasValue ? m.value : "\(m.percentile)")
                             .font(GridironType.statMed)
@@ -567,12 +599,21 @@ struct PlayerComparisonView: View {
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(height: 10)
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(pctColor)
-                        .frame(width: max(8, CGFloat(m.percentile) * 0.6), height: 4)
-                        .frame(maxWidth: 60, alignment: .leading)
+                    // The same track-and-fill bar the boards and the profile
+                    // use. The hand-rolled rectangle this replaces had no
+                    // track, so a low percentile read as a missing bar, and
+                    // its `max(8, …)` floor drew a 1st percentile as wide as
+                    // a 13th.
+                    PercentileBarMini(percentile: m.percentile, height: 5)
+                        .frame(maxWidth: 60)
                 }
                 .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(
+                    hasValue
+                        ? "\(m.value), \(m.percentile)th percentile"
+                        : "\(m.percentile)th percentile"
+                )
             } else {
                 Text("-")
                     .font(GridironType.statSmall)
