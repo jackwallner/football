@@ -81,8 +81,10 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         ).firstMatch
         guard row.waitForExistence(timeout: 30) else { return false }
         row.tap()
-        // The profile's own tab strip, once the push has settled.
-        return waitUntilHittable(app.buttons["Advanced"].firstMatch, timeout: 15)
+        // The profile's own tab strip, once the push has settled. On the same
+        // budget as the board itself: a debug build is slow enough that 15s
+        // turned "the transition is still animating" into "no profile opened".
+        return waitUntilHittable(app.buttons["Advanced"].firstMatch, timeout: Self.loadTimeout)
     }
 
     // MARK: - DashboardView Tests
