@@ -408,6 +408,7 @@
 			buildConfigurationList = 1A40E0275A1654AF28D537F3 /* Build configuration list for PBXNativeTarget "StatScoutUITests" */;
 			buildPhases = (
 				9D4C1E692D360F6632EF43DD /* Sources */,
+				139A7CD29FA741F1226D74AD /* Embed simulator Testing interop */,
 			);
 			buildRules = (
 			);
@@ -429,6 +430,7 @@
 				8D503ED964FE7ADDD8578786 /* Sources */,
 				1AA49039FB2B094A9F99EF4F /* Resources */,
 				A0D512F2B3CA023982E11731 /* Frameworks */,
+				EB1215B97A91D4924FAA3E6D /* Embed simulator Testing interop */,
 			);
 			buildRules = (
 			);
@@ -506,6 +508,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		139A7CD29FA741F1226D74AD /* Embed simulator Testing interop */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed simulator Testing interop";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"$PLATFORM_NAME\" = \"iphonesimulator\" ]; then\n  source=\"${PLATFORM_DEVELOPER_USR_DIR}/lib/lib_TestingInterop.dylib\"\n  runner=\"${BUILT_PRODUCTS_DIR}/${TARGET_NAME}-Runner.app/Frameworks/lib_TestingInterop.dylib\"\n  if [ -f \"$source\" ]; then\n    mkdir -p \"$(dirname \"$runner\")\"\n    cp \"$source\" \"$runner\"\n  fi\nfi\n";
+		};
 		2544ECE7BFE80C32283888C9 /* Pre-build validation */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -524,6 +545,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if ! command -v xcodegen &> /dev/null; then\n  echo \"warning: xcodegen not found. Install via 'brew install xcodegen'.\"\nfi\nif [ \"$PLATFORM_NAME\" != \"iphonesimulator\" ]; then\n  if [ -z \"$SUPABASE_URL\" ]; then\n    echo \"error: SUPABASE_URL not set.\"\n    exit 1\n  fi\n  if [ -z \"$SUPABASE_ANON_KEY\" ]; then\n    echo \"error: SUPABASE_ANON_KEY not set.\"\n    exit 1\n  fi\nfi\n";
+		};
+		EB1215B97A91D4924FAA3E6D /* Embed simulator Testing interop */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed simulator Testing interop";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"$PLATFORM_NAME\" = \"iphonesimulator\" ]; then\n  source=\"${PLATFORM_DEVELOPER_USR_DIR}/lib/lib_TestingInterop.dylib\"\n  destination=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/lib_TestingInterop.dylib\"\n  if [ -f \"$source\" ]; then\n    mkdir -p \"$(dirname \"$destination\")\"\n    cp \"$source\" \"$destination\"\n  fi\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -61,6 +61,18 @@ targets:
               exit 1
             fi
           fi
+    postBuildScripts:
+      - name: Embed simulator Testing interop
+        basedOnDependencyAnalysis: false
+        script: |
+          if [ "$PLATFORM_NAME" = "iphonesimulator" ]; then
+            source="${PLATFORM_DEVELOPER_USR_DIR}/lib/lib_TestingInterop.dylib"
+            destination="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/lib_TestingInterop.dylib"
+            if [ -f "$source" ]; then
+              mkdir -p "$(dirname "$destination")"
+              cp "$source" "$destination"
+            fi
+          fi
     entitlements:
       path: StatScout/StatScout.entitlements
     dependencies:
@@ -101,14 +113,25 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: StatScout
+    postBuildScripts:
+      - name: Embed simulator Testing interop
+        basedOnDependencyAnalysis: false
+        script: |
+          if [ "$PLATFORM_NAME" = "iphonesimulator" ]; then
+            source="${PLATFORM_DEVELOPER_USR_DIR}/lib/lib_TestingInterop.dylib"
+            runner="${BUILT_PRODUCTS_DIR}/${TARGET_NAME}-Runner.app/Frameworks/lib_TestingInterop.dylib"
+            if [ -f "$source" ]; then
+              mkdir -p "$(dirname "$runner")"
+              cp "$source" "$runner"
+            fi
+          fi
 
 schemes:
   # The paywall purchase probe, on its own scheme so the app is NOT built as a
   # unit-test host. The StatScout scheme includes StatScoutTests, which makes
   # Xcode embed Testing.framework and the XCTest frameworks into the app bundle
-  # -- and then the app dies at launch with
-  # "Library not loaded: @rpath/lib_TestingInterop.dylib", before any of this
-  # app's own code runs. Nothing to do with the paywall.
+  # and requires the simulator's Testing interop runtime. The target build
+  # scripts stage that runtime into the app and UI-test runner only on simulator.
   StatScoutUITests:
     build:
       targets:
