@@ -1107,6 +1107,20 @@ struct PlayerProfileView: View {
         return RecentFormWindow.build(label: "Last \(span)", span: span, logs: windowLogs)
     }
 
+    /// What the recent column is actually made of.
+    ///
+    /// The picker offers 3 / 5 / 8 games, but a player one week into the season
+    /// has one. Captioning that column "5 games" states a span the numbers
+    /// under it do not cover, so the caption follows the games in hand and only
+    /// says five when there are five.
+    private var standardRecentCaption: String {
+        guard let games = standardRecentWindow?.games,
+              games < standardWindow.rawValue else {
+            return standardWindow.segmentLabel
+        }
+        return games == 1 ? "1 game" : "\(games) games"
+    }
+
     /// The recent-window version of one traditional stat, or nil when the window
     /// has no figure for it. Percentile comes from the same league season
     /// distribution the season row uses, so both sit on one ruler.
@@ -1238,7 +1252,7 @@ struct PlayerProfileView: View {
                         DualMetricBar(
                             season: metric,
                             recent: recent,
-                            recentCaption: standardWindow.segmentLabel
+                            recentCaption: standardRecentCaption
                         )
                     }
                 }

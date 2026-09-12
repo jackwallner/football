@@ -180,7 +180,7 @@ struct TeamStandardCard: View {
                             id: "team-std-\(label)",
                             label: label,
                             value: format(label, value),
-                            percentile: percentile(label: label, value: value, league: league) ?? 0,
+                            percentile: percentile(label: label, value: value, league: league),
                             category: side == .defense ? .defense : .passing
                         )
                     )
@@ -236,7 +236,7 @@ struct TeamStandardCard: View {
                 // club's own season number is the real information, and it's the
                 // same framing the Trends board uses.
                 if !rates.isEmpty {
-                    GridironSubSectionBar(title: "RATE · LAST \(windowGames) GAMES")
+                    GridironSubSectionBar(title: "RATE · \(windowTitle)")
                     ForEach(Array(rates.keys.sorted(by: sortByOrder).enumerated()), id: \.element) { index, label in
                         let now = rates[label] ?? 0
                         let then = seasonLine[label]
@@ -245,7 +245,7 @@ struct TeamStandardCard: View {
                                 .font(GridironType.bodyBold)
                                 .foregroundStyle(GridironPalette.ink)
                                 .frame(width: 68, alignment: .leading)
-                            if let then {
+                            if let then, !windowIsWholeSeason {
                                 Text("\(format(label, then)) → \(format(label, now))")
                                     .font(GridironType.small)
                                     .monospacedDigit()
@@ -257,7 +257,7 @@ struct TeamStandardCard: View {
                                     .foregroundStyle(GridironPalette.inkSecondary)
                             }
                             Spacer(minLength: 0)
-                            if let then {
+                            if let then, !windowIsWholeSeason {
                                 TrendArrow(
                                     delta: now - then,
                                     decimals: 1,
@@ -273,7 +273,11 @@ struct TeamStandardCard: View {
                             alignment: .bottom
                         )
                     }
-                    Text("Compared with the same club's season line.")
+                    Text(
+                        windowIsWholeSeason
+                            ? "Every game this club has played so far."
+                            : "Compared with the same club's season line."
+                    )
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .padding(.horizontal, GridironGeo.padCard)
@@ -284,7 +288,7 @@ struct TeamStandardCard: View {
                 // Counting stats get no bar. Five games of touchdowns against
                 // thirty-two season totals would sit at the first percentile for
                 // every club in the league, which says nothing.
-                GridironSubSectionBar(title: "TOTALS · LAST \(windowGames) GAMES")
+                GridironSubSectionBar(title: "TOTALS · \(windowTitle)")
                 let counts = countingWindowKeys.filter { totals[$0.label] != nil }
                 ForEach(Array(counts.enumerated()), id: \.element.label) { index, entry in
                     HStack {
@@ -468,11 +472,16 @@ struct TeamStandardCard: View {
             .filter { !$0.isEmpty }
     }
 
-    private func percentile(label: String, value: Double, league: [[String: Double]]) -> Int? {
-        let values = league.compactMap { $0[label] }
-        // Thirty-two clubs is the whole population, so anything much short of it
-        // means the season hasn't been aggregated yet.
-        guard values.count >= 12 else { return nil }
+    /// Rank against whichever clubs have the stat, however few that is.
+    ///
+    /// This used to require twelve clubs and return nil below that, which the
+    /// caller turned into `percentile: 0` - a full-width empty bar reading as
+    /// "worst in the league" on week one, when the truth was "six clubs have
+    /// played". A rank among the clubs that have a number is the honest answer
+    /// at every point in the season.
+    private func percentile(label: String, value: Double, league: [[String: Double]]) -> Int {
+        var values = league.compactMap { $0[label] }
+        if values.isEmpty { values = [value] }
         let below = values.reduce(0) { $0 + ($1 < value ? 1 : 0) }
         let equal = values.reduce(0) { $0 + ($1 == value ? 1 : 0) }
         let raw = (Double(below) + Double(equal) / 2) / Double(values.count) * 100
@@ -504,6 +513,24 @@ struct TeamStandardCard: View {
         let gameDates = Set(onSide.map(\.gameDate)).sorted(by: >)
         let kept = Set(gameDates.prefix(windowGames))
         return onSide.filter { kept.contains($0.gameDate) }
+    }
+
+    /// What the window heading says. "LAST 5 GAMES" over a club that has played
+    /// one is a claim about games that do not exist yet.
+    private var windowTitle: String {
+        windowIsWholeSeason ? "SEASON TO DATE" : "LAST \(windowGames) GAMES"
+    }
+
+    /// True when the club has played no more games than the window, so "last
+    /// five" and "the season" are the same games.
+    ///
+    /// In week one that turned every rate row into "73.5% → 73.5%" next to a
+    /// grey zero: the same number printed twice and a change measured against
+    /// itself. The window is real, the comparison is not, so the comparison is
+    /// what goes away.
+    private var windowIsWholeSeason: Bool {
+        let onSide = logs.filter { side.includes(playerType: $0.playerType) }
+        return Set(onSide.map(\.gameDate)).count <= windowGames
     }
 
     /// Summed counting stats for the window, keyed by display label, plus the

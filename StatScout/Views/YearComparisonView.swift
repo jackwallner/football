@@ -233,6 +233,11 @@ struct YearComparisonView: View {
             )
             .frame(width: 72)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            "\(item.metricLabel): \(priorYear) \(item.percentileB)th percentile, "
+                + "\(recentYear) \(item.percentileA)th percentile"
+        )
         .frame(height: 48)
         .padding(.horizontal, GridironGeo.padInline)
         .background(isAlt ? GridironPalette.surfaceAlt : GridironPalette.surface)
@@ -251,6 +256,7 @@ struct YearComparisonView: View {
                     Image(systemName: "trophy.fill")
                         .font(.system(size: 8, weight: .bold))
                         .foregroundStyle(Color.yellow)
+                        .accessibilityHidden(true)
                 }
                 Text(value.isEmpty ? String(percentile) : value)
                     .font(GridironType.statSmall)
@@ -288,6 +294,15 @@ struct YearComparisonView: View {
                     rawValue(item.recent, isWinner: winner == .right)
                         .frame(width: 72)
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(
+                    seasonRowAccessibilityLabel(
+                        label: item.label,
+                        prior: item.prior,
+                        recent: item.recent,
+                        winner: winner
+                    )
+                )
                 .frame(height: 48)
                 .padding(.horizontal, GridironGeo.padInline)
                 .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
@@ -307,12 +322,32 @@ struct YearComparisonView: View {
         )
     }
 
+    /// Spoken form of one season-totals row. The trophy is decoration, so the
+    /// better year is named here instead.
+    private func seasonRowAccessibilityLabel(
+        label: String,
+        prior: String?,
+        recent: String?,
+        winner: StandardStatSemantics.Winner?
+    ) -> String {
+        var parts = [
+            "\(label): \(priorYear) \(prior ?? "no data"), \(recentYear) \(recent ?? "no data")"
+        ]
+        switch winner {
+        case .left: parts.append("\(priorYear) better")
+        case .right: parts.append("\(recentYear) better")
+        case nil: break
+        }
+        return parts.joined(separator: ", ")
+    }
+
     private func rawValue(_ value: String?, isWinner: Bool) -> some View {
         HStack(spacing: 3) {
             if isWinner {
                 Image(systemName: "trophy.fill")
                     .font(.system(size: 8, weight: .bold))
                     .foregroundStyle(Color.yellow)
+                    .accessibilityHidden(true)
             }
             Text(value ?? "-")
                 .font(GridironType.statSmall)

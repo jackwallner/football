@@ -12,9 +12,13 @@ struct LeaguePercentileCurve {
     /// (value, percentile) points sorted ascending by value.
     private let points: [(value: Double, pct: Double)]
 
+    /// Two points are enough to interpolate between, and two is what an
+    /// opening week provides. The old floor of five drew no recent bar at all
+    /// for a metric only a handful of players had yet, which read as a broken
+    /// card rather than as a thin league sample.
     init?(points raw: [(Double, Double)]) {
         let sorted = raw.sorted { $0.0 < $1.0 }
-        guard sorted.count >= 5 else { return nil }
+        guard sorted.count >= 2 else { return nil }
         self.points = sorted.map { (value: $0.0, pct: $0.1) }
     }
 
