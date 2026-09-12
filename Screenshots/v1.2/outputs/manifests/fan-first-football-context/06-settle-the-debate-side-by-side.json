@@ -1,0 +1,68 @@
+{
+  "filename": "06-settle-the-debate-side-by-side.png",
+  "path": "fan-first-football-context/06-settle-the-debate-side-by-side.png",
+  "output_sha256": "9061e6a55acb91eb2ee7958e24730e552dd1b40ae51b279d5c4afa09472824ea",
+  "output_size": [
+    1320,
+    2868
+  ],
+  "device": "iphone",
+  "header": "Settle the debate side by side",
+  "pitch": {
+    "benefit": "Make a fantasy, dynasty, or fan debate with the same context on both sides",
+    "problem": "Separate stat pages make every player debate depend on mismatched context",
+    "advantage": "StatScout aligns two players, their teams, and shared season totals in one comparison",
+    "header_problem": "separate pages mismatch context",
+    "header_advantage": "the debate side by side",
+    "search_terms": [
+      "player comparison",
+      "qb stats"
+    ],
+    "proof": "The literal comparison capture places Caleb Mercer and Mason Reed in parallel cards with aligned season totals"
+  },
+  "source": "/Users/jackwallner/football/screenshots/v1.2/raw/06_player_comparison.png",
+  "source_sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c",
+  "background_asset": null,
+  "background_asset_sha256": null,
+  "background_override": null,
+  "foreground": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.foreground.png",
+  "foreground_sha256": "6b4eaf0f49429981425d998edaf0489d8d1b5a4d42d450e32b69a53f1fd26182",
+  "ui_mask": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.ui-mask.png",
+  "ui_coverage": 0.6448,
+  "imagegen_received_ui_source": false,
+  "target": "iphone_69",
+  "size": [
+    1320,
+    2868
+  ],
+  "background_mode": "theme",
+  "background_id": "theme",
+  "background_top": "#f0ede3",
+  "background_bottom": "#d9e1d7",
+  "background_asset_applied": false,
+  "phone": {
+    "x": 109,
+    "y": 500,
+    "width": 1101,
+    "height": 2344,
+    "screen_x": 130,
+    "screen_y": 521,
+    "screen_width": 1059,
+    "screen_height": 2302
+  },
+  "header_only": true,
+  "compositor_text_layers": [
+    "header"
+  ],
+  "header_font_size": 170,
+  "header_lines": 2,
+  "header_text": "Settle the debate side by side",
+  "header_bounds": [
+    52,
+    155,
+    1267,
+    482
+  ],
+  "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/06_player_comparison.png",
+  "source_evidence_sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c"
+}

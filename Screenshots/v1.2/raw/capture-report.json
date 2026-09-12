@@ -1,0 +1,116 @@
+{
+  "status": "ok",
+  "manifest": "/Users/jackwallner/football/screenshots/v1.2/manifest.json",
+  "app": "football-next-statscout",
+  "mode": "command",
+  "lease": "football",
+  "output": "/Users/jackwallner/football/screenshots/v1.2/raw",
+  "proof_only": false,
+  "checkout_options": [],
+  "lease_checked_in": true,
+  "screenshots": [
+    "01_league_leaders.png",
+    "02_player_profile.png",
+    "03_trends.png",
+    "04_team.png",
+    "05_following.png",
+    "06_player_comparison.png",
+    "07_year_history.png"
+  ],
+  "screenshot_records": [
+    {
+      "name": "01_league_leaders.png",
+      "path": "/Users/jackwallner/football/screenshots/v1.2/raw/01_league_leaders.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "mode": "RGB",
+      "sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae"
+    },
+    {
+      "name": "02_player_profile.png",
+      "path": "/Users/jackwallner/football/screenshots/v1.2/raw/02_player_profile.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "mode": "RGB",
+      "sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6"
+    },
+    {
+      "name": "03_trends.png",
+      "path": "/Users/jackwallner/football/screenshots/v1.2/raw/03_trends.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "mode": "RGB",
+      "sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d"
+    },
+    {
+      "name": "04_team.png",
+      "path": "/Users/jackwallner/football/screenshots/v1.2/raw/04_team.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "mode": "RGB",
+      "sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee"
+    },
+    {
+      "name": "05_following.png",
+      "path": "/Users/jackwallner/football/screenshots/v1.2/raw/05_following.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "mode": "RGB",
+      "sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3"
+    },
+    {
+      "name": "06_player_comparison.png",
+      "path": "/Users/jackwallner/football/screenshots/v1.2/raw/06_player_comparison.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "mode": "RGB",
+      "sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c"
+    },
+    {
+      "name": "07_year_history.png",
+      "path": "/Users/jackwallner/football/screenshots/v1.2/raw/07_year_history.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "mode": "RGB",
+      "sha256": "8fcd21e0c023f0c84b0069ddcb0a01fece6086b5737693ba12191dd8224378e2"
+    }
+  ],
+  "flows": [
+    {
+      "id": "repo-command",
+      "screenshots": [
+        "01_league_leaders.png",
+        "02_player_profile.png",
+        "03_trends.png",
+        "04_team.png",
+        "05_following.png",
+        "06_player_comparison.png",
+        "07_year_history.png"
+      ]
+    }
+  ],
+  "app_repo": {
+    "path": "/Users/jackwallner/football",
+    "git_commit": "d81559857440e3f751af8de4745677efe303d3f1"
+  },
+  "device": {
+    "udid": "2C7A80C1-1228-411A-B9AD-A7DEED683F79",
+    "name": "agent-sim-1",
+    "runtime": "com.apple.CoreSimulator.SimRuntime.iOS-26-5",
+    "device_type": "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro"
+  }
+}

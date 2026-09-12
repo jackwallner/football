@@ -1,0 +1,498 @@
+{
+  "app": "football-next-statscout",
+  "manifest": "/Users/jackwallner/football/screenshots/v1.2/manifest.json",
+  "target": "iphone_69",
+  "copy_contract": "single-header-benefit-story-v3",
+  "background_override": null,
+  "sets": [
+    {
+      "id": "fan-first-football-context",
+      "style": "editorial-gridiron",
+      "frames": [
+        {
+          "filename": "01-know-who-leads-the-league.png",
+          "path": "fan-first-football-context/01-know-who-leads-the-league.png",
+          "output_sha256": "d9bb66e8e1ed4e2de9586f6b969a7ae6f07a6498a7c1ee42c93802e349521fbc",
+          "output_size": [
+            1320,
+            2868
+          ],
+          "device": "iphone",
+          "header": "Know who leads the league",
+          "pitch": {
+            "benefit": "Find the players creating the most value without leaving the league board",
+            "problem": "Box-score leaderboards hide efficiency and make advanced research slow",
+            "advantage": "StatScout ranks qualified players with familiar production and a path to advanced context",
+            "header_problem": "finding leaders takes work",
+            "header_advantage": "who leads the league",
+            "search_terms": [
+              "nfl stats",
+              "qb stats"
+            ],
+            "proof": "The literal Stats capture shows qualified quarterbacks ranked by Pass Yds with season, position, stat, and sort controls visible"
+          },
+          "source": "/Users/jackwallner/football/screenshots/v1.2/raw/01_league_leaders.png",
+          "source_sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae",
+          "background_asset": null,
+          "background_asset_sha256": null,
+          "background_override": null,
+          "foreground": "manifests/fan-first-football-context/01-know-who-leads-the-league.foreground.png",
+          "foreground_sha256": "9f0b6f2c5a9bf813dccd2c5dcea06d4e5c418a000dc051a863ef4e379e683df1",
+          "ui_mask": "manifests/fan-first-football-context/01-know-who-leads-the-league.ui-mask.png",
+          "ui_coverage": 0.6448,
+          "imagegen_received_ui_source": false,
+          "target": "iphone_69",
+          "size": [
+            1320,
+            2868
+          ],
+          "background_mode": "theme",
+          "background_id": "theme",
+          "background_top": "#091412",
+          "background_bottom": "#10281f",
+          "background_asset_applied": false,
+          "phone": {
+            "x": 109,
+            "y": 500,
+            "width": 1101,
+            "height": 2344,
+            "screen_x": 130,
+            "screen_y": 521,
+            "screen_width": 1059,
+            "screen_height": 2302
+          },
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 170,
+          "header_lines": 2,
+          "header_text": "Know who leads the league",
+          "header_bounds": [
+            80,
+            155,
+            1239,
+            483
+          ],
+          "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/01_league_leaders.png",
+          "source_evidence_sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae",
+          "manifest": "manifests/fan-first-football-context/01-know-who-leads-the-league.json"
+        },
+        {
+          "filename": "02-know-what-makes-a-player-elite.png",
+          "path": "fan-first-football-context/02-know-what-makes-a-player-elite.png",
+          "output_sha256": "03f02cdb696066d39a9b73f57d2a8878606acab993c788ef071367cfee4a8447",
+          "output_size": [
+            1320,
+            2868
+          ],
+          "device": "iphone",
+          "header": "Know what makes a player elite",
+          "pitch": {
+            "benefit": "Understand the traits behind a player's ranking instead of relying on one headline stat",
+            "problem": "One box-score line cannot explain efficiency, accuracy, pressure, and mistakes",
+            "advantage": "StatScout turns a player profile into a percentile map with the underlying metric values beside it",
+            "header_problem": "one stat misses the shape",
+            "header_advantage": "what makes a player elite",
+            "search_terms": [
+              "advanced football stats",
+              "football analytics"
+            ],
+            "proof": "The literal profile capture shows grouped percentile bars and named metric values for the fictional Caleb Mercer profile"
+          },
+          "source": "/Users/jackwallner/football/screenshots/v1.2/raw/02_player_profile.png",
+          "source_sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6",
+          "background_asset": null,
+          "background_asset_sha256": null,
+          "background_override": null,
+          "foreground": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.foreground.png",
+          "foreground_sha256": "3d9ebbf0e427b03fae48856e12108a26aa8664c45db707ab558e0fdc7f3807df",
+          "ui_mask": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.ui-mask.png",
+          "ui_coverage": 0.6448,
+          "imagegen_received_ui_source": false,
+          "target": "iphone_69",
+          "size": [
+            1320,
+            2868
+          ],
+          "background_mode": "theme",
+          "background_id": "theme",
+          "background_top": "#f0ede3",
+          "background_bottom": "#d9e1d7",
+          "background_asset_applied": false,
+          "phone": {
+            "x": 109,
+            "y": 500,
+            "width": 1101,
+            "height": 2344,
+            "screen_x": 130,
+            "screen_y": 521,
+            "screen_width": 1059,
+            "screen_height": 2302
+          },
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 158,
+          "header_lines": 2,
+          "header_text": "Know what makes a player elite",
+          "header_bounds": [
+            58,
+            152,
+            1261,
+            456
+          ],
+          "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/02_player_profile.png",
+          "source_evidence_sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6",
+          "manifest": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.json"
+        },
+        {
+          "filename": "03-see-who-is-heating-up-right-now.png",
+          "path": "fan-first-football-context/03-see-who-is-heating-up-right-now.png",
+          "output_sha256": "4c8cfc7f7d8fb59f9ec151d70679b999a3b278f71bffb8befa8b566ca6f34079",
+          "output_size": [
+            1320,
+            2868
+          ],
+          "device": "iphone",
+          "header": "See who is heating up right now",
+          "pitch": {
+            "benefit": "Spot players whose recent form is changing before season totals catch up",
+            "problem": "Season totals move slowly and hide who has changed over the last few football weeks",
+            "advantage": "StatScout compares recent windows and surfaces league-wide movement with a clear coverage boundary",
+            "header_problem": "season totals hide movement",
+            "header_advantage": "who is heating up right now",
+            "search_terms": [
+              "football analytics",
+              "nfl stats"
+            ],
+            "proof": "The literal Trends capture shows Heating up, a recent window, and quarterback movement through a named NFL week"
+          },
+          "source": "/Users/jackwallner/football/screenshots/v1.2/raw/03_trends.png",
+          "source_sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d",
+          "background_asset": null,
+          "background_asset_sha256": null,
+          "background_override": null,
+          "foreground": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.foreground.png",
+          "foreground_sha256": "6b3fc5f74ca741c9198d346e3119361d43edd93aaff26542b4a1520de38d22a0",
+          "ui_mask": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.ui-mask.png",
+          "ui_coverage": 0.6448,
+          "imagegen_received_ui_source": false,
+          "target": "iphone_69",
+          "size": [
+            1320,
+            2868
+          ],
+          "background_mode": "theme",
+          "background_id": "theme",
+          "background_top": "#091412",
+          "background_bottom": "#10281f",
+          "background_asset_applied": false,
+          "phone": {
+            "x": 109,
+            "y": 500,
+            "width": 1101,
+            "height": 2344,
+            "screen_x": 130,
+            "screen_y": 521,
+            "screen_width": 1059,
+            "screen_height": 2302
+          },
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 158,
+          "header_lines": 2,
+          "header_text": "See who is heating up right now",
+          "header_bounds": [
+            42,
+            152,
+            1277,
+            456
+          ],
+          "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/03_trends.png",
+          "source_evidence_sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d",
+          "manifest": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.json"
+        },
+        {
+          "filename": "04-scout-your-team-in-one-view.png",
+          "path": "fan-first-football-context/04-scout-your-team-in-one-view.png",
+          "output_sha256": "d3ed595f9e6d54a3f010e9154515d65ec0ee1302f62f52f06ccafe0ccf6cc3ad",
+          "output_size": [
+            1320,
+            2868
+          ],
+          "device": "iphone",
+          "header": "Scout your team in one view",
+          "pitch": {
+            "benefit": "Move from league-wide context to the team you watch most",
+            "problem": "Team research gets scattered across player pages and disconnected totals",
+            "advantage": "StatScout opens a favorite team with advanced, standard, and roster paths in one destination",
+            "header_problem": "team research gets scattered",
+            "header_advantage": "your team in one view",
+            "search_terms": [
+              "nfl stats",
+              "football analytics"
+            ],
+            "proof": "The literal Chiefs team capture shows the selected franchise, team context, and the app's Advanced, Standard, and Roster paths"
+          },
+          "source": "/Users/jackwallner/football/screenshots/v1.2/raw/04_team.png",
+          "source_sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee",
+          "background_asset": null,
+          "background_asset_sha256": null,
+          "background_override": null,
+          "foreground": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.foreground.png",
+          "foreground_sha256": "cfbdbcbb05320df52791d5ddebb0595a2bbe2e05f03de017beeffb799bf02b13",
+          "ui_mask": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.ui-mask.png",
+          "ui_coverage": 0.6448,
+          "imagegen_received_ui_source": false,
+          "target": "iphone_69",
+          "size": [
+            1320,
+            2868
+          ],
+          "background_mode": "theme",
+          "background_id": "theme",
+          "background_top": "#091412",
+          "background_bottom": "#10281f",
+          "background_asset_applied": false,
+          "phone": {
+            "x": 109,
+            "y": 500,
+            "width": 1101,
+            "height": 2344,
+            "screen_x": 130,
+            "screen_y": 521,
+            "screen_width": 1059,
+            "screen_height": 2302
+          },
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 170,
+          "header_lines": 2,
+          "header_text": "Scout your team in one view",
+          "header_bounds": [
+            78,
+            155,
+            1241,
+            451
+          ],
+          "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/04_team.png",
+          "source_evidence_sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee",
+          "manifest": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.json"
+        },
+        {
+          "filename": "05-keep-your-players-one-tap-away.png",
+          "path": "fan-first-football-context/05-keep-your-players-one-tap-away.png",
+          "output_sha256": "a2102bb45759ff00b6c747ceac74deb3d8ccefa25b776843a0406bcbd8f08efc",
+          "output_size": [
+            1320,
+            2868
+          ],
+          "device": "iphone",
+          "header": "Keep your players one tap away",
+          "pitch": {
+            "benefit": "Turn a fan's team and favorite players into a quick personal stats board",
+            "problem": "The players you care about most disappear inside a full league list",
+            "advantage": "Following keeps team context and concise season summaries together, for free",
+            "header_problem": "favorite players disappear in league lists",
+            "header_advantage": "your players one tap away",
+            "search_terms": [
+              "fantasy football stats",
+              "nfl stats"
+            ],
+            "proof": "The literal Following capture shows the favorite Chiefs shortcut and three followed fictional players with production summaries"
+          },
+          "source": "/Users/jackwallner/football/screenshots/v1.2/raw/05_following.png",
+          "source_sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3",
+          "background_asset": null,
+          "background_asset_sha256": null,
+          "background_override": null,
+          "foreground": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.foreground.png",
+          "foreground_sha256": "5949e073570a057c05eee3b7f4e9829a1f3e977202b6e72790b45343ab21c268",
+          "ui_mask": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.ui-mask.png",
+          "ui_coverage": 0.6448,
+          "imagegen_received_ui_source": false,
+          "target": "iphone_69",
+          "size": [
+            1320,
+            2868
+          ],
+          "background_mode": "theme",
+          "background_id": "theme",
+          "background_top": "#f0ede3",
+          "background_bottom": "#d9e1d7",
+          "background_asset_applied": false,
+          "phone": {
+            "x": 109,
+            "y": 500,
+            "width": 1101,
+            "height": 2344,
+            "screen_x": 130,
+            "screen_y": 521,
+            "screen_width": 1059,
+            "screen_height": 2302
+          },
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 162,
+          "header_lines": 2,
+          "header_text": "Keep your players one tap away",
+          "header_bounds": [
+            54,
+            153,
+            1265,
+            465
+          ],
+          "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/05_following.png",
+          "source_evidence_sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3",
+          "manifest": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.json"
+        },
+        {
+          "filename": "06-settle-the-debate-side-by-side.png",
+          "path": "fan-first-football-context/06-settle-the-debate-side-by-side.png",
+          "output_sha256": "9061e6a55acb91eb2ee7958e24730e552dd1b40ae51b279d5c4afa09472824ea",
+          "output_size": [
+            1320,
+            2868
+          ],
+          "device": "iphone",
+          "header": "Settle the debate side by side",
+          "pitch": {
+            "benefit": "Make a fantasy, dynasty, or fan debate with the same context on both sides",
+            "problem": "Separate stat pages make every player debate depend on mismatched context",
+            "advantage": "StatScout aligns two players, their teams, and shared season totals in one comparison",
+            "header_problem": "separate pages mismatch context",
+            "header_advantage": "the debate side by side",
+            "search_terms": [
+              "player comparison",
+              "qb stats"
+            ],
+            "proof": "The literal comparison capture places Caleb Mercer and Mason Reed in parallel cards with aligned season totals"
+          },
+          "source": "/Users/jackwallner/football/screenshots/v1.2/raw/06_player_comparison.png",
+          "source_sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c",
+          "background_asset": null,
+          "background_asset_sha256": null,
+          "background_override": null,
+          "foreground": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.foreground.png",
+          "foreground_sha256": "6b4eaf0f49429981425d998edaf0489d8d1b5a4d42d450e32b69a53f1fd26182",
+          "ui_mask": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.ui-mask.png",
+          "ui_coverage": 0.6448,
+          "imagegen_received_ui_source": false,
+          "target": "iphone_69",
+          "size": [
+            1320,
+            2868
+          ],
+          "background_mode": "theme",
+          "background_id": "theme",
+          "background_top": "#f0ede3",
+          "background_bottom": "#d9e1d7",
+          "background_asset_applied": false,
+          "phone": {
+            "x": 109,
+            "y": 500,
+            "width": 1101,
+            "height": 2344,
+            "screen_x": 130,
+            "screen_y": 521,
+            "screen_width": 1059,
+            "screen_height": 2302
+          },
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 170,
+          "header_lines": 2,
+          "header_text": "Settle the debate side by side",
+          "header_bounds": [
+            52,
+            155,
+            1267,
+            482
+          ],
+          "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/06_player_comparison.png",
+          "source_evidence_sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c",
+          "manifest": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.json"
+        },
+        {
+          "filename": "07-see-how-a-season-changed.png",
+          "path": "fan-first-football-context/07-see-how-a-season-changed.png",
+          "output_sha256": "c41a0940c175a1ce5b97d11980f882a1971c73da2a8d6fa5d50beea520a1b44e",
+          "output_size": [
+            1320,
+            2868
+          ],
+          "device": "iphone",
+          "header": "See how a season changed",
+          "pitch": {
+            "benefit": "See where a player's production improved, declined, or stayed steady",
+            "problem": "The latest season line hides the direction of a player's development",
+            "advantage": "StatScout puts two available seasons into one metric-by-metric comparison",
+            "header_problem": "the latest line hides direction",
+            "header_advantage": "how a season changed",
+            "search_terms": [
+              "football analytics",
+              "player comparison"
+            ],
+            "proof": "The literal year comparison capture shows two available fictional seasons with aligned standard totals and winning-year cues"
+          },
+          "source": "/Users/jackwallner/football/screenshots/v1.2/raw/07_year_history.png",
+          "source_sha256": "8fcd21e0c023f0c84b0069ddcb0a01fece6086b5737693ba12191dd8224378e2",
+          "background_asset": null,
+          "background_asset_sha256": null,
+          "background_override": null,
+          "foreground": "manifests/fan-first-football-context/07-see-how-a-season-changed.foreground.png",
+          "foreground_sha256": "9d1847b3cb22675baa96e5ff03aea2e964c29fda5c2b173cb380fba4e219f565",
+          "ui_mask": "manifests/fan-first-football-context/07-see-how-a-season-changed.ui-mask.png",
+          "ui_coverage": 0.6448,
+          "imagegen_received_ui_source": false,
+          "target": "iphone_69",
+          "size": [
+            1320,
+            2868
+          ],
+          "background_mode": "theme",
+          "background_id": "theme",
+          "background_top": "#f0ede3",
+          "background_bottom": "#d9e1d7",
+          "background_asset_applied": false,
+          "phone": {
+            "x": 109,
+            "y": 500,
+            "width": 1101,
+            "height": 2344,
+            "screen_x": 130,
+            "screen_y": 521,
+            "screen_width": 1059,
+            "screen_height": 2302
+          },
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 170,
+          "header_lines": 2,
+          "header_text": "See how a season changed",
+          "header_bounds": [
+            74,
+            155,
+            1245,
+            483
+          ],
+          "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/07_year_history.png",
+          "source_evidence_sha256": "8fcd21e0c023f0c84b0069ddcb0a01fece6086b5737693ba12191dd8224378e2",
+          "manifest": "manifests/fan-first-football-context/07-see-how-a-season-changed.json"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "filename": "07-see-how-a-season-changed.png",
+  "path": "fan-first-football-context/07-see-how-a-season-changed.png",
+  "output_sha256": "c41a0940c175a1ce5b97d11980f882a1971c73da2a8d6fa5d50beea520a1b44e",
+  "output_size": [
+    1320,
+    2868
+  ],
+  "device": "iphone",
+  "header": "See how a season changed",
+  "pitch": {
+    "benefit": "See where a player's production improved, declined, or stayed steady",
+    "problem": "The latest season line hides the direction of a player's development",
+    "advantage": "StatScout puts two available seasons into one metric-by-metric comparison",
+    "header_problem": "the latest line hides direction",
+    "header_advantage": "how a season changed",
+    "search_terms": [
+      "football analytics",
+      "player comparison"
+    ],
+    "proof": "The literal year comparison capture shows two available fictional seasons with aligned standard totals and winning-year cues"
+  },
+  "source": "/Users/jackwallner/football/screenshots/v1.2/raw/07_year_history.png",
+  "source_sha256": "8fcd21e0c023f0c84b0069ddcb0a01fece6086b5737693ba12191dd8224378e2",
+  "background_asset": null,
+  "background_asset_sha256": null,
+  "background_override": null,
+  "foreground": "manifests/fan-first-football-context/07-see-how-a-season-changed.foreground.png",
+  "foreground_sha256": "9d1847b3cb22675baa96e5ff03aea2e964c29fda5c2b173cb380fba4e219f565",
+  "ui_mask": "manifests/fan-first-football-context/07-see-how-a-season-changed.ui-mask.png",
+  "ui_coverage": 0.6448,
+  "imagegen_received_ui_source": false,
+  "target": "iphone_69",
+  "size": [
+    1320,
+    2868
+  ],
+  "background_mode": "theme",
+  "background_id": "theme",
+  "background_top": "#f0ede3",
+  "background_bottom": "#d9e1d7",
+  "background_asset_applied": false,
+  "phone": {
+    "x": 109,
+    "y": 500,
+    "width": 1101,
+    "height": 2344,
+    "screen_x": 130,
+    "screen_y": 521,
+    "screen_width": 1059,
+    "screen_height": 2302
+  },
+  "header_only": true,
+  "compositor_text_layers": [
+    "header"
+  ],
+  "header_font_size": 170,
+  "header_lines": 2,
+  "header_text": "See how a season changed",
+  "header_bounds": [
+    74,
+    155,
+    1245,
+    483
+  ],
+  "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/07_year_history.png",
+  "source_evidence_sha256": "8fcd21e0c023f0c84b0069ddcb0a01fece6086b5737693ba12191dd8224378e2"
+}

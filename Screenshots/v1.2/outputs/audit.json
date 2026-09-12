@@ -1,0 +1,427 @@
+{
+  "app": "football-next-statscout",
+  "target": "iphone_69",
+  "expected_size": [
+    1320,
+    2868
+  ],
+  "copy_contract": "single-header-benefit-story-v3",
+  "market": {
+    "category": "NFL advanced player analytics and comparison apps",
+    "audience": "NFL fans, fantasy and dynasty players, writers, and creators who need fast context on a player's value",
+    "problem": "Box scores tell fans what happened, but not who was efficient, who is changing, or how a favorite fits the league",
+    "advantage": "Football Next: StatScout turns advanced NFL metrics into scannable leaderboards, player profiles, recent movement, team context, following shortcuts, and side-by-side comparisons",
+    "competitive_context": "It competes with score apps and dense desktop analytics pages. It wins by making EPA, percentile context, recent form, and fan-selected players readable in one mobile workflow",
+    "search_intent": [
+      "nfl stats",
+      "advanced football stats",
+      "football analytics",
+      "qb stats",
+      "player comparison",
+      "fantasy football stats"
+    ],
+    "proof_points": [
+      {
+        "claim": "The Stats screen ranks fictional qualified quarterbacks by Pass Yds with visible position, season, metric, and sort controls",
+        "source": "raw/01_league_leaders.png"
+      },
+      {
+        "claim": "The player profile shows advanced percentile bars and the metric values behind a quarterback's ranking",
+        "source": "raw/02_player_profile.png"
+      },
+      {
+        "claim": "The Trends screen surfaces quarterback movement with an honest week boundary and a selected recent window",
+        "source": "raw/03_trends.png"
+      },
+      {
+        "claim": "The Chiefs team page keeps team context and roster paths in one real navigation destination",
+        "source": "raw/04_team.png"
+      },
+      {
+        "claim": "The Following board keeps a fan's team and selected players one tap away with season summaries",
+        "source": "raw/05_following.png"
+      },
+      {
+        "claim": "The player comparison screen aligns two quarterbacks and their season totals for a clear debate",
+        "source": "raw/06_player_comparison.png"
+      },
+      {
+        "claim": "The year comparison screen puts two available seasons into one metric-by-metric view",
+        "source": "raw/07_year_history.png"
+      }
+    ]
+  },
+  "sets": [
+    {
+      "id": "fan-first-football-context",
+      "submission": true,
+      "story": {
+        "throughline": "Move from a quick league scan to the context, movement, team view, and fan shortcuts that make every football debate easier",
+        "sequence": [
+          "problem",
+          "mechanism",
+          "proof"
+        ]
+      },
+      "frames": [
+        {
+          "filename": "01-know-who-leads-the-league.png",
+          "path": "fan-first-football-context/01-know-who-leads-the-league.png",
+          "header": "Know who leads the league",
+          "pitch": {
+            "benefit": "Find the players creating the most value without leaving the league board",
+            "problem": "Box-score leaderboards hide efficiency and make advanced research slow",
+            "advantage": "StatScout ranks qualified players with familiar production and a path to advanced context",
+            "header_problem": "finding leaders takes work",
+            "header_advantage": "who leads the league",
+            "search_terms": [
+              "nfl stats",
+              "qb stats"
+            ],
+            "proof": "The literal Stats capture shows qualified quarterbacks ranked by Pass Yds with season, position, stat, and sort controls visible"
+          },
+          "capture_flow": "repo-command",
+          "evidence_status": "canonical",
+          "benefit": "Find the players creating the most value without leaving the league board",
+          "generic_header_terms": [],
+          "size": [
+            1320,
+            2868
+          ],
+          "mode": "RGB",
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 170,
+          "header_lines": 2,
+          "header_bounds": [
+            80,
+            155,
+            1239,
+            483
+          ],
+          "story_role": "problem",
+          "story_focus": "who leads the league",
+          "background_id": "theme",
+          "foreground_sha256": "9f0b6f2c5a9bf813dccd2c5dcea06d4e5c418a000dc051a863ef4e379e683df1",
+          "background_contrast": {
+            "top": 17.91,
+            "bottom": 14.92
+          },
+          "thumbnail_ocr": "9:41 all > & @ Seas trowh Wook 700 cores rr) ono PTC @) (= view\u00bb 1 \u00a9 Caleb Mercer oy em 3632 2 QO MrerFeed ssc 008 a > A Tyler Knox our 1572 5 DariusCole oc ease \u2018 () Eli Brooks eon 1525 a ) oO Ss",
+          "corner_contrast_vs_ink": 16.53
+        },
+        {
+          "filename": "02-know-what-makes-a-player-elite.png",
+          "path": "fan-first-football-context/02-know-what-makes-a-player-elite.png",
+          "header": "Know what makes a player elite",
+          "pitch": {
+            "benefit": "Understand the traits behind a player's ranking instead of relying on one headline stat",
+            "problem": "One box-score line cannot explain efficiency, accuracy, pressure, and mistakes",
+            "advantage": "StatScout turns a player profile into a percentile map with the underlying metric values beside it",
+            "header_problem": "one stat misses the shape",
+            "header_advantage": "what makes a player elite",
+            "search_terms": [
+              "advanced football stats",
+              "football analytics"
+            ],
+            "proof": "The literal profile capture shows grouped percentile bars and named metric values for the fictional Caleb Mercer profile"
+          },
+          "capture_flow": "repo-command",
+          "evidence_status": "canonical",
+          "benefit": "Understand the traits behind a player's ranking instead of relying on one headline stat",
+          "generic_header_terms": [],
+          "size": [
+            1320,
+            2868
+          ],
+          "mode": "RGB",
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 158,
+          "header_lines": 2,
+          "header_bounds": [
+            58,
+            152,
+            1261,
+            456
+          ],
+          "story_role": "mechanism",
+          "story_focus": "what makes a player elite",
+          "background_id": "theme",
+          "foreground_sha256": "3d9ebbf0e427b03fae48856e12108a26aa8664c45db707ab558e0fdc7f3807df",
+          "background_contrast": {
+            "top": 15.48,
+            "bottom": 13.55
+          },
+          "thumbnail_ocr": "9:41 all F Ga \u00a9 Caleb Mercer fe 3% Caleb Mercer Kansas City Chiefs Go| [Senso crAPley 0.31 CARs 0.22 crore) 6.x IT 1.3% sock\u2019, ee) 4.0K Timet0 Theo 2.63 5 \u2018Dm Si0.2",
+          "corner_contrast_vs_ink": 14.48
+        },
+        {
+          "filename": "03-see-who-is-heating-up-right-now.png",
+          "path": "fan-first-football-context/03-see-who-is-heating-up-right-now.png",
+          "header": "See who is heating up right now",
+          "pitch": {
+            "benefit": "Spot players whose recent form is changing before season totals catch up",
+            "problem": "Season totals move slowly and hide who has changed over the last few football weeks",
+            "advantage": "StatScout compares recent windows and surfaces league-wide movement with a clear coverage boundary",
+            "header_problem": "season totals hide movement",
+            "header_advantage": "who is heating up right now",
+            "search_terms": [
+              "football analytics",
+              "nfl stats"
+            ],
+            "proof": "The literal Trends capture shows Heating up, a recent window, and quarterback movement through a named NFL week"
+          },
+          "capture_flow": "repo-command",
+          "evidence_status": "canonical",
+          "benefit": "Spot players whose recent form is changing before season totals catch up",
+          "generic_header_terms": [],
+          "size": [
+            1320,
+            2868
+          ],
+          "mode": "RGB",
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 158,
+          "header_lines": 2,
+          "header_bounds": [
+            42,
+            152,
+            1277,
+            456
+          ],
+          "story_role": "proof",
+          "story_focus": "who is heating up right now",
+          "background_id": "theme",
+          "foreground_sha256": "6b3fc5f74ca741c9198d346e3119361d43edd93aaff26542b4a1520de38d22a0",
+          "background_contrast": {
+            "top": 17.91,
+            "bottom": 14.92
+          },
+          "thumbnail_ocr": "See who is heating up right now 9:41 all S Ga 2026 Regular Season V & Cooling off = 1 @ careers: sons 2 \u00a9 vert ; so08 3 Own . 001 6 @ se\" soot al f.) oO Ss",
+          "corner_contrast_vs_ink": 16.53
+        },
+        {
+          "filename": "04-scout-your-team-in-one-view.png",
+          "path": "fan-first-football-context/04-scout-your-team-in-one-view.png",
+          "header": "Scout your team in one view",
+          "pitch": {
+            "benefit": "Move from league-wide context to the team you watch most",
+            "problem": "Team research gets scattered across player pages and disconnected totals",
+            "advantage": "StatScout opens a favorite team with advanced, standard, and roster paths in one destination",
+            "header_problem": "team research gets scattered",
+            "header_advantage": "your team in one view",
+            "search_terms": [
+              "nfl stats",
+              "football analytics"
+            ],
+            "proof": "The literal Chiefs team capture shows the selected franchise, team context, and the app's Advanced, Standard, and Roster paths"
+          },
+          "capture_flow": "repo-command",
+          "evidence_status": "canonical",
+          "benefit": "Move from league-wide context to the team you watch most",
+          "generic_header_terms": [],
+          "size": [
+            1320,
+            2868
+          ],
+          "mode": "RGB",
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 170,
+          "header_lines": 2,
+          "header_bounds": [
+            78,
+            155,
+            1241,
+            451
+          ],
+          "story_role": "support",
+          "story_focus": "your team in one view",
+          "background_id": "theme",
+          "foreground_sha256": "cfbdbcbb05320df52791d5ddebb0595a2bbe2e05f03de017beeffb799bf02b13",
+          "background_contrast": {
+            "top": 17.91,
+            "bottom": 14.92
+          },
+          "thumbnail_ocr": "9:41 all F \u00a9 stats through Week 5-80 games a oct10 TEAM ADVANCED STATS ( ovense ERI season MDa EPAPlay a () 0.3 croc mn) ba NT 1.3% ee) 4.8% Time to \u00a9 Throw 2:6) hoes \u2014\u2014} ma Intended r.) Air Yds. Boz EPARish 0.2 Wort! Den S ..\\5 stats \u201cTrends Teams Compare",
+          "corner_contrast_vs_ink": 16.53
+        },
+        {
+          "filename": "05-keep-your-players-one-tap-away.png",
+          "path": "fan-first-football-context/05-keep-your-players-one-tap-away.png",
+          "header": "Keep your players one tap away",
+          "pitch": {
+            "benefit": "Turn a fan's team and favorite players into a quick personal stats board",
+            "problem": "The players you care about most disappear inside a full league list",
+            "advantage": "Following keeps team context and concise season summaries together, for free",
+            "header_problem": "favorite players disappear in league lists",
+            "header_advantage": "your players one tap away",
+            "search_terms": [
+              "fantasy football stats",
+              "nfl stats"
+            ],
+            "proof": "The literal Following capture shows the favorite Chiefs shortcut and three followed fictional players with production summaries"
+          },
+          "capture_flow": "repo-command",
+          "evidence_status": "canonical",
+          "benefit": "Turn a fan's team and favorite players into a quick personal stats board",
+          "generic_header_terms": [],
+          "size": [
+            1320,
+            2868
+          ],
+          "mode": "RGB",
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 162,
+          "header_lines": 2,
+          "header_bounds": [
+            54,
+            153,
+            1265,
+            465
+          ],
+          "story_role": "support",
+          "story_focus": "your players one tap away",
+          "background_id": "theme",
+          "foreground_sha256": "5949e073570a057c05eee3b7f4e9829a1f3e977202b6e72790b45343ab21c268",
+          "background_contrast": {
+            "top": 15.48,
+            "bottom": 13.55
+          },
+          "thumbnail_ocr": "Keep your players one tap away 9:41 all F @ \u00a9 \u2018Kansas City Chits > Your players Manage @ zee > \u00a9 wa > Oe > 406 4 31/45, Cr ) oO Ss",
+          "corner_contrast_vs_ink": 14.48
+        },
+        {
+          "filename": "06-settle-the-debate-side-by-side.png",
+          "path": "fan-first-football-context/06-settle-the-debate-side-by-side.png",
+          "header": "Settle the debate side by side",
+          "pitch": {
+            "benefit": "Make a fantasy, dynasty, or fan debate with the same context on both sides",
+            "problem": "Separate stat pages make every player debate depend on mismatched context",
+            "advantage": "StatScout aligns two players, their teams, and shared season totals in one comparison",
+            "header_problem": "separate pages mismatch context",
+            "header_advantage": "the debate side by side",
+            "search_terms": [
+              "player comparison",
+              "qb stats"
+            ],
+            "proof": "The literal comparison capture places Caleb Mercer and Mason Reed in parallel cards with aligned season totals"
+          },
+          "capture_flow": "repo-command",
+          "evidence_status": "canonical",
+          "benefit": "Make a fantasy, dynasty, or fan debate with the same context on both sides",
+          "generic_header_terms": [],
+          "size": [
+            1320,
+            2868
+          ],
+          "mode": "RGB",
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 170,
+          "header_lines": 2,
+          "header_bounds": [
+            52,
+            155,
+            1267,
+            482
+          ],
+          "story_role": "support",
+          "story_focus": "the debate side by side",
+          "background_id": "theme",
+          "foreground_sha256": "6b4eaf0f49429981425d998edaf0489d8d1b5a4d42d450e32b69a53f1fd26182",
+          "background_contrast": {
+            "top": 15.48,
+            "bottom": 13.55
+          },
+          "thumbnail_ocr": "9:41 all F @ \u00a9 Player Comparison cae teror Mason Reed \u2018O Change v \u2018\u00a9 Change ~ SEASON TOTALS \u00b0 5 5 mpi sani7e 119/174 base vis = 3682 1608 pass T0 16 16 wr 2 2 ox 1 18 rush Ye 107 105 rush 70 2 2 passino Ca) oO Ss",
+          "corner_contrast_vs_ink": 14.48
+        },
+        {
+          "filename": "07-see-how-a-season-changed.png",
+          "path": "fan-first-football-context/07-see-how-a-season-changed.png",
+          "header": "See how a season changed",
+          "pitch": {
+            "benefit": "See where a player's production improved, declined, or stayed steady",
+            "problem": "The latest season line hides the direction of a player's development",
+            "advantage": "StatScout puts two available seasons into one metric-by-metric comparison",
+            "header_problem": "the latest line hides direction",
+            "header_advantage": "how a season changed",
+            "search_terms": [
+              "football analytics",
+              "player comparison"
+            ],
+            "proof": "The literal year comparison capture shows two available fictional seasons with aligned standard totals and winning-year cues"
+          },
+          "capture_flow": "repo-command",
+          "evidence_status": "canonical",
+          "benefit": "See where a player's production improved, declined, or stayed steady",
+          "generic_header_terms": [],
+          "size": [
+            1320,
+            2868
+          ],
+          "mode": "RGB",
+          "header_only": true,
+          "compositor_text_layers": [
+            "header"
+          ],
+          "header_font_size": 170,
+          "header_lines": 2,
+          "header_bounds": [
+            74,
+            155,
+            1245,
+            483
+          ],
+          "story_role": "support",
+          "story_focus": "how a season changed",
+          "background_id": "theme",
+          "foreground_sha256": "9d1847b3cb22675baa96e5ff03aea2e964c29fda5c2b173cb380fba4e219f565",
+          "background_contrast": {
+            "top": 15.48,
+            "bottom": 13.55
+          },
+          "thumbnail_ocr": "See how a season changed 9:41 al SF & \u00a9 criecivercen ery (em) Caleb Mercer 2025 \"> 2026 = rea f.) 0 Ss",
+          "corner_contrast_vs_ink": 14.48
+        }
+      ],
+      "errors": [],
+      "warnings": [
+        "01-know-who-leads-the-league.png: thumbnail OCR missed header words ['know', 'who', 'leads', 'the', 'league']",
+        "02-know-what-makes-a-player-elite.png: thumbnail OCR missed header words ['know', 'what', 'makes', 'player', 'elite']",
+        "04-scout-your-team-in-one-view.png: thumbnail OCR missed header words ['scout', 'your', 'one', 'view']",
+        "06-settle-the-debate-side-by-side.png: thumbnail OCR missed header words ['settle', 'the', 'debate', 'side', 'side']"
+      ],
+      "status": "pass"
+    }
+  ],
+  "errors": [],
+  "warnings": [
+    "fan-first-football-context: 01-know-who-leads-the-league.png: thumbnail OCR missed header words ['know', 'who', 'leads', 'the', 'league']",
+    "fan-first-football-context: 02-know-what-makes-a-player-elite.png: thumbnail OCR missed header words ['know', 'what', 'makes', 'player', 'elite']",
+    "fan-first-football-context: 04-scout-your-team-in-one-view.png: thumbnail OCR missed header words ['scout', 'your', 'one', 'view']",
+    "fan-first-football-context: 06-settle-the-debate-side-by-side.png: thumbnail OCR missed header words ['settle', 'the', 'debate', 'side', 'side']"
+  ],
+  "release_requested": true,
+  "release_ready": true,
+  "disposition": "release-ready",
+  "capture_status": "ok",
+  "canonical_submission_evidence": true,
+  "status": "pass"
+}
