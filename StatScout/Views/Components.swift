@@ -126,17 +126,14 @@ struct MetricBar: View {
                 let offset = (circleSize / 2) + (trackWidth * CGFloat(percentileValue) / 100.0)
 
                 ZStack(alignment: .leading) {
-                    // Track
                     RoundedRectangle(cornerRadius: 4)
                         .fill(GridironPalette.surfaceSunk)
                         .frame(height: 10)
 
-                    // Fill
                     RoundedRectangle(cornerRadius: 4)
                         .fill(GridironPalette.color(forPercentile: percentileValue))
                         .frame(width: offset, height: 10)
 
-                    // Percentile circle
                     ZStack {
                         Circle()
                             .fill(GridironPalette.color(forPercentile: percentileValue))

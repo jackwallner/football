@@ -322,7 +322,6 @@ struct CompareView: View {
         .sheet(isPresented: $showingTrial) {
             TrialPitchSheet(trigger: .playerComparison)
         }
-        .modifier(PlayerProfileDestination(viewModel: viewModel))
         .navigationDestination(item: $comparisonRoute) { route in
             PlayerComparisonView(
                 playerA: route.playerA,
@@ -764,41 +763,28 @@ struct CompareView: View {
                 action: onPickTeam
             )
 
-            // Stacked, not side by side. See `slotColumn`.
-            VStack(spacing: 6) {
-                SeasonMenu(
-                    // Team-scoped, so no All Time: a career line carries the
-                    // player's last club and would miscredit the franchise.
-                    seasons: viewModel.seasonsExcludingAllTime,
-                    selected: season,
-                    isLocked: viewModel.isSeasonLocked,
-                    onSelect: { picked in
-                        if viewModel.isSeasonLocked(picked) {
-                            showingTrial = true
-                        } else {
-                            onPickSeason(picked)
-                        }
+            SeasonPhasePicker(
+                // Team-scoped, so no All Time: a career line carries the
+                // player's last club and would miscredit the franchise.
+                seasons: viewModel.seasonsExcludingAllTime,
+                selectedSeason: season,
+                selectedPhase: phase,
+                isSeasonLocked: viewModel.isSeasonLocked,
+                onSelectSeason: { picked in
+                    if viewModel.isSeasonLocked(picked) {
+                        showingTrial = true
+                    } else {
+                        onPickSeason(picked)
                     }
-                ) {
-                    GridironInlinePill(
-                        systemImage: "calendar",
-                        title: SeasonLabel.text(season),
-                        compressible: true
-                    )
-                    .frame(maxWidth: .infinity)
-                }
-
-                SeasonPhaseMenu(
-                    selected: phase,
-                    onSelect: onPickPhase
-                ) {
-                    GridironInlinePill(
-                        systemImage: nil,
-                        title: phase.label,
-                        compressible: true
-                    )
-                    .frame(maxWidth: .infinity)
-                }
+                },
+                onSelectPhase: onPickPhase
+            ) {
+                GridironInlinePill(
+                    systemImage: nil,
+                    title: "\(SeasonLabel.text(season)) · \(phase.label)",
+                    compressible: true
+                )
+                .frame(maxWidth: .infinity)
             }
         }
         .frame(maxWidth: .infinity)
@@ -845,54 +831,28 @@ struct CompareView: View {
         VStack(spacing: 6) {
             playerSlot(player: player, placeholder: placeholder, action: onPickPlayer)
 
-            // Stacked, not side by side.
-            //
-            // Two pills sharing a half-width column had about 74pt each to work
-            // with. "Regular Season" wants ~130, and a four-digit year wants ~70
-            // once the calendar glyph and chevron are counted - so *both* pills
-            // truncated, and the season one lost worst: the year, the single most
-            // load-bearing word in the card, rendered as "20…". Shrinking the
-            // label further only made an unreadable pill smaller.
-            //
-            // Stacking gives each pill the full column, where both fit at full
-            // size with room to spare, and costs one row of height per slot.
-            // `maxWidth: .infinity` on the pill (rather than letting it size to
-            // its text) keeps the two the same width so the pair reads as one
-            // control for one player rather than as two ragged chips.
-            VStack(spacing: 6) {
-                SeasonMenu(
-                    seasons: viewModel.availableSeasons,
-                    selected: season,
-                    isLocked: { viewModel.isSeasonLocked($0) },
-                    onSelect: { picked in
-                        if viewModel.isSeasonLocked(picked) {
-                            showingTrial = true
-                        } else {
-                            onPickSeason(picked)
-                        }
+            SeasonPhasePicker(
+                seasons: viewModel.availableSeasons,
+                selectedSeason: season,
+                selectedPhase: phase,
+                isSeasonLocked: { viewModel.isSeasonLocked($0) },
+                onSelectSeason: { picked in
+                    if viewModel.isSeasonLocked(picked) {
+                        showingTrial = true
+                    } else {
+                        onPickSeason(picked)
                     }
-                ) {
-                    GridironInlinePill(
-                        systemImage: "calendar",
-                        title: SeasonLabel.text(season),
-                        compressible: true
-                    )
-                    .frame(maxWidth: .infinity)
-                }
-                .accessibilityLabel("Season for \(player?.name ?? placeholder)")
-
-                SeasonPhaseMenu(
-                    selected: phase,
-                    onSelect: onPickPhase
-                ) {
-                    GridironInlinePill(
-                        systemImage: nil,
-                        title: phase.label,
-                        compressible: true
-                    )
-                    .frame(maxWidth: .infinity)
-                }
+                },
+                onSelectPhase: onPickPhase
+            ) {
+                GridironInlinePill(
+                    systemImage: nil,
+                    title: "\(SeasonLabel.text(season)) · \(phase.label)",
+                    compressible: true
+                )
+                .frame(maxWidth: .infinity)
             }
+            .accessibilityLabel("Season and season type for \(player?.name ?? placeholder)")
         }
         .frame(maxWidth: .infinity)
     }

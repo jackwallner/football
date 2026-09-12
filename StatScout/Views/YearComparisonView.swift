@@ -68,11 +68,11 @@ struct YearComparisonView: View {
     private var yearPickerCard: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                yearButton(year: $yearA, otherYear: yearB, label: yearA > 0 ? String(yearA) : "Select")
+                yearButton(year: $yearB, otherYear: yearA, label: yearB > 0 ? String(yearB) : "Select")
                 Image(systemName: "arrow.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(GridironPalette.inkTertiary)
-                yearButton(year: $yearB, otherYear: yearA, label: yearB > 0 ? String(yearB) : "Select")
+                yearButton(year: $yearA, otherYear: yearB, label: yearA > 0 ? String(yearA) : "Select")
             }
         }
         .padding(16)
@@ -221,7 +221,7 @@ struct YearComparisonView: View {
             yearValueColumn(
                 percentile: item.percentileB,
                 value: item.valueB,
-                isFaded: true
+                isWinner: item.percentileB > item.percentileA
             )
             .frame(width: 72)
 
@@ -229,7 +229,7 @@ struct YearComparisonView: View {
             yearValueColumn(
                 percentile: item.percentileA,
                 value: item.valueA,
-                isFaded: false
+                isWinner: item.percentileA > item.percentileB
             )
             .frame(width: 72)
         }
@@ -244,13 +244,20 @@ struct YearComparisonView: View {
         )
     }
 
-    private func yearValueColumn(percentile: Int, value: String, isFaded: Bool) -> some View {
+    private func yearValueColumn(percentile: Int, value: String, isWinner: Bool) -> some View {
         VStack(spacing: 2) {
-            Text(value.isEmpty ? String(percentile) : value)
-                .font(GridironType.statSmall)
-                .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.turf)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+            HStack(spacing: 3) {
+                if isWinner {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(Color.yellow)
+                }
+                Text(value.isEmpty ? String(percentile) : value)
+                    .font(GridironType.statSmall)
+                    .foregroundStyle(isWinner ? GridironPalette.turf : GridironPalette.inkSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
             if value.isEmpty {
                 Text("PCTL")
                     .font(GridironType.micro)
@@ -266,14 +273,19 @@ struct YearComparisonView: View {
             GridironSubSectionBar(title: "SEASON TOTALS")
             columnHeader
             ForEach(Array(items.enumerated()), id: \.element.label) { index, item in
+                let winner = StandardStatSemantics.winner(
+                    label: item.label,
+                    left: item.prior,
+                    right: item.recent
+                )
                 HStack(spacing: 0) {
                     Text(item.label)
                         .font(GridironType.body)
                         .foregroundStyle(GridironPalette.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    rawValue(item.prior, isFaded: true)
+                    rawValue(item.prior, isWinner: winner == .left)
                         .frame(width: 72)
-                    rawValue(item.recent, isFaded: false)
+                    rawValue(item.recent, isWinner: winner == .right)
                         .frame(width: 72)
                 }
                 .frame(height: 48)
@@ -295,15 +307,22 @@ struct YearComparisonView: View {
         )
     }
 
-    private func rawValue(_ value: String?, isFaded: Bool) -> some View {
-        Text(value ?? "-")
-            .font(GridironType.statSmall)
-            .foregroundStyle(
-                value == nil
-                    ? GridironPalette.inkTertiary
-                    : (isFaded ? GridironPalette.inkSecondary : GridironPalette.turf)
-            )
-            .monospacedDigit()
+    private func rawValue(_ value: String?, isWinner: Bool) -> some View {
+        HStack(spacing: 3) {
+            if isWinner {
+                Image(systemName: "trophy.fill")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(Color.yellow)
+            }
+            Text(value ?? "-")
+                .font(GridironType.statSmall)
+                .foregroundStyle(
+                    value == nil
+                        ? GridironPalette.inkTertiary
+                        : (isWinner ? GridironPalette.turf : GridironPalette.inkSecondary)
+                )
+                .monospacedDigit()
+        }
     }
 
     // MARK: - Comparisons Builder
