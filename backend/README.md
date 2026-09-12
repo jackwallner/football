@@ -48,7 +48,9 @@ The production path is `backend/source_probe.py` followed by
    and `advstats_season_def.parquet`. The weekly player asset is the exact
    input used by both current-season builders.
 2. A SHA-256 fingerprint combines each asset's release timestamp, ETag,
-   Last-Modified value, length, and HTTP status. The last successful
+   Last-Modified value, length, and HTTP status. `games.parquet` is excluded
+   because nflverse republishes it about every 30 minutes without any stat
+   change; it still gates readiness and feeds coverage at build time. The last successful
    fingerprint is stored in `data_refresh_state`, so an unchanged probe exits
    without downloading source files or writing player tables.
 3. A changed source creates a `data_refresh_runs` row. The builder reads the

@@ -326,6 +326,13 @@ def probe_asset(client: HTTPClient, spec: AssetSpec) -> AssetProbe:
         )
 
 
+# nflverse republishes games.parquet roughly every 30 minutes (odds, weather,
+# kickoff tweaks) even when no player stat moved. Completed games reach the app
+# only through stats_player_week, so the schedule gates readiness but does not
+# start a new data generation. Coverage still reads the schedule at build time.
+UNFINGERPRINTED_ASSETS = frozenset({"schedule"})
+
+
 def fingerprint_assets(assets: Iterable[AssetProbe]) -> str:
     """Return a stable content generation from release metadata.
 
@@ -347,6 +354,7 @@ def fingerprint_assets(assets: Iterable[AssetProbe]) -> str:
             "content_length": asset.content_length,
         }
         for asset in sorted(assets, key=lambda item: item.name)
+        if asset.name not in UNFINGERPRINTED_ASSETS
     ]
     encoded = json.dumps(values, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
