@@ -1,0 +1,68 @@
+{
+  "filename": "02-know-what-makes-a-player-elite.png",
+  "path": "fan-first-football-context/02-know-what-makes-a-player-elite.png",
+  "output_sha256": "03f02cdb696066d39a9b73f57d2a8878606acab993c788ef071367cfee4a8447",
+  "output_size": [
+    1320,
+    2868
+  ],
+  "device": "iphone",
+  "header": "Know what makes a player elite",
+  "pitch": {
+    "benefit": "Understand the traits behind a player's ranking instead of relying on one headline stat",
+    "problem": "One box-score line cannot explain efficiency, accuracy, pressure, and mistakes",
+    "advantage": "StatScout turns a player profile into a percentile map with the underlying metric values beside it",
+    "header_problem": "one stat misses the shape",
+    "header_advantage": "what makes a player elite",
+    "search_terms": [
+      "advanced football stats",
+      "football analytics"
+    ],
+    "proof": "The literal profile capture shows grouped percentile bars and named metric values for the fictional Caleb Mercer profile"
+  },
+  "source": "/Users/jackwallner/football/screenshots/v1.2/raw/02_player_profile.png",
+  "source_sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6",
+  "background_asset": null,
+  "background_asset_sha256": null,
+  "background_override": null,
+  "foreground": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.foreground.png",
+  "foreground_sha256": "3d9ebbf0e427b03fae48856e12108a26aa8664c45db707ab558e0fdc7f3807df",
+  "ui_mask": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.ui-mask.png",
+  "ui_coverage": 0.6448,
+  "imagegen_received_ui_source": false,
+  "target": "iphone_69",
+  "size": [
+    1320,
+    2868
+  ],
+  "background_mode": "theme",
+  "background_id": "theme",
+  "background_top": "#f0ede3",
+  "background_bottom": "#d9e1d7",
+  "background_asset_applied": false,
+  "phone": {
+    "x": 109,
+    "y": 500,
+    "width": 1101,
+    "height": 2344,
+    "screen_x": 130,
+    "screen_y": 521,
+    "screen_width": 1059,
+    "screen_height": 2302
+  },
+  "header_only": true,
+  "compositor_text_layers": [
+    "header"
+  ],
+  "header_font_size": 158,
+  "header_lines": 2,
+  "header_text": "Know what makes a player elite",
+  "header_bounds": [
+    58,
+    152,
+    1261,
+    456
+  ],
+  "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/02_player_profile.png",
+  "source_evidence_sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6"
+}

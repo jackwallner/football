@@ -1,0 +1,68 @@
+{
+  "filename": "05-keep-your-players-one-tap-away.png",
+  "path": "fan-first-football-context/05-keep-your-players-one-tap-away.png",
+  "output_sha256": "a2102bb45759ff00b6c747ceac74deb3d8ccefa25b776843a0406bcbd8f08efc",
+  "output_size": [
+    1320,
+    2868
+  ],
+  "device": "iphone",
+  "header": "Keep your players one tap away",
+  "pitch": {
+    "benefit": "Turn a fan's team and favorite players into a quick personal stats board",
+    "problem": "The players you care about most disappear inside a full league list",
+    "advantage": "Following keeps team context and concise season summaries together, for free",
+    "header_problem": "favorite players disappear in league lists",
+    "header_advantage": "your players one tap away",
+    "search_terms": [
+      "fantasy football stats",
+      "nfl stats"
+    ],
+    "proof": "The literal Following capture shows the favorite Chiefs shortcut and three followed fictional players with production summaries"
+  },
+  "source": "/Users/jackwallner/football/screenshots/v1.2/raw/05_following.png",
+  "source_sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3",
+  "background_asset": null,
+  "background_asset_sha256": null,
+  "background_override": null,
+  "foreground": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.foreground.png",
+  "foreground_sha256": "5949e073570a057c05eee3b7f4e9829a1f3e977202b6e72790b45343ab21c268",
+  "ui_mask": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.ui-mask.png",
+  "ui_coverage": 0.6448,
+  "imagegen_received_ui_source": false,
+  "target": "iphone_69",
+  "size": [
+    1320,
+    2868
+  ],
+  "background_mode": "theme",
+  "background_id": "theme",
+  "background_top": "#f0ede3",
+  "background_bottom": "#d9e1d7",
+  "background_asset_applied": false,
+  "phone": {
+    "x": 109,
+    "y": 500,
+    "width": 1101,
+    "height": 2344,
+    "screen_x": 130,
+    "screen_y": 521,
+    "screen_width": 1059,
+    "screen_height": 2302
+  },
+  "header_only": true,
+  "compositor_text_layers": [
+    "header"
+  ],
+  "header_font_size": 162,
+  "header_lines": 2,
+  "header_text": "Keep your players one tap away",
+  "header_bounds": [
+    54,
+    153,
+    1265,
+    465
+  ],
+  "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/05_following.png",
+  "source_evidence_sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3"
+}

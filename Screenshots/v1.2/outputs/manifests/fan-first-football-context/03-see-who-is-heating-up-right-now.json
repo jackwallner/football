@@ -1,0 +1,68 @@
+{
+  "filename": "03-see-who-is-heating-up-right-now.png",
+  "path": "fan-first-football-context/03-see-who-is-heating-up-right-now.png",
+  "output_sha256": "4c8cfc7f7d8fb59f9ec151d70679b999a3b278f71bffb8befa8b566ca6f34079",
+  "output_size": [
+    1320,
+    2868
+  ],
+  "device": "iphone",
+  "header": "See who is heating up right now",
+  "pitch": {
+    "benefit": "Spot players whose recent form is changing before season totals catch up",
+    "problem": "Season totals move slowly and hide who has changed over the last few football weeks",
+    "advantage": "StatScout compares recent windows and surfaces league-wide movement with a clear coverage boundary",
+    "header_problem": "season totals hide movement",
+    "header_advantage": "who is heating up right now",
+    "search_terms": [
+      "football analytics",
+      "nfl stats"
+    ],
+    "proof": "The literal Trends capture shows Heating up, a recent window, and quarterback movement through a named NFL week"
+  },
+  "source": "/Users/jackwallner/football/screenshots/v1.2/raw/03_trends.png",
+  "source_sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d",
+  "background_asset": null,
+  "background_asset_sha256": null,
+  "background_override": null,
+  "foreground": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.foreground.png",
+  "foreground_sha256": "6b3fc5f74ca741c9198d346e3119361d43edd93aaff26542b4a1520de38d22a0",
+  "ui_mask": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.ui-mask.png",
+  "ui_coverage": 0.6448,
+  "imagegen_received_ui_source": false,
+  "target": "iphone_69",
+  "size": [
+    1320,
+    2868
+  ],
+  "background_mode": "theme",
+  "background_id": "theme",
+  "background_top": "#091412",
+  "background_bottom": "#10281f",
+  "background_asset_applied": false,
+  "phone": {
+    "x": 109,
+    "y": 500,
+    "width": 1101,
+    "height": 2344,
+    "screen_x": 130,
+    "screen_y": 521,
+    "screen_width": 1059,
+    "screen_height": 2302
+  },
+  "header_only": true,
+  "compositor_text_layers": [
+    "header"
+  ],
+  "header_font_size": 158,
+  "header_lines": 2,
+  "header_text": "See who is heating up right now",
+  "header_bounds": [
+    42,
+    152,
+    1277,
+    456
+  ],
+  "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/03_trends.png",
+  "source_evidence_sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d"
+}

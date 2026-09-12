@@ -1,0 +1,68 @@
+{
+  "filename": "01-know-who-leads-the-league.png",
+  "path": "fan-first-football-context/01-know-who-leads-the-league.png",
+  "output_sha256": "d9bb66e8e1ed4e2de9586f6b969a7ae6f07a6498a7c1ee42c93802e349521fbc",
+  "output_size": [
+    1320,
+    2868
+  ],
+  "device": "iphone",
+  "header": "Know who leads the league",
+  "pitch": {
+    "benefit": "Find the players creating the most value without leaving the league board",
+    "problem": "Box-score leaderboards hide efficiency and make advanced research slow",
+    "advantage": "StatScout ranks qualified players with familiar production and a path to advanced context",
+    "header_problem": "finding leaders takes work",
+    "header_advantage": "who leads the league",
+    "search_terms": [
+      "nfl stats",
+      "qb stats"
+    ],
+    "proof": "The literal Stats capture shows qualified quarterbacks ranked by Pass Yds with season, position, stat, and sort controls visible"
+  },
+  "source": "/Users/jackwallner/football/screenshots/v1.2/raw/01_league_leaders.png",
+  "source_sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae",
+  "background_asset": null,
+  "background_asset_sha256": null,
+  "background_override": null,
+  "foreground": "manifests/fan-first-football-context/01-know-who-leads-the-league.foreground.png",
+  "foreground_sha256": "9f0b6f2c5a9bf813dccd2c5dcea06d4e5c418a000dc051a863ef4e379e683df1",
+  "ui_mask": "manifests/fan-first-football-context/01-know-who-leads-the-league.ui-mask.png",
+  "ui_coverage": 0.6448,
+  "imagegen_received_ui_source": false,
+  "target": "iphone_69",
+  "size": [
+    1320,
+    2868
+  ],
+  "background_mode": "theme",
+  "background_id": "theme",
+  "background_top": "#091412",
+  "background_bottom": "#10281f",
+  "background_asset_applied": false,
+  "phone": {
+    "x": 109,
+    "y": 500,
+    "width": 1101,
+    "height": 2344,
+    "screen_x": 130,
+    "screen_y": 521,
+    "screen_width": 1059,
+    "screen_height": 2302
+  },
+  "header_only": true,
+  "compositor_text_layers": [
+    "header"
+  ],
+  "header_font_size": 170,
+  "header_lines": 2,
+  "header_text": "Know who leads the league",
+  "header_bounds": [
+    80,
+    155,
+    1239,
+    483
+  ],
+  "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/01_league_leaders.png",
+  "source_evidence_sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae"
+}

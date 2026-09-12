@@ -1,0 +1,68 @@
+{
+  "filename": "04-scout-your-team-in-one-view.png",
+  "path": "fan-first-football-context/04-scout-your-team-in-one-view.png",
+  "output_sha256": "d3ed595f9e6d54a3f010e9154515d65ec0ee1302f62f52f06ccafe0ccf6cc3ad",
+  "output_size": [
+    1320,
+    2868
+  ],
+  "device": "iphone",
+  "header": "Scout your team in one view",
+  "pitch": {
+    "benefit": "Move from league-wide context to the team you watch most",
+    "problem": "Team research gets scattered across player pages and disconnected totals",
+    "advantage": "StatScout opens a favorite team with advanced, standard, and roster paths in one destination",
+    "header_problem": "team research gets scattered",
+    "header_advantage": "your team in one view",
+    "search_terms": [
+      "nfl stats",
+      "football analytics"
+    ],
+    "proof": "The literal Chiefs team capture shows the selected franchise, team context, and the app's Advanced, Standard, and Roster paths"
+  },
+  "source": "/Users/jackwallner/football/screenshots/v1.2/raw/04_team.png",
+  "source_sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee",
+  "background_asset": null,
+  "background_asset_sha256": null,
+  "background_override": null,
+  "foreground": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.foreground.png",
+  "foreground_sha256": "cfbdbcbb05320df52791d5ddebb0595a2bbe2e05f03de017beeffb799bf02b13",
+  "ui_mask": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.ui-mask.png",
+  "ui_coverage": 0.6448,
+  "imagegen_received_ui_source": false,
+  "target": "iphone_69",
+  "size": [
+    1320,
+    2868
+  ],
+  "background_mode": "theme",
+  "background_id": "theme",
+  "background_top": "#091412",
+  "background_bottom": "#10281f",
+  "background_asset_applied": false,
+  "phone": {
+    "x": 109,
+    "y": 500,
+    "width": 1101,
+    "height": 2344,
+    "screen_x": 130,
+    "screen_y": 521,
+    "screen_width": 1059,
+    "screen_height": 2302
+  },
+  "header_only": true,
+  "compositor_text_layers": [
+    "header"
+  ],
+  "header_font_size": 170,
+  "header_lines": 2,
+  "header_text": "Scout your team in one view",
+  "header_bounds": [
+    78,
+    155,
+    1241,
+    451
+  ],
+  "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/04_team.png",
+  "source_evidence_sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee"
+}
