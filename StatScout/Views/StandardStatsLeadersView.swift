@@ -35,6 +35,8 @@ struct StandardStatsLeadersView: View {
     var season: Int? = nil
     var boardBindings: StatsBoardBindings? = nil
     var viewModel: DashboardViewModel? = nil
+    @State private var isSearching = false
+    @State private var searchText = ""
 
     private var availableStats: [String] {
         StandardStatCatalog.stats(for: selectedPosition)
@@ -64,6 +66,18 @@ struct StandardStatsLeadersView: View {
         VStack(spacing: 0) {
             positionSelector
             controlRow
+            if isSearching {
+                HStack(spacing: 8) {
+                    SearchField(text: $searchText, focusOnAppear: true)
+                    Button("Cancel") {
+                        isSearching = false
+                        searchText = ""
+                    }
+                    .font(GridironType.small)
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+            }
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -75,6 +89,8 @@ struct StandardStatsLeadersView: View {
                 }
             }
             .scrollBounceBehavior(.basedOnSize)
+            .scrollDismissesKeyboard(.interactively)
+            .refreshable { await viewModel?.load() }
         }
         .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
@@ -145,6 +161,15 @@ struct StandardStatsLeadersView: View {
                 )
             )
 
+            Button {
+                isSearching.toggle()
+                if !isSearching { searchText = "" }
+            } label: {
+                GridironChip(systemImage: "magnifyingglass", isActive: isSearching)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Search players or teams")
+
             if let boardBindings, let viewModel {
                 StatsViewMenu(
                     viewModel: viewModel,
@@ -175,7 +200,7 @@ struct StandardStatsLeadersView: View {
     }
 
     private var leadersList: some View {
-        VStack(spacing: 0) {
+        LazyVStack(spacing: 0) {
             Button {
                 sortDescending.toggle()
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -217,7 +242,10 @@ struct StandardStatsLeadersView: View {
             }
             .buttonStyle(.plain)
 
-            if sortedPlayers.isEmpty {
+            if viewModel?.isLoading == true && players.isEmpty {
+                ProgressView("Loading player stats")
+                    .padding(.vertical, 48)
+            } else if sortedPlayers.isEmpty {
                 ContentUnavailableView {
                     Label("No data available", systemImage: "chart.bar")
                 } description: {
@@ -226,8 +254,17 @@ struct StandardStatsLeadersView: View {
                 .padding(.vertical, 48)
                 .background(GridironPalette.surface)
             } else {
-                let ranked = Array(sortedPlayers.prefix(50).enumerated())
+                let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                let ranked = Array(sortedPlayers.enumerated()).filter { _, player in
+                    query.isEmpty || player.name.localizedCaseInsensitiveContains(query)
+                        || player.team.localizedCaseInsensitiveContains(query)
+                        || teamFullName(player.team).localizedCaseInsensitiveContains(query)
+                }
                 let peerValues = filteredPlayers.compactMap { standardStat(for: $0)?.value }
+                if ranked.isEmpty {
+                    ContentUnavailableView.search(text: searchText)
+                        .padding(.vertical, 24)
+                }
                 ForEach(ranked, id: \.element.id) { index, player in
                     playerRow(rank: index + 1, player: player, peerValues: peerValues)
                 }
@@ -291,7 +328,7 @@ struct StandardStatsLeadersView: View {
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(
-                    "\(selectedStat): \(statDisplay(for: player)), \(pct)th percentile"
+                    "\(selectedStat): \(statDisplay(for: player)), \(pct.ordinalString) percentile"
                 )
             }
             .frame(height: GridironGeo.rowHeight)

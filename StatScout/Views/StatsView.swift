@@ -6,7 +6,8 @@ struct StatsView: View {
     let viewModel: DashboardViewModel
     @EnvironmentObject private var store: StoreService
 
-    @State private var board: StatsBoard = .advanced
+    @AppStorage("stats.board") private var board: StatsBoard = .standard
+    @State private var showingFollowing = false
     @State private var standardStat = "Pass Yds"
     @State private var standardSortDescending = true
     @State private var paywallTrigger: PaywallTrigger?
@@ -23,20 +24,25 @@ struct StatsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            switch board {
-            case .advanced:
-                DashboardView(viewModel: viewModel, boardBindings: bindings)
-            case .standard:
-                StandardStatsLeadersView(
-                    players: standardBoardPlayers,
-                    selectedStat: $standardStat,
-                    selectedPosition: selectedPositionBinding,
-                    sortDescending: $standardSortDescending,
-                    boardBindings: bindings,
-                    viewModel: viewModel
-                )
-            case .bestWorst:
-                BestWorstBoard(viewModel: viewModel, bindings: bindings)
+            if viewModel.selectedSeason == viewModel.freeSeason && viewModel.selectedPhase == .regular {
+                DataFreshnessView(viewModel: viewModel)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+            }
+            GridironSegmented(
+                segments: [
+                    .init(value: false, label: "League leaders"),
+                    .init(value: true, label: "Following", systemImage: "star.fill"),
+                ],
+                selection: $showingFollowing
+            )
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+
+            if showingFollowing {
+                FollowingStatsView(viewModel: viewModel)
+            } else {
+                leagueBoard
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -67,6 +73,25 @@ struct StatsView: View {
         }
         .sheet(item: $paywallTrigger) { trigger in
             TrialPitchSheet(trigger: trigger)
+        }
+    }
+
+    @ViewBuilder
+    private var leagueBoard: some View {
+        switch board {
+        case .advanced:
+            DashboardView(viewModel: viewModel, boardBindings: bindings)
+        case .standard:
+            StandardStatsLeadersView(
+                players: standardBoardPlayers,
+                selectedStat: $standardStat,
+                selectedPosition: selectedPositionBinding,
+                sortDescending: $standardSortDescending,
+                boardBindings: bindings,
+                viewModel: viewModel
+            )
+        case .bestWorst:
+            BestWorstBoard(viewModel: viewModel, bindings: bindings)
         }
     }
 

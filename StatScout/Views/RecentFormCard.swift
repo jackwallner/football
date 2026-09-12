@@ -14,6 +14,10 @@ struct RecentFormCard: View {
     let leaguePlayers: [Player]
     /// (playerId, season, phase).
     let fetchGameLogs: ((Int, Int, SeasonPhase) async throws -> [PlayerGameLog])?
+    /// Changes after a validated publisher revision, so a retained profile
+    /// cannot keep showing the previous game set.
+    var freshnessRevision: String? = nil
+    var freshnessStatus: DataFreshnessStatus? = nil
     let onUpgradeTap: () -> Void
 
     @State private var logs: [PlayerGameLog] = []
@@ -57,7 +61,7 @@ struct RecentFormCard: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
-        .task(id: player.playerId) {
+        .task(id: "\(player.playerId)-\(season)-\(seasonPhase.rawValue)-\(freshnessRevision ?? "none")") {
             await load()
         }
         .onAppear { rebuildCurves() }
@@ -192,12 +196,23 @@ struct RecentFormCard: View {
                 Image(systemName: "calendar.badge.exclamationmark")
                     .font(.system(size: 22))
                     .foregroundStyle(GridironPalette.inkTertiary)
-                Text("No games in the last \(windowGames) games")
+                Text(emptyStateText)
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 22)
+        }
+    }
+
+    private var emptyStateText: String {
+        switch freshnessStatus {
+        case .pending, .partial, .checking:
+            return "Recent game data is still arriving"
+        case .offline, .failed:
+            return "Recent game data is unavailable right now"
+        default:
+            return "No games in the last \(windowGames) games"
         }
     }
 

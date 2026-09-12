@@ -177,6 +177,68 @@ final class DashboardViewModel {
     var errorMessage: String?
     var lastFetchFailed = false
     private var hasStartedLoading = false
+    private var loadTask: Task<Void, Never>?
+    private var freshnessCheckTask: Task<FreshnessCheckResult, Never>?
+    private var lastForegroundCheckAt: Date?
+    private var lastStatusCheckAt: Date?
+
+    /// The latest status returned by the publisher. This is persisted as a
+    /// small metadata cache so offline users can still see an honest boundary.
+    var dataFreshness: DataFreshness?
+    /// Revision actually represented by the player and recent-form data on
+    /// screen. It can lag the server revision while a new version is pending.
+    private(set) var displayedDataRevision: String?
+    private(set) var localLastCheckedAt: Date?
+
+    /// The revision cards should use in their task identity. It changes only
+    /// after a validated current dataset has been accepted, so a server probe
+    /// cannot make a profile or team card discard good data prematurely.
+    var freshnessRevision: String? { displayedDataRevision }
+
+    var freshnessForDisplay: DataFreshness? {
+        guard let remote = dataFreshness else { return nil }
+        let dataFreshness = remote.replacing(coverage: .some(dataCoverage))
+        if lastFetchFailed {
+            return dataFreshness.replacing(
+                status: .failed,
+                message: .some(errorMessage ?? "Showing saved data while the latest refresh is retried."),
+                isCached: .some(true)
+            )
+        }
+        guard dataFreshness.status == .ready,
+              let serverRevision = dataFreshness.revision,
+              let displayedDataRevision,
+              serverRevision != displayedDataRevision else {
+            return dataFreshness
+        }
+        return dataFreshness.replacing(
+            status: .stale,
+            message: .some("New game data is ready, but this screen is still showing the last complete revision."),
+            isCached: .some(true)
+        )
+    }
+
+    var freshnessStatus: DataFreshnessStatus {
+        if lastFetchFailed { return .failed }
+        return freshnessForDisplay?.status ?? (players.isEmpty && isLoading ? .checking : .ready)
+    }
+
+    var lastCheckedAt: Date? { localLastCheckedAt ?? dataFreshness?.checkedAt }
+
+    var isRefreshing: Bool {
+        loadTask != nil || freshnessCheckTask != nil
+    }
+
+    enum FreshnessCheckResult: Equatable, Sendable {
+        case unavailable
+        case unchanged
+        case updated
+        case pending
+        case partial
+        case stale
+        case failed
+        case throttled
+    }
 
     var isReady: Bool { !players.isEmpty }
 
@@ -260,6 +322,12 @@ final class DashboardViewModel {
     init(provider: StatcastProviding, cache: PlayerCaching? = nil) {
         self.provider = provider
         self.cache = cache
+        if cache != nil, let cachedFreshness = DataFreshnessCache.load() {
+            self.dataFreshness = cachedFreshness.replacing(isCached: .some(true))
+            self.dataCoverage = cachedFreshness.coverage
+            self.displayedDataRevision = DataFreshnessCache.loadDisplayedRevision()
+            self.localLastCheckedAt = cachedFreshness.checkedAt
+        }
     }
 
     #if DEBUG
@@ -409,6 +477,19 @@ final class DashboardViewModel {
 
     private var recentFormRowsByWindow: [Int: [RecentForm]] = [:]
 
+    /// Clears every league recent-form window after a new active data revision
+    /// is adopted. In-flight requests are cancelled so an older response cannot
+    /// repopulate a newer snapshot.
+    func invalidateRecentFormCache() {
+        for task in recentFormTasks.values { task.cancel() }
+        recentFormTasks.removeAll()
+        recentFormLoadingWindows.removeAll()
+        recentFormByWindow.removeAll()
+        recentFormRowsByWindow.removeAll()
+        recentFormContext = nil
+        recentFormError = nil
+    }
+
     func reloadRecentForm(
         window: TrendWindow? = nil,
         season: Int? = nil,
@@ -472,7 +553,6 @@ final class DashboardViewModel {
                        existing.plays >= row.plays { continue }
                     byPlayer[row.playerId] = row
                 }
-                guard !byPlayer.isEmpty else { return }
                 self.recentFormByWindow[target.rawValue] = byPlayer
                 self.recentFormRowsByWindow[target.rawValue] = rows
             } catch {
@@ -768,6 +848,103 @@ final class DashboardViewModel {
     }
 
     func load() async {
+        if let loadTask {
+            await loadTask.value
+            return
+        }
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.performLoad()
+        }
+        loadTask = task
+        await task.value
+    }
+
+    /// Checks the lightweight publisher status when the app returns to the
+    /// foreground. A changed ready revision triggers the normal full load;
+    /// unchanged or pending status leaves the current screen in place.
+    func refreshOnForeground(now: Date = .now) async {
+        let interval: TimeInterval = dataFreshness?.status == .pending ? 120 : 300
+        if let lastForegroundCheckAt,
+           now.timeIntervalSince(lastForegroundCheckAt) < interval {
+            return
+        }
+        lastForegroundCheckAt = now
+        if await checkForUpdates(force: false) == .updated {
+            await load()
+        }
+    }
+
+    @discardableResult
+    func checkForUpdates(force: Bool = false) async -> FreshnessCheckResult {
+        if let freshnessCheckTask {
+            return await freshnessCheckTask.value
+        }
+        if !force,
+           let lastStatusCheckAt,
+           Date().timeIntervalSince(lastStatusCheckAt) < (dataFreshness?.status == .pending ? 120 : 300) {
+            return .throttled
+        }
+
+        let task = Task { @MainActor [weak self] in
+            await self?.performFreshnessCheck() ?? .unavailable
+        }
+        freshnessCheckTask = task
+        return await task.value
+    }
+
+    private func performFreshnessCheck() async -> FreshnessCheckResult {
+        defer { freshnessCheckTask = nil }
+        let now = Date()
+        lastStatusCheckAt = now
+        localLastCheckedAt = now
+
+        do {
+            guard let remote = try await provider.fetchDataFreshness(season: freeSeason) else {
+                // The endpoint is optional while the backend rolls out. The
+                // player load remains the source of truth in that case.
+                return .unavailable
+            }
+
+            dataFreshness = remote.replacing(
+                checkedAt: .some(remote.checkedAt ?? now),
+                isCached: .some(false)
+            )
+            persistFreshness()
+
+            switch remote.status {
+            case .ready:
+                if let revision = remote.revision,
+                   revision != displayedDataRevision {
+                    return .updated
+                }
+                return .unchanged
+            case .pending: return .pending
+            case .partial:
+                if let revision = remote.revision, revision != displayedDataRevision { return .updated }
+                return .partial
+            case .stale: return .stale
+            case .checking: return .unchanged
+            case .offline, .failed: return .failed
+            }
+        } catch is CancellationError {
+            return .failed
+        } catch {
+            if let existing = dataFreshness {
+                dataFreshness = existing.replacing(
+                    status: .offline,
+                    checkedAt: .some(now),
+                    message: .some("We couldn't check for new game data."),
+                    isCached: .some(true)
+                )
+                persistFreshness()
+            }
+            return .failed
+        }
+    }
+
+    private func performLoad() async {
+        defer { loadTask = nil }
         hasStartedLoading = true
         isLoading = players.isEmpty
         loadingMessage = players.isEmpty ? "Loading saved players…" : "Refreshing player data…"
@@ -790,16 +967,33 @@ final class DashboardViewModel {
         errorMessage = nil
         lastFetchFailed = false
 
+        let freshnessResult = await checkForUpdates(force: true)
+        let revisionAtStart = dataFreshness?.revision
+
+        var acceptedCurrent: [Player] = []
+        var loadedCurrentData = false
+        var playersToIngest: [Player] = []
+
         do {
             let current = try await provider.fetchCurrentPlayers()
             let fallbackPlayers = cached.isEmpty ? playerHistories.values.flatMap { $0 } : cached
             let hasCompleteFallback = PlayerSnapshotValidator.isCompleteCurrent(fallbackPlayers)
-            let acceptedCurrent = PlayerSnapshotValidator.isCompleteCurrent(current) || !hasCompleteFallback
+            let passesCompleteness = PlayerSnapshotValidator.isCompleteCurrent(current)
+            acceptedCurrent = passesCompleteness || !hasCompleteFallback
                 ? current
                 : []
+            // Before the status endpoint exists, a source regression can still
+            // satisfy the live-season minimum with fewer teams. Retain the
+            // complete cached set when a whole team disappears or a large part
+            // of the known player set vanishes.
+            if !acceptedCurrent.isEmpty,
+               (freshnessResult == .unavailable || freshnessResult == .failed),
+               hasUnsafeSnapshotRegression(current, against: fallbackPlayers) {
+                acceptedCurrent = []
+            }
             let allPlayers = acceptedCurrent.isEmpty ? fallbackPlayers : mergePlayers(replacing: acceptedCurrent)
 
-            guard !allPlayers.isEmpty else {
+            if allPlayers.isEmpty {
                 // No current data (offseason / cold cache / offline). Fall back to
                 // bundled historical so the app is usable instead of trapped on an
                 // empty state; season gating still applies via isSeasonLocked.
@@ -815,19 +1009,16 @@ final class DashboardViewModel {
                     errorMessage = "No players found."
                     lastFetchFailed = true
                 }
-                isLoading = false
-                loadingProgress = 1
-                return
-            }
-
-            loadingMessage = "Preparing leaderboard…"
-            loadingProgress = 0.85
-            ingestPlayers(allPlayers)
-            if !acceptedCurrent.isEmpty {
-                try? cache?.savePlayers(acceptedCurrent)
-            } else if !current.isEmpty {
-                errorMessage = "Showing complete saved data while the live feed finishes updating."
-                lastFetchFailed = true
+            } else {
+                loadingMessage = "Preparing leaderboard…"
+                loadingProgress = 0.85
+                playersToIngest = allPlayers
+                if !acceptedCurrent.isEmpty {
+                    loadedCurrentData = true
+                } else if !current.isEmpty {
+                    errorMessage = "Showing complete saved data while the live feed finishes updating."
+                    lastFetchFailed = true
+                }
             }
 
         } catch is DecodingError {
@@ -847,9 +1038,130 @@ final class DashboardViewModel {
         // sheet reads, fetched once the leaderboard is already on screen. A
         // failure here leaves the coverage line blank rather than failing the
         // load.
-        if let coverage = try? await provider.fetchDataCoverage(season: freeSeason) {
-            dataCoverage = coverage
+        let candidateCoverage = try? await provider.fetchDataCoverage(season: freeSeason)
+
+        // The source can publish a new revision while snapshots are being
+        // fetched. Bracket the candidate with a second status read so a new
+        // status row cannot be paired with older player rows. Keep the prior
+        // display and wait for the next check when the bracket moves.
+        let endingResult = await checkForUpdates(force: true)
+        let revisionAtEnd = dataFreshness?.revision
+        let revisionDrifted = revisionAtEnd != nil && revisionAtEnd != revisionAtStart
+        if revisionDrifted {
+            playersToIngest = []
+            acceptedCurrent = []
+            loadedCurrentData = false
+            if let current = dataFreshness {
+                dataFreshness = current.replacing(
+                    status: .checking,
+                    message: .some("A newer game revision arrived while this update was loading."),
+                    isCached: .some(true)
+                )
+            }
+        } else if !playersToIngest.isEmpty {
+            ingestPlayers(playersToIngest)
         }
+        if loadedCurrentData {
+            dataCoverage = dataFreshness?.coverage ?? candidateCoverage
+            try? cache?.savePlayers(acceptedCurrent)
+            adoptLoadedRevision(
+                players: acceptedCurrent,
+                useServerRevision: canUseServerRevision(freshnessResult, endingResult)
+            )
+        } else if lastFetchFailed, let current = dataFreshness {
+            dataFreshness = current.replacing(
+                status: .failed,
+                message: .some(errorMessage ?? "Showing saved data while the latest refresh is retried."),
+                isCached: .some(true)
+            )
+        }
+        persistFreshness()
+    }
+
+    /// Marks a successfully accepted snapshot as the revision shown by every
+    /// dependent surface. Recent form is cleared only after this point, so a
+    /// failed or partial response cannot erase useful in-memory results.
+    private func adoptLoadedRevision(
+        players loadedPlayers: [Player],
+        useServerRevision: Bool
+    ) {
+        let candidate: String?
+        if useServerRevision,
+           (dataFreshness?.status == .ready || dataFreshness?.status == .partial),
+           let revision = dataFreshness?.revision {
+            candidate = revision
+        } else {
+            candidate = fallbackRevision(players: loadedPlayers, coverage: dataCoverage)
+        }
+        guard let candidate else { return }
+        let changed = displayedDataRevision != candidate
+        displayedDataRevision = candidate
+        if changed {
+            invalidateRecentFormCache()
+        }
+
+        if let current = dataFreshness {
+            dataFreshness = current.replacing(
+                status: current.status == .checking ? .ready : nil,
+                revision: useServerRevision ? nil : .some(candidate),
+                coverage: .some(dataCoverage),
+                isCached: .some(false)
+            )
+        } else {
+            dataFreshness = DataFreshness(
+                status: .ready,
+                revision: candidate,
+                checkedAt: localLastCheckedAt ?? Date(),
+                coverage: dataCoverage
+            )
+        }
+    }
+
+    private func canUseServerRevision(
+        _ initial: FreshnessCheckResult,
+        _ ending: FreshnessCheckResult
+    ) -> Bool {
+        let allowed: Set<FreshnessCheckResult> = [.updated, .unchanged, .partial]
+        return allowed.contains(initial) && allowed.contains(ending)
+    }
+
+    private func fallbackRevision(players: [Player], coverage: DataCoverage?) -> String? {
+        guard let latest = players.map(\.updatedAt).max() else { return nil }
+        let timestamp = Int(latest.timeIntervalSince1970)
+        let week = coverage?.week ?? 0
+        let asOf = coverage.map { Int($0.asOf.timeIntervalSince1970) } ?? 0
+        return "players-\(timestamp)-week-\(week)-asof-\(asOf)"
+    }
+
+    private func hasUnsafeSnapshotRegression(
+        _ candidate: [Player],
+        against fallback: [Player]
+    ) -> Bool {
+        let currentSeason = StatScoutSeason.current
+        let fallbackCurrent = fallback.filter {
+            $0.season == currentSeason && $0.seasonPhase == .regular
+        }
+        let candidateCurrent = candidate.filter {
+            $0.season == currentSeason && $0.seasonPhase == .regular
+        }
+        guard !fallbackCurrent.isEmpty, !candidateCurrent.isEmpty else { return false }
+
+        let fallbackTeams = Set(fallbackCurrent.map { normalizedTeamAbbreviation($0.team) })
+        let candidateTeams = Set(candidateCurrent.map { normalizedTeamAbbreviation($0.team) })
+        guard fallbackTeams.isSubset(of: candidateTeams) else { return true }
+
+        let fallbackIDs = Set(fallbackCurrent.map(\.playerId))
+        let candidateIDs = Set(candidateCurrent.map(\.playerId))
+        let missing = fallbackIDs.subtracting(candidateIDs).count
+        return Double(missing) / Double(fallbackIDs.count) > 0.20
+    }
+
+    private func persistFreshness() {
+        guard cache != nil, let dataFreshness else { return }
+        DataFreshnessCache.save(
+            dataFreshness.replacing(coverage: .some(dataCoverage)),
+            displayedRevision: displayedDataRevision
+        )
     }
 
     func loadHistoricalIfNeeded() async {
@@ -858,12 +1170,19 @@ final class DashboardViewModel {
         loadingMessage = "Loading past seasons…"
         loadingProgress = 0.12
 
-        let historical: [Player] = await Task.detached { [cache] in
+        var historical: [Player] = await Task.detached { [cache] in
             if let cache = cache as? TwoTierPlayerCache {
                 return cache.loadHistoricalPlayers()
             }
             return ((try? cache?.loadPlayers()) ?? []).filter { ($0.season ?? 0) < StatScoutSeason.current }
         }.value
+
+        // The screenshot fixture and lightweight providers may intentionally
+        // disable the disk cache. Fetch their historical tier directly rather
+        // than leaving a Pro season menu with no data.
+        if historical.isEmpty {
+            historical = (try? await provider.fetchHistoricalPlayers()) ?? []
+        }
 
         loadingMessage = "Preparing season history…"
         loadingProgress = 0.78

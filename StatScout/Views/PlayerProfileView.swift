@@ -26,6 +26,10 @@ struct PlayerProfileView: View {
     /// (playerId, season, phase). The phase is part of the request, not a
     /// post-filter: see `PlayerGameLog.seasonPhase`.
     var fetchGameLogs: ((Int, Int, SeasonPhase) async throws -> [PlayerGameLog])?
+    /// Shared freshness state from the tab root. Optional keeps previews and
+    /// standalone tests lightweight while production profiles share one cache
+    /// revision with Trends and Teams.
+    var freshnessViewModel: DashboardViewModel? = nil
     var comparisonCatalog: ComparisonCatalog?
     @State private var showPercentileInfo = false
     @State private var selectedTab: PlayerStatTab = .advanced
@@ -137,6 +141,16 @@ struct PlayerProfileView: View {
             VStack(spacing: 0) {
                 PlayerIdentityStrip(player: player)
 
+                if let freshnessViewModel {
+                    DataFreshnessView(
+                        viewModel: freshnessViewModel,
+                        season: activeSeason ?? player.season,
+                        phase: activePhase
+                    )
+                    .padding(.horizontal, 12)
+                    .padding(.top, 10)
+                }
+
                 tabSelector
                     .padding(.horizontal, 12)
                     .padding(.top, 12)
@@ -158,6 +172,9 @@ struct PlayerProfileView: View {
             }
         }
         .scrollBounceBehavior(.basedOnSize)
+        .refreshable {
+            await refreshProfile()
+        }
         .background(GridironPalette.canvas.ignoresSafeArea())
         // First-tap activation: profile renders immediately (no full-screen
         // paywall blocking it), and a native half-sheet TrialPitchSheet
@@ -332,6 +349,8 @@ struct PlayerProfileView: View {
                     season: activeSeason ?? player.season ?? Calendar.current.component(.year, from: .now),
                     leaguePlayers: allPlayers,
                     fetchGameLogs: fetchGameLogs,
+                    freshnessRevision: freshnessViewModel?.freshnessRevision,
+                    freshnessStatus: freshnessViewModel?.freshnessStatus,
                     onUpgradeTap: { trialPitchTrigger = .recentForm }
                 )
                 proUpsellCard
@@ -665,7 +684,7 @@ struct PlayerProfileView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                 } else if recentWindow == nil {
-                    Text("No games in the last \(recentWindowGames) games")
+                    Text(recentEmptyStateText)
                         .font(GridironType.small)
                         .foregroundStyle(GridironPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
@@ -701,7 +720,7 @@ struct PlayerProfileView: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
-        .task(id: "\(formDisplayMode)-\(recentWindowGames)-\(player.playerId)-\(activeSeason ?? 0)-\(store.isPro)") {
+        .task(id: "\(formDisplayMode)-\(recentWindowGames)-\(player.playerId)-\(activeSeason ?? 0)-\(store.isPro)-\(freshnessViewModel?.freshnessRevision ?? "none")") {
             guard store.isPro, effectiveFormDisplayMode != .season else { return }
             rebuildRecentCurves()
             await loadRecentLogs()
@@ -730,6 +749,17 @@ struct PlayerProfileView: View {
         let season = activeSeason ?? currentSeason
         guard let recentFormSeasons else { return season == currentSeason }
         return recentFormSeasons.contains(season)
+    }
+
+    private var recentEmptyStateText: String {
+        switch freshnessViewModel?.freshnessStatus {
+        case .pending, .partial, .checking:
+            return "Recent game data is still arriving"
+        case .offline, .failed:
+            return "Recent game data is unavailable right now"
+        default:
+            return "No games in the last \(recentWindowGames) games"
+        }
     }
 
     /// The mode rows actually render in - forced back to `.season` on a
@@ -966,8 +996,9 @@ struct PlayerProfileView: View {
         // season and then his playoffs reused the first fetch's games under the
         // second heading - the cache said "same player, same season, already have
         // it" about two different sets of football.
-        let key = "\(player.playerId)-\(season)-\(activePhase.rawValue)"
+        let key = "\(player.playerId)-\(season)-\(activePhase.rawValue)-\(freshnessViewModel?.freshnessRevision ?? "none")"
         if recentLogsKey == key, !recentLogs.isEmpty { return }
+        guard !recentLoading else { return }
         recentLoading = true
         recentLoadError = nil
         do {
@@ -976,11 +1007,24 @@ struct PlayerProfileView: View {
         } catch {
             // Distinguish "no games" from "fetch failed" - otherwise a network
             // error renders as an honest-looking "No games in the last N days".
-            recentLogs = []
-            recentLogsKey = nil
-            recentLoadError = "Couldn't load recent games. Check your connection and try again."
+            if !isTaskCancellation(error), recentLogs.isEmpty {
+                recentLogsKey = nil
+                recentLoadError = "Couldn't load recent games. Check your connection and try again."
+            }
         }
         recentLoading = false
+    }
+
+    private func refreshProfile() async {
+        guard let freshnessViewModel else { return }
+        // Keep existing rows visible while the shared revision check runs. The
+        // task IDs will fetch them again only when a new revision is accepted.
+        await freshnessViewModel.load()
+        recentLogsKey = nil
+        if store.isPro,
+           effectiveFormDisplayMode != .season || effectiveStandardMode != .season {
+            await loadRecentLogs()
+        }
     }
 
     /// Which of the four boards a traditional stat belongs to, so tapping a row
@@ -1202,7 +1246,7 @@ struct PlayerProfileView: View {
         // runs while you are looking at this one. Without this the Recent /
         // Both modes rendered season numbers under a "5 games" caption until
         // you happened to visit the other tab first.
-        .task(id: "std-\(standardMode)-\(standardWindow.rawValue)-\(player.playerId)-\(activeSeason ?? 0)-\(store.isPro)") {
+        .task(id: "std-\(standardMode)-\(standardWindow.rawValue)-\(player.playerId)-\(activeSeason ?? 0)-\(store.isPro)-\(freshnessViewModel?.freshnessRevision ?? "none")") {
             guard store.isPro, effectiveStandardMode != .season else { return }
             await loadRecentLogs()
         }
@@ -1303,7 +1347,7 @@ struct PercentileInfoSheet: View {
                     }
                     .padding(.vertical, 8)
 
-                    Text("Data refreshes nightly from public NFL advanced-stats leaderboards. Not every metric is tracked for every player.")
+                    Text("Stats update after new source data is validated. Advanced metrics may arrive later than game totals. Not every metric is tracked for every player.")
                         .font(GridironType.small)
                         .foregroundStyle(GridironPalette.inkTertiary)
                 }

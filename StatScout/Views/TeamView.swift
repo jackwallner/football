@@ -207,6 +207,15 @@ struct TeamView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
+                if let viewModel {
+                    DataFreshnessView(
+                        viewModel: viewModel,
+                        season: displaySeason,
+                        phase: displayPhase
+                    )
+                        .padding(.horizontal, 12)
+                        .padding(.top, 10)
+                }
                 tabSelector
                     .padding(.horizontal, 12)
                     .padding(.top, 12)
@@ -232,6 +241,9 @@ struct TeamView: View {
         .scrollBounceBehavior(.basedOnSize)
         .scrollDismissesKeyboard(.interactively)
         .background(GridironPalette.canvas.ignoresSafeArea())
+        .refreshable {
+            await viewModel?.load()
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) { teamSwitcherMenu }
@@ -264,7 +276,7 @@ struct TeamView: View {
         .onChange(of: viewModel?.selectedPhase) { _, _ in
             applyDefaultDirectionIfMetricChanged()
         }
-        .task(id: "\(rosterMode.rawValue)-\(rosterWindow.rawValue)-\(displaySeason)-\(viewModel?.selectedPhase.rawValue ?? "")-\(store.isPro)") {
+        .task(id: "\(rosterMode.rawValue)-\(rosterWindow.rawValue)-\(displaySeason)-\(viewModel?.selectedPhase.rawValue ?? "")-\(store.isPro)-\(viewModel?.freshnessRevision ?? "none")") {
             guard isRosterRecent else { return }
             await viewModel?.loadRecentFormIfNeeded(window: rosterWindow)
         }
@@ -313,6 +325,8 @@ struct TeamView: View {
                 players: players,
                 leaguePlayers: leaguePlayers,
                 fetchTeamGameLogs: fetchTeamGameLogs,
+                freshnessRevision: viewModel?.freshnessRevision,
+                freshnessStatus: viewModel?.freshnessStatus,
                 onUpgradeTap: {
                     // Explicit tap, always answer it; the gate only caps
                     // automatic pop-ups.

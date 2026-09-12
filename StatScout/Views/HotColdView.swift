@@ -88,17 +88,34 @@ struct HotColdView: View {
             if store.isPro {
                 ScrollView {
                     LazyVStack(spacing: 0) {
+                        DataFreshnessView(
+                            viewModel: viewModel,
+                            season: selectedSeason,
+                            phase: selectedPhase
+                        )
+                            .padding(.horizontal, 12)
+                            .padding(.top, 10)
                         proContent
                         Color.clear.frame(height: 88)
                     }
                 }
                 .scrollBounceBehavior(.basedOnSize)
+                .refreshable {
+                    await viewModel.load()
+                }
                 .safeAreaInset(edge: .top, spacing: 0) {
                     header
                         .background(GridironPalette.canvas)
                 }
             } else {
                 VStack(spacing: 0) {
+                    DataFreshnessView(
+                        viewModel: viewModel,
+                        season: selectedSeason,
+                        phase: selectedPhase
+                    )
+                        .padding(.horizontal, 12)
+                        .padding(.top, 10)
                     header
                     lockedContent
                 }
@@ -132,7 +149,7 @@ struct HotColdView: View {
         // we're asking to be trusted. It's a single request against the
         // pre-aggregated rollup table, the same one Pro reads.
         .task(
-            id: "\(isActive)-\(viewModel.recentWindow.rawValue)-\(selectedSeason)-\(selectedPhase.rawValue)"
+            id: "\(isActive)-\(viewModel.recentWindow.rawValue)-\(selectedSeason)-\(selectedPhase.rawValue)-\(viewModel.freshnessRevision ?? "none")"
         ) {
             guard isActive else { return }
             await viewModel.loadRecentFormIfNeeded(

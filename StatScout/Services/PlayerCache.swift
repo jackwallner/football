@@ -201,7 +201,11 @@ enum PlayerSnapshotValidator {
         let types = Set(current.compactMap(\.playerType).map { $0.lowercased() })
         let metricLabels = Set(current.flatMap(\.metrics).map(\.label))
         let requiredMetrics: Set<String> = ["EPA/Play", "EPA/Rush", "EPA/Tgt"]
-        return teams.count >= minimumTeamCount
+        // The first published game has two teams. A 30-team requirement kept
+        // valid opening-week data out of the cache until most of the NFL played.
+        // The publisher checks game coverage and regression before promotion.
+        return teams.count >= 2
+            && current.count >= 20
             && requiredTypes.isSubset(of: types)
             && requiredMetrics.isSubset(of: metricLabels)
     }

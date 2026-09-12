@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Which league-wide board the Stats tab is drawing.
-enum StatsBoard: Hashable {
+enum StatsBoard: String, Hashable {
     case advanced
     case standard
     case bestWorst

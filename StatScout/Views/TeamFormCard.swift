@@ -30,6 +30,10 @@ struct TeamRankingsCard: View {
     let leaguePlayers: [Player]
     /// (team, season, phase, since).
     let fetchTeamGameLogs: ((String, Int, SeasonPhase, Date) async throws -> [PlayerGameLog])?
+    /// Changes after a validated publisher revision, so a retained team page
+    /// cannot keep showing logs from the previous game set.
+    var freshnessRevision: String? = nil
+    var freshnessStatus: DataFreshnessStatus? = nil
     /// False on a historical season: rolling windows are built from per-game
     /// logs, and those are only kept for the live season now, so Recent/Both
     /// are hidden rather than offered and left to come back empty.
@@ -109,7 +113,7 @@ struct TeamRankingsCard: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
-        .task(id: "\(team)-\(season)-\(seasonPhase.rawValue)-\(effectiveMode.rawValue)-\(store.isPro)") {
+        .task(id: "\(team)-\(season)-\(seasonPhase.rawValue)-\(effectiveMode.rawValue)-\(store.isPro)-\(freshnessRevision ?? "none")") {
             if effectiveMode.usesRecent, store.isPro { await load() }
         }
         .onAppear { rebuildCurves() }
@@ -400,12 +404,23 @@ struct TeamRankingsCard: View {
                 Image(systemName: "calendar.badge.exclamationmark")
                     .font(.system(size: 22))
                     .foregroundStyle(GridironPalette.inkTertiary)
-                Text("No \(side.label.lowercased()) data in the last \(windowGames) games")
+                Text(emptyStateText)
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 22)
+        }
+    }
+
+    private var emptyStateText: String {
+        switch freshnessStatus {
+        case .pending, .partial, .checking:
+            return "Recent team data is still arriving"
+        case .offline, .failed:
+            return "Recent team data is unavailable right now"
+        default:
+            return "No \(side.label.lowercased()) data in the last \(windowGames) games"
         }
     }
 

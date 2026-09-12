@@ -282,6 +282,11 @@ struct PlayerComparisonView: View {
         .background(GridironPalette.canvas.ignoresSafeArea())
         .navigationTitle("Player Comparison")
         .navigationBarTitleDisplayMode(.inline)
+        // Match the midnight bar on the profile it is pushed from. The stack's
+        // dark toolbar scheme otherwise draws white status text on the canvas.
+        .toolbarBackground(GridironPalette.midnight, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
     }
 
     private var standardStatsCard: some View {
@@ -611,8 +616,8 @@ struct PlayerComparisonView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(
                     hasValue
-                        ? "\(m.value), \(m.percentile)th percentile"
-                        : "\(m.percentile)th percentile"
+                        ? "\(m.value), \(m.percentile.ordinalString) percentile"
+                        : "\(m.percentile.ordinalString) percentile"
                 )
             } else {
                 Text("-")
