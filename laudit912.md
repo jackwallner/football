@@ -966,3 +966,232 @@ No code changes are included in this reviewer supplement.
 - A repository-wide check found no em dash added by this task.
 - The backend test command was attempted from backend with python3 -m pytest tests. Collection was blocked by the environment because nflreadpy is not installed. No application code was changed to work around that dependency issue.
 - Existing unrelated working-tree changes remain outside this document. The task-owned diff is laudit912.md only.
+
+## Supplemental source and persona audit notes
+
+This section adds the source-level measurements and user-experience review completed on 2026-09-12. It is intentionally appended to preserve the earlier audit notes in this tracked document.
+
+### Source release snapshot observed on 2026-09-12
+
+The nflverse data README is the primary public timing reference. It describes raw JSON as generally appearing about 1-2 hours after a game, PBP and player stats around 09:00 UTC during the season, rosters around 07:00 UTC, NGS around 07:00 UTC, and PFR advanced stats several times per day.
+
+The upstream workflow files were also inspected:
+
+- [nflverse-pbp update workflow](https://github.com/nflverse/nflverse-pbp/blob/main/.github/workflows/update_data.yaml)
+- [nflverse-pbp workflow runs](https://github.com/nflverse/nflverse-pbp/actions/workflows/update_data.yaml)
+- [NGS update workflow](https://github.com/nflverse/ngs-data/blob/main/.github/workflows/update_ngs.yaml)
+- [PFR advanced stats workflow](https://github.com/nflverse/pfr_scrapR/blob/main/.github/workflows/update_advanced_stats.yaml)
+- [roster update workflow](https://github.com/nflverse/nflverse-rosters/blob/main/.github/workflows/update_rosters.yaml)
+- [nflreadpy player-stat loader](https://github.com/nflverse/nflreadpy/blob/main/src/nflreadpy/load_stats.py)
+- [nflreadpy NGS loader](https://github.com/nflverse/nflreadpy/blob/main/src/nflreadpy/load_nextgen_stats.py)
+- [nflreadpy PFR loader](https://github.com/nflverse/nflreadpy/blob/main/src/nflreadpy/load_pfr_advstats.py)
+- [nflreadpy schedule loader](https://github.com/nflverse/nflreadpy/blob/main/src/nflreadpy/load_schedules.py)
+- [nflreadpy downloader](https://github.com/nflverse/nflreadpy/blob/main/src/nflreadpy/downloader.py)
+
+The following timestamp manifests were read during this audit. These are point-in-time observations, not permanent guarantees.
+
+| Release tag | Observed last_updated UTC | Manifest |
+| --- | ---: | --- |
+| pbp | 2026-09-12 12:50:48 | [pbp timestamp.json](https://github.com/nflverse/nflverse-data/releases/download/pbp/timestamp.json) |
+| stats_player | 2026-09-12 12:52:24 | [stats_player timestamp.json](https://github.com/nflverse/nflverse-data/releases/download/stats_player/timestamp.json) |
+| nextgen_stats | 2026-09-12 11:23:41 | [nextgen_stats timestamp.json](https://github.com/nflverse/nflverse-data/releases/download/nextgen_stats/timestamp.json) |
+| pfr_advstats | 2026-09-12 20:16:48 | [pfr_advstats timestamp.json](https://github.com/nflverse/nflverse-data/releases/download/pfr_advstats/timestamp.json) |
+| schedules | 2026-09-12 20:46:30 | [schedules timestamp.json](https://github.com/nflverse/nflverse-data/releases/download/schedules/timestamp.json) |
+| rosters | 2026-09-12 11:37:38 | [rosters timestamp.json](https://github.com/nflverse/nflverse-data/releases/download/rosters/timestamp.json) |
+| players | 2026-09-12 11:52:47 | [players timestamp.json](https://github.com/nflverse/nflverse-data/releases/download/players/timestamp.json) |
+| snap_counts | 2026-09-11 16:10:07 | [snap_counts timestamp.json](https://github.com/nflverse/nflverse-data/releases/download/snap_counts/timestamp.json) |
+
+PBP and stats_player were published within about two minutes in this source cycle, but schedules and PFR were later. The source components are not one atomic release. A monitor must track the required source set for each output rather than use whichever one has the newest timestamp.
+
+### Source family and consumer matrix
+
+| Source | Source cadence or observed behavior | Local consumer | Important lag or completeness note |
+| --- | --- | --- | --- |
+| Raw PBP | Approximately 1-2 hours after a game in the source documentation, with additional game-window workflow schedules | Indirect input to stats_player; useful for game coverage validation | Early data can be recalculated. The first release is not a finality guarantee. |
+| stats_player | Published by the PBP/stats workflow after PBP processing | Snapshot and game-log ingestion | Base dependency. A release can be 404, empty, or incomplete during a transition. |
+| NGS weekly | Daily source workflow around 07:00 UTC in January, February, and September through December | Weekly metrics in player_game_logs | Can lag stats_player. Current code catches failures and continues without NGS. |
+| NGS season | Same release family, season-level rows | Season-level player_snapshots | Season-level availability can differ from weekly availability. |
+| PFR weekly | Workflow polls approximately every six hours during its active months | Not currently consumed by the app pipeline | Current-week scrape failures can leave individual games absent. |
+| PFR season defense | Season-level release used by backend/ingest.py | Advanced defense metrics in player_snapshots | Current asset inspected had seasons 2018-2025 and no 2026 row. It cannot provide live 2026 PFR defense to the current consumer. |
+| schedules | Separate release with its own timestamp | Required by player_game_logs to assign game dates and IDs | Stats and schedules can be at different generations. |
+| rosters and players | Daily metadata updates | Names, identity, and display fields | Soft dependency for numeric stats. A player can reach stats before metadata catches up. |
+| snap counts | Approximately four polls per day | Not a core current app dependency | Do not block base player data on this feed. |
+| derived snapshots | Local aggregation and percentile computation | player_snapshots | A successful write does not prove optional NGS or PFR completeness. |
+| derived game logs | Weekly stats plus schedules, with optional NGS | player_game_logs | Current incremental mode reprocesses only the latest stored game date and can miss older corrections. |
+| Recent Form | Rebuilt from game logs and anchored on latest available week | player_recent_form | Must be generated from the same source generation as snapshots and logs. |
+| app response | Fetch on launch, foreground, or manual refresh | iOS screens | A new database version is not visible in an already-open app until it fetches. |
+
+### 2025 source workflow reliability
+
+For the 2025 season operational window, the source PBP workflow had 293 recorded runs from 2025-09-01 through 2026-02-28:
+
+- 278 successful scheduled runs;
+- eight successful manual runs;
+- five failed scheduled runs;
+- one cancelled manual run;
+- one failed manual run.
+
+The NGS workflow had 187 runs in that same window:
+
+- 174 successful scheduled runs;
+- four successful manual runs;
+- seven failed scheduled runs;
+- two failed manual runs.
+
+The PFR advanced-stat workflow had 603 runs from 2025-09-01 through 2026-02-15:
+
+- 594 successful scheduled runs;
+- one successful manual run;
+- seven failed scheduled runs;
+- one failed manual run.
+
+These are workflow-level measurements. A successful run is not proof that every file or game in the release is complete. They do show why the local controller needs retries and a last-known-good policy even when upstream schedules are regular.
+
+### Exact 2026 asset observations
+
+The first two 2026 games were measured against the source job logs while detailed logs were still available.
+
+| Game | Final PBP event | PBP upload | stats_player upload | Final-event to stats_player |
+| --- | ---: | ---: | ---: | ---: |
+| New England at Seattle | 2026-09-10 03:24:41 UTC, 2026-09-09 20:24:41 PDT | about 04:40 UTC | 04:41:54 UTC | about 1 h 17 m |
+| San Francisco at Los Angeles | 2026-09-11 03:23:53 UTC, 2026-09-10 20:23:53 PDT | about 06:07 UTC | 06:08:41 UTC | about 2 h 45 m |
+
+The source asset sizes also show that the second game was available to PBP/stats_player before the local scheduled refresh:
+
+- The current 2026 PBP file had 323 rows across two games.
+- The current 2026 player-stat weekly file had 135 rows across 134 players.
+- NGS had week-one weekly rows for passing, rushing, and receiving.
+- The local 2026-09-11 scheduled run built 112 game-log rows and 324 Recent Form rows after seeing both games.
+- The local 2026-09-12 run completed around 12:27 UTC, before the later PBP and stats_player source timestamps at approximately 12:50 and 12:52 UTC.
+
+The current PFR weekly files were not equivalent to the base release. They contained 2026 week-one rows for New England at Seattle, but not San Francisco at Los Angeles at the time of inspection. Current-week PFR workflow attempts showed scrape and parsing failures. This is a metric-specific source gap, not evidence that the base game was absent from nflverse.
+
+### Metric-specific freshness policy
+
+Treat these metrics as separate products:
+
+1. **Box-score and core player stats.** Use stats_player plus schedules as the base readiness set. Target publication within three hours of the final play on a normal Sunday, with a six-hour alert threshold.
+2. **Raw PBP-derived metrics.** Expect the same general window as stats_player, but permit later recalculation. Recheck the current week after the slate completes.
+3. **NGS weekly metrics.** Expect them after the daily NGS run. Do not turn a missing NGS value into zero. Either publish core data with an explicit advanced-pending state or wait for NGS only for screens that require it.
+4. **NGS season metrics.** Validate season-level row coverage independently. A weekly NGS row does not prove a complete season-level snapshot.
+5. **PFR weekly metrics.** Keep them independent of base readiness. A PFR scrape can fail while player stats are usable.
+6. **PFR season defense.** Do not claim live 2026 PFR advanced defense until the consumer path has current-season rows or a deliberate weekly aggregation path.
+7. **Schedules.** Require a schedule row for each completed game before writing game logs. Treat the schedule source as a separate generation.
+8. **Recent Form.** Rebuild after the matching game-log generation is validated. A newly written Recent Form row with an old as_of week is not fresh coverage.
+9. **Corrections.** Reprocess the latest two game dates or the full current week on each event refresh. Recheck the prior week daily for 48 hours, then nightly until the next slate.
+
+The current backend already comments that latest-date rows are reread for late updates, but game-date-only overlap is not enough. A correction to an earlier game is skipped once a later game date exists.
+
+### Source release detection
+
+The recommended pre-ingest check is:
+
+1. Read timestamp.json for every source in the output's required-source set.
+2. Compare each source timestamp with the last successfully published manifest.
+3. If no required source is newer, exit without rewriting the database.
+4. If a source is newer, download the candidate assets with a fresh cache policy.
+5. Verify asset existence, schema, non-zero size, row counts, current season, and expected game coverage.
+6. Read timestamp.json again after a short delay, or otherwise require the multi-asset release to be stable.
+7. Build into a candidate refresh ID.
+8. Publish only after all required checks pass.
+
+Persist at least:
+
+- source name and release tag;
+- source_updated_at;
+- checked_at;
+- exact asset path;
+- ETag or Last-Modified when available;
+- byte length or checksum;
+- source row count;
+- maximum week and game date;
+- expected and observed completed-game count;
+- optional-source status;
+- pipeline start and completion;
+- refresh ID and active-version pointer.
+
+A timestamp advance is necessary but not sufficient. A source can publish a newer but partial file, and a correction can arrive with the same maximum week. Coverage and regression checks must accompany timestamp checks.
+
+nflreadpy's loader and downloader use fixed release-tag URLs and cache controls, but the loader does not itself provide the product-level comparison against timestamp.json required here. The wrapper should own that comparison. In CI, a fresh process reduces local cache risk, but a long-lived filesystem cache must not be allowed to hide a newer source release.
+
+### Recommended operating flow
+
+Use a source-aware hybrid controller:
+
+- During active NFL windows, run a cheap monitor every 30 minutes or around known upstream post-game windows.
+- Keep the current daily source-window run as a backup.
+- Trigger the full ingest only when a source generation changes or a manual force is requested.
+- Serialize full ingests with one concurrency group.
+- Reprocess at least the latest two game dates, preferably the current week.
+- Stage snapshots, game logs, and Recent Form under one refresh ID.
+- Validate coverage and source completeness.
+- Promote one active version atomically.
+- Retain the prior complete version if any stage fails.
+- Alert on source-new-but-local-stale, expected-game-missing, source regression, repeated source failure, and publish-SLO breach.
+- Reduce polling in the offseason, when source updates stop or change cadence.
+
+Suggested target states:
+
+| State | Meaning | Serving behavior |
+| --- | --- | --- |
+| unchanged | No required source generation changed | Keep the current version and do not touch updated_at |
+| waiting_for_source | A game is over but source has not advanced | Keep last complete data and show source pending if useful |
+| ready | Base source set is newer and validated | Build and publish core data |
+| partial | Core is valid, NGS or PFR is late | Publish core with explicit advanced-pending status, or hold only the affected product |
+| regressed | Candidate loses expected games, rows, or required fields | Hold the previous version and alert |
+| complete | Product-required sources are valid | Mark the refresh complete |
+| failed | Download, transform, validation, or write failed | Hold the previous version and record the failure |
+
+### App-facing freshness contract
+
+The app should not infer freshness from one updated_at value. Return or expose:
+
+- source publication time for each important source;
+- last validated Supabase publish time;
+- games through date and week;
+- active refresh ID;
+- completeness or partial status;
+- cached-versus-network state when relevant;
+- last successful refresh and last check.
+
+Use “Games through Week N” as the primary user-facing coverage statement. Use “Last checked” and “Last published” as secondary details. Reserve “Last updated” for a clearly defined local write event.
+
+The existing foreground reload and API cache-bypass behavior are sufficient for the app to see a new version once the user opens or refreshes it. They do not provide real-time visibility while the app is already open. A backend push signal is not required for the first iteration, but it should not be implied by the refresh copy.
+
+### Persona review
+
+These are independent review lenses applied directly in this audit because a callable subagent runtime was unavailable.
+
+| Persona | Primary need | Risk in current flow | Recommended response |
+| --- | --- | --- | --- |
+| Sunday fantasy or analytics user | See finished-game changes Sunday night | Once-daily local refresh waits for the next scheduled run | Post-game source monitor, games-through copy, advanced-pending state |
+| Casual fan | Know whether the app is current without source knowledge | Generic Updated time can mean only that old data was rewritten | Show coverage week/date separately from local write time |
+| Power user or analyst | Reproduce and trust metrics | PBP, stats_player, NGS, PFR, and schedules can be different generations | Expose source generations and correction state in diagnostics |
+| StatScout+ subscriber | Receive timely, coherent Recent Form | Recent Form can be fresh in write time but stale in source coverage | Tie it to the same refresh ID as snapshots and game logs |
+| Offline or poor-network user | Keep a useful last-known view | A failed candidate could replace good cached data | Preserve the last complete network and disk versions |
+| Accessibility reviewer | Understand partial and stale states without color | A colored status badge can hide an important distinction | Use text labels and accessible coverage dates |
+| Support operator | Explain a missing Sunday game | Current logs do not form a normalized source-to-publish timeline | Store run ID, source timestamp, expected games, observed games, and failure class |
+| Security owner | Keep one safe production writer | A personal Mac and the local backend .env create credential and target risks | GitHub remains the writer; add a Football-project environment guard |
+| Cost-conscious owner | Improve freshness without buying infrastructure | Mac cron adds maintenance but does not reduce source lag | Use free public-repository Actions and no-op source probes |
+| Product owner | Balance “fast” against “trustworthy” | Publishing a partial week can make rankings and Recent Form misleading | Define core versus enrichment readiness before changing cadence |
+
+### MacBook cron decision
+
+A MacBook Pro cron is not required for cost control. GitHub's [Actions billing documentation](https://docs.github.com/en/actions/concepts/billing-and-usage) states that standard GitHub-hosted runners in public repositories are free, and self-hosted runners do not incur GitHub-hosted runner charges.
+
+Use GitHub Actions as the primary scheduler because it is auditable, shared, and available without requiring the laptop to be awake. Keep a Mac as a break-glass manual dispatcher only if needed. Do not create a second independent production writer. If a laptop fallback is ever formalized, use macOS launchd and dispatch a safe workflow rather than storing a service-role key locally.
+
+### Updated recommendation
+
+The source timing supports a practical Sunday experience:
+
+- expect base data to become source-available about two hours after a normal game;
+- detect it within 30 minutes;
+- publish within about 15 minutes after successful detection;
+- alert at six hours for a normal Sunday game;
+- use wider 8-12 hour windows for Saturday and postseason games;
+- keep checking for corrections for 24-48 hours;
+- make NGS and PFR lag visible without blocking core stats;
+- show the user the coverage week/date and last complete publish time.
+
+The dominant avoidable delay is the local once-daily schedule. More cron entries without source fingerprints, coverage checks, overlap reprocessing, serialization, and atomic publication would improve timing but leave the main correctness risks intact.
