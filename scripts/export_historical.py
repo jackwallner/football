@@ -137,6 +137,14 @@ def validate_export(
                     f"Incomplete career rollup: {len(season_players)} players, "
                     f"missing types={sorted(missing_types)}"
                 )
+        elif season == CURRENT_SEASON:
+            # Opening week may contain only one completed game. Require both
+            # teams and every position group, without inventing the other games.
+            if len(teams) < 2 or len(season_players) < 20 or missing_types:
+                raise RuntimeError(
+                    f"Incomplete current season: {len(teams)} teams, "
+                    f"{len(season_players)} players, missing types={sorted(missing_types)}"
+                )
         elif len(teams) < 30 or missing_types:
             raise RuntimeError(
                 f"Incomplete {season}: {len(teams)} teams, missing types={sorted(missing_types)}"
@@ -185,28 +193,32 @@ def export(
     )
 
 
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument(
-    "--historical-only",
-    action="store_true",
-    help="Skip the current-season export (for a pre-rollover STATCAST_SEASON).",
-)
-args = parser.parse_args()
-
-os.makedirs("StatScout/Data", exist_ok=True)
-export(
-    "players-historical",
-    [(
-        "or",
-        f"(season.eq.{ALL_TIME_SEASON},"
-        f"and(season.gte.{OLDEST_SUPPORTED_SEASON},season.lt.{CURRENT_SEASON}))",
-    )],
-    {ALL_TIME_SEASON} | set(range(OLDEST_SUPPORTED_SEASON, CURRENT_SEASON)),
-)
-if not args.historical_only:
-    export(
-        "players-current",
-        [("season", f"eq.{CURRENT_SEASON}")],
-        {CURRENT_SEASON},
-        require_rate_metrics=True,
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--historical-only", action="store_true",
+        help="Skip the current-season export (for a pre-rollover STATCAST_SEASON).",
     )
+    mode.add_argument(
+        "--current-only", action="store_true",
+        help="Refresh the shipped current snapshot without replacing historical data.",
+    )
+    args = parser.parse_args()
+    os.makedirs("StatScout/Data", exist_ok=True)
+    if not args.current_only:
+        export(
+            "players-historical",
+            [("or", f"(season.eq.{ALL_TIME_SEASON},"
+              f"and(season.gte.{OLDEST_SUPPORTED_SEASON},season.lt.{CURRENT_SEASON}))")],
+            {ALL_TIME_SEASON} | set(range(OLDEST_SUPPORTED_SEASON, CURRENT_SEASON)),
+        )
+    if not args.historical_only:
+        export(
+            "players-current", [("season", f"eq.{CURRENT_SEASON}")],
+            {CURRENT_SEASON}, require_rate_metrics=True,
+        )
+
+
+if __name__ == "__main__":
+    main()
