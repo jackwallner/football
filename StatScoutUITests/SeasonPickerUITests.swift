@@ -35,15 +35,24 @@ final class SeasonPickerUITests: XCTestCase {
     /// Season and phase share one pill, labelled for VoiceOver as
     /// "Season and season type" with a value like "2025, Regular Season".
     ///
-    /// `firstMatch`, not the bare query, and that is the difference between
-    /// this suite running and this suite reporting "Multiple matching elements
-    /// found" forever. Stats, Trends and Teams each mount that control, and a
-    /// `TabView` keeps every tab's hierarchy alive, so the app always holds
-    /// three of them - only the front one is reachable by touch, which is why
-    /// the duplication is invisible to a user and fatal to an exact query. The
-    /// front tab's control is the first in the tree.
+    /// The *hittable* one, and both words are load-bearing.
+    ///
+    /// Stats, Trends and Teams each mount this control, and a `TabView` keeps
+    /// every visited tab's hierarchy alive, so the app holds as many of them as
+    /// tabs the session has opened. A bare exact query therefore throws
+    /// "Multiple matching elements found", and `firstMatch` silently answers
+    /// with whichever is first in the tree - a background tab's, whose snapshot
+    /// is not redrawn when the season changes, so the value it reports is the
+    /// season from before the change. Only one of them is on screen, and that
+    /// is the one the user is touching.
     private func seasonControl() -> XCUIElement {
-        app.buttons["Season and season type"].firstMatch
+        let matches = app.buttons.matching(
+            NSPredicate(format: "label == %@", "Season and season type")
+        )
+        for element in matches.allElementsBoundByIndex where element.isHittable {
+            return element
+        }
+        return matches.firstMatch
     }
 
     private func waitForBoard() -> Bool {
@@ -60,11 +69,14 @@ final class SeasonPickerUITests: XCTestCase {
         // The menu should carry the career rollup plus the full 2000-current
         // range. Spot-check the ends and the sentinel rather than all 27 rows,
         // since a long menu scrolls and off-screen rows aren't hittable.
+        // "All since 2000", not "All Time": `SeasonLabel.text` renamed it
+        // deliberately, because "All Time" claimed a century of football the
+        // data does not have. The test kept asking for the old wording.
         XCTAssertTrue(
-            app.buttons["All Time"].waitForExistence(timeout: 5),
+            app.buttons["All since 2000"].waitForExistence(timeout: 5),
             "Season menu should offer the career rollup"
         )
-        XCTAssertTrue(app.buttons["2025"].exists, "Season menu should offer the current season")
+        XCTAssertTrue(app.buttons["2025"].exists, "Season menu should offer a recent season")
 
         // Years are bare four-digit strings - never thousands-separated, which is
         // what this originally guarded against ("2,025").

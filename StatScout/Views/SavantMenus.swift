@@ -195,9 +195,14 @@ struct SeasonPhaseNavBar: ViewModifier {
             // the bar at one compact height instead of the large-title layout.
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            // Announced for VoiceOver, which loses the screen's name along with
-            // the visible title.
-            .accessibilityLabel(title)
+            // The screen's name is NOT painted on here.
+            //
+            // `.accessibilityLabel` on a container hands that label to the
+            // elements inside it, and this container is the whole screen: the
+            // search chip, the stat picker and the View menu all announced
+            // themselves as "Stats" instead of saying what they do. VoiceOver
+            // still gets the screen's name from the tab bar, which says it in
+            // words and marks the selected one.
             .toolbar {
                 // The green pills are their own capsules; suppress the iOS 26
                 // Liquid Glass container or each reads as a pill inside a pill.
