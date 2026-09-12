@@ -127,4 +127,13 @@ final class StandardStatsTests: XCTestCase {
         XCTAssertEqual(curve?.percentile(for: 400), 80)
         XCTAssertNil(LeaguePercentileCurve(points: [(100, 20)]))
     }
+
+    func testRecentWindowCaptionNamesTheGamesInHand() {
+        XCTAssertEqual(RecentFormWindow.caption(games: 1, span: 5), "1 game")
+        XCTAssertEqual(RecentFormWindow.caption(games: 3, span: 5), "3 games")
+        XCTAssertEqual(RecentFormWindow.caption(games: 5, span: 5), "5 games")
+        // A window can never hold more than it asked for; if it somehow does,
+        // the span is still what was requested.
+        XCTAssertEqual(RecentFormWindow.caption(games: 9, span: 8), "8 games")
+    }
 }

@@ -34,8 +34,16 @@ final class SeasonPickerUITests: XCTestCase {
 
     /// Season and phase share one pill, labelled for VoiceOver as
     /// "Season and season type" with a value like "2025, Regular Season".
+    ///
+    /// `firstMatch`, not the bare query, and that is the difference between
+    /// this suite running and this suite reporting "Multiple matching elements
+    /// found" forever. Stats, Trends and Teams each mount that control, and a
+    /// `TabView` keeps every tab's hierarchy alive, so the app always holds
+    /// three of them - only the front one is reachable by touch, which is why
+    /// the duplication is invisible to a user and fatal to an exact query. The
+    /// front tab's control is the first in the tree.
     private func seasonControl() -> XCUIElement {
-        app.buttons["Season and season type"]
+        app.buttons["Season and season type"].firstMatch
     }
 
     private func waitForBoard() -> Bool {

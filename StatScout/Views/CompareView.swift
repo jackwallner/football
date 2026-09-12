@@ -786,6 +786,11 @@ struct CompareView: View {
                 )
                 .frame(maxWidth: .infinity)
             }
+            // Named by its slot. `SeasonPhasePicker` labels itself "Season and
+            // season type", and three of them on one screen - the nav bar's and
+            // one per team - left VoiceOver saying the same phrase three times
+            // with no way to tell which control was which.
+            .accessibilityLabel("Season and season type for \(team ?? placeholder)")
         }
         .frame(maxWidth: .infinity)
     }

@@ -1012,9 +1012,14 @@ struct PlayerProfileView: View {
     /// Football's traditional line is almost entirely counting stats, unlike
     /// baseball's, so in practice the RATE group is usually empty and the
     /// sub-section bars are only drawn when both groups have something in them.
+    ///
+    /// "Tgt Allowed" belongs here with the other counts: the pipeline emits it
+    /// as the volume behind a defender's coverage rates, and leaving it out put
+    /// a raw target count under the RATE heading.
     private static let countingStats: Set<String> = [
         "G", "PASS YDS", "PASS TD", "INT", "CAR", "RUSH YDS", "RUSH TD",
         "REC", "REC YDS", "REC TD", "TACKLES", "SACKS", "DEF INT",
+        "TGT ALLOWED",
     ]
 
     /// Percentile rank for a traditional stat against the league.
@@ -1028,20 +1033,27 @@ struct PlayerProfileView: View {
         label: String,
         value: String
     ) -> Int {
+        StandardStatSemantics.percentile(
+            label: label,
+            value: value,
+            peerValues: peerValues(forStat: label)
+        )
+    }
+
+    /// Same-position players' values for one traditional stat.
+    ///
+    /// Kept as its own step so the season and recent rows of a card share the
+    /// walk over `allPlayers` for a given stat instead of each row starting it
+    /// again.
+    private func peerValues(forStat label: String) -> [String] {
         let key = label.uppercased()
-        let peers = allPlayers.filter {
-            $0.positionGroup == displayedPlayer.positionGroup
-        }
-        let values: [String] = peers.compactMap { other in
-            guard let stat = other.standardStats?.first(where: { $0.label.uppercased() == key })
+        let group = displayedPlayer.positionGroup
+        return allPlayers.compactMap { other in
+            guard other.positionGroup == group,
+                  let stat = other.standardStats?.first(where: { $0.label.uppercased() == key })
             else { return nil }
             return stat.value
         }
-        return StandardStatSemantics.percentile(
-            label: label,
-            value: value,
-            peerValues: values
-        )
     }
 
     /// The data's own spelling of a stat, given the uppercased one this card
@@ -1107,18 +1119,13 @@ struct PlayerProfileView: View {
         return RecentFormWindow.build(label: "Last \(span)", span: span, logs: windowLogs)
     }
 
-    /// What the recent column is actually made of.
-    ///
-    /// The picker offers 3 / 5 / 8 games, but a player one week into the season
-    /// has one. Captioning that column "5 games" states a span the numbers
-    /// under it do not cover, so the caption follows the games in hand and only
-    /// says five when there are five.
+    /// What the recent column is actually made of. See
+    /// `RecentFormWindow.caption`.
     private var standardRecentCaption: String {
-        guard let games = standardRecentWindow?.games,
-              games < standardWindow.rawValue else {
+        guard let games = standardRecentWindow?.games else {
             return standardWindow.segmentLabel
         }
-        return games == 1 ? "1 game" : "\(games) games"
+        return RecentFormWindow.caption(games: games, span: standardWindow.rawValue)
     }
 
     /// The recent-window version of one traditional stat, or nil when the window
