@@ -51,6 +51,26 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         return field
     }
 
+    /// Waits for an element to be *tappable*, not merely present.
+    ///
+    /// A pushed screen exists in the tree the instant the navigation starts,
+    /// while the transition is still animating and nothing on it can be
+    /// touched. Tapping there fails with "not hittable" and reads like a
+    /// disabled control, which is what five of these tests spent their time
+    /// reporting about a Year Compare tab that was never disabled.
+    @discardableResult
+    private func waitUntilHittable(
+        _ element: XCUIElement,
+        timeout: TimeInterval = 10
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if element.exists, element.isHittable { return true }
+            usleep(200_000)
+        }
+        return false
+    }
+
     /// Opens the first player on the board. Rows are buttons labelled
     /// "<rank>, <name>, <pos>, <team>, <stat>".
     @discardableResult
@@ -61,7 +81,8 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         ).firstMatch
         guard row.waitForExistence(timeout: 30) else { return false }
         row.tap()
-        return true
+        // The profile's own tab strip, once the push has settled.
+        return waitUntilHittable(app.buttons["Advanced"].firstMatch, timeout: 15)
     }
 
     // MARK: - DashboardView Tests
@@ -151,8 +172,8 @@ final class StatScoutComprehensiveUITests: XCTestCase {
             return XCTFail("A player profile should open from the leaderboard")
         }
 
-        let yearCompareTab = app.buttons["Year Compare"]
-        guard yearCompareTab.waitForExistence(timeout: 2) else {
+        let yearCompareTab = app.buttons["Year Compare"].firstMatch
+        guard waitUntilHittable(yearCompareTab) else {
             return
         }
         yearCompareTab.tap()
@@ -170,8 +191,8 @@ final class StatScoutComprehensiveUITests: XCTestCase {
             return XCTFail("A player profile should open from the leaderboard")
         }
 
-        let yearCompareTab = app.buttons["Year Compare"]
-        guard yearCompareTab.waitForExistence(timeout: 2) else {
+        let yearCompareTab = app.buttons["Year Compare"].firstMatch
+        guard waitUntilHittable(yearCompareTab) else {
             return
         }
         yearCompareTab.tap()
@@ -187,8 +208,8 @@ final class StatScoutComprehensiveUITests: XCTestCase {
             return XCTFail("A player profile should open from the leaderboard")
         }
 
-        let yearCompareTab = app.buttons["Year Compare"]
-        guard yearCompareTab.waitForExistence(timeout: 2) else {
+        let yearCompareTab = app.buttons["Year Compare"].firstMatch
+        guard waitUntilHittable(yearCompareTab) else {
             return
         }
         yearCompareTab.tap()
@@ -211,8 +232,8 @@ final class StatScoutComprehensiveUITests: XCTestCase {
             return XCTFail("A player profile should open from the leaderboard")
         }
 
-        let yearCompareTab = app.buttons["Year Compare"]
-        guard yearCompareTab.waitForExistence(timeout: 2) else {
+        let yearCompareTab = app.buttons["Year Compare"].firstMatch
+        guard waitUntilHittable(yearCompareTab) else {
             return
         }
         yearCompareTab.tap()
