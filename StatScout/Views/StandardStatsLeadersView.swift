@@ -226,11 +226,10 @@ struct StandardStatsLeadersView: View {
                 .padding(.vertical, 48)
                 .background(GridironPalette.surface)
             } else {
-                ForEach(
-                    Array(sortedPlayers.prefix(50).enumerated()),
-                    id: \.element.id
-                ) { index, player in
-                    playerRow(rank: index + 1, player: player)
+                let ranked = Array(sortedPlayers.prefix(50).enumerated())
+                let peerValues = filteredPlayers.compactMap { standardStat(for: $0)?.value }
+                ForEach(ranked, id: \.element.id) { index, player in
+                    playerRow(rank: index + 1, player: player, peerValues: peerValues)
                 }
             }
         }
@@ -242,7 +241,7 @@ struct StandardStatsLeadersView: View {
         )
     }
 
-    private func playerRow(rank: Int, player: Player) -> some View {
+    private func playerRow(rank: Int, player: Player, peerValues: [String]) -> some View {
         NavigationLink(value: player) {
             HStack(spacing: 0) {
                 Text("\(rank)")
@@ -278,8 +277,9 @@ struct StandardStatsLeadersView: View {
                 }
                 .frame(width: 44, alignment: .leading)
 
+                let pct = percentile(for: player, peerValues: peerValues)
                 HStack(spacing: 8) {
-                    PercentileBarMini(percentile: percentile(for: player))
+                    PercentileBarMini(percentile: pct)
                         .frame(width: 34)
                     Text(statDisplay(for: player))
                         .font(GridironType.statMed)
@@ -291,7 +291,7 @@ struct StandardStatsLeadersView: View {
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(
-                    "\(selectedStat): \(statDisplay(for: player)), \(percentile(for: player))th percentile"
+                    "\(selectedStat): \(statDisplay(for: player)), \(pct)th percentile"
                 )
             }
             .frame(height: GridironGeo.rowHeight)
@@ -335,12 +335,16 @@ struct StandardStatsLeadersView: View {
     /// Every row on this board has the stat it is ranked by - that is the
     /// filter - so every row can carry a percentile, drawn against the same
     /// position cohort the profile's traditional bars use.
-    private func percentile(for player: Player) -> Int {
+    ///
+    /// The cohort is passed in rather than recomputed per row: `filteredPlayers`
+    /// walks the whole season pool, and a fifty-row board asking for it twice a
+    /// row walked it a hundred times per redraw.
+    private func percentile(for player: Player, peerValues: [String]) -> Int {
         guard let stat = standardStat(for: player) else { return 50 }
         return StandardStatSemantics.percentile(
             label: stat.label,
             value: stat.value,
-            peerValues: filteredPlayers.compactMap { standardStat(for: $0)?.value }
+            peerValues: peerValues
         )
     }
 

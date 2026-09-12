@@ -110,6 +110,18 @@ struct RecentFormWindow {
         (label: $0.label, span: $0.rawValue)
     }
 
+    /// What to call a window of `games` when `span` games were asked for.
+    ///
+    /// The pickers offer 3 / 5 / 8, but a player one week into a season has
+    /// one. Captioning that column "5 games" claims a span the numbers under it
+    /// do not cover, so the caption follows the games in hand and only says
+    /// five when there are five.
+    static func caption(games: Int, span: Int) -> String {
+        let count = min(games, span)
+        guard count < span else { return "\(span) games" }
+        return count == 1 ? "1 game" : "\(count) games"
+    }
+
     /// Build a window by summing each metric across the supplied game logs.
     static func build(label: String, span: Int, logs: [PlayerGameLog]) -> RecentFormWindow {
         let plays = logs.reduce(0) { $0 + $1.plays }

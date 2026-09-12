@@ -196,7 +196,7 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         // Test category tabs within Year Compare
         let categories = ["QB", "RB", "WR", "TE", "DEF"]
         for category in categories {
-            let tab = app.buttons[category]
+            let tab = app.buttons[category].firstMatch
             if tab.waitForExistence(timeout: 2) {
                 tab.tap()
                 // Verify content updates
@@ -288,7 +288,10 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         let categories = ["QB", "RB", "WR", "TE", "DEF"]
 
         for category in categories {
-            let tab = app.buttons[category]
+            // `firstMatch`: every mounted tab carries its own position
+            // selector, so the bare query matches several elements and throws
+            // rather than tapping. The front tab's is first in the tree.
+            let tab = app.buttons[category].firstMatch
             if tab.waitForExistence(timeout: 2) {
                 tab.tap()
 
@@ -339,12 +342,15 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         )
 
         // The position selector labels itself for VoiceOver.
-        XCTAssertTrue(app.otherElements["Position"].exists || app.buttons["QB"].exists,
-                      "Position selector should be exposed to VoiceOver")
+        XCTAssertTrue(
+            app.otherElements["Position"].firstMatch.exists
+                || app.buttons["QB"].firstMatch.exists,
+            "Position selector should be exposed to VoiceOver"
+        )
 
         let categories = ["QB", "RB", "WR", "TE", "DEF"]
         for category in categories {
-            let tab = app.buttons[category]
+            let tab = app.buttons[category].firstMatch
             if tab.exists {
                 XCTAssertFalse(tab.label.isEmpty, "\(category) tab should have accessibility label")
             }
