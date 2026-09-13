@@ -1,1 +1,5 @@
-Musim 2026 sudah dimulai: setiap pemain yang sudah bermain masuk peringkat sejak pekan pertama, diperbarui setiap malam. Pilih View > Qualified untuk hanya melihat pemain dengan waktu bermain yang cukup.
+Dibuat untuk hari pertandingan.
+• Stats dibuka dengan pemimpin yang familier seperti passing yards, dan peringkat lanjutan cukup satu ketukan.
+• Tampilan Following baru menyatukan tim dan pemain favoritmu di satu tempat, gratis.
+• Cari di seluruh papan peringkat tanpa kehilangan peringkat liga pemain.
+• Statistik segar tak lama setelah dipublikasikan, dan setiap layar menampilkan minggu serta pertandingan yang disertakan.

@@ -1,1 +1,5 @@
-Kausi 2026 on käynnissä: jokainen pelannut pelaaja on rankingissa ensimmäisestä viikosta alkaen, ja tiedot päivittyvät joka yö. Valitse View > Qualified nähdäksesi vain pelaajat, joilla on riittävästi peliaikaa.
+Tehty ottelupäivää varten.
+• Stats avautuu tutuilla kärkilistoilla, kuten syöttöjaardeilla, ja edistyneet rankingit ovat yhden napautuksen päässä.
+• Uusi Following-näkymä kokoaa joukkueesi ja suosikkipelaajasi yhteen paikkaan, ilmaiseksi.
+• Hae koko listalta niin, että pelaajan sijoitus liigassa säilyy.
+• Tuoreet tilastot pian julkaisun jälkeen, ja jokainen näkymä kertoo viikon ja mukana olevat ottelut.

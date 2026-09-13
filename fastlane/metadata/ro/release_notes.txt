@@ -1,1 +1,5 @@
-Sezonul 2026 a început: fiecare jucător care a jucat apare în clasament din prima săptămână, cu actualizare în fiecare noapte. Alege View > Qualified pentru a vedea doar jucătorii cu suficient timp de joc.
+Creat pentru ziua meciului.
+• Stats se deschide cu clasamente cunoscute, precum yarzii din pase, iar clasamentele avansate sunt la o atingere.
+• Noua vizualizare Following: echipa ta și jucătorii preferați într-un singur loc, gratuit.
+• Caută în tot clasamentul fără ca jucătorul să își piardă locul în ligă.
+• Statistici proaspete la scurt timp după publicare, iar fiecare ecran arată săptămâna și meciurile incluse.

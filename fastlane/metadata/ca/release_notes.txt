@@ -1,1 +1,5 @@
-La temporada 2026 ja ha començat: tots els jugadors que han jugat surten al rànquing des de la primera setmana, amb actualització cada nit. Tria View > Qualified per veure només jugadors amb prou temps de joc.
+Fet per al dia de partit.
+• Stats s'obre amb líders coneguts com les iardes de passada, i els rànquings avançats són a un toc.
+• Nova vista Following: el teu equip i els teus jugadors preferits en un sol lloc, gratis.
+• Cerca a tota la classificació sense perdre la posició de cada jugador a la lliga.
+• Estadístiques fresques poc després de publicar-se, i cada pantalla mostra la setmana i els partits inclosos.

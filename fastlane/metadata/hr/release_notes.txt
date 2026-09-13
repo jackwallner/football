@@ -1,1 +1,5 @@
-Sezona 2026 je počela: svaki igrač koji je igrao rangiran je od prvog tjedna, uz ažuriranje svake noći. Odaberite View > Qualified za prikaz samo igrača s dovoljno minutaže.
+Stvoreno za dan utakmice.
+• Stats se otvara poznatim vodećima poput jardi dodavanja, a napredne ljestvice su na jedan dodir.
+• Novi prikaz Following: vaša momčad i omiljeni igrači na jednom mjestu, besplatno.
+• Pretražujte cijelu ljestvicu bez gubitka igračeva poretka u ligi.
+• Svježa statistika ubrzo nakon objave, a svaki zaslon prikazuje tjedan i uključene utakmice.

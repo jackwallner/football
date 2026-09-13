@@ -293,6 +293,17 @@ struct DataFreshness: Codable, Equatable, Sendable {
     }
 }
 
+extension DataCoverage {
+    /// Game dates arrive without a time and are parsed as Eastern midnight, the
+    /// league's calendar. Formatting them in the phone's zone showed the day
+    /// before anywhere west of New York (Sep 10 games read "Sep 9" in Seattle).
+    static var gameDayStyle: Date.FormatStyle {
+        var style = Date.FormatStyle.dateTime.month(.abbreviated).day()
+        style.timeZone = TimeZone(identifier: "America/New_York") ?? .current
+        return style
+    }
+}
+
 /// Small persistence layer for the last known-good status. This is separate
 /// from the player cache so a failed status check cannot replace useful data.
 enum DataFreshnessCache {

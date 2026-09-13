@@ -1,1 +1,5 @@
-La stagione 2026 è iniziata: ogni giocatore sceso in campo è in classifica dalla prima settimana, con aggiornamento ogni notte. Scegli View > Qualified per vedere solo i giocatori con abbastanza tempo di gioco.
+Pensato per il giorno della partita.
+• Stats si apre con classifiche familiari come le yard su passaggio, e le classifiche avanzate sono a un tocco.
+• Nuova vista Following: la tua squadra e i tuoi giocatori preferiti in un unico posto, gratis.
+• Cerca in tutta la classifica senza perdere la posizione in lega di ogni giocatore.
+• Statistiche aggiornate poco dopo la pubblicazione, e ogni schermata mostra la settimana e le partite incluse.

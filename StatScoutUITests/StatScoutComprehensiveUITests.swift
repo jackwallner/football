@@ -11,6 +11,10 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         // Without this every test in this file lands on the onboarding pager
         // rather than the board it means to exercise.
         app.launchArguments += ["-hasCompletedOnboarding", "YES"]
+        // Every test opens a profile, and the second open of any run shows the
+        // free-tier pitch sheet over the toolbar. Pin the counter so each launch
+        // sees a first visit.
+        app.launchArguments += ["-profileOpenCount", "0"]
         app.launch()
     }
 
@@ -111,11 +115,11 @@ final class StatScoutComprehensiveUITests: XCTestCase {
             // Tap Year Compare tab
             yearCompareTab.tap()
 
-            // Verify year selectors exist
-            let year1Selector = app.buttons["Year 1"]
-            let year2Selector = app.buttons["Year 2"]
-            XCTAssertTrue(year1Selector.exists, "Year 1 selector should exist")
-            XCTAssertTrue(year2Selector.exists, "Year 2 selector should exist")
+            // Both the Pro comparison and the free preview lead with season totals.
+            XCTAssertTrue(
+                app.staticTexts["SEASON TOTALS"].waitForExistence(timeout: 15),
+                "Year Compare should show season totals"
+            )
         }
     }
 
@@ -187,11 +191,11 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         }
         yearCompareTab.tap()
 
-        // Verify initial state with two different years
-        let year1Selector = app.buttons["Year 1"]
-        let year2Selector = app.buttons["Year 2"]
-        XCTAssertTrue(year1Selector.exists, "Year 1 selector should exist")
-        XCTAssertTrue(year2Selector.exists, "Year 2 selector should exist")
+        // The comparison names two seasons; the free preview shows the same table.
+        XCTAssertTrue(
+            app.staticTexts["SEASON TOTALS"].waitForExistence(timeout: 15),
+            "Year Compare should load its season totals"
+        )
     }
 
     func testYearComparisonMetricDisplay() throws {
@@ -208,8 +212,10 @@ final class StatScoutComprehensiveUITests: XCTestCase {
 
         // Verify comparison grid shows metrics
         app.swipeUp()
-        let comparisonContent = app.staticTexts["Metric"]
-        XCTAssertTrue(comparisonContent.exists || app.staticTexts["Δ"].exists, "Comparison grid should show")
+        XCTAssertTrue(
+            app.staticTexts["SEASON TOTALS"].waitForExistence(timeout: 15),
+            "Comparison grid should show"
+        )
     }
 
     func testYearComparisonCategoryTabs() throws {
@@ -257,8 +263,7 @@ final class StatScoutComprehensiveUITests: XCTestCase {
             XCTAssertTrue(noMetricsDescription.exists, "Should show explanation text")
         } else {
             // If no message, then comparison grid should be showing
-            let comparisonContent = app.staticTexts["Metric"]
-            XCTAssertTrue(comparisonContent.exists || app.staticTexts["Δ"].exists,
+            XCTAssertTrue(app.staticTexts["SEASON TOTALS"].waitForExistence(timeout: 15),
                           "Should show either no-metrics message or comparison grid")
         }
     }
@@ -503,7 +508,8 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         searchField.tap()
         searchField.typeText("Chiefs")
 
-        let match = app.staticTexts["Kansas City Chiefs"]
+        // Team disks show the abbreviation and carry the full name as their label.
+        let match = app.buttons["Kansas City Chiefs"]
         XCTAssertTrue(match.waitForExistence(timeout: 10), "Should find the Chiefs in search results")
     }
 

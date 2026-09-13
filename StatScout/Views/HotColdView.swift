@@ -234,7 +234,7 @@ struct HotColdView: View {
             season: selectedSeason,
             phase: selectedPhase
         ) {
-            return "Through \(asOf.formatted(.dateTime.month(.abbreviated).day()))"
+            return "Through \(asOf.formatted(DataCoverage.gameDayStyle))"
         }
         return nil
     }

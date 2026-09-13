@@ -31,16 +31,14 @@ final class RecentFormScreenshotUITests: XCTestCase {
         XCTAssertTrue(playerRow.waitForExistence(timeout: 150), "A player row should load with live data")
         playerRow.tap()
 
-        // Recent Form sits below the percentile card; it exists in the a11y tree
-        // even off-screen, so scroll until it's actually hittable.
-        let recentForm = app.staticTexts["RECENT FORM"]
-        XCTAssertTrue(recentForm.waitForExistence(timeout: 30), "Recent Form card should exist on the profile")
-        var tries = 0
-        while !recentForm.isHittable && tries < 10 {
-            app.swipeUp()
-            tries += 1
-        }
-        XCTAssertTrue(recentForm.isHittable, "Recent Form card should be scrolled into view")
+        // Pro reads recent form in place: the percentile card's Season / Recent /
+        // Both switch. The standalone "RECENT FORM" card is the free tier's
+        // teaser and never renders with Pro on, which is why this test used to
+        // wait 30s for a card that could not exist.
+        let recent = app.buttons["Recent"]
+        XCTAssertTrue(recent.waitForExistence(timeout: 30), "Pro profile should offer the Recent window")
+        recent.tap()
+        XCTAssertTrue(app.buttons["5 games"].waitForExistence(timeout: 15), "Recent mode should show its window picker")
 
         // Let game logs load and the bars render.
         sleep(5)

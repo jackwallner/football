@@ -1,1 +1,5 @@
-Säsongen 2026 är igång: alla spelare som har spelat rankas från vecka ett och uppdateras varje natt. Välj View > Qualified för att bara se spelare med tillräckligt med speltid.
+Byggd för matchdagen.
+• Stats öppnar med välbekanta ledare som passningsyards, och avancerade rankningar är ett tryck bort.
+• Ny Following-vy samlar ditt lag och dina favoritspelare på ett ställe, gratis.
+• Sök i hela topplistan utan att spelaren tappar sin placering i ligan.
+• Färsk statistik strax efter publicering, och varje skärm visar vecka och inkluderade matcher.

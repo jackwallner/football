@@ -1,1 +1,5 @@
-A temporada 2026 começou: todo jogador que já entrou em campo aparece no ranking desde a semana 1, com atualização toda noite. Escolha View > Qualified para ver só jogadores com tempo de jogo suficiente.
+Feito para o dia de jogo.
+• Stats abre com líderes conhecidos, como jardas de passe, e os rankings avançados ficam a um toque.
+• Nova tela Following: seu time e seus jogadores favoritos em um só lugar, de graça.
+• Pesquise a classificação inteira sem perder a posição de cada jogador na liga.
+• Estatísticas atualizadas logo após a publicação, e cada tela mostra a semana e os jogos incluídos.

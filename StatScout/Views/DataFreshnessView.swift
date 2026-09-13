@@ -12,7 +12,23 @@ struct DataFreshnessView: View {
     var showRefreshButton = true
 
     private var freshness: DataFreshness? { viewModel.freshnessForDisplay }
-    private var status: DataFreshnessStatus { viewModel.freshnessStatus }
+    private var status: DataFreshnessStatus {
+        let raw = viewModel.freshnessStatus
+        // Every game is in and only optional enrichment (PFR or Next Gen) is
+        // late. That is a normal mid-week state, so it reads as current data
+        // with a footnote rather than as a problem with a "Try again" button.
+        if raw == .partial, !isWaitingOnGames { return .ready }
+        return raw
+    }
+    private var isWaitingOnGames: Bool {
+        guard let coverage = freshness?.coverage,
+              let expected = coverage.expectedGames,
+              let included = coverage.gamesIncluded else { return false }
+        return included < expected
+    }
+    private var enrichmentPending: Bool {
+        viewModel.freshnessStatus == .partial && !isWaitingOnGames
+    }
     private var isCurrentScope: Bool {
         guard let season else { return true }
         guard season == viewModel.freeSeason else { return false }
@@ -147,27 +163,23 @@ struct DataFreshnessView: View {
         case .pending:
             return "Advanced stats can take a little time after the final whistle."
         case .partial:
-            if let coverage = freshness?.coverage,
-               let expected = coverage.expectedGames,
-               let included = coverage.gamesIncluded,
-               included < expected {
-                return "We are waiting for complete game coverage before advancing this view."
-            }
-            return "Some optional advanced metrics may still be arriving."
+            return "We are waiting for complete game coverage before advancing this view."
         case .stale:
             return "A newer update is available, but this screen has not loaded it yet."
         case .offline:
             return "Reconnect to check for the latest player stats."
         case .failed:
             return "The latest check did not finish. Your saved data is still available."
-        case .ready, .checking:
+        case .ready:
+            return enrichmentPending ? "Some advanced metrics are still arriving." : nil
+        case .checking:
             return nil
         }
     }
 
     private var coverageText: String? {
         guard let coverage = freshness?.coverage ?? viewModel.dataCoverage else { return nil }
-        let date = coverage.asOf.formatted(.dateTime.month(.abbreviated).day())
+        let date = coverage.asOf.formatted(DataCoverage.gameDayStyle)
         let gameCount: String? = {
             guard let included = coverage.gamesIncluded else { return nil }
             if let expected = coverage.expectedGames {

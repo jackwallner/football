@@ -47,7 +47,12 @@ struct TeamsView: View {
     ]
 
     private var filteredTeams: [String] {
-        let teams = searchText.isEmpty ? viewModel.teamsWithData : viewModel.teamsWithData.filter {
+        // The division grid always draws all 32 clubs, so search and the count
+        // cover them too. Filtering to teams with published rows meant that in
+        // Week 1, with four teams played, "Chiefs" found nothing and the header
+        // read "4 teams" above a grid of 32.
+        guard !viewModel.teamsWithData.isEmpty else { return [] }
+        let teams = searchText.isEmpty ? Self.allTeams : Self.allTeams.filter {
             teamFullName($0).localizedCaseInsensitiveContains(searchText) ||
             $0.localizedCaseInsensitiveContains(searchText)
         }

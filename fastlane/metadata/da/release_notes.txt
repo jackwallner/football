@@ -1,1 +1,5 @@
-2026-sæsonen er i gang: alle spillere, der har spillet, er rangeret fra uge et og opdateres hver nat. Vælg View > Qualified for kun at se spillere med nok spilletid.
+Bygget til kampdag.
+• Stats åbner med velkendte førere som pasningsyards, og avancerede ranglister er et tryk væk.
+• Ny Following-visning samler dit hold og dine yndlingsspillere ét sted, gratis.
+• Søg i hele ranglisten uden at miste spillerens placering i ligaen.
+• Friske statistikker kort efter offentliggørelse, og hver skærm viser uge og inkluderede kampe.
