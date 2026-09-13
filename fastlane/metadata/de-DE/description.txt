@@ -9,11 +9,11 @@ Jede Metrik erscheint als Balken mit farbigem Marker, von Rost (0. Perzentil) ü
 VOLLSTÄNDIGE SPIELERPROFILE
 Perzentil-Ranglisten für Passing, Rushing, Receiving und Defense, Umschalten zwischen fortgeschrittenen Metriken und Standardstatistiken, dazu die Form der letzten Spiele.
 
-NÄCHTLICHE UPDATES
-Die Daten werden jede Nacht aktualisiert, immer aktuell bis zum Ende der Vorwoche.
+IMMER AKTUELL AM SPIELTAG
+StatScout prüft während der Saison den ganzen Tag auf neu veröffentlichte Statistiken und aktualisiert sie, sobald sie da sind. Jeder Bildschirm zeigt, welche Woche und welche Spiele enthalten sind.
 
-BESTENLISTEN UND FILTER
-Die gesamte Liga, gefiltert nach Passing, Rushing, Receiving oder Defense. Sortieren, suchen, antippen.
+BESTENLISTEN UND FOLLOWING
+Starte mit vertrauten Bestenlisten wie Passing Yards oder wechsle zu fortgeschrittenen Rankings. Filtere nach Passing, Rushing, Receiving oder Defense und suche jeden Spieler, ohne seinen Ligarang zu verlieren. Dein Team und deine Lieblingsspieler findest du kostenlos gebündelt unter Following.
 
 STATSCOUT+
 - Trends: die ganze Liga danach sortiert, wer heiß läuft und wer abkühlt

@@ -1,1 +1,5 @@
-Sezona 2026 se je začela: vsak igralec, ki je igral, je uvrščen že od prvega tedna, s posodobitvijo vsako noč. Izberite View > Qualified za prikaz samo igralcev z dovolj igralnega časa.
+Ustvarjeno za dan tekme.
+• Stats se odpre z znanimi vodilnimi, kot so jardi podaj, napredne lestvice pa so le en dotik stran.
+• Nov pogled Following: vaša ekipa in priljubljeni igralci na enem mestu, brezplačno.
+• Iščite po celotni lestvici, ne da bi igralec izgubil mesto v ligi.
+• Sveža statistika kmalu po objavi, vsak zaslon pa pokaže teden in vključene tekme.

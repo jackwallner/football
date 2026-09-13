@@ -225,9 +225,10 @@ struct PlayerProfileView: View {
             UserDefaults.standard.set(opens, forKey: profileOpenCountKey)
             if !store.isPro, opens >= 2, PaywallGate.shared.shouldPresent(.playerScouting) {
                 trialPitchTrigger = .playerScouting
-            }
-            // Third+ profile visit = engaged browsing; never on open 2 (trial pitch).
-            if opens >= 3 {
+            } else if opens >= 3 {
+                // Third+ profile visit = engaged browsing. Never on a visit that
+                // just showed the pitch, or "Enjoying StatScout?" lands the
+                // moment the user dismisses a subscription sheet.
                 ReviewPromptTracker.recordPositiveMoment()
             }
         }

@@ -1,1 +1,5 @@
-La temporada 2026 ya está en marcha: todos los jugadores que han jugado aparecen en el ranking desde la semana 1, con actualización cada noche. Elige View > Qualified para ver solo jugadores con suficiente tiempo de juego.
+Hecho para el día de partido.
+• Stats abre con líderes conocidos como yardas por pase, y los rankings avanzados están a un toque.
+• Nueva vista Following: tu equipo y tus jugadores favoritos en un solo lugar, gratis.
+• Busca en toda la tabla sin perder la posición de cada jugador en la liga.
+• Estadísticas frescas poco después de publicarse, y cada pantalla muestra la semana y los partidos incluidos.

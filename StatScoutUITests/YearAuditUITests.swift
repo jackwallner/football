@@ -28,25 +28,14 @@ final class YearAuditUITests: XCTestCase {
 
     /// The leaderboard's first data row, used as the fingerprint of a season.
     private func topPlayerName() -> String? {
-        // Row cells expose the player's name as their first static text; the
-        // header row ("RANK"/"PLAYER") is excluded by skipping known labels.
-        let ignored: Set<String> = ["RANK", "PLAYER", "TEAM"]
-        // A locked season replaces the rows with an upsell, and "Unlock 2024"
-        // contains a space just like a name does, so it satisfied every other
-        // rule here and got recorded as the season's top player.
-        let upsellPrefixes = ["Unlock", "Start ", "Try ", "See all"]
-        for index in 0..<min(app.staticTexts.count, 40) {
-            let text = app.staticTexts.element(boundBy: index)
-            guard text.exists else { continue }
-            let label = text.label.trimmingCharacters(in: .whitespaces)
-            guard !label.isEmpty,
-                  !ignored.contains(label.uppercased()),
-                  !upsellPrefixes.contains(where: { label.hasPrefix($0) }),
-                  label.contains(" ")           // "Drake Maye", not "QB" or "0.31"
-            else { continue }
-            return label
-        }
-        return nil
+        // Leaderboard rows are buttons labelled "<rank>, <name>, ...". Reading
+        // the first static text with a space picked up copy from other mounted
+        // tabs (the Trends explainer), which is identical in every season.
+        let row = app.buttons.matching(
+            NSPredicate(format: "label MATCHES %@", "^[0-9]+, .*")
+        ).firstMatch
+        guard row.waitForExistence(timeout: 15) else { return nil }
+        return row.label
     }
 
     private func openSeasonMenu() -> Bool {

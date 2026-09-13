@@ -166,7 +166,7 @@ struct AboutView: View {
     /// the app count in; the date follows for anyone who wants it.
     private var gamesThroughText: String {
         guard let coverage = freshness?.coverage ?? dataCoverage else { return "-" }
-        let stamp = coverage.asOf.formatted(.dateTime.month(.abbreviated).day())
+        let stamp = coverage.asOf.formatted(DataCoverage.gameDayStyle)
         guard let week = coverage.week else { return stamp }
         let phase = coverage.phase == .playoffs ? " (playoffs)" : ""
         return "Week \(week)\(phase) · \(stamp)"

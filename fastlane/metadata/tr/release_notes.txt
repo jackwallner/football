@@ -1,1 +1,5 @@
-2026 sezonu başladı: oynayan her oyuncu ilk haftadan itibaren sıralamada, her gece güncelleniyor. Yalnızca yeterli süre alan oyuncuları görmek için View > Qualified seçin.
+Maç günü için tasarlandı.
+• Stats, pas yardı gibi tanıdık liderlerle açılır; gelişmiş sıralamalar bir dokunuş uzağınızda.
+• Yeni Following görünümü takımınızı ve favori oyuncularınızı ücretsiz olarak tek yerde toplar.
+• Oyuncunun lig sırasını kaybetmeden tüm liderlik tablosunda arama yapın.
+• Yayınlandıktan kısa süre sonra güncel istatistikler; her ekran dahil olan haftayı ve maçları gösterir.

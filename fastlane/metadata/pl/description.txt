@@ -9,11 +9,11 @@ Every metric displays as a horizontal percentile bar with a colored marker. The 
 COMPLETE PLAYER PROFILES
 Tap any player to see the full picture: percentile rankings across Passing, Rushing, Receiving, and Defense, a switch between advanced metrics and standard season stats, and recent form game by game.
 
-NIGHTLY UPDATES
-Our data feed refreshes every night, pulling the latest percentile rankings and standard stats for qualified players. What you see is always current through the previous week's games.
+STATS THAT KEEP UP WITH GAME DAY
+During the season, StatScout checks for newly published NFL stats throughout the day and updates as soon as they arrive. Every screen shows which week and games the numbers include, so you always know what you are looking at.
 
-LEADERBOARDS AND FILTERS
-Browse the full league leaderboard filtered by Passing, Rushing, Receiving, or Defense. Sort and search across every active player. Tap any row to open the full profile.
+LEADERBOARDS AND FOLLOWING
+Start on familiar leaders like passing yards, or switch to advanced rankings. Filter by Passing, Rushing, Receiving, or Defense, and search every active player without losing league rank. Keep your team and favorite players together in Following, free. Tap any row to open the full profile.
 
 STATSCOUT+
 Unlock the rest of the app with StatScout+:

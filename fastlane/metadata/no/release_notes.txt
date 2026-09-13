@@ -1,1 +1,5 @@
-2026-sesongen er i gang: alle spillere som har spilt, rangeres fra uke én og oppdateres hver natt. Velg View > Qualified for å bare se spillere med nok spilletid.
+Laget for kampdagen.
+• Stats åpner med kjente ledere som pasningsyards, og avanserte rangeringer er ett trykk unna.
+• Ny Following-visning samler laget ditt og favorittspillerne dine på ett sted, gratis.
+• Søk i hele listen uten at spilleren mister plasseringen sin i ligaen.
+• Ferske statistikker kort tid etter publisering, og hver skjerm viser uke og inkluderte kamper.

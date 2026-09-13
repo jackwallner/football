@@ -1,1 +1,5 @@
-Elindult a 2026-os szezon: minden játékos, aki játszott, már az első héttől szerepel a rangsorban, éjszakánként frissítve. A View > Qualified opcióval csak az elegendő játékidővel rendelkező játékosok jelennek meg.
+A meccsnapra készült.
+• A Stats ismerős listákkal nyílik, például passzolt yardokkal, a haladó rangsorok pedig egy koppintásnyira vannak.
+• Új Following nézet: csapatod és kedvenc játékosaid egy helyen, ingyen.
+• Keress a teljes ranglistán úgy, hogy a játékos ligahelyezése megmarad.
+• Friss statisztikák röviddel a közzététel után, és minden képernyő mutatja a hetet és a benne lévő meccseket.

@@ -9,11 +9,11 @@ Cada métrica aparece como uma barra com marcador colorido, do ferrugem (percent
 PERFIS COMPLETOS
 Percentis em Passe, Corrida, Recepção e Defesa, alternância entre métricas avançadas e estatísticas padrão, e forma recente jogo a jogo.
 
-ATUALIZAÇÕES TODA NOITE
-Os dados são atualizados todas as noites, sempre em dia até os jogos da semana anterior.
+SEMPRE EM DIA NA RODADA
+Durante a temporada, o StatScout procura estatísticas recém-publicadas ao longo do dia e atualiza assim que elas chegam. Cada tela mostra qual semana e quais jogos estão incluídos.
 
-CLASSIFICAÇÕES E FILTROS
-A liga inteira filtrada por Passe, Corrida, Recepção ou Defesa. Ordene, pesquise e abra qualquer perfil.
+CLASSIFICAÇÕES E FOLLOWING
+Comece pelos líderes conhecidos, como jardas de passe, ou mude para os rankings avançados. Filtre por Passe, Corrida, Recepção ou Defesa e pesquise qualquer jogador sem perder a posição na liga. Seu time e seus jogadores favoritos ficam juntos, de graça, em Following.
 
 STATSCOUT+
 - Tendências: a liga toda ordenada por quem está subindo e quem está caindo

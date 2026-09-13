@@ -1,1 +1,5 @@
-Mùa giải 2026 đã bắt đầu: mọi cầu thủ đã ra sân đều được xếp hạng từ tuần 1, cập nhật mỗi đêm. Chọn View > Qualified để chỉ xem cầu thủ có đủ thời gian thi đấu.
+Được làm cho ngày thi đấu.
+• Stats mở với bảng dẫn đầu quen thuộc như số yard chuyền, còn bảng xếp hạng nâng cao chỉ cách một chạm.
+• Chế độ xem Following mới gom đội và cầu thủ yêu thích của bạn vào một nơi, miễn phí.
+• Tìm kiếm trên toàn bảng mà không làm mất thứ hạng giải đấu của cầu thủ.
+• Số liệu mới ngay sau khi được công bố, và mỗi màn hình đều cho biết tuần và các trận được tính.

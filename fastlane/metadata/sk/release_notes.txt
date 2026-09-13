@@ -1,1 +1,5 @@
-Sezóna 2026 sa začala: každý hráč, ktorý nastúpil, je v rebríčku už od prvého týždňa a údaje sa aktualizujú každú noc. Voľbou View > Qualified zobrazíte len hráčov s dostatočným herným časom.
+Vytvorené pre zápasový deň.
+• Stats sa otvára známymi rebríčkami, ako sú prihrané yardy, a pokročilé rebríčky sú na jedno ťuknutie.
+• Nové zobrazenie Following: váš tím a obľúbení hráči na jednom mieste, zadarmo.
+• Prehľadávajte celý rebríček bez toho, aby hráč stratil svoje poradie v lige.
+• Čerstvé štatistiky krátko po zverejnení a každá obrazovka ukazuje týždeň a zahrnuté zápasy.

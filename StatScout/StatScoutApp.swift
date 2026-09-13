@@ -445,11 +445,11 @@ struct OnboardingCards: View {
         OnboardingPage(
             icon: "football.fill",
             title: "Your Pocket\nScout",
-            description: "NFL percentile rankings built for a fast mobile view. Every player, every metric, updated nightly.",
+            description: "NFL percentile rankings built for a fast mobile view. Every player, every metric, updated soon after games finish.",
             bullets: [
                 BulletItem(text: "Every player ranked from week one", icon: "checkmark.circle.fill", color: GridironPalette.turf),
                 BulletItem(text: "EPA, CPOE, YAC, RYOE, and more", icon: "checkmark.circle.fill", color: GridironPalette.turf),
-                BulletItem(text: "Updated nightly, always fresh", icon: "checkmark.circle.fill", color: GridironPalette.turf),
+                BulletItem(text: "Fresh stats soon after every game", icon: "checkmark.circle.fill", color: GridironPalette.turf),
                 BulletItem(text: "No account or sign-up", icon: "checkmark.circle.fill", color: GridironPalette.turf)
             ]
         ),

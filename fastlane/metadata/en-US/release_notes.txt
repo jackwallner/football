@@ -1,1 +1,5 @@
-The 2026 season is live: every player who has played is ranked from week one and updated nightly. Choose View > Qualified to see only players with enough playing time.
+Built for game day.
+• Stats opens on familiar leaders like passing yards, with advanced rankings one tap away.
+• New Following view keeps your team and favorite players in one place, free.
+• Search the whole leaderboard without losing a player's league rank.
+• Fresh stats soon after games are published, and every screen shows the week and games included.

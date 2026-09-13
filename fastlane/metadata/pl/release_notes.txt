@@ -1,1 +1,5 @@
-Sezon 2026 wystartował: każdy zawodnik, który zagrał, jest w rankingu od pierwszego tygodnia, z aktualizacją co noc. Wybierz View > Qualified, aby zobaczyć tylko zawodników z wystarczającym czasem gry.
+Stworzone na dzień meczowy.
+• Stats otwiera się znanymi rankingami, takimi jak jardy podań, a zaawansowane rankingi są o jedno stuknięcie.
+• Nowy widok Following: Twoja drużyna i ulubieni zawodnicy w jednym miejscu, za darmo.
+• Przeszukuj całą tabelę bez utraty miejsca zawodnika w lidze.
+• Świeże statystyki wkrótce po publikacji, a każdy ekran pokazuje tydzień i uwzględnione mecze.
