@@ -1,7 +1,7 @@
 {
   "filename": "04-scout-your-team-in-one-view.png",
   "path": "fan-first-football-context/04-scout-your-team-in-one-view.png",
-  "output_sha256": "d3ed595f9e6d54a3f010e9154515d65ec0ee1302f62f52f06ccafe0ccf6cc3ad",
+  "output_sha256": "6c8a125ce14794b09ff9f0714cdba561529aeefeb413950721b3ac96a0f06460",
   "output_size": [
     1320,
     2868
@@ -21,12 +21,12 @@
     "proof": "The literal Chiefs team capture shows the selected franchise, team context, and the app's Advanced, Standard, and Roster paths"
   },
   "source": "/Users/jackwallner/football/screenshots/v1.2/raw/04_team.png",
-  "source_sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee",
+  "source_sha256": "548e7c81b06cb9803be2762f1d082414514635b0e5bada58a82c19b7cc552dba",
   "background_asset": null,
   "background_asset_sha256": null,
   "background_override": null,
   "foreground": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.foreground.png",
-  "foreground_sha256": "cfbdbcbb05320df52791d5ddebb0595a2bbe2e05f03de017beeffb799bf02b13",
+  "foreground_sha256": "03b28ac131e22c40e0d9f7d0b91abcf8d3b20d52e017884c2adead04d96109af",
   "ui_mask": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.ui-mask.png",
   "ui_coverage": 0.6448,
   "imagegen_received_ui_source": false,
@@ -64,5 +64,5 @@
     451
   ],
   "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/04_team.png",
-  "source_evidence_sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee"
+  "source_evidence_sha256": "548e7c81b06cb9803be2762f1d082414514635b0e5bada58a82c19b7cc552dba"
 }

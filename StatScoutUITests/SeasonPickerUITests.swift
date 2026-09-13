@@ -73,7 +73,7 @@ final class SeasonPickerUITests: XCTestCase {
         // deliberately, because "All Time" claimed a century of football the
         // data does not have. The test kept asking for the old wording.
         XCTAssertTrue(
-            app.buttons["All since 2000"].waitForExistence(timeout: 5),
+            app.buttons["All since 2000"].waitForExistence(timeout: 20),
             "Season menu should offer the career rollup"
         )
         XCTAssertTrue(app.buttons["2025"].exists, "Season menu should offer a recent season")

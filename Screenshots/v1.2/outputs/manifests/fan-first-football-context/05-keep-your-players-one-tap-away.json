@@ -1,7 +1,7 @@
 {
   "filename": "05-keep-your-players-one-tap-away.png",
   "path": "fan-first-football-context/05-keep-your-players-one-tap-away.png",
-  "output_sha256": "a2102bb45759ff00b6c747ceac74deb3d8ccefa25b776843a0406bcbd8f08efc",
+  "output_sha256": "88444d3278d924d0f926dd40a2e9abcbb18d6fec5a7f41f0d83abd0fc6879537",
   "output_size": [
     1320,
     2868
@@ -21,12 +21,12 @@
     "proof": "The literal Following capture shows the favorite Chiefs shortcut and three followed fictional players with production summaries"
   },
   "source": "/Users/jackwallner/football/screenshots/v1.2/raw/05_following.png",
-  "source_sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3",
+  "source_sha256": "578d618f1c9a4b6bd9614c7a78593960060c604ea4ef85ba607ab665a8a02c3e",
   "background_asset": null,
   "background_asset_sha256": null,
   "background_override": null,
   "foreground": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.foreground.png",
-  "foreground_sha256": "5949e073570a057c05eee3b7f4e9829a1f3e977202b6e72790b45343ab21c268",
+  "foreground_sha256": "f1615a08f4bc025a3412f551cd2a5c9cb313b4facbee02877ef80c5a9a5c8fef",
   "ui_mask": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.ui-mask.png",
   "ui_coverage": 0.6448,
   "imagegen_received_ui_source": false,
@@ -64,5 +64,5 @@
     465
   ],
   "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/05_following.png",
-  "source_evidence_sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3"
+  "source_evidence_sha256": "578d618f1c9a4b6bd9614c7a78593960060c604ea4ef85ba607ab665a8a02c3e"
 }

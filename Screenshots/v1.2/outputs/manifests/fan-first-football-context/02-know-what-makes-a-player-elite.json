@@ -1,7 +1,7 @@
 {
   "filename": "02-know-what-makes-a-player-elite.png",
   "path": "fan-first-football-context/02-know-what-makes-a-player-elite.png",
-  "output_sha256": "03f02cdb696066d39a9b73f57d2a8878606acab993c788ef071367cfee4a8447",
+  "output_sha256": "4eda0af4f58f3ced66889da9cbed01afd228a1376720ae92992e5b5b68055489",
   "output_size": [
     1320,
     2868
@@ -21,12 +21,12 @@
     "proof": "The literal profile capture shows grouped percentile bars and named metric values for the fictional Caleb Mercer profile"
   },
   "source": "/Users/jackwallner/football/screenshots/v1.2/raw/02_player_profile.png",
-  "source_sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6",
+  "source_sha256": "9182caee30c9f7dd9769108dbee08829436230dcb1f73a54ea9544abf2045c93",
   "background_asset": null,
   "background_asset_sha256": null,
   "background_override": null,
   "foreground": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.foreground.png",
-  "foreground_sha256": "3d9ebbf0e427b03fae48856e12108a26aa8664c45db707ab558e0fdc7f3807df",
+  "foreground_sha256": "9d496c093cead241e7542f3ef669b6654feea15bf97e645679e030a0d56c5384",
   "ui_mask": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.ui-mask.png",
   "ui_coverage": 0.6448,
   "imagegen_received_ui_source": false,
@@ -64,5 +64,5 @@
     456
   ],
   "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/02_player_profile.png",
-  "source_evidence_sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6"
+  "source_evidence_sha256": "9182caee30c9f7dd9769108dbee08829436230dcb1f73a54ea9544abf2045c93"
 }

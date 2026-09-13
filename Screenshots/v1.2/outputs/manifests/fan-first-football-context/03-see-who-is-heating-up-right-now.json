@@ -1,7 +1,7 @@
 {
   "filename": "03-see-who-is-heating-up-right-now.png",
   "path": "fan-first-football-context/03-see-who-is-heating-up-right-now.png",
-  "output_sha256": "4c8cfc7f7d8fb59f9ec151d70679b999a3b278f71bffb8befa8b566ca6f34079",
+  "output_sha256": "2490e0f96a141ed3f5420faab56480770a2c4e7370c0de348524c101987bfe0d",
   "output_size": [
     1320,
     2868
@@ -21,12 +21,12 @@
     "proof": "The literal Trends capture shows Heating up, a recent window, and quarterback movement through a named NFL week"
   },
   "source": "/Users/jackwallner/football/screenshots/v1.2/raw/03_trends.png",
-  "source_sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d",
+  "source_sha256": "249e3173f9811e89e29960e795d3600061417bc65b84defe1c9fb65c67ff9281",
   "background_asset": null,
   "background_asset_sha256": null,
   "background_override": null,
   "foreground": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.foreground.png",
-  "foreground_sha256": "6b3fc5f74ca741c9198d346e3119361d43edd93aaff26542b4a1520de38d22a0",
+  "foreground_sha256": "98a02ecee5694bc55f7f4a4ec252f46b3530f0087ea48edba98d9de413b7fb12",
   "ui_mask": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.ui-mask.png",
   "ui_coverage": 0.6448,
   "imagegen_received_ui_source": false,
@@ -64,5 +64,5 @@
     456
   ],
   "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/03_trends.png",
-  "source_evidence_sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d"
+  "source_evidence_sha256": "249e3173f9811e89e29960e795d3600061417bc65b84defe1c9fb65c67ff9281"
 }
