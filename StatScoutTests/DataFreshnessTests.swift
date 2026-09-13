@@ -78,3 +78,13 @@ private actor RevisionProvider: StatcastProviding {
     func fetchGameLogs(playerId: Int, season: Int, seasonPhase: SeasonPhase) async throws -> [PlayerGameLog] { [] }
     func fetchTeamGameLogs(team: String, season: Int, seasonPhase: SeasonPhase, sinceDate: Date) async throws -> [PlayerGameLog] { [] }
 }
+
+final class DataFreshnessCaptionTests: XCTestCase {
+    func testShortAgeStaysCompact() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        XCTAssertEqual(DataFreshnessView.shortAge(of: now.addingTimeInterval(5), now: now), "just now")
+        XCTAssertEqual(DataFreshnessView.shortAge(of: now.addingTimeInterval(-59), now: now), "just now")
+        XCTAssertEqual(DataFreshnessView.shortAge(of: now.addingTimeInterval(-600), now: now), "10m ago")
+        XCTAssertEqual(DataFreshnessView.shortAge(of: now.addingTimeInterval(-7_200), now: now), "2h ago")
+    }
+}

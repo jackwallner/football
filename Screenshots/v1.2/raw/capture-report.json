@@ -26,7 +26,7 @@
         2622
       ],
       "mode": "RGB",
-      "sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae"
+      "sha256": "86af86738db80cef8e9ffa493dba619ff395360db0b5e88014bf4274650509b3"
     },
     {
       "name": "02_player_profile.png",
@@ -36,7 +36,7 @@
         2622
       ],
       "mode": "RGB",
-      "sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6"
+      "sha256": "9182caee30c9f7dd9769108dbee08829436230dcb1f73a54ea9544abf2045c93"
     },
     {
       "name": "03_trends.png",
@@ -46,7 +46,7 @@
         2622
       ],
       "mode": "RGB",
-      "sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d"
+      "sha256": "249e3173f9811e89e29960e795d3600061417bc65b84defe1c9fb65c67ff9281"
     },
     {
       "name": "04_team.png",
@@ -56,7 +56,7 @@
         2622
       ],
       "mode": "RGB",
-      "sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee"
+      "sha256": "548e7c81b06cb9803be2762f1d082414514635b0e5bada58a82c19b7cc552dba"
     },
     {
       "name": "05_following.png",
@@ -66,7 +66,7 @@
         2622
       ],
       "mode": "RGB",
-      "sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3"
+      "sha256": "578d618f1c9a4b6bd9614c7a78593960060c604ea4ef85ba607ab665a8a02c3e"
     },
     {
       "name": "06_player_comparison.png",
@@ -76,7 +76,7 @@
         2622
       ],
       "mode": "RGB",
-      "sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c"
+      "sha256": "405404157a5e2d1148256937467148f93b6939599e95de1e92b29ffc169b48d3"
     },
     {
       "name": "07_year_history.png",
@@ -86,7 +86,7 @@
         2622
       ],
       "mode": "RGB",
-      "sha256": "8fcd21e0c023f0c84b0069ddcb0a01fece6086b5737693ba12191dd8224378e2"
+      "sha256": "e9e84961abcd2f6a229e4112d763270f0c8d2f6623964e4e87d974d471803631"
     }
   ],
   "flows": [
@@ -105,7 +105,7 @@
   ],
   "app_repo": {
     "path": "/Users/jackwallner/football",
-    "git_commit": "d81559857440e3f751af8de4745677efe303d3f1"
+    "git_commit": "a86674ae679d75b6b6856fab5bb542368da686f5"
   },
   "device": {
     "udid": "2C7A80C1-1228-411A-B9AD-A7DEED683F79",

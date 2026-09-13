@@ -1,7 +1,7 @@
 {
   "filename": "06-settle-the-debate-side-by-side.png",
   "path": "fan-first-football-context/06-settle-the-debate-side-by-side.png",
-  "output_sha256": "9061e6a55acb91eb2ee7958e24730e552dd1b40ae51b279d5c4afa09472824ea",
+  "output_sha256": "055af770efb33636f3ccb4ef294869946ca02a9f3954e5109efb9c486d6cbc7b",
   "output_size": [
     1320,
     2868
@@ -21,12 +21,12 @@
     "proof": "The literal comparison capture places Caleb Mercer and Mason Reed in parallel cards with aligned season totals"
   },
   "source": "/Users/jackwallner/football/screenshots/v1.2/raw/06_player_comparison.png",
-  "source_sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c",
+  "source_sha256": "405404157a5e2d1148256937467148f93b6939599e95de1e92b29ffc169b48d3",
   "background_asset": null,
   "background_asset_sha256": null,
   "background_override": null,
   "foreground": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.foreground.png",
-  "foreground_sha256": "6b4eaf0f49429981425d998edaf0489d8d1b5a4d42d450e32b69a53f1fd26182",
+  "foreground_sha256": "e84c2ebe0d48b0dd015ddc021cbc0b74ad2a46cf625ac5f048b0f2d966c40fd0",
   "ui_mask": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.ui-mask.png",
   "ui_coverage": 0.6448,
   "imagegen_received_ui_source": false,
@@ -64,5 +64,5 @@
     482
   ],
   "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/06_player_comparison.png",
-  "source_evidence_sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c"
+  "source_evidence_sha256": "405404157a5e2d1148256937467148f93b6939599e95de1e92b29ffc169b48d3"
 }

@@ -1,7 +1,7 @@
 {
   "filename": "01-know-who-leads-the-league.png",
   "path": "fan-first-football-context/01-know-who-leads-the-league.png",
-  "output_sha256": "d9bb66e8e1ed4e2de9586f6b969a7ae6f07a6498a7c1ee42c93802e349521fbc",
+  "output_sha256": "69fd7272286369cfaf5fe61d919ab87d35d48a8196b88c0bb5f759dfe1d1782f",
   "output_size": [
     1320,
     2868
@@ -21,12 +21,12 @@
     "proof": "The literal Stats capture shows qualified quarterbacks ranked by Pass Yds with season, position, stat, and sort controls visible"
   },
   "source": "/Users/jackwallner/football/screenshots/v1.2/raw/01_league_leaders.png",
-  "source_sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae",
+  "source_sha256": "86af86738db80cef8e9ffa493dba619ff395360db0b5e88014bf4274650509b3",
   "background_asset": null,
   "background_asset_sha256": null,
   "background_override": null,
   "foreground": "manifests/fan-first-football-context/01-know-who-leads-the-league.foreground.png",
-  "foreground_sha256": "9f0b6f2c5a9bf813dccd2c5dcea06d4e5c418a000dc051a863ef4e379e683df1",
+  "foreground_sha256": "f9894c322f62d21a1e7bf80a277fd0a563983b3d753aaa247c5f42a9382f5763",
   "ui_mask": "manifests/fan-first-football-context/01-know-who-leads-the-league.ui-mask.png",
   "ui_coverage": 0.6448,
   "imagegen_received_ui_source": false,
@@ -64,5 +64,5 @@
     483
   ],
   "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/01_league_leaders.png",
-  "source_evidence_sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae"
+  "source_evidence_sha256": "86af86738db80cef8e9ffa493dba619ff395360db0b5e88014bf4274650509b3"
 }

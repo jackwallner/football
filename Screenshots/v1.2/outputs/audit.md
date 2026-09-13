@@ -9,10 +9,11 @@ This report combines file-spec checks with an independent thumbnail and OCR pass
 
 ## Warnings
 
-- fan-first-football-context: 01-know-who-leads-the-league.png: thumbnail OCR missed header words ['know', 'who', 'leads', 'the', 'league']
+- fan-first-football-context: 01-know-who-leads-the-league.png: thumbnail OCR missed header words ['know', 'who', 'leads', 'league']
 - fan-first-football-context: 02-know-what-makes-a-player-elite.png: thumbnail OCR missed header words ['know', 'what', 'makes', 'player', 'elite']
 - fan-first-football-context: 04-scout-your-team-in-one-view.png: thumbnail OCR missed header words ['scout', 'your', 'one', 'view']
 - fan-first-football-context: 06-settle-the-debate-side-by-side.png: thumbnail OCR missed header words ['settle', 'the', 'debate', 'side', 'side']
+- fan-first-football-context: 07-see-how-a-season-changed.png: thumbnail OCR missed header words ['see', 'how', 'season', 'changed']
 
 ## Market brief
 

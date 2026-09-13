@@ -1,7 +1,14 @@
 import SwiftUI
 
-/// A compact, plain language boundary between the current football data and
-/// the time the app last checked for a newer publisher revision.
+/// One quiet caption that says what the numbers on screen include and how old
+/// they are, e.g. "Week 1 · 14 games · Updated 2h ago".
+///
+/// It used to be a bordered card with a status icon, two or three lines of copy
+/// and a Refresh button, repeated at the top of every board. That is a lot of
+/// chrome for "your data is fine", which is the answer almost every time. The
+/// caption stays one line; only a real problem (offline, a failed check, games
+/// still missing) earns an icon and colour. Pull to refresh already exists on
+/// every screen that shows it, and tapping the caption does the same.
 struct DataFreshnessView: View {
     @Bindable var viewModel: DashboardViewModel
     /// The shared status currently describes the live regular-season dataset.
@@ -9,26 +16,27 @@ struct DataFreshnessView: View {
     /// coverage label from another set of numbers.
     var season: Int? = nil
     var phase: SeasonPhase? = nil
+    /// Kept for call-site compatibility. The caption itself is the refresh
+    /// control now, so there is no separate button to hide.
     var showRefreshButton = true
 
     private var freshness: DataFreshness? { viewModel.freshnessForDisplay }
+
     private var status: DataFreshnessStatus {
         let raw = viewModel.freshnessStatus
         // Every game is in and only optional enrichment (PFR or Next Gen) is
-        // late. That is a normal mid-week state, so it reads as current data
-        // with a footnote rather than as a problem with a "Try again" button.
+        // late. That is a normal mid-week state, not something to flag.
         if raw == .partial, !isWaitingOnGames { return .ready }
         return raw
     }
+
     private var isWaitingOnGames: Bool {
         guard let coverage = freshness?.coverage,
               let expected = coverage.expectedGames,
               let included = coverage.gamesIncluded else { return false }
         return included < expected
     }
-    private var enrichmentPending: Bool {
-        viewModel.freshnessStatus == .partial && !isWaitingOnGames
-    }
+
     private var isCurrentScope: Bool {
         guard let season else { return true }
         guard season == viewModel.freeSeason else { return false }
@@ -37,176 +45,110 @@ struct DataFreshnessView: View {
     }
 
     var body: some View {
-        Group {
-            if isCurrentScope {
-                freshnessRow
+        if isCurrentScope {
+            // Re-render once a minute so "Updated 4m ago" does not freeze.
+            TimelineView(.periodic(from: .now, by: 60)) { context in
+                caption(now: context.date)
             }
         }
     }
 
-    private var freshnessRow: some View {
-        HStack(alignment: .top, spacing: 9) {
-            Image(systemName: status.iconName)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(iconColor)
-                .frame(width: 18, height: 20)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(primaryText)
-                    .font(GridironType.smallBold)
-                    .foregroundStyle(GridironPalette.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(detailText)
-                    .font(GridironType.micro)
-                    .foregroundStyle(GridironPalette.inkSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if let explanation {
-                    Text(explanation)
-                        .font(GridironType.micro)
-                        .foregroundStyle(GridironPalette.inkTertiary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 1)
+    private func caption(now: Date) -> some View {
+        Button {
+            Task { await viewModel.load() }
+        } label: {
+            HStack(spacing: 5) {
+                if let problemIcon {
+                    Image(systemName: problemIcon)
+                        .font(.system(size: 10, weight: .semibold))
                 }
-            }
-
-            Spacer(minLength: 4)
-
-            if showRefreshButton {
-                Button {
-                    Task { await viewModel.load() }
-                } label: {
-                    if viewModel.isRefreshing {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Text(status == .ready ? "Refresh" : "Try again")
-                            .font(GridironType.micro)
-                    }
+                Text(text(now: now))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                if viewModel.isRefreshing {
+                    ProgressView()
+                        .controlSize(.mini)
                 }
-                .buttonStyle(.bordered)
-                .tint(GridironPalette.turf)
-                .controlSize(.small)
-                .disabled(viewModel.isRefreshing)
-                .accessibilityLabel(viewModel.isRefreshing ? "Checking for new game data" : "Refresh game data")
+                Spacer(minLength: 0)
             }
+            .font(GridironType.micro)
+            .foregroundStyle(problemIcon == nil ? GridironPalette.inkTertiary : GridironPalette.performanceLow)
+            .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, GridironGeo.padInline)
-        .padding(.vertical, 9)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(backgroundColor)
-        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
-        .overlay(
-            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
-                .stroke(GridironPalette.hairline, lineWidth: 0.5)
-        )
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(accessibilityText)
+        .buttonStyle(.plain)
+        .disabled(viewModel.isRefreshing)
+        .accessibilityLabel(accessibilityText(now: now))
+        .accessibilityHint("Checks for new game data")
     }
 
-    private var iconColor: Color {
+    private var problemIcon: String? {
         switch status {
-        case .ready: GridironPalette.performanceHigh
-        case .checking: GridironPalette.linkBlue
-        case .pending, .partial: GridironPalette.inkSecondary
-        case .stale, .offline, .failed: GridironPalette.performanceLow
+        case .offline: "wifi.slash"
+        case .failed: "exclamationmark.triangle.fill"
+        case .stale: "arrow.clockwise"
+        case .ready, .checking, .pending, .partial: nil
         }
     }
 
-    private var backgroundColor: Color {
+    private func text(now: Date) -> String {
         switch status {
-        case .ready: GridironPalette.surface
-        case .checking, .pending, .partial: GridironPalette.surfaceAlt
-        case .stale, .offline, .failed: GridironPalette.surfaceAlt
-        }
-    }
-
-    private var primaryText: String {
-        switch status {
-        case .ready:
-            return coverageText ?? "Player data loaded"
-        case .checking:
-            return "Checking for new game data"
-        case .pending:
-            return "Latest game data is still arriving"
-        case .partial:
-            return "Some game data is still processing"
-        case .stale:
-            return "Showing saved data"
         case .offline:
-            return "You're offline"
+            return "Offline · Showing saved stats"
         case .failed:
-            return "Showing the last complete data"
-        }
-    }
-
-    private var detailText: String {
-        let coverage = coverageText.map { "\($0). " } ?? ""
-        let checked = viewModel.lastCheckedAt.map(relativeDate) ?? "not checked yet"
-        switch status {
-        case .ready:
-            return "Last checked \(checked)"
-        case .checking:
-            return coverage + "Your current numbers stay on screen while we check."
-        case .pending:
-            return coverage + "Last checked \(checked)."
-        case .partial:
-            return coverage + "Last checked \(checked)."
-        case .stale, .offline, .failed:
-            return coverage + "Last checked \(checked)."
-        }
-    }
-
-    private var explanation: String? {
-        switch status {
-        case .pending:
-            return "Advanced stats can take a little time after the final whistle."
-        case .partial:
-            return "We are waiting for complete game coverage before advancing this view."
+            return "Couldn't update · Showing saved stats"
         case .stale:
-            return "A newer update is available, but this screen has not loaded it yet."
-        case .offline:
-            return "Reconnect to check for the latest player stats."
-        case .failed:
-            return "The latest check did not finish. Your saved data is still available."
-        case .ready:
-            return enrichmentPending ? "Some advanced metrics are still arriving." : nil
-        case .checking:
-            return nil
+            return "Newer stats available · Tap to load"
+        case .checking where coverageText == nil:
+            return "Checking for new stats"
+        case .ready, .checking, .pending, .partial:
+            let parts = [coverageText, updatedText(now: now)].compactMap { $0 }
+            return parts.isEmpty ? "Checking for new stats" : parts.joined(separator: " · ")
         }
     }
 
+    /// "Week 1 · 14 games", or "Week 1 · 12 of 14 games in" while a slate is
+    /// still arriving.
     private var coverageText: String? {
         guard let coverage = freshness?.coverage ?? viewModel.dataCoverage else { return nil }
-        let date = coverage.asOf.formatted(DataCoverage.gameDayStyle)
-        let gameCount: String? = {
-            guard let included = coverage.gamesIncluded else { return nil }
-            if let expected = coverage.expectedGames {
-                return "\(included) of \(expected) games"
-            }
-            return "\(included) games"
-        }()
+        var parts: [String] = []
         if let week = coverage.week {
-            let phase = coverage.phase == .playoffs ? " playoffs" : ""
-            let count = gameCount.map { " · \($0)" } ?? ""
-            return "Stats through Week \(week)\(phase)\(count) · \(date)"
+            parts.append(coverage.phase == .playoffs ? "Playoffs week \(week)" : "Week \(week)")
+        } else {
+            parts.append("Through \(coverage.asOf.formatted(DataCoverage.gameDayStyle))")
         }
-        let count = gameCount.map { " · \($0)" } ?? ""
-        return "Stats through\(count) · \(date)"
+        if let included = coverage.gamesIncluded {
+            if let expected = coverage.expectedGames, included < expected {
+                parts.append("\(included) of \(expected) games in")
+            } else {
+                parts.append(included == 1 ? "1 game" : "\(included) games")
+            }
+        }
+        return parts.joined(separator: " · ")
     }
 
-    private var accessibilityText: String {
-        let coverage = coverageText ?? "Coverage unavailable"
-        let checked = viewModel.lastCheckedAt.map(relativeDate) ?? "not checked yet"
-        return "\(status.accessibilityName). \(coverage). Last checked \(checked)."
+    /// When the numbers last changed, which is what a fan means by "updated".
+    /// Falls back to the last check before the first published revision.
+    private func updatedText(now: Date) -> String? {
+        guard let date = freshness?.publishedAt ?? viewModel.lastCheckedAt else { return nil }
+        return "Updated \(Self.shortAge(of: date, now: now))"
     }
 
-    private func relativeDate(_ date: Date) -> String {
-        // A check that just finished can land a few ms in the future and read
-        // "in 0 seconds". Anything under a minute is simply "just now".
-        if abs(date.timeIntervalSinceNow) < 60 { return "just now" }
-        return RelativeDateTimeFormatter().localizedString(for: date, relativeTo: .now)
+    static func shortAge(of date: Date, now: Date = .now) -> String {
+        let seconds = max(0, now.timeIntervalSince(date))
+        switch seconds {
+        case ..<60: return "just now"
+        case ..<3_600: return "\(Int(seconds / 60))m ago"
+        case ..<86_400: return "\(Int(seconds / 3_600))h ago"
+        default: return date.formatted(.dateTime.month(.abbreviated).day())
+        }
+    }
+
+    private func accessibilityText(now: Date) -> String {
+        text(now: now)
+            .replacingOccurrences(of: " · ", with: ", ")
+            .replacingOccurrences(of: "m ago", with: " minutes ago")
+            .replacingOccurrences(of: "h ago", with: " hours ago")
     }
 }
 

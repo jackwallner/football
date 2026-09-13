@@ -12,7 +12,7 @@
         {
           "filename": "01-know-who-leads-the-league.png",
           "path": "fan-first-football-context/01-know-who-leads-the-league.png",
-          "output_sha256": "d9bb66e8e1ed4e2de9586f6b969a7ae6f07a6498a7c1ee42c93802e349521fbc",
+          "output_sha256": "69fd7272286369cfaf5fe61d919ab87d35d48a8196b88c0bb5f759dfe1d1782f",
           "output_size": [
             1320,
             2868
@@ -32,12 +32,12 @@
             "proof": "The literal Stats capture shows qualified quarterbacks ranked by Pass Yds with season, position, stat, and sort controls visible"
           },
           "source": "/Users/jackwallner/football/screenshots/v1.2/raw/01_league_leaders.png",
-          "source_sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae",
+          "source_sha256": "86af86738db80cef8e9ffa493dba619ff395360db0b5e88014bf4274650509b3",
           "background_asset": null,
           "background_asset_sha256": null,
           "background_override": null,
           "foreground": "manifests/fan-first-football-context/01-know-who-leads-the-league.foreground.png",
-          "foreground_sha256": "9f0b6f2c5a9bf813dccd2c5dcea06d4e5c418a000dc051a863ef4e379e683df1",
+          "foreground_sha256": "f9894c322f62d21a1e7bf80a277fd0a563983b3d753aaa247c5f42a9382f5763",
           "ui_mask": "manifests/fan-first-football-context/01-know-who-leads-the-league.ui-mask.png",
           "ui_coverage": 0.6448,
           "imagegen_received_ui_source": false,
@@ -75,13 +75,13 @@
             483
           ],
           "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/01_league_leaders.png",
-          "source_evidence_sha256": "06d75686aa2f90fc7c03d5fd0f52b59aea159e05148beb3ae973aab6330e53ae",
+          "source_evidence_sha256": "86af86738db80cef8e9ffa493dba619ff395360db0b5e88014bf4274650509b3",
           "manifest": "manifests/fan-first-football-context/01-know-who-leads-the-league.json"
         },
         {
           "filename": "02-know-what-makes-a-player-elite.png",
           "path": "fan-first-football-context/02-know-what-makes-a-player-elite.png",
-          "output_sha256": "03f02cdb696066d39a9b73f57d2a8878606acab993c788ef071367cfee4a8447",
+          "output_sha256": "4eda0af4f58f3ced66889da9cbed01afd228a1376720ae92992e5b5b68055489",
           "output_size": [
             1320,
             2868
@@ -101,12 +101,12 @@
             "proof": "The literal profile capture shows grouped percentile bars and named metric values for the fictional Caleb Mercer profile"
           },
           "source": "/Users/jackwallner/football/screenshots/v1.2/raw/02_player_profile.png",
-          "source_sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6",
+          "source_sha256": "9182caee30c9f7dd9769108dbee08829436230dcb1f73a54ea9544abf2045c93",
           "background_asset": null,
           "background_asset_sha256": null,
           "background_override": null,
           "foreground": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.foreground.png",
-          "foreground_sha256": "3d9ebbf0e427b03fae48856e12108a26aa8664c45db707ab558e0fdc7f3807df",
+          "foreground_sha256": "9d496c093cead241e7542f3ef669b6654feea15bf97e645679e030a0d56c5384",
           "ui_mask": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.ui-mask.png",
           "ui_coverage": 0.6448,
           "imagegen_received_ui_source": false,
@@ -144,13 +144,13 @@
             456
           ],
           "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/02_player_profile.png",
-          "source_evidence_sha256": "9700873ca824fa2b9c25b9eecfbe142cf14ab00c09c80a9b5bd67efb3d0477c6",
+          "source_evidence_sha256": "9182caee30c9f7dd9769108dbee08829436230dcb1f73a54ea9544abf2045c93",
           "manifest": "manifests/fan-first-football-context/02-know-what-makes-a-player-elite.json"
         },
         {
           "filename": "03-see-who-is-heating-up-right-now.png",
           "path": "fan-first-football-context/03-see-who-is-heating-up-right-now.png",
-          "output_sha256": "4c8cfc7f7d8fb59f9ec151d70679b999a3b278f71bffb8befa8b566ca6f34079",
+          "output_sha256": "2490e0f96a141ed3f5420faab56480770a2c4e7370c0de348524c101987bfe0d",
           "output_size": [
             1320,
             2868
@@ -170,12 +170,12 @@
             "proof": "The literal Trends capture shows Heating up, a recent window, and quarterback movement through a named NFL week"
           },
           "source": "/Users/jackwallner/football/screenshots/v1.2/raw/03_trends.png",
-          "source_sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d",
+          "source_sha256": "249e3173f9811e89e29960e795d3600061417bc65b84defe1c9fb65c67ff9281",
           "background_asset": null,
           "background_asset_sha256": null,
           "background_override": null,
           "foreground": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.foreground.png",
-          "foreground_sha256": "6b3fc5f74ca741c9198d346e3119361d43edd93aaff26542b4a1520de38d22a0",
+          "foreground_sha256": "98a02ecee5694bc55f7f4a4ec252f46b3530f0087ea48edba98d9de413b7fb12",
           "ui_mask": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.ui-mask.png",
           "ui_coverage": 0.6448,
           "imagegen_received_ui_source": false,
@@ -213,13 +213,13 @@
             456
           ],
           "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/03_trends.png",
-          "source_evidence_sha256": "eee9dd619c0c5e39718a3fd26785c1df2fc07085ef011b1a5af9e4e215fb5c2d",
+          "source_evidence_sha256": "249e3173f9811e89e29960e795d3600061417bc65b84defe1c9fb65c67ff9281",
           "manifest": "manifests/fan-first-football-context/03-see-who-is-heating-up-right-now.json"
         },
         {
           "filename": "04-scout-your-team-in-one-view.png",
           "path": "fan-first-football-context/04-scout-your-team-in-one-view.png",
-          "output_sha256": "d3ed595f9e6d54a3f010e9154515d65ec0ee1302f62f52f06ccafe0ccf6cc3ad",
+          "output_sha256": "6c8a125ce14794b09ff9f0714cdba561529aeefeb413950721b3ac96a0f06460",
           "output_size": [
             1320,
             2868
@@ -239,12 +239,12 @@
             "proof": "The literal Chiefs team capture shows the selected franchise, team context, and the app's Advanced, Standard, and Roster paths"
           },
           "source": "/Users/jackwallner/football/screenshots/v1.2/raw/04_team.png",
-          "source_sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee",
+          "source_sha256": "548e7c81b06cb9803be2762f1d082414514635b0e5bada58a82c19b7cc552dba",
           "background_asset": null,
           "background_asset_sha256": null,
           "background_override": null,
           "foreground": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.foreground.png",
-          "foreground_sha256": "cfbdbcbb05320df52791d5ddebb0595a2bbe2e05f03de017beeffb799bf02b13",
+          "foreground_sha256": "03b28ac131e22c40e0d9f7d0b91abcf8d3b20d52e017884c2adead04d96109af",
           "ui_mask": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.ui-mask.png",
           "ui_coverage": 0.6448,
           "imagegen_received_ui_source": false,
@@ -282,13 +282,13 @@
             451
           ],
           "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/04_team.png",
-          "source_evidence_sha256": "184be8c31f6a87a39a1f7a128079f57bd3ee5abd7f9de1409a7dbf42075c8aee",
+          "source_evidence_sha256": "548e7c81b06cb9803be2762f1d082414514635b0e5bada58a82c19b7cc552dba",
           "manifest": "manifests/fan-first-football-context/04-scout-your-team-in-one-view.json"
         },
         {
           "filename": "05-keep-your-players-one-tap-away.png",
           "path": "fan-first-football-context/05-keep-your-players-one-tap-away.png",
-          "output_sha256": "a2102bb45759ff00b6c747ceac74deb3d8ccefa25b776843a0406bcbd8f08efc",
+          "output_sha256": "88444d3278d924d0f926dd40a2e9abcbb18d6fec5a7f41f0d83abd0fc6879537",
           "output_size": [
             1320,
             2868
@@ -308,12 +308,12 @@
             "proof": "The literal Following capture shows the favorite Chiefs shortcut and three followed fictional players with production summaries"
           },
           "source": "/Users/jackwallner/football/screenshots/v1.2/raw/05_following.png",
-          "source_sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3",
+          "source_sha256": "578d618f1c9a4b6bd9614c7a78593960060c604ea4ef85ba607ab665a8a02c3e",
           "background_asset": null,
           "background_asset_sha256": null,
           "background_override": null,
           "foreground": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.foreground.png",
-          "foreground_sha256": "5949e073570a057c05eee3b7f4e9829a1f3e977202b6e72790b45343ab21c268",
+          "foreground_sha256": "f1615a08f4bc025a3412f551cd2a5c9cb313b4facbee02877ef80c5a9a5c8fef",
           "ui_mask": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.ui-mask.png",
           "ui_coverage": 0.6448,
           "imagegen_received_ui_source": false,
@@ -351,13 +351,13 @@
             465
           ],
           "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/05_following.png",
-          "source_evidence_sha256": "a2e2bdaebf09c060696f91f0a0442434d36905dd5fce75383f05fd9c3da4d5f3",
+          "source_evidence_sha256": "578d618f1c9a4b6bd9614c7a78593960060c604ea4ef85ba607ab665a8a02c3e",
           "manifest": "manifests/fan-first-football-context/05-keep-your-players-one-tap-away.json"
         },
         {
           "filename": "06-settle-the-debate-side-by-side.png",
           "path": "fan-first-football-context/06-settle-the-debate-side-by-side.png",
-          "output_sha256": "9061e6a55acb91eb2ee7958e24730e552dd1b40ae51b279d5c4afa09472824ea",
+          "output_sha256": "055af770efb33636f3ccb4ef294869946ca02a9f3954e5109efb9c486d6cbc7b",
           "output_size": [
             1320,
             2868
@@ -377,12 +377,12 @@
             "proof": "The literal comparison capture places Caleb Mercer and Mason Reed in parallel cards with aligned season totals"
           },
           "source": "/Users/jackwallner/football/screenshots/v1.2/raw/06_player_comparison.png",
-          "source_sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c",
+          "source_sha256": "405404157a5e2d1148256937467148f93b6939599e95de1e92b29ffc169b48d3",
           "background_asset": null,
           "background_asset_sha256": null,
           "background_override": null,
           "foreground": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.foreground.png",
-          "foreground_sha256": "6b4eaf0f49429981425d998edaf0489d8d1b5a4d42d450e32b69a53f1fd26182",
+          "foreground_sha256": "e84c2ebe0d48b0dd015ddc021cbc0b74ad2a46cf625ac5f048b0f2d966c40fd0",
           "ui_mask": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.ui-mask.png",
           "ui_coverage": 0.6448,
           "imagegen_received_ui_source": false,
@@ -420,13 +420,13 @@
             482
           ],
           "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/06_player_comparison.png",
-          "source_evidence_sha256": "557c8e53fc065850ed9112a8dbbabc8fa8d2ba60fe7314e4360fe93204f14a0c",
+          "source_evidence_sha256": "405404157a5e2d1148256937467148f93b6939599e95de1e92b29ffc169b48d3",
           "manifest": "manifests/fan-first-football-context/06-settle-the-debate-side-by-side.json"
         },
         {
           "filename": "07-see-how-a-season-changed.png",
           "path": "fan-first-football-context/07-see-how-a-season-changed.png",
-          "output_sha256": "c41a0940c175a1ce5b97d11980f882a1971c73da2a8d6fa5d50beea520a1b44e",
+          "output_sha256": "b27a30dddce27bbe7b046a29a20d6246f49b5509c2a3f61685eeac714455d141",
           "output_size": [
             1320,
             2868
@@ -446,12 +446,12 @@
             "proof": "The literal year comparison capture shows two available fictional seasons with aligned standard totals and winning-year cues"
           },
           "source": "/Users/jackwallner/football/screenshots/v1.2/raw/07_year_history.png",
-          "source_sha256": "8fcd21e0c023f0c84b0069ddcb0a01fece6086b5737693ba12191dd8224378e2",
+          "source_sha256": "e9e84961abcd2f6a229e4112d763270f0c8d2f6623964e4e87d974d471803631",
           "background_asset": null,
           "background_asset_sha256": null,
           "background_override": null,
           "foreground": "manifests/fan-first-football-context/07-see-how-a-season-changed.foreground.png",
-          "foreground_sha256": "9d1847b3cb22675baa96e5ff03aea2e964c29fda5c2b173cb380fba4e219f565",
+          "foreground_sha256": "c747732b80d6cb1a832160162f92e024060b2560c443e6520c59aad273c48762",
           "ui_mask": "manifests/fan-first-football-context/07-see-how-a-season-changed.ui-mask.png",
           "ui_coverage": 0.6448,
           "imagegen_received_ui_source": false,
@@ -489,7 +489,7 @@
             483
           ],
           "source_evidence": "/Users/jackwallner/football/screenshots/v1.2/raw/07_year_history.png",
-          "source_evidence_sha256": "8fcd21e0c023f0c84b0069ddcb0a01fece6086b5737693ba12191dd8224378e2",
+          "source_evidence_sha256": "e9e84961abcd2f6a229e4112d763270f0c8d2f6623964e4e87d974d471803631",
           "manifest": "manifests/fan-first-football-context/07-see-how-a-season-changed.json"
         }
       ]

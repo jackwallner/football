@@ -468,6 +468,7 @@ struct PlayerProfileDestination: ViewModifier {
                             seasonPhase: phase
                         )
                     },
+                    freshnessViewModel: viewModel,
                     comparisonCatalog: ComparisonCatalog(
                         viewModel: viewModel,
                         defaultPhase: profilePhase
