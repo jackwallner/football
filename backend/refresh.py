@@ -15,6 +15,8 @@ with the existing app schema.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import logging
 import os
 import sys
@@ -292,6 +294,50 @@ def build_candidate(season: int, *, now: datetime | None = None) -> Candidate:
     )
 
 
+# Build-time stamps differ on every run even when no stat changed.
+VOLATILE_ROW_KEYS = frozenset({"updated_at", "refresh_id", "source_published_at", "published_at"})
+
+
+def content_hash(candidate: Candidate) -> str:
+    """Hash the serving output, ignoring build timestamps.
+
+    Two builds of identical football produce the same hash, so a source
+    re-upload that changes no stat can be recorded without republishing.
+    """
+    digest = hashlib.sha256()
+    for label, rows in (
+        ("snapshots", candidate.snapshots),
+        ("game_logs", candidate.game_logs),
+        ("recent_form", candidate.recent_form),
+    ):
+        normalized = sorted(
+            json.dumps(
+                {k: v for k, v in row.items() if k not in VOLATILE_ROW_KEYS},
+                sort_keys=True,
+                separators=(",", ":"),
+                default=str,
+            )
+            for row in rows
+        )
+        digest.update(label.encode())
+        for line in normalized:
+            digest.update(line.encode())
+            digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def _live_content_hash(client: Any) -> str | None:
+    response = (
+        client.table("data_refresh_state")
+        .select("last_success_content_hash")
+        .eq("singleton", True)
+        .limit(1)
+        .execute()
+    )
+    rows = getattr(response, "data", None) or []
+    return rows[0].get("last_success_content_hash") if rows else None
+
+
 def _client():
     url = os.environ.get("SUPABASE_URL", "").strip()
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
@@ -354,6 +400,15 @@ def publish(refresh_id: str, *, season: int | None = None, now: datetime | None 
         source_after = probe_sources(target_season)
         if not source_after.ready or source_after.fingerprint != source_before.fingerprint:
             raise CandidateNotReady("Source changed during the build; keeping the live revision")
+        output_hash = content_hash(candidate)
+        if output_hash == _live_content_hash(client):
+            result = _rpc(
+                client,
+                "mark_data_refresh_unchanged",
+                {"p_refresh_id": refresh_id, "p_content_hash": output_hash},
+            )
+            logger.info("Source re-upload changed no stats; live revision kept: %s", result)
+            return result
         snapshot_count = _stage_rows(client, STAGE_TABLES[0], refresh_id, candidate.snapshots)
         log_count = _stage_rows(client, STAGE_TABLES[1], refresh_id, candidate.game_logs)
         recent_count = _stage_rows(client, STAGE_TABLES[2], refresh_id, candidate.recent_form)
@@ -374,6 +429,9 @@ def publish(refresh_id: str, *, season: int | None = None, now: datetime | None 
                 "p_pfr_status": candidate.pfr_status,
             },
         )
+        client.table("data_refresh_runs").update({"content_hash": output_hash}).eq(
+            "refresh_id", refresh_id
+        ).execute()
         result = _rpc(client, "publish_data_refresh", {"p_refresh_id": refresh_id})
         if not isinstance(result, dict) or result.get("status") not in ("published", "degraded"):
             raise RuntimeError(f"atomic publish rejected refresh {refresh_id}: {result}")

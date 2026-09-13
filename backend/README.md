@@ -61,6 +61,10 @@ The production path is `backend/source_probe.py` followed by
    identities, then swaps the requested season phases in one transaction. A
    failure leaves the prior serving rows in place. Successful staging payloads
    are removed immediately; run manifests are retained for bounded diagnostics.
+5. Before staging, the builder hashes its output without build timestamps. If
+   the hash matches the live revision, `mark_data_refresh_unchanged` records
+   the new source generation as handled and leaves rows, `refresh_id`, and
+   `published_at` alone, so `published_at` means "the stats last changed".
 
 The workflow is serialized with `cancel-in-progress: false`. A manual force
 run is available when a source correction does not change release metadata:

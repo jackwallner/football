@@ -62,3 +62,30 @@ def test_candidate_key_validation_rejects_duplicate_rows():
     _validate_unique(rows, ("id", "season", "season_type"), "snapshots")
     with pytest.raises(RuntimeError, match="duplicate key"):
         _validate_unique(rows * 2, ("id", "season", "season_type"), "snapshots")
+
+
+def _candidate(stamp: str, passing_yards: int = 205):
+    from refresh import Candidate, Coverage
+
+    return Candidate(
+        season=2026,
+        season_types=("REG",),
+        snapshots=({"id": 1, "season": 2026, "updated_at": stamp, "standard_stats": [{"label": "Pass Yds", "value": passing_yards}]},),
+        game_logs=({"player_id": 1, "game_date": "2026-09-10", "updated_at": stamp},),
+        recent_form=({"player_id": 1, "window_weeks": 3, "updated_at": stamp},),
+        coverage=Coverage(1, "2026-09-10", 2, 2, "complete"),
+        ngs_status="ready",
+        pfr_status="pending",
+    )
+
+
+def test_content_hash_ignores_build_timestamps():
+    from refresh import content_hash
+
+    assert content_hash(_candidate("2026-09-13T10:00:00Z")) == content_hash(_candidate("2026-09-13T17:49:00Z"))
+
+
+def test_content_hash_changes_with_a_stat():
+    from refresh import content_hash
+
+    assert content_hash(_candidate("x", 205)) != content_hash(_candidate("x", 206))
