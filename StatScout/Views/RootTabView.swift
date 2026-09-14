@@ -138,7 +138,7 @@ struct RootTabView: View {
     }
 
     private enum Tab: Int, CaseIterable, Identifiable {
-        case stats, trends, teams, compare
+        case games, stats, trends, teams, compare
 
         var id: Int { rawValue }
 
@@ -160,6 +160,7 @@ struct RootTabView: View {
 
         var title: String {
             switch self {
+            case .games: return "Games"
             case .stats: return "Stats"
             case .trends: return "Trends"
             case .teams: return "Teams"
@@ -169,6 +170,7 @@ struct RootTabView: View {
 
         var icon: String {
             switch self {
+            case .games: return "sportscourt.fill"
             case .stats: return "chart.bar.fill"
             case .trends: return "flame.fill"
             case .teams: return "shield.lefthalf.filled"
@@ -180,6 +182,7 @@ struct RootTabView: View {
     @ViewBuilder
     private func tabContent(_ tab: Tab) -> some View {
         switch tab {
+        case .games: gamesTab
         case .stats: statsTab
         case .trends: trendsTab
         case .teams: teamsTab
@@ -207,6 +210,20 @@ struct RootTabView: View {
         .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
         .shadow(color: .black.opacity(0.10), radius: 12, y: 4)
         .padding(.bottom, 12)
+    }
+
+    private var gamesTab: some View {
+        NavigationStack {
+            GamesView(
+                viewModel: viewModel,
+                isActive: selection == Tab.games.rawValue
+            )
+                .navigationTitle("Games · \(String(viewModel.freeSeason))")
+                .navigationBarTitleDisplayMode(.inline)
+                .modifier(GridironNavBar())
+                .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated, dataCoverage: viewModel.dataCoverage))
+                .modifier(StandardDestinations(viewModel: viewModel))
+        }
     }
 
     private var statsTab: some View {
@@ -277,9 +294,11 @@ private struct TabBarButton: View {
                     .font(.system(size: 20, weight: .semibold))
                 Text(label)
                     .font(GridironType.smallBold)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .foregroundStyle(isSelected ? GridironPalette.turf : GridironPalette.inkSecondary)
-            .frame(width: 78, height: 52)
+            .frame(width: 68, height: 52)
             .background(
                 isSelected ? GridironPalette.turf.opacity(0.12) : .clear,
                 in: Capsule()
@@ -474,6 +493,10 @@ struct PlayerProfileDestination: ViewModifier {
                         defaultPhase: profilePhase
                     )
                 )
+                    .modifier(GridironNavBar())
+            }
+            .navigationDestination(for: GameRoute.self) { route in
+                GameDetailView(viewModel: viewModel, gameId: route.gameId)
                     .modifier(GridironNavBar())
             }
     }

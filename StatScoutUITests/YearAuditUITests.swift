@@ -16,7 +16,7 @@ final class YearAuditUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments += ["-hasCompletedOnboarding", "YES"]
+        app.launchArguments += ["-hasCompletedOnboarding", "YES", "-StartTab", "stats"]
         // Pro, because the premise is "every season the menu offers draws a
         // board" and a free user can reach exactly one of them. Without this the
         // "at least two seasons" assertion below is unsatisfiable by design, and
