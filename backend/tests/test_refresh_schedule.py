@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta, timezone
 
-from refresh_schedule import Game, decide, kickoff_utc, parse_games_csv
+from refresh_schedule import Game, decide, kickoff_utc, next_check_at, parse_games_csv
 
 UTC = timezone.utc
 KICKOFF = datetime(2026, 9, 13, 17, 0, tzinfo=UTC)  # 1:00 PM EDT
@@ -93,3 +93,20 @@ def test_empty_schedule_syncs_immediately_and_force_wins():
 def test_cron_delay_tolerance():
     now = KICKOFF + timedelta(hours=4)
     assert run(now, [game()], last_probe=now - timedelta(minutes=12)).probe
+
+
+def test_next_check_lands_on_the_post_game_window():
+    now = KICKOFF + timedelta(hours=1)
+    at = next_check_at(now=now, games=[game()], games_with_stats=set(), last_probe_at=now, last_sync_at=now)
+    # In progress: the schedule re-syncs in 15 minutes for the final score.
+    assert at - now <= timedelta(minutes=15)
+    at = next_check_at(now=now, games=[game(away=1, home=2)], games_with_stats={"2026_01_BUF_HOU"},
+                       last_probe_at=now, last_sync_at=now)
+    assert KICKOFF + timedelta(hours=3, minutes=30) <= at <= KICKOFF + timedelta(hours=3, minutes=35)
+
+
+def test_next_check_is_daily_when_quiet():
+    now = KICKOFF + timedelta(days=6)
+    at = next_check_at(now=now, games=[game(away=1, home=2)], games_with_stats={"2026_01_BUF_HOU"},
+                       last_probe_at=now, last_sync_at=now)
+    assert timedelta(hours=19) <= at - now <= timedelta(hours=20)
