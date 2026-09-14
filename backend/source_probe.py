@@ -190,6 +190,15 @@ def current_asset_specs(season: int) -> tuple[AssetSpec, ...]:
             required=True,
         ),
     ]
+    # Play-by-play feeds the advanced game pages (ingest_game_details.py).
+    # Optional: a late pbp upload must not hold back the core player feed.
+    specs.append(
+        AssetSpec(
+            name="pbp",
+            tag="pbp",
+            filename=f"play_by_play_{season}.parquet",
+        )
+    )
     if season >= 2016:
         specs.extend(
             AssetSpec(

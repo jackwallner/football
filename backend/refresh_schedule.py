@@ -109,6 +109,7 @@ class Decision:
     probe_reason: str
     sync_games: bool
     sync_reason: str
+    next_check_at: Optional[datetime] = None
 
 
 def resolve_season(now: datetime) -> int:
@@ -274,6 +275,35 @@ def decide(
     )
 
 
+STEP = timedelta(minutes=5)
+HORIZON = timedelta(hours=24)
+
+
+def next_check_at(
+    *,
+    now: datetime,
+    games: list[Game],
+    games_with_stats: set[str],
+    last_probe_at: Optional[datetime],
+    last_sync_at: Optional[datetime],
+) -> datetime:
+    """The first moment after ``now`` when a probe or a schedule sync is due.
+
+    GitHub drops scheduled runs under load (on 2026-09-13 none fired for five
+    hours, so Sunday night's stats sat unpublished). The workflow therefore
+    schedules its own next run from this answer instead of trusting cron.
+    Callers pass ``last_*`` as ``now`` for anything that ran this time.
+    """
+    t = now + STEP
+    while t <= now + HORIZON:
+        _, probe_every = probe_cadence(games, t, games_with_stats)
+        _, sync_every = sync_cadence(games, t)
+        if _due(last_probe_at, t, probe_every) or _due(last_sync_at, t, sync_every):
+            return t
+        t += STEP
+    return now + HORIZON
+
+
 # ---------------------------------------------------------------------------
 # Network
 
@@ -372,11 +402,13 @@ def run(now: datetime, *, force: bool, dry_run: bool) -> Decision:
         last_sync_at=db.last_sync_at(),
         force=force,
     )
+    last_sync_at = db.last_sync_at()
     if decision.sync_games:
         games = parse_games_csv(fetch_games_csv(), seasons)
         if not dry_run:
             db.upsert_games([g.as_row(now) for g in games])
         logger.info("Synced %d games (%s)", len(games), decision.sync_reason)
+        last_sync_at = now
         # A score that just landed can shorten the probe cadence.
         decision = decide(
             now=now,
@@ -386,7 +418,15 @@ def run(now: datetime, *, force: bool, dry_run: bool) -> Decision:
             last_sync_at=now,
             force=force,
         )
-    return decision
+    with_stats = db.games_with_stats(recent_game_ids(games, now))
+    upcoming = next_check_at(
+        now=now,
+        games=games,
+        games_with_stats=with_stats,
+        last_probe_at=now if decision.probe else db.last_probe_at(),
+        last_sync_at=last_sync_at,
+    )
+    return Decision(decision.probe, decision.probe_reason, decision.sync_games, decision.sync_reason, upcoming)
 
 
 def main() -> int:
@@ -402,13 +442,15 @@ def main() -> int:
         decision = run(now, force=args.force, dry_run=args.dry_run)
     except Exception:  # noqa: BLE001 - never let the planner block a probe
         logger.exception("Schedule planner failed; probing anyway")
-        decision = Decision(True, "planner error", False, "planner error")
+        decision = Decision(True, "planner error", False, "planner error", now + timedelta(minutes=30))
 
-    logger.info("probe=%s (%s)", decision.probe, decision.probe_reason)
+    wait = int(((decision.next_check_at or now + timedelta(minutes=30)) - now).total_seconds())
+    logger.info("probe=%s (%s); next check in %dm", decision.probe, decision.probe_reason, wait // 60)
     if args.github_output:
         with open(args.github_output, "a", encoding="utf-8") as output:
             output.write(f"probe={str(decision.probe).lower()}\n")
             output.write(f"reason={decision.probe_reason}\n")
+            output.write(f"wait_seconds={max(60, wait)}\n")
     return 0
 
 
