@@ -84,12 +84,14 @@ enum GridironType {
     static let smallBold    = Font.system(.caption, design: .default, weight: .semibold)
     static let micro        = Font.system(.caption2, design: .default, weight: .semibold)
 
-    // Monospacing is reserved for values and ranks so numeric columns remain
-    // stable while every word uses the same SF Pro hierarchy above.
-    static let statHero  = Font.system(.title, design: .monospaced, weight: .bold).monospacedDigit()
-    static let statLarge = Font.system(.title3, design: .monospaced, weight: .bold).monospacedDigit()
-    static let statMed   = Font.system(.subheadline, design: .monospaced, weight: .semibold).monospacedDigit()
-    static let statSmall = Font.system(.caption, design: .monospaced, weight: .medium).monospacedDigit()
+    // Values and ranks are SF Pro too, with tabular digits so columns still
+    // line up. They used to be SF Mono, which put a second typeface on every
+    // row: a name in SF Pro beside a number in Mono, and the few titles that
+    // borrowed a stat style ("Full Player Scouting") read as code.
+    static let statHero  = Font.system(.title, design: .default, weight: .bold).monospacedDigit()
+    static let statLarge = Font.system(.title3, design: .default, weight: .bold).monospacedDigit()
+    static let statMed   = Font.system(.subheadline, design: .default, weight: .semibold).monospacedDigit()
+    static let statSmall = Font.system(.caption, design: .default, weight: .medium).monospacedDigit()
 }
 
 enum GridironGeo {

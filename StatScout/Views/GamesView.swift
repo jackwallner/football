@@ -146,7 +146,9 @@ struct GamesView: View {
                 .padding(.top, 12)
         }
 
-        Text("Scores post when each game goes final. Player stats usually follow within two hours.")
+        Text(favorites.team == nil
+             ? "Scores post when each game goes final, stats within about two hours. Follow a team from its page to pin its game here."
+             : "Scores post when each game goes final. Player stats usually follow within two hours.")
             .font(GridironType.micro)
             .foregroundStyle(GridironPalette.inkTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -303,7 +305,7 @@ struct GameRow: View {
         case .inProgress, .awaitingScore:
             return "\(away) at \(home), in progress"
         case .upcoming:
-            return "\(away) at \(home), \(game.dayLabel) \(game.kickoffLabel)"
+            return "\(away) at \(home), \(game.dayLabel) at \(game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "time TBD")"
         }
     }
 }

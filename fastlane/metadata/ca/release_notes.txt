@@ -1,4 +1,5 @@
 Fet per al dia de partit.
+• Nova pestanya Games: resultats, calendari i estadístiques de cada partit, amb anàlisi avançada d'EPA.
 • Stats s'obre amb líders coneguts com les iardes de passada, i els rànquings avançats són a un toc.
 • Nova vista Following: el teu equip i els teus jugadors preferits en un sol lloc, gratis.
 • Cerca a tota la classificació sense perdre la posició de cada jugador a la lliga.

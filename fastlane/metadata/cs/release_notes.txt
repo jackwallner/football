@@ -1,4 +1,5 @@
 Vytvořeno pro zápasový den.
+• Nová karta Games: výsledky, rozpis a statistiky každého zápasu s pokročilým rozborem EPA.
 • Stats začíná známými žebříčky, jako jsou přihrané yardy, a pokročilé žebříčky jsou na jedno klepnutí.
 • Nové zobrazení Following: váš tým a oblíbení hráči na jednom místě, zdarma.
 • Prohledávejte celý žebříček, aniž by hráč ztratil své pořadí v lize.

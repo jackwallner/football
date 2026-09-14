@@ -140,7 +140,7 @@ struct MetricBar: View {
                             .frame(width: circleSize, height: circleSize)
 
                         Text("\(percentileValue)")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .font(.system(size: 11, weight: .bold).monospacedDigit())
                             .monospacedDigit()
                             .foregroundStyle(.white)
                             .shadow(color: Color.black.opacity(0.35), radius: 1, x: 0, y: 0.5)

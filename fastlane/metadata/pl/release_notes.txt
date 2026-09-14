@@ -1,4 +1,5 @@
 Stworzone na dzień meczowy.
+• Nowa karta Games: wyniki, terminarz i statystyki każdego meczu z zaawansowaną analizą EPA.
 • Stats otwiera się znanymi rankingami, takimi jak jardy podań, a zaawansowane rankingi są o jedno stuknięcie.
 • Nowy widok Following: Twoja drużyna i ulubieni zawodnicy w jednym miejscu, za darmo.
 • Przeszukuj całą tabelę bez utraty miejsca zawodnika w lidze.

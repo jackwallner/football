@@ -1,4 +1,5 @@
 Feito para o dia de jogo.
+• Nova aba Games: placares, calendário e box score de cada jogo, com análise avançada de EPA.
 • Stats abre com líderes conhecidos, como jardas de passe, e os rankings avançados ficam a um toque.
 • Nova tela Following: seu time e seus jogadores favoritos em um só lugar, de graça.
 • Pesquise a classificação inteira sem perder a posição de cada jogador na liga.

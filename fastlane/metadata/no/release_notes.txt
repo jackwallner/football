@@ -1,4 +1,5 @@
 Laget for kampdagen.
+• Ny Games-fane: resultater, terminliste og statistikk for hver kamp, med avansert EPA-analyse.
 • Stats åpner med kjente ledere som pasningsyards, og avanserte rangeringer er ett trykk unna.
 • Ny Following-visning samler laget ditt og favorittspillerne dine på ett sted, gratis.
 • Søk i hele listen uten at spilleren mister plasseringen sin i ligaen.

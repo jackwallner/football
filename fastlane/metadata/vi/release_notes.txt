@@ -1,4 +1,5 @@
 Được làm cho ngày thi đấu.
+• Thẻ Games mới: tỷ số, lịch thi đấu và thống kê mọi trận, kèm phân tích EPA nâng cao.
 • Stats mở với bảng dẫn đầu quen thuộc như số yard chuyền, còn bảng xếp hạng nâng cao chỉ cách một chạm.
 • Chế độ xem Following mới gom đội và cầu thủ yêu thích của bạn vào một nơi, miễn phí.
 • Tìm kiếm trên toàn bảng mà không làm mất thứ hạng giải đấu của cầu thủ.

@@ -138,7 +138,7 @@ struct RootTabView: View {
     }
 
     private enum Tab: Int, CaseIterable, Identifiable {
-        case games, stats, trends, teams, compare
+        case stats, games, trends, teams, compare
 
         var id: Int { rawValue }
 
@@ -497,6 +497,10 @@ struct PlayerProfileDestination: ViewModifier {
             }
             .navigationDestination(for: GameRoute.self) { route in
                 GameDetailView(viewModel: viewModel, gameId: route.gameId)
+                    .modifier(GridironNavBar())
+            }
+            .navigationDestination(for: TeamScheduleRoute.self) { route in
+                TeamScheduleView(viewModel: viewModel, team: route.team)
                     .modifier(GridironNavBar())
             }
     }

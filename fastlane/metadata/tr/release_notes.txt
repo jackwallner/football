@@ -1,4 +1,5 @@
 Maç günü için tasarlandı.
+• Yeni Games sekmesi: her maçın skoru, fikstürü ve istatistikleri, gelişmiş EPA analiziyle.
 • Stats, pas yardı gibi tanıdık liderlerle açılır; gelişmiş sıralamalar bir dokunuş uzağınızda.
 • Yeni Following görünümü takımınızı ve favori oyuncularınızı ücretsiz olarak tek yerde toplar.
 • Oyuncunun lig sırasını kaybetmeden tüm liderlik tablosunda arama yapın.

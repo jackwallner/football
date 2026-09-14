@@ -1,4 +1,5 @@
 Tehty ottelupäivää varten.
+• Uusi Games-välilehti: tulokset, otteluohjelma ja tilastot jokaisesta ottelusta sekä edistynyt EPA-analyysi.
 • Stats avautuu tutuilla kärkilistoilla, kuten syöttöjaardeilla, ja edistyneet rankingit ovat yhden napautuksen päässä.
 • Uusi Following-näkymä kokoaa joukkueesi ja suosikkipelaajasi yhteen paikkaan, ilmaiseksi.
 • Hae koko listalta niin, että pelaajan sijoitus liigassa säilyy.

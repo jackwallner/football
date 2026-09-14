@@ -1,4 +1,5 @@
 Conçu pour les jours de match.
+• Nouvel onglet Games : pointages, calendrier et statistiques de chaque match, avec analyse EPA avancée.
 • Stats s'ouvre sur des meneurs familiers comme les verges par la passe, et les classements avancés sont à un toucher.
 • Nouvelle vue Following : ton équipe et tes joueurs favoris au même endroit, gratuitement.
 • Recherche dans tout le classement sans perdre le rang d'un joueur dans la ligue.

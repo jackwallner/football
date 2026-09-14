@@ -1,4 +1,5 @@
 Creat pentru ziua meciului.
+• Filă nouă Games: scoruri, program și statistici pentru fiecare meci, cu analiză EPA avansată.
 • Stats se deschide cu clasamente cunoscute, precum yarzii din pase, iar clasamentele avansate sunt la o atingere.
 • Noua vizualizare Following: echipa ta și jucătorii preferați într-un singur loc, gratuit.
 • Caută în tot clasamentul fără ca jucătorul să își piardă locul în ligă.

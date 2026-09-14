@@ -28,7 +28,7 @@ final class SeasonPickerUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments += ["-hasCompletedOnboarding", "YES", "-StartTab", "stats"]
+        app.launchArguments += ["-hasCompletedOnboarding", "YES"]
         app.launch()
     }
 

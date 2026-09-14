@@ -1,4 +1,5 @@
 Dibuat untuk hari pertandingan.
+• Tab Games baru: skor, jadwal, dan box score setiap pertandingan, dengan analisis EPA lanjutan.
 • Stats dibuka dengan pemimpin yang familier seperti passing yards, dan peringkat lanjutan cukup satu ketukan.
 • Tampilan Following baru menyatukan tim dan pemain favoritmu di satu tempat, gratis.
 • Cari di seluruh papan peringkat tanpa kehilangan peringkat liga pemain.
