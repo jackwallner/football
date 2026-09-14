@@ -2,11 +2,13 @@ name: Nightly NFL Refresh
 
 on:
   schedule:
-    # GitHub schedule dispatch is best effort.  The durable source fingerprint
-    # and the daily safety pass make a delayed dispatch converge on the next
-    # check.  The first schedule covers the active NFL months; the second is a
-    # cheap offseason safety check.
-    - cron: "*/30 * * 9-12,1-2 *"
+    # GitHub schedule dispatch is best effort.  In season the workflow fires
+    # every 15 minutes, and backend/refresh_schedule.py turns most firings into
+    # a no-op: it reads kickoff times from the games table and only lets the
+    # source probe run in post-game windows, while a final score is still
+    # missing its stats, during enrichment days, and once a day as a safety
+    # check.  The second schedule is the offseason daily check.
+    - cron: "*/15 * * 9-12,1-2 *"
     - cron: "0 10 * 3-8 *"
   workflow_dispatch:
     inputs:
@@ -53,12 +55,32 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # Stdlib only, on the runner's own python3, so a skipped firing costs a
+      # checkout and a few small requests.  It also keeps the games table
+      # (schedule and final scores) in sync for the app's Games tab.
+      - name: Plan from the NFL schedule
+        id: plan
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STATCAST_SEASON: ${{ vars.STATCAST_SEASON }}
+          FORCE_REFRESH: ${{ github.event_name != 'schedule' }}
+        run: |
+          args=()
+          if [ "$FORCE_REFRESH" = "true" ]; then
+            args+=(--force)
+          fi
+          python3 backend/refresh_schedule.py --github-output "$GITHUB_OUTPUT" "${args[@]}"
+
       - name: Set up Python
+        if: steps.plan.outputs.probe == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Probe nflverse source generations
+        if: steps.plan.outputs.probe == 'true'
         id: source-probe
         shell: bash
         env:
