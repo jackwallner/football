@@ -10,7 +10,7 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         app = XCUIApplication()
         // Without this every test in this file lands on the onboarding pager
         // rather than the board it means to exercise.
-        app.launchArguments += ["-hasCompletedOnboarding", "YES", "-StartTab", "stats"]
+        app.launchArguments += ["-hasCompletedOnboarding", "YES"]
         // Every test opens a profile, and the second open of any run shows the
         // free-tier pitch sheet over the toolbar. Pin the counter so each launch
         // sees a first visit.

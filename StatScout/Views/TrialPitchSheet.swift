@@ -32,6 +32,18 @@ struct TrialPitchSheet: View {
     /// were the ones nobody scrolled to.
     private var benefits: [Benefit] {
         switch trigger {
+        case .advancedBoxScore:
+            return [
+                Benefit(icon: "sportscourt.fill",
+                        title: "Advanced box scores",
+                        detail: "EPA, CPOE and RYOE for every player, every game."),
+                Benefit(icon: "flame.fill",
+                        title: "The Trends board",
+                        detail: "The whole league ranked by who's moving, right now."),
+                Benefit(icon: "chart.bar.fill",
+                        title: "Recent form everywhere",
+                        detail: "Last 3 / 5 / 8 games on any player, team or board.")
+            ]
         case .playerScouting, .recentForm, .upgrade, .onboarding, .activation, .bestWorst:
             return [
                 Benefit(icon: "flame.fill",
@@ -132,7 +144,7 @@ struct TrialPitchSheet: View {
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(GridironPalette.turf)
                 Text(trigger.title)
-                    .font(GridironType.statLarge)
+                    .font(GridironType.pageTitle)
                     .foregroundStyle(GridironPalette.ink)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)

@@ -27,6 +27,8 @@ enum PaywallTrigger: Identifiable, Hashable {
     case recentForm
     /// Best & Worst, reached from the Stats tab's View menu.
     case bestWorst
+    /// Player-level advanced tables on a game's box score.
+    case advancedBoxScore
 
     var icon: String {
         switch self {
@@ -43,6 +45,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .playerScouting:    return "binoculars.fill"
         case .recentForm:        return "flame.fill"
         case .bestWorst:         return "arrow.up.arrow.down"
+        case .advancedBoxScore:  return "sportscourt.fill"
         }
     }
 
@@ -61,6 +64,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .playerScouting:    return "Full Player Scouting"
         case .recentForm:        return "Recent Form"
         case .bestWorst:         return "Best & Worst"
+        case .advancedBoxScore:  return "Advanced Box Scores"
         }
     }
 
@@ -92,6 +96,8 @@ enum PaywallTrigger: Identifiable, Hashable {
             return "Every player's last 3 / 5 / 8 game form. Catch hot streaks and slumps before the season totals catch up."
         case .bestWorst:
             return "The league leader and the league trailer on every NFL metric, side by side, in one board."
+        case .advancedBoxScore:
+            return "Every player in every game: EPA, CPOE, RYOE, separation and YAC over expected, beside the box score."
         }
     }
 
@@ -111,6 +117,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .playerScouting:    return "statscout_paywall_player_scouting"
         case .recentForm:        return "statscout_paywall_recent_form"
         case .bestWorst:         return "statscout_paywall_best_worst"
+        case .advancedBoxScore:  return "statscout_paywall_advanced_box_score"
         }
     }
 
@@ -123,6 +130,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         ("chart.bar.fill", "Last 3 / 5 / 8 game form on any player, team or leaderboard"),
         ("person.2.fill", "Head-to-head: any two players, every metric"),
         ("shield.lefthalf.filled", "Team scouting: advanced and standard, season or recent"),
+        ("sportscourt.fill", "Advanced box scores: EPA, CPOE and RYOE for every player, every game"),
         ("calendar.badge.clock", "Every season back to 2000 + year-over-year trends")
     ]
 

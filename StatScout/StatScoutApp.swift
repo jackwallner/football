@@ -456,7 +456,7 @@ struct OnboardingCards: View {
         OnboardingPage(
             icon: "chart.bar.fill",
             title: "Find Insights\nFast",
-            description: "Start with the week's games, then dig into the numbers behind them.",
+            description: "Scores, leaders and movement across the league in seconds, with the numbers behind every game.",
             bullets: [
                 BulletItem(text: "Games: scores and box scores", icon: "checkmark.circle.fill", color: GridironPalette.turf),
                 BulletItem(text: "Stats: leaders, best and worst", icon: "checkmark.circle.fill", color: GridironPalette.turf),

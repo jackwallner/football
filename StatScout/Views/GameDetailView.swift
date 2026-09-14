@@ -3,8 +3,17 @@ import SwiftUI
 /// One game: the score first, then the box score, then the few advanced numbers
 /// the per-player feed can total honestly.
 struct GameDetailView: View {
+    @EnvironmentObject private var store: StoreService
     @Bindable var viewModel: DashboardViewModel
     let gameId: String
+
+    enum Mode: Hashable {
+        case boxScore
+        case advanced
+    }
+
+    @State private var mode: Mode = .boxScore
+    @State private var paywallTrigger: PaywallTrigger?
 
     @State private var logs: [PlayerGameLog] = []
     @State private var isLoading = false
@@ -37,6 +46,9 @@ struct GameDetailView: View {
             await loadLogs(force: true)
         }
         .task { await viewModel.loadGames() }
+        .sheet(item: $paywallTrigger) { trigger in
+            TrialPitchSheet(trigger: trigger)
+        }
         .task(id: "\(gameId)-\(game.map(viewModel.hasStats) ?? false)-\(viewModel.freshnessRevision ?? "none")") {
             await loadLogs(force: false)
         }
@@ -124,7 +136,7 @@ struct GameDetailView: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .minimumScaleFactor(0.85)
-                Text(label)
+                Text(([label] + [game.seasonPhase == .regular ? viewModel.record(forTeam: team, through: game) : nil].compactMap { $0 }).joined(separator: " · "))
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
             }
@@ -154,11 +166,32 @@ struct GameDetailView: View {
     @ViewBuilder
     private func detail(for game: Game) -> some View {
         if !logs.isEmpty {
-            leadersCard
-            teamStatsCard(game)
-            boxScoreCard(game)
+            GridironSegmented(
+                segments: [
+                    .init(value: Mode.boxScore, label: "Box Score"),
+                    .init(value: Mode.advanced, label: "Advanced"),
+                ],
+                selection: $mode
+            )
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
+
+            switch mode {
+            case .boxScore:
+                leadersCard
+                teamStatsCard(game)
+                boxScoreCard(game)
+            case .advanced:
+                efficiencyCard(game)
+                epaLeadersCard
+                advancedPlayersCard(game)
+                footnote("Next Gen Stats columns (CPOE, time to throw, RYOE, separation, YAC+) appear once Next Gen publishes the game, usually a day or two later. ADOT is air yards per attempt or target.")
+                StatGlossaryLink()
+                    .padding(.horizontal, 12)
+                    .padding(.top, 12)
+            }
             if viewModel.freshnessForDisplay?.isAdvancedPending == true {
-                footnote("Next Gen and advanced defense numbers for this week are still arriving and can change over the next few days.")
+                footnote("Some advanced numbers for this week are still arriving and can change over the next few days.")
             }
         } else if isLoading {
             ProgressView("Loading box score")
@@ -237,16 +270,20 @@ struct GameDetailView: View {
     }
 
     private func comparisonRow(_ label: String, _ away: Double, _ home: Double, higherIsBetter: Bool, decimals: Int = 0) -> some View {
-        let awayBetter = higherIsBetter ? away > home : away < home
-        let homeBetter = higherIsBetter ? home > away : home < away
-        let format: (Double) -> String = { value in
+        comparisonRow(label, away, home, higherIsBetter: higherIsBetter) { value in
             decimals == 0
                 ? Int(value.rounded()).formatted()
                 : value.formatted(.number.precision(.fractionLength(decimals)).sign(strategy: .always(includingZero: false)))
         }
+    }
+
+    private func comparisonRow(_ label: String, _ away: Double, _ home: Double, higherIsBetter: Bool, format: @escaping (Double) -> String) -> some View {
+        let awayBetter = higherIsBetter ? away > home : away < home
+        let homeBetter = higherIsBetter ? home > away : home < away
         return HStack {
             Text(format(away))
-                .font(awayBetter ? GridironType.statMed : GridironType.statSmall)
+                .font(GridironType.statMed)
+                .fontWeight(awayBetter ? .bold : .regular)
                 .foregroundStyle(awayBetter ? GridironPalette.ink : GridironPalette.inkSecondary)
                 .frame(width: 64, alignment: .leading)
             Spacer()
@@ -255,7 +292,8 @@ struct GameDetailView: View {
                 .foregroundStyle(GridironPalette.inkSecondary)
             Spacer()
             Text(format(home))
-                .font(homeBetter ? GridironType.statMed : GridironType.statSmall)
+                .font(GridironType.statMed)
+                .fontWeight(homeBetter ? .bold : .regular)
                 .foregroundStyle(homeBetter ? GridironPalette.ink : GridironPalette.inkSecondary)
                 .frame(width: 64, alignment: .trailing)
         }
@@ -267,18 +305,225 @@ struct GameDetailView: View {
         .accessibilityLabel("\(label): \(teamFullName(game?.awayTeam ?? "")) \(format(away)), \(teamFullName(game?.homeTeam ?? "")) \(format(home))")
     }
 
+    // MARK: - Advanced
+
+    private func teamHeaderRow(_ game: Game) -> some View {
+        HStack {
+            Text(displayTeamAbbr(game.awayTeam)).frame(width: 64, alignment: .leading)
+            Spacer()
+            Text(displayTeamAbbr(game.homeTeam)).frame(width: 64, alignment: .trailing)
+        }
+        .font(GridironType.smallBold)
+        .foregroundStyle(GridironPalette.inkSecondary)
+        .padding(.horizontal, GridironGeo.padCard)
+        .frame(height: 30)
+        .background(GridironPalette.surfaceAlt)
+    }
+
+    @ViewBuilder
+    private func rateRow(_ label: String, _ away: Double?, _ home: Double?, higherIsBetter: Bool, style: RateStyle) -> some View {
+        if let away, let home {
+            comparisonRow(label, away, home, higherIsBetter: higherIsBetter) { style.format($0) }
+        }
+    }
+
+    enum RateStyle {
+        case epa
+        case yards
+        case percent
+
+        func format(_ value: Double) -> String {
+            switch self {
+            case .epa: return value.formatted(.number.precision(.fractionLength(2)).sign(strategy: .always(includingZero: false)))
+            case .yards: return value.formatted(.number.precision(.fractionLength(1)))
+            case .percent: return value.formatted(.number.precision(.fractionLength(1))) + "%"
+            }
+        }
+    }
+
+    /// Free: how efficiently each offense moved the ball. Rates, not totals,
+    /// so a team that ran twenty more plays doesn't win every row.
+    private func efficiencyCard(_ game: Game) -> some View {
+        let away = boxScore.totals(for: game.awayTeam)
+        let home = boxScore.totals(for: game.homeTeam)
+        return card(title: "Offensive efficiency") {
+            teamHeaderRow(game)
+            rateRow("EPA per play", away.epaPerPlay, home.epaPerPlay, higherIsBetter: true, style: .epa)
+            rateRow("EPA per dropback", away.epaPerDropback, home.epaPerDropback, higherIsBetter: true, style: .epa)
+            rateRow("EPA per carry", away.epaPerCarry, home.epaPerCarry, higherIsBetter: true, style: .epa)
+            rateRow("Yards per play", away.yardsPerPlay, home.yardsPerPlay, higherIsBetter: true, style: .yards)
+            rateRow("Net yards per dropback", away.netYardsPerDropback, home.netYardsPerDropback, higherIsBetter: true, style: .yards)
+            rateRow("Yards per carry", away.yardsPerCarry, home.yardsPerCarry, higherIsBetter: true, style: .yards)
+            rateRow("First down rate", away.firstDownRate, home.firstDownRate, higherIsBetter: true, style: .percent)
+            rateRow("Sack rate", away.sackRate, home.sackRate, higherIsBetter: false, style: .percent)
+            rateRow("Air yards per attempt", away.airYardsPerAttempt, home.airYardsPerAttempt, higherIsBetter: true, style: .yards)
+            rateRow("Yards after catch share", away.yacShare, home.yacShare, higherIsBetter: true, style: .percent)
+            footnoteRow("EPA (expected points added) measures how much each play changed a team's scoring chances. A dropback is a pass attempt or a sack.")
+        }
+    }
+
+    /// Free: the players who moved the needle most, by total EPA.
+    private var epaLeadersCard: some View {
+        card(title: "Most valuable by EPA") {
+            ForEach(Array(boxScore.epaLeaders().enumerated()), id: \.element.id) { index, line in
+                playerRow(line: line, index: index) {
+                    HStack(spacing: 10) {
+                        Text("\(index + 1)")
+                            .font(GridironType.statSmall)
+                            .foregroundStyle(GridironPalette.inkTertiary)
+                            .frame(width: 18, alignment: .leading)
+                        VStack(alignment: .leading, spacing: 2) {
+                            nameText(line)
+                            Text("\(displayTeamAbbr(line.team)) · \(GameBoxScore.summary(line))")
+                                .font(GridironType.micro)
+                                .foregroundStyle(GridironPalette.inkTertiary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                        }
+                        Spacer(minLength: 8)
+                        Text(RateStyle.epa.format(GameBoxScore.totalEPA(line) ?? 0))
+                            .font(GridironType.statMed)
+                            .foregroundStyle((GameBoxScore.totalEPA(line) ?? 0) >= 0 ? GridironPalette.performanceHigh : GridironPalette.performanceLow)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func advancedPlayersCard(_ game: Game) -> some View {
+        if store.isPro {
+            advancedPlayerTables(game)
+        } else {
+            VStack(spacing: 10) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                Text("Every player's advanced line")
+                    .font(GridironType.cardTitle)
+                    .foregroundStyle(GridironPalette.ink)
+                Text("EPA per dropback, CPOE, time to throw, RYOE, separation and YAC over expected for both rosters.")
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                PlusDirectCTA(trigger: .advancedBoxScore, style: .capsule)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity)
+            .background(GridironPalette.surface)
+            .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+            .overlay(
+                RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                    .stroke(GridironPalette.hairline, lineWidth: 0.5)
+            )
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
+        }
+    }
+
+    private func advancedPlayerTables(_ game: Game) -> some View {
+        let team = boxTeam.isEmpty ? game.awayTeam : boxTeam
+        return VStack(spacing: 0) {
+            teamPicker(game, team: team)
+
+            let passers = boxScore.passers(for: team)
+            let passNGS = passers.contains { $0.metrics["cpoe"] != nil || $0.metrics["avg_time_to_throw"] != nil }
+            card(title: "Passing") {
+                tableHeader(["EPA", "EPA/DB", "ADOT"] + (passNGS ? ["CPOE", "TTT"] : []), width: passNGS ? 44 : 56)
+                ForEach(Array(passers.enumerated()), id: \.element.id) { index, line in
+                    let dropbacks = line.value("attempts") + line.value("sacks_suffered")
+                    tableRow(line, index: index, width: passNGS ? 44 : 56, values: [
+                        epa(line.metrics["passing_epa"]),
+                        epa(dropbacks > 0 ? line.metrics["passing_epa"].map { $0 / dropbacks } : nil),
+                        per(line.value("passing_air_yards"), line.value("attempts")),
+                    ] + (passNGS ? [
+                        signed(line.metrics["cpoe"], places: 1),
+                        plain(line.metrics["avg_time_to_throw"], places: 2),
+                    ] : []))
+                }
+            }
+            let rushers = boxScore.rushers(for: team)
+            let rushNGS = rushers.contains { $0.metrics["rush_yoe"] != nil }
+            card(title: "Rushing") {
+                tableHeader(["EPA", "EPA/C", "1D"] + (rushNGS ? ["RYOE"] : []), width: 52)
+                ForEach(Array(rushers.enumerated()), id: \.element.id) { index, line in
+                    tableRow(line, index: index, width: 52, values: [
+                        epa(line.metrics["rushing_epa"]),
+                        epa(line.value("carries") > 0 ? line.metrics["rushing_epa"].map { $0 / line.value("carries") } : nil),
+                        "\(line.int("rushing_first_downs"))",
+                    ] + (rushNGS ? [signed(line.metrics["rush_yoe"], places: 0)] : []))
+                }
+            }
+            let receivers = boxScore.receivers(for: team)
+            let recNGS = receivers.contains { $0.metrics["avg_separation"] != nil || $0.metrics["avg_yac_above_expectation"] != nil }
+            card(title: "Receiving") {
+                tableHeader(["EPA", "YAC", "ADOT"] + (recNGS ? ["SEP", "YAC+"] : []), width: recNGS ? 44 : 56)
+                ForEach(Array(receivers.enumerated()), id: \.element.id) { index, line in
+                    tableRow(line, index: index, width: recNGS ? 44 : 56, values: [
+                        epa(line.metrics["receiving_epa"]),
+                        "\(line.int("receiving_yac"))",
+                        per(line.value("receiving_air_yards"), line.value("targets")),
+                    ] + (recNGS ? [
+                        plain(line.metrics["avg_separation"], places: 1),
+                        signed(line.metrics["avg_yac_above_expectation"], places: 1),
+                    ] : []))
+                }
+            }
+            card(title: "Pass rush and havoc") {
+                tableHeader(["SCK", "HITS", "TFL", "FF"], width: 46)
+                ForEach(Array(havocPlayers(for: team).enumerated()), id: \.element.id) { index, line in
+                    tableRow(line, index: index, width: 46, values: [
+                        line.value("def_sacks").formatted(.number.precision(.fractionLength(0...1))),
+                        "\(line.int("def_qb_hits"))",
+                        "\(line.int("def_tackles_for_loss"))",
+                        "\(line.int("def_fumbles_forced"))",
+                    ])
+                }
+            }
+        }
+    }
+
+    private func havocPlayers(for team: String) -> [GameBoxScore.PlayerLine] {
+        boxScore.lines(for: team)
+            .map { ($0, $0.value("def_sacks") * 2 + $0.value("def_qb_hits") + $0.value("def_tackles_for_loss") + $0.value("def_fumbles_forced") * 2) }
+            .filter { $0.1 > 0 }
+            .sorted { $0.1 > $1.1 }
+            .map(\.0)
+    }
+
+    private func epa(_ value: Double?) -> String {
+        value.map { RateStyle.epa.format($0) } ?? "-"
+    }
+
+    private func signed(_ value: Double?, places: Int) -> String {
+        value.map { $0.formatted(.number.precision(.fractionLength(places)).sign(strategy: .always(includingZero: false))) } ?? "-"
+    }
+
+    private func plain(_ value: Double?, places: Int) -> String {
+        value.map { $0.formatted(.number.precision(.fractionLength(places))) } ?? "-"
+    }
+
+    private func per(_ numerator: Double, _ denominator: Double) -> String {
+        denominator > 0 ? (numerator / denominator).formatted(.number.precision(.fractionLength(1))) : "-"
+    }
+
+    private func teamPicker(_ game: Game, team: String) -> some View {
+        GridironSegmented(
+            segments: [
+                .init(value: game.awayTeam, label: teamFullName(game.awayTeam)),
+                .init(value: game.homeTeam, label: teamFullName(game.homeTeam)),
+            ],
+            selection: Binding(get: { team }, set: { boxTeam = $0 })
+        )
+        .padding(.horizontal, 12)
+        .padding(.top, 16)
+    }
+
     private func boxScoreCard(_ game: Game) -> some View {
         let team = boxTeam.isEmpty ? game.awayTeam : boxTeam
         return VStack(spacing: 0) {
-            GridironSegmented(
-                segments: [
-                    .init(value: game.awayTeam, label: teamFullName(game.awayTeam)),
-                    .init(value: game.homeTeam, label: teamFullName(game.homeTeam)),
-                ],
-                selection: Binding(get: { team }, set: { boxTeam = $0 })
-            )
-            .padding(.horizontal, 12)
-            .padding(.top, 16)
+            teamPicker(game, team: team)
 
             card(title: "Passing") {
                 tableHeader(["C/ATT", "YDS", "TD", "INT"])
@@ -325,7 +570,7 @@ struct GameDetailView: View {
     private func upcomingCard(_ game: Game) -> some View {
         notice(
             icon: "calendar",
-            title: "Kickoff \(game.dayLabel), \(game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "time TBD")",
+            title: "Not started yet",
             text: "The score and box score post here when the game goes final. Scout both rosters from the team pages above."
         )
     }
@@ -347,12 +592,15 @@ struct GameDetailView: View {
         .padding(.top, 12)
     }
 
-    private func tableHeader(_ columns: [String]) -> some View {
+    private func tableHeader(_ columns: [String], width: CGFloat = 46) -> some View {
         HStack(spacing: 0) {
             Text("PLAYER")
                 .frame(maxWidth: .infinity, alignment: .leading)
             ForEach(columns, id: \.self) { column in
-                Text(column).frame(width: 46, alignment: .trailing)
+                Text(column)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .frame(width: width, alignment: .trailing)
             }
         }
         .font(GridironType.micro)
@@ -362,7 +610,7 @@ struct GameDetailView: View {
         .background(GridironPalette.surfaceAlt)
     }
 
-    private func tableRow(_ line: GameBoxScore.PlayerLine, index: Int, values: [String]) -> some View {
+    private func tableRow(_ line: GameBoxScore.PlayerLine, index: Int, width: CGFloat = 46, values: [String]) -> some View {
         playerRow(line: line, index: index) {
             HStack(spacing: 0) {
                 nameText(line)
@@ -371,7 +619,7 @@ struct GameDetailView: View {
                     Text(value)
                         .font(GridironType.statSmall)
                         .foregroundStyle(GridironPalette.ink)
-                        .frame(width: 46, alignment: .trailing)
+                        .frame(width: width, alignment: .trailing)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                 }

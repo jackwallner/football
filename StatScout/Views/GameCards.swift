@@ -1,28 +1,60 @@
 import SwiftUI
 
+struct TeamScheduleRoute: Hashable {
+    let team: String
+}
+
 /// A team's game this week, on its team page: the result, the next kickoff, or
 /// the bye. It sits above the roster cards so the first thing a team page says
-/// is what happened on the field.
+/// is what happened on the field. Under it: follow the club, open its schedule.
 struct TeamWeekGameCard: View {
     @Bindable var viewModel: DashboardViewModel
     let team: String
+    @State private var favorites = FavoritesStore.shared
 
     var body: some View {
         if let week = viewModel.currentGameWeek {
-            if let game = viewModel.currentGame(forTeam: team) {
-                NavigationLink(value: GameRoute(gameId: game.id)) {
-                    content(week: week, game: game)
+            VStack(spacing: 8) {
+                if let game = viewModel.currentGame(forTeam: team) {
+                    NavigationLink(value: GameRoute(gameId: game.id)) {
+                        content(week: week, game: game)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens the game")
+                } else if week.phase == .regular {
+                    shell(week: week) {
+                        Text("Bye week")
+                            .font(GridironType.bodyBold)
+                            .foregroundStyle(GridironPalette.ink)
+                        Spacer(minLength: 0)
+                    }
                 }
-                .buttonStyle(.plain)
-                .accessibilityHint("Opens the game")
-            } else if week.phase == .regular {
-                shell(week: week) {
-                    Text("Bye week")
-                        .font(GridironType.bodyBold)
-                        .foregroundStyle(GridironPalette.ink)
-                    Spacer(minLength: 0)
-                }
+                actions
             }
+        }
+    }
+
+    private var actions: some View {
+        let following = favorites.isFavorite(team: normalizedTeamAbbreviation(team))
+        return HStack(spacing: 8) {
+            Button {
+                favorites.setFavorite(team: following ? nil : normalizedTeamAbbreviation(team))
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                GridironChip(
+                    title: following ? "Your team" : "Follow team",
+                    systemImage: following ? "star.fill" : "star",
+                    isActive: following
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(following ? "Stops pinning this team's games" : "Pins this team's games at the top of Games")
+
+            NavigationLink(value: TeamScheduleRoute(team: normalizedTeamAbbreviation(team))) {
+                GridironChip(title: "Schedule", systemImage: "calendar")
+            }
+            .buttonStyle(.plain)
+            Spacer(minLength: 0)
         }
     }
 
@@ -44,7 +76,6 @@ struct TeamWeekGameCard: View {
                 Text(line)
                     .font(GridironType.statMed)
                     .foregroundStyle(game.result(for: team) == "L" ? GridironPalette.performanceLow : GridironPalette.performanceHigh)
-                    .monospacedDigit()
             }
             Image(systemName: "chevron.right")
                 .font(.system(size: 11, weight: .semibold))
@@ -65,7 +96,7 @@ struct TeamWeekGameCard: View {
 
     private func shell<Content: View>(week: GameWeek, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(week.label.uppercased())
+            Text(([week.label] + [viewModel.record(forTeam: team)].compactMap { $0 }).joined(separator: " · ").uppercased())
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkSecondary)
             HStack(spacing: 10) {
@@ -81,6 +112,140 @@ struct TeamWeekGameCard: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
+        .contentShape(Rectangle())
+    }
+}
+
+/// One club's season: every week, the opponent, the result or the kickoff.
+struct TeamScheduleView: View {
+    @Bindable var viewModel: DashboardViewModel
+    let team: String
+
+    var body: some View {
+        let games = viewModel.schedule(forTeam: team)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                VStack(spacing: 0) {
+                    GridironSectionBar(
+                        title: "\(String(viewModel.freeSeason)) schedule",
+                        trailing: viewModel.record(forTeam: team).map {
+                            AnyView(Text($0).font(GridironType.statSmall).foregroundStyle(GridironPalette.inkSecondary))
+                        }
+                    )
+                    ForEach(Array(entries(games).enumerated()), id: \.element.id) { index, entry in
+                        let background = index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt
+                        switch entry {
+                        case .game(let game):
+                            NavigationLink(value: GameRoute(gameId: game.id)) {
+                                row(game).background(background)
+                            }
+                            .buttonStyle(.plain)
+                        case .bye(let week):
+                            byeRow(week).background(background)
+                        }
+                    }
+                    if games.isEmpty {
+                        Text(viewModel.isGamesLoading ? "Loading schedule" : "Schedule not published yet")
+                            .font(GridironType.small)
+                            .foregroundStyle(GridironPalette.inkTertiary)
+                            .padding(.vertical, 32)
+                    }
+                }
+                .background(GridironPalette.surface)
+                .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+                .overlay(
+                    RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                        .stroke(GridironPalette.hairline, lineWidth: 0.5)
+                )
+                .padding(.horizontal, 12)
+                .padding(.top, 12)
+                Color.clear.frame(height: 88)
+            }
+        }
+        .background(GridironPalette.canvas.ignoresSafeArea())
+        .navigationTitle(teamFullName(team))
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await viewModel.loadGames() }
+    }
+
+    enum Entry: Identifiable {
+        case game(Game)
+        case bye(Int)
+
+        var id: String {
+            switch self {
+            case .game(let game): return game.id
+            case .bye(let week): return "bye-\(week)"
+            }
+        }
+    }
+
+    /// The schedule with the bye week slotted in where the club has no game.
+    private func entries(_ games: [Game]) -> [Entry] {
+        let regularWeeks = Set(viewModel.games.filter { $0.seasonPhase == .regular }.map(\.week))
+        let played = Set(games.filter { $0.seasonPhase == .regular }.map(\.week))
+        var result: [Entry] = []
+        for week in regularWeeks.sorted() {
+            if let game = games.first(where: { $0.seasonPhase == .regular && $0.week == week }) {
+                result.append(.game(game))
+            } else if !played.contains(week) {
+                result.append(.bye(week))
+            }
+        }
+        result += games.filter { $0.seasonPhase != .regular }.map(Entry.game)
+        return result
+    }
+
+    private func byeRow(_ week: Int) -> some View {
+        HStack(spacing: 10) {
+            Text("\(week)")
+                .font(GridironType.statSmall)
+                .foregroundStyle(GridironPalette.inkTertiary)
+                .frame(width: 30, alignment: .leading)
+            Text("Bye week")
+                .font(GridironType.body)
+                .foregroundStyle(GridironPalette.inkTertiary)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, GridironGeo.padInline)
+        .frame(minHeight: 44)
+        .overlay(Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline), alignment: .bottom)
+    }
+
+    private func row(_ game: Game) -> some View {
+        HStack(spacing: 10) {
+            Text(game.seasonPhase == .regular ? "\(game.week)" : game.gameType)
+                .font(GridironType.statSmall)
+                .foregroundStyle(GridironPalette.inkTertiary)
+                .frame(width: 30, alignment: .leading)
+            TeamColorDot(abbr: game.opponent(of: team), size: 10)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(game.matchupLabel(for: team)) · \(teamFullName(game.opponent(of: team)))")
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                Text(game.dayLabel)
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+            }
+            Spacer(minLength: 8)
+            if let line = game.resultLine(for: team) {
+                Text(line)
+                    .font(GridironType.statMed)
+                    .foregroundStyle(game.result(for: team) == "L" ? GridironPalette.performanceLow : GridironPalette.performanceHigh)
+            } else {
+                Text(game.status() == .upcoming ? (game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "TBD") : "In progress")
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
+            }
+            Image(systemName: "chevron.right")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(GridironPalette.inkTertiary)
+        }
+        .padding(.horizontal, GridironGeo.padInline)
+        .frame(minHeight: 52)
+        .overlay(Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline), alignment: .bottom)
         .contentShape(Rectangle())
     }
 }

@@ -51,6 +51,20 @@ final class GamesTests: XCTestCase {
         XCTAssertEqual(GameWeek.current(in: games, now: date("2027-03-01T00:00:00Z"))?.week, 2)
     }
 
+    @MainActor
+    func testTeamRecordCountsRegularSeasonFinalsThroughAGame() async {
+        let w1 = game("w1", week: 1, kickoff: "2026-09-13T17:00:00Z", away: "BUF", home: "HOU", awayScore: 36, homeScore: 31)
+        let w2 = game("w2", week: 2, kickoff: "2026-09-20T17:00:00Z", away: "DET", home: "BUF", awayScore: 24, homeScore: 17)
+        let w3 = game("w3", week: 3, kickoff: "2026-09-27T17:00:00Z", away: "BUF", home: "LAC")
+        let model = DashboardViewModel(provider: GamesProvider(games: [w3, w1, w2]))
+        await model.loadGames(force: true)
+        XCTAssertEqual(model.record(forTeam: "BUF"), "1-1")
+        XCTAssertEqual(model.record(forTeam: "BUF", through: w1), "1-0")
+        XCTAssertEqual(model.record(forTeam: "HOU"), "0-1")
+        XCTAssertNil(model.record(forTeam: "LAC"))
+        XCTAssertEqual(model.schedule(forTeam: "BUF").map(\.id), ["w1", "w2", "w3"])
+    }
+
     func testSlateOrderPutsLiveFirstThenFinalsThenUpcoming() {
         let now = date("2026-09-13T19:00:00Z")
         let slate = Game.slateOrder([
@@ -107,4 +121,16 @@ final class GamesTests: XCTestCase {
         )
         XCTAssertEqual(roundTrip.advancedDefenseStatus, "pending")
     }
+}
+
+private struct GamesProvider: StatcastProviding {
+    let games: [Game]
+    func fetchGames(season: Int) async throws -> [Game] { games }
+    func fetchPlayers() async throws -> [Player] { [] }
+    func fetchHistoricalPlayers() async throws -> [Player] { [] }
+    func fetchCurrentPlayers() async throws -> [Player] { [] }
+    func fetchGameLogs(playerId: Int, season: Int, seasonPhase: SeasonPhase) async throws -> [PlayerGameLog] { [] }
+    func fetchTeamGameLogs(team: String, season: Int, seasonPhase: SeasonPhase, sinceDate: Date) async throws -> [PlayerGameLog] { [] }
+    func fetchRecentForm(season: Int, seasonPhase: SeasonPhase, windowWeeks: Int) async throws -> [RecentForm] { [] }
+    func fetchDataCoverage(season: Int) async throws -> DataCoverage? { nil }
 }

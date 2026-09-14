@@ -1,4 +1,5 @@
 Pensato per il giorno della partita.
+• Nuova scheda Games: punteggi, calendario e statistiche di ogni partita, con analisi EPA avanzata.
 • Stats si apre con classifiche familiari come le yard su passaggio, e le classifiche avanzate sono a un tocco.
 • Nuova vista Following: la tua squadra e i tuoi giocatori preferiti in un unico posto, gratis.
 • Cerca in tutta la classifica senza perdere la posizione in lega di ogni giocatore.

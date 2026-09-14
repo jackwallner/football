@@ -19,7 +19,7 @@ final class RecentFormScreenshotUITests: XCTestCase {
         // decoding the bundled snapshot, and the combination of long implicit
         // waits and synthesised swipes is what produced "Failed to get background
         // assertion for target app" - a flake in the harness, not the app.
-        app.launchArguments += ["-hasCompletedOnboarding", "YES", "-StartTab", "stats"]
+        app.launchArguments += ["-hasCompletedOnboarding", "YES"]
         app.launch()
 
         // Player rows are buttons labelled "<rank>, <name>, <pos>, <team>, <stat>"

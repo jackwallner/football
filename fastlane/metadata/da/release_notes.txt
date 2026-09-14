@@ -1,4 +1,5 @@
 Bygget til kampdag.
+• Ny Games-fane: resultater, kampprogram og statistik for hver kamp med avanceret EPA-analyse.
 • Stats åbner med velkendte førere som pasningsyards, og avancerede ranglister er et tryk væk.
 • Ny Following-visning samler dit hold og dine yndlingsspillere ét sted, gratis.
 • Søg i hele ranglisten uden at miste spillerens placering i ligaen.

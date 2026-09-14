@@ -1,4 +1,5 @@
 Gebaut für den Spieltag.
+• Neuer Tab Games: Ergebnisse, Spielplan und Box Scores für jedes Spiel, mit erweiterter EPA-Analyse.
 • Stats startet mit vertrauten Bestenlisten wie Passing Yards, fortgeschrittene Rankings sind einen Tipp entfernt.
 • Neue Ansicht Following: dein Team und deine Lieblingsspieler an einem Ort, kostenlos.
 • Durchsuche die gesamte Bestenliste, ohne den Ligarang eines Spielers zu verlieren.

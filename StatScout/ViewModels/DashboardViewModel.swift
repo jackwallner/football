@@ -448,6 +448,28 @@ final class DashboardViewModel {
         return week.games(from: games).first { $0.involves(team) }
     }
 
+    /// Regular-season record from posted finals, "2-1" or "2-1-1". When
+    /// `through` is given, only games kicked off up to and including it count.
+    func record(forTeam team: String, through game: Game? = nil) -> String? {
+        let cutoff = game?.kickoff ?? .distantFuture
+        let finals = games.filter {
+            $0.seasonPhase == .regular && $0.isFinal && $0.involves(team)
+                && ($0.kickoff ?? $0.gameDate) <= cutoff
+        }
+        guard !finals.isEmpty else { return nil }
+        let results = finals.compactMap { $0.result(for: team) }
+        let wins = results.filter { $0 == "W" }.count
+        let losses = results.filter { $0 == "L" }.count
+        let ties = results.filter { $0 == "T" }.count
+        return ties > 0 ? "\(wins)-\(losses)-\(ties)" : "\(wins)-\(losses)"
+    }
+
+    /// Every game on a club's schedule this season, in kickoff order.
+    func schedule(forTeam team: String) -> [Game] {
+        games.filter { $0.involves(team) }
+            .sorted { ($0.kickoff ?? $0.gameDate) < ($1.kickoff ?? $1.gameDate) }
+    }
+
     func hasStats(_ game: Game) -> Bool {
         gameIdsWithStats.contains(game.id)
     }

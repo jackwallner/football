@@ -1,4 +1,5 @@
 Built for game day.
+• New Games tab: scores, schedules and box scores for every game, with advanced EPA breakdowns.
 • Stats opens on familiar leaders like passing yards, with advanced rankings one tap away.
 • New Following view keeps your team and favorite players in one place, free.
 • Search the whole leaderboard without losing a player's league rank.
