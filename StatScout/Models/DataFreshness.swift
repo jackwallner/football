@@ -103,6 +103,19 @@ struct DataFreshness: Codable, Equatable, Sendable {
     let coverage: DataCoverage?
     let message: String?
     let isCached: Bool
+    /// Publisher state of the optional enrichment feeds ("ready", "pending").
+    /// A complete slate of games can still be waiting on these.
+    var nextGenStatus: String? = nil
+    var advancedDefenseStatus: String? = nil
+
+    /// True while Next Gen Stats or PFR advanced defense has not caught up with
+    /// the games already published.
+    var isAdvancedPending: Bool {
+        [nextGenStatus, advancedDefenseStatus].contains { status in
+            guard let status = status?.lowercased() else { return false }
+            return status != "ready" && status != "not_applicable" && status != "unavailable"
+        }
+    }
 
     init(
         status: DataFreshnessStatus = .ready,
@@ -112,7 +125,9 @@ struct DataFreshness: Codable, Equatable, Sendable {
         checkedAt: Date? = nil,
         coverage: DataCoverage? = nil,
         message: String? = nil,
-        isCached: Bool = false
+        isCached: Bool = false,
+        nextGenStatus: String? = nil,
+        advancedDefenseStatus: String? = nil
     ) {
         self.status = status
         self.revision = revision
@@ -122,6 +137,8 @@ struct DataFreshness: Codable, Equatable, Sendable {
         self.coverage = coverage
         self.message = message
         self.isCached = isCached
+        self.nextGenStatus = nextGenStatus
+        self.advancedDefenseStatus = advancedDefenseStatus
     }
 
     /// Returns a copy with local display state changed without altering the
@@ -142,7 +159,9 @@ struct DataFreshness: Codable, Equatable, Sendable {
             checkedAt: checkedAt ?? self.checkedAt,
             coverage: coverage ?? self.coverage,
             message: message ?? self.message,
-            isCached: isCached ?? self.isCached
+            isCached: isCached ?? self.isCached,
+            nextGenStatus: nextGenStatus,
+            advancedDefenseStatus: advancedDefenseStatus
         )
     }
 
@@ -169,6 +188,8 @@ struct DataFreshness: Codable, Equatable, Sendable {
         case message
         case errorMessage = "error_message"
         case cached = "is_cached"
+        case ngsStatus = "ngs_status"
+        case pfrStatus = "pfr_status"
     }
 
     private struct CoveragePayload: Decodable {
@@ -206,6 +227,8 @@ struct DataFreshness: Codable, Equatable, Sendable {
         message = try c.decodeIfPresent(String.self, forKey: .message)
             ?? c.decodeIfPresent(String.self, forKey: .errorMessage)
         isCached = try c.decodeIfPresent(Bool.self, forKey: .cached) ?? false
+        nextGenStatus = try c.decodeIfPresent(String.self, forKey: .ngsStatus)
+        advancedDefenseStatus = try c.decodeIfPresent(String.self, forKey: .pfrStatus)
 
         let nestedCoverage: CoveragePayload?
         do {
@@ -260,6 +283,8 @@ struct DataFreshness: Codable, Equatable, Sendable {
         try c.encodeIfPresent(coverage?.expectedGames, forKey: .expectedGames)
         try c.encodeIfPresent(message, forKey: .message)
         try c.encode(isCached, forKey: .cached)
+        try c.encodeIfPresent(nextGenStatus, forKey: .ngsStatus)
+        try c.encodeIfPresent(advancedDefenseStatus, forKey: .pfrStatus)
     }
 
     private static func decodeDate(

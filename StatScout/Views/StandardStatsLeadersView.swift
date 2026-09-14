@@ -210,9 +210,14 @@ struct StandardStatsLeadersView: View {
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(width: 42, alignment: .leading)
-                    Text("PLAYER")
+                    // Says who is on the list where the list is read. The rule
+                    // otherwise lives only in the View menu, and "leaders" with
+                    // no minimum in Week 1 reads like a ranking of the best.
+                    Text(sampleLabel)
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text("TEAM")
                         .font(GridironType.micro)
@@ -299,9 +304,10 @@ struct StandardStatsLeadersView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.85)
                             .truncationMode(.tail)
-                        Text(player.displayPosition)
+                        Text([player.displayPosition, volumeText(for: player)].compactMap { $0 }.joined(separator: " · "))
                             .font(GridironType.micro)
                             .foregroundStyle(GridironPalette.inkTertiary)
+                            .lineLimit(1)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -360,6 +366,36 @@ struct StandardStatsLeadersView: View {
         player.standardStats?.first {
             $0.label.compare(selectedStat, options: .caseInsensitive) == .orderedSame
         }
+    }
+
+    private var sampleLabel: String {
+        guard let viewModel else { return "PLAYER" }
+        return viewModel.qualifierLevel == .qualified ? "QUALIFIED PLAYERS" : "ALL PLAYERS · NO MINIMUM"
+    }
+
+    /// The volume behind the headline number: attempts for a passing stat,
+    /// carries for rushing, targets for receiving, games otherwise. One game of
+    /// 9 yards a carry means little on three carries.
+    private func volumeText(for player: Player) -> String? {
+        let stats = player.standardStats ?? []
+        func value(_ label: String) -> String? {
+            stats.first { $0.label.caseInsensitiveCompare(label) == .orderedSame }?.value
+        }
+        func denominator(_ pair: String?) -> String? {
+            pair?.split(separator: "/").last.map(String.init)
+        }
+        let stat = selectedStat.uppercased()
+        if stat.hasPrefix("PASS") || stat == "INT" || stat == "CMP/ATT" || stat == "RATING" || stat == "Y/A" {
+            return denominator(value("Cmp/Att")).map { "\($0) att" }
+        }
+        if stat.hasPrefix("RUSH") || stat == "Y/C" {
+            return value("Car").map { "\($0) car" }
+        }
+        if stat.hasPrefix("REC") {
+            return denominator(value("Rec/Tgt")).map { "\($0) tgt" }
+        }
+        guard stat != "G", let games = value("G") else { return nil }
+        return games == "1" ? "1 game" : "\(games) games"
     }
 
     private func numericStat(for player: Player) -> Double? {

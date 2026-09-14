@@ -15,6 +15,9 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
     /// postseason is what sits at the top of a date-descending list - and the
     /// Playoffs board padded its short run out with December.
     let seasonPhase: SeasonPhase
+    /// nflverse game id, e.g. "2026_01_BUF_HOU". The join key to `Game`.
+    /// Optional because rows ingested before the column existed carry none.
+    var gameId: String? = nil
     let gameDate: Date
     let playerType: String
     let team: String?
@@ -29,6 +32,7 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
         case playerId = "player_id"
         case season
         case seasonPhase = "season_type"
+        case gameId = "game_id"
         case gameDate = "game_date"
         case playerType = "player_type"
         case team
@@ -46,6 +50,7 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
         // the column, and a row with no phase is a regular-season row.
         seasonPhase = try c.decodeIfPresent(SeasonPhase.self, forKey: .seasonPhase) ?? .regular
         playerType = try c.decode(String.self, forKey: .playerType)
+        gameId = try c.decodeIfPresent(String.self, forKey: .gameId)
         team = try c.decodeIfPresent(String.self, forKey: .team)
         opponent = try c.decodeIfPresent(String.self, forKey: .opponent)
         plays = try c.decodeIfPresent(Int.self, forKey: .plays) ?? 0
@@ -75,6 +80,7 @@ struct PlayerGameLog: Codable, Hashable, Sendable {
         try c.encode(season, forKey: .season)
         try c.encode(seasonPhase, forKey: .seasonPhase)
         try c.encode(playerType, forKey: .playerType)
+        try c.encodeIfPresent(gameId, forKey: .gameId)
         try c.encodeIfPresent(team, forKey: .team)
         try c.encodeIfPresent(opponent, forKey: .opponent)
         try c.encode(plays, forKey: .plays)

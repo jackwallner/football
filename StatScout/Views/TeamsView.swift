@@ -342,15 +342,25 @@ struct TeamsView: View {
             // The disk already carries the abbreviation, so no caption beneath,
             // it printed the same letters twice and ate the vertical room the
             // eight division rows need.
-            ZStack(alignment: .topTrailing) {
-                TeamAbbrDisk(abbr: abbr)
-                if teamsViewModel.isFavorite(abbr) {
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(Color.yellow)
-                        .padding(2)
-                        .background(GridironPalette.surface, in: Circle())
-                        .offset(x: 3, y: -3)
+            VStack(spacing: 3) {
+                ZStack(alignment: .topTrailing) {
+                    TeamAbbrDisk(abbr: abbr)
+                    if teamsViewModel.isFavorite(abbr) {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(Color.yellow)
+                            .padding(2)
+                            .background(GridironPalette.surface, in: Circle())
+                            .offset(x: 3, y: -3)
+                    }
+                }
+                if let status = weekStatus(abbr) {
+                    Text(status.text)
+                        .font(GridironType.micro)
+                        .foregroundStyle(status.color)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .monospacedDigit()
                 }
             }
             .frame(maxWidth: .infinity)
@@ -369,7 +379,31 @@ struct TeamsView: View {
                       systemImage: teamsViewModel.isFavorite(abbr) ? "star.slash" : "star.fill")
             }
         }
-        .accessibilityLabel(teamFullName(abbr))
+        .accessibilityLabel([teamFullName(abbr), weekStatus(abbr)?.spoken].compactMap { $0 }.joined(separator: ", "))
+    }
+
+    /// This week's result, kickoff or bye under each club, so the grid doubles
+    /// as the week at a glance. Only for the live season, where it is true.
+    private func weekStatus(_ abbr: String) -> (text: String, spoken: String, color: Color)? {
+        guard viewModel.selectedSeason == viewModel.freeSeason,
+              let week = viewModel.currentGameWeek else { return nil }
+        guard let game = viewModel.currentGame(forTeam: abbr) else {
+            return week.phase == .regular ? ("Bye", "bye week", GridironPalette.inkTertiary) : nil
+        }
+        switch game.status() {
+        case .final:
+            let line = game.resultLine(for: abbr) ?? "Final"
+            let color = game.result(for: abbr) == "L" ? GridironPalette.performanceLow : GridironPalette.performanceHigh
+            return (line, "\(line) \(game.matchupLabel(for: abbr))", color)
+        case .inProgress, .awaitingScore:
+            return ("Live", "playing \(game.matchupLabel(for: abbr))", GridironPalette.performanceLow)
+        case .upcoming:
+            return (
+                game.kickoff?.formatted(.dateTime.weekday(.abbreviated)) ?? "TBD",
+                "\(game.matchupLabel(for: abbr)), \(game.dayLabel)",
+                GridironPalette.inkSecondary
+            )
+        }
     }
 }
 

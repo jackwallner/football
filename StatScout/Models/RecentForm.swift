@@ -119,15 +119,23 @@ struct RecentForm: Codable, Hashable, Sendable, Identifiable {
     /// predates the week columns.
     var weekRangeLabel: String? {
         guard let startWeek, let endWeek else { return nil }
-        return startWeek == endWeek ? "Week \(startWeek)" : "Weeks \(startWeek)-\(endWeek)"
+        // The rollup anchors a window on the league's latest week and counts
+        // back, so a three-week window in Week 1 starts at "Week -1". No games
+        // exist before Week 1; label the weeks that do.
+        let first = max(1, startWeek)
+        return first >= endWeek ? "Week \(endWeek)" : "Weeks \(first)-\(endWeek)"
     }
 
     /// Small samples make wild deltas. Volume means different things by
     /// position, so the floor does too: a quarterback throws thirty times in a
     /// bad game, a tight end can have a real week on four targets. Defenders
     /// have no play count in the weekly feed at all, so they gate on games.
-    var isSmallSample: Bool {
-        if games < 2 { return true }
+    var isSmallSample: Bool { isSmallSample(minimumGames: 2) }
+
+    /// The same volume floor with a different game minimum. The early-season
+    /// board ranks a single week, so it asks for one game rather than two.
+    func isSmallSample(minimumGames: Int) -> Bool {
+        if games < minimumGames { return true }
         switch playerType {
         case "qb":  return plays < 30
         case "rb":  return plays < 18

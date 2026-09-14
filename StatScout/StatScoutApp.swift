@@ -456,8 +456,9 @@ struct OnboardingCards: View {
         OnboardingPage(
             icon: "chart.bar.fill",
             title: "Find Insights\nFast",
-            description: "Four tabs cover every angle of the game. See what's happening across the league in seconds.",
+            description: "Start with the week's games, then dig into the numbers behind them.",
             bullets: [
+                BulletItem(text: "Games: scores and box scores", icon: "checkmark.circle.fill", color: GridironPalette.turf),
                 BulletItem(text: "Stats: leaders, best and worst", icon: "checkmark.circle.fill", color: GridironPalette.turf),
                 BulletItem(text: "Trends: heating up, cooling off", icon: "checkmark.circle.fill", color: GridironPalette.turf),
                 BulletItem(text: "Teams: any roster, any season", icon: "checkmark.circle.fill", color: GridironPalette.turf),

@@ -215,6 +215,11 @@ struct TeamView: View {
                     )
                         .padding(.horizontal, 12)
                         .padding(.top, 10)
+                    if displaySeason == viewModel.freeSeason {
+                        TeamWeekGameCard(viewModel: viewModel, team: team)
+                            .padding(.horizontal, 12)
+                            .padding(.top, 10)
+                    }
                 }
                 tabSelector
                     .padding(.horizontal, 12)

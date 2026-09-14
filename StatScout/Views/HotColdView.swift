@@ -61,6 +61,36 @@ struct HotColdView: View {
         return metric.lowerIsBetter ? -delta : delta
     }
 
+    /// True when nobody on this board has a prior window for the metric yet.
+    ///
+    /// Movement compares a window with the same span before it, so a three-week
+    /// window has nothing to compare until Week 4, five weeks until Week 6. Until
+    /// then the board ranks the current window by level instead of showing an
+    /// empty "no movement" screen in the weeks new fans arrive.
+    private var isEarlySeason: Bool {
+        !forms.isEmpty && !forms.contains { $0.priorMetrics[metric.key] != nil }
+    }
+
+    /// The first week a comparison exists for the selected window.
+    private var movementStartWeek: Int { viewModel.recentWindow.rawValue + 1 }
+
+    /// Early-season board: the current window ranked by the metric itself.
+    /// A volume floor still applies, so one long catch can't top Y/R.
+    private var earlyRanked: [RecentForm] {
+        forms
+            .filter { $0.metrics[metric.key] != nil && !$0.isSmallSample(minimumGames: 1) }
+            .sorted {
+                let a = $0.metrics[metric.key] ?? 0
+                let b = $1.metrics[metric.key] ?? 0
+                return metric.lowerIsBetter ? a < b : a > b
+            }
+    }
+
+    private var earlyTitle: String {
+        let weeks = forms.compactMap(\.weekRangeLabel).first ?? "This season"
+        return "\(side.label.uppercased()) · \(weeks.uppercased()) LEADERS"
+    }
+
     /// Ranked by improvement, hot first or cold first. Small samples are
     /// excluded outright: four carries in a mop-up week produce enormous deltas
     /// that would crowd out every real riser.
@@ -189,21 +219,25 @@ struct HotColdView: View {
                 // Same control as every other inline picker; only the selected
                 // fill differs, because here the choice itself encodes hot vs
                 // cold.
-                GridironSegmented(
-                    segments: [
-                        .init(value: false, label: "Heating up", systemImage: "flame.fill"),
-                        .init(value: true, label: "Cooling off", systemImage: "snowflake"),
-                    ],
-                    selection: $showingCold,
-                    selectedFill: { $0 ? GridironPalette.performanceLow : GridironPalette.performanceHigh }
-                )
+                if !isEarlySeason {
+                    GridironSegmented(
+                        segments: [
+                            .init(value: false, label: "Heating up", systemImage: "flame.fill"),
+                            .init(value: true, label: "Cooling off", systemImage: "snowflake"),
+                        ],
+                        selection: $showingCold,
+                        selectedFill: { $0 ? GridironPalette.performanceLow : GridironPalette.performanceHigh }
+                    )
+                }
 
                 GridironSegmented(
                     segments: TrendWindow.allCases.map { .init(value: $0, label: $0.segmentLabel) },
                     selection: $viewModel.recentWindow
                 )
 
-                Text("League weeks, compared with the same span before them. Players inactive for the current span are excluded.")
+                Text(isEarlySeason
+                     ? "Too early for movement: a \(viewModel.recentWindow.rawValue)-week comparison starts in Week \(movementStartWeek). Until then, the best of the season so far."
+                     : "League weeks, compared with the same span before them. Players inactive for the current span are excluded.")
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -312,6 +346,8 @@ struct HotColdView: View {
                 .tint(GridironPalette.turf)
             }
             .padding(.vertical, 32)
+        } else if isEarlySeason, !earlyRanked.isEmpty {
+            earlySection(forms: Array(earlyRanked.prefix(50)))
         } else if ranked.isEmpty {
             // A metric the pipeline hasn't produced a prior window for yet
             // ranks nobody, and a bare header under a full set of controls
@@ -320,7 +356,7 @@ struct HotColdView: View {
             ContentUnavailableView {
                 Label("No movement to rank yet", systemImage: "chart.line.flattrend.xyaxis")
             } description: {
-                Text("\(metric.label) doesn't have enough of a prior window to compare against. Try another stat or a longer window.")
+                Text("\(metric.label) doesn't have a prior window to compare against yet. Try another stat or a shorter window.")
             }
             .padding(.vertical, 32)
         } else {
@@ -338,7 +374,7 @@ struct HotColdView: View {
     /// security boundary, so the rows behind it were never real numbers.
     private var lockedContent: some View {
         VStack(spacing: 0) {
-            GridironSectionBar(title: boardTitle)
+            GridironSectionBar(title: isEarlySeason ? earlyTitle : boardTitle)
 
             leaderRow
 
@@ -389,7 +425,9 @@ struct HotColdView: View {
     /// resize under the gate as data arrives.
     @ViewBuilder
     private var leaderRow: some View {
-        if let leader = ranked.first {
+        if isEarlySeason, let leader = earlyRanked.first {
+            earlyRow(form: leader, rank: 1, index: 0)
+        } else if let leader = ranked.first {
             row(form: leader, rank: 1, index: 0)
         } else {
             HStack(spacing: 10) {
@@ -417,6 +455,81 @@ struct HotColdView: View {
     private var boardTitle: String {
         let direction = showingCold ? "COOLING OFF" : "HEATING UP"
         return "\(side.label.uppercased()) · \(direction)"
+    }
+
+    private func earlySection(forms: [RecentForm]) -> some View {
+        VStack(spacing: 0) {
+            GridironSectionBar(title: earlyTitle)
+            ForEach(Array(forms.enumerated()), id: \.element.id) { index, form in
+                earlyRow(form: form, rank: index + 1, index: index)
+            }
+        }
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+    }
+
+    /// A level, not a change: the value and the volume behind it.
+    @ViewBuilder
+    private func earlyRow(form: RecentForm, rank: Int, index: Int) -> some View {
+        let player = viewModel.players(forSeason: form.season, phase: form.seasonPhase)
+            .first { $0.playerId == form.playerId }
+        let value = form.metrics[metric.key].map { metric.format($0) } ?? "-"
+        let rowContent = HStack(spacing: 10) {
+            Text("\(rank)")
+                .font(GridironType.statSmall)
+                .foregroundStyle(GridironPalette.inkSecondary)
+                .frame(width: 26, alignment: .leading)
+                .monospacedDigit()
+            PlayerHeadshot(team: player?.team ?? form.team ?? "", initials: player?.initials ?? "-", size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(player?.name ?? "Player \(form.playerId)")
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
+                    .lineLimit(1)
+                Text([displayTeamAbbr(player?.team ?? form.team ?? ""), volumeText(form)].joined(separator: " · "))
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Text(value)
+                .font(GridironType.statMed)
+                .foregroundStyle(GridironPalette.turf)
+                .monospacedDigit()
+                .frame(width: 72, alignment: .trailing)
+        }
+        .padding(.horizontal, GridironGeo.padInline)
+        .frame(height: GridironGeo.rowHeight)
+        .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
+        .overlay(
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline),
+            alignment: .bottom
+        )
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(rank). \(player?.name ?? "Player"), \(metric.label) \(value), \(volumeText(form))")
+
+        if let player {
+            NavigationLink(value: player) { rowContent }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens \(player.name)'s profile")
+        } else {
+            rowContent
+        }
+    }
+
+    private func volumeText(_ form: RecentForm) -> String {
+        let games = form.games == 1 ? "1 game" : "\(form.games) games"
+        switch form.playerType {
+        case "qb", "rb", "wr", "te": return "\(games) · \(form.plays) plays"
+        default: return games
+        }
     }
 
     private func section(title: String, forms: [RecentForm], ranked: Bool) -> some View {

@@ -384,6 +384,84 @@ final class DashboardViewModel {
         return allSeasonPlayers.filter { seenIds.insert($0.playerId).inserted }
     }
 
+    // MARK: - Games
+
+    /// The live season's schedule and posted finals, from `public.games`.
+    private(set) var games: [Game] = []
+    /// Games whose player stats are published, so a final can say whether its
+    /// box score is in yet.
+    private(set) var gameIdsWithStats: Set<String> = []
+    private(set) var isGamesLoading = false
+    private(set) var gamesError: String?
+    private(set) var gamesLoadedAt: Date?
+    private var gamesTask: Task<Void, Never>?
+
+    var currentGameWeek: GameWeek? { GameWeek.current(in: games) }
+
+    /// Loads the schedule, at most once a minute unless forced. Failures keep
+    /// whatever schedule is already on screen.
+    func loadGames(force: Bool = false) async {
+        if let gamesTask {
+            await gamesTask.value
+            return
+        }
+        if !force, let gamesLoadedAt, Date().timeIntervalSince(gamesLoadedAt) < 60 {
+            return
+        }
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.performGamesLoad()
+        }
+        gamesTask = task
+        await task.value
+    }
+
+    private func performGamesLoad() async {
+        defer { gamesTask = nil }
+        isGamesLoading = games.isEmpty
+        let season = freeSeason
+        do {
+            async let schedule = provider.fetchGames(season: season)
+            async let withStats = provider.fetchGameIdsWithStats(season: season)
+            let (loadedGames, loadedIds) = try await (schedule, withStats)
+            if !loadedGames.isEmpty || games.isEmpty {
+                games = loadedGames
+            }
+            gameIdsWithStats = loadedIds
+            gamesError = nil
+            gamesLoadedAt = Date()
+        } catch {
+            if !isTaskCancellation(error) {
+                gamesError = "Couldn't load games. Check your connection and try again."
+            }
+        }
+        isGamesLoading = false
+    }
+
+    func game(id: String) -> Game? {
+        games.first { $0.id == id }
+    }
+
+    /// A team's game in the week the Games tab calls current, or nil on a bye.
+    func currentGame(forTeam team: String) -> Game? {
+        guard let week = currentGameWeek else { return nil }
+        return week.games(from: games).first { $0.involves(team) }
+    }
+
+    func hasStats(_ game: Game) -> Bool {
+        gameIdsWithStats.contains(game.id)
+    }
+
+    func fetchGameLogs(gameId: String) async throws -> [PlayerGameLog] {
+        try await provider.fetchGameLogs(gameId: gameId)
+    }
+
+    /// The live-season player row for a game-log line, for names and links.
+    func player(id: Int, season: Int, phase: SeasonPhase) -> Player? {
+        (playerHistories[id] ?? []).first { $0.season == season && $0.seasonPhase == phase }
+            ?? (playerHistories[id] ?? []).first { $0.season == season }
+    }
+
     // MARK: - Recent form
 
     /// Rolling windows keyed by length, cached per season so flipping between
@@ -872,6 +950,8 @@ final class DashboardViewModel {
         lastForegroundCheckAt = now
         if await checkForUpdates(force: false) == .updated {
             await load()
+        } else {
+            await loadGames()
         }
     }
 
@@ -1046,7 +1126,12 @@ final class DashboardViewModel {
         // display and wait for the next check when the bracket moves.
         let endingResult = await checkForUpdates(force: true)
         let revisionAtEnd = dataFreshness?.revision
-        let revisionDrifted = revisionAtEnd != nil && revisionAtEnd != revisionAtStart
+        // Only a revision that actually moved counts. A first status read that
+        // failed (nil) and a second that succeeded is not drift; treating it as
+        // drift discarded a good load and, on a cold start, left a blank app.
+        let revisionDrifted = revisionAtStart != nil
+            && revisionAtEnd != nil
+            && revisionAtEnd != revisionAtStart
         if revisionDrifted {
             playersToIngest = []
             acceptedCurrent = []
@@ -1076,6 +1161,7 @@ final class DashboardViewModel {
             )
         }
         persistFreshness()
+        await loadGames(force: true)
     }
 
     /// Marks a successfully accepted snapshot as the revision shown by every

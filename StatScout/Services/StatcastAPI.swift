@@ -30,12 +30,18 @@ protocol StatcastProviding: Sendable {
     ) async throws -> [RecentForm]
     func fetchDataCoverage(season: Int) async throws -> DataCoverage?
     func fetchDataFreshness(season: Int) async throws -> DataFreshness?
+    func fetchGames(season: Int) async throws -> [Game]
+    func fetchGameLogs(gameId: String) async throws -> [PlayerGameLog]
+    func fetchGameIdsWithStats(season: Int) async throws -> Set<String>
 }
 
 extension StatcastProviding {
     /// Older test and preview providers do not need to know about the optional
     /// status endpoint. A missing implementation is treated as unavailable.
     func fetchDataFreshness(season: Int) async throws -> DataFreshness? { nil }
+    func fetchGames(season: Int) async throws -> [Game] { [] }
+    func fetchGameLogs(gameId: String) async throws -> [PlayerGameLog] { [] }
+    func fetchGameIdsWithStats(season: Int) async throws -> Set<String> { [] }
 }
 
 struct StatcastAPI: StatcastProviding {
@@ -295,6 +301,56 @@ struct StatcastAPI: StatcastProviding {
             throw URLError(.badServerResponse)
         }
         return try JSONDecoder.statScout.decode([DataFreshness].self, from: data).first
+    }
+
+    /// The whole season's schedule in one request, about 285 rows.
+    func fetchGames(season: Int) async throws -> [Game] {
+        let data = try await get("games", [
+            URLQueryItem(name: "select", value: "*"),
+            URLQueryItem(name: "season", value: "eq.\(season)"),
+            URLQueryItem(name: "order", value: "kickoff_at.asc,game_id.asc"),
+            URLQueryItem(name: "limit", value: "400"),
+        ])
+        return try JSONDecoder.statScout.decode([Lenient<Game>].self, from: data).compactMap(\.value)
+    }
+
+    /// Every player's line from one game, for its box score.
+    func fetchGameLogs(gameId: String) async throws -> [PlayerGameLog] {
+        let data = try await get("player_game_logs", [
+            URLQueryItem(name: "select", value: "*"),
+            URLQueryItem(name: "game_id", value: "eq.\(gameId)"),
+            URLQueryItem(name: "limit", value: "200"),
+        ])
+        return try JSONDecoder.statScout.decode([Lenient<PlayerGameLog>].self, from: data).compactMap(\.value)
+    }
+
+    /// Which games have player stats published. Every game has a passer, so
+    /// quarterback rows alone answer it at a fraction of the payload.
+    func fetchGameIdsWithStats(season: Int) async throws -> Set<String> {
+        struct Row: Decodable { let game_id: String? }
+        let data = try await get("player_game_logs", [
+            URLQueryItem(name: "select", value: "game_id"),
+            URLQueryItem(name: "season", value: "eq.\(season)"),
+            URLQueryItem(name: "player_type", value: "eq.qb"),
+            URLQueryItem(name: "limit", value: "2000"),
+        ])
+        return Set(try JSONDecoder().decode([Row].self, from: data).compactMap(\.game_id))
+    }
+
+    private func get(_ table: String, _ queryItems: [URLQueryItem]) async throws -> Data {
+        let endpoint = baseURL
+            .appending(path: "rest/v1/\(table)")
+            .appending(queryItems: queryItems)
+        var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(apiKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              200..<300 ~= httpResponse.statusCode || httpResponse.statusCode == 206 else {
+            throw URLError(.badServerResponse)
+        }
+        return data
     }
 
     private func fetchPlayers(queryItems filters: [URLQueryItem]) async throws -> [Player] {

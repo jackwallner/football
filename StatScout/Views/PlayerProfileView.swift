@@ -48,6 +48,7 @@ struct PlayerProfileView: View {
     /// the same season share one fetch.
     @State private var recentLogsKey: String?
     @State private var recentLoading = false
+    @State private var recentLoadingKey: String?
     @State private var recentLoadError: String?
     @State private var recentCurves: LeaguePercentileCurves?
     @State private var standardMode: FormDisplayMode = .season
@@ -149,6 +150,17 @@ struct PlayerProfileView: View {
                     )
                     .padding(.horizontal, 12)
                     .padding(.top, 10)
+
+                    if let season = activeSeason ?? player.season,
+                       (recentFormSeasons ?? [currentSeason]).contains(season) {
+                        PlayerLastGameCard(
+                            viewModel: freshnessViewModel,
+                            player: displayedPlayer,
+                            season: season,
+                            phase: activePhase
+                        )
+                        .padding(.horizontal, 12)
+                    }
                 }
 
                 tabSelector
@@ -999,20 +1011,30 @@ struct PlayerProfileView: View {
         // it" about two different sets of football.
         let key = "\(player.playerId)-\(season)-\(activePhase.rawValue)-\(freshnessViewModel?.freshnessRevision ?? "none")"
         if recentLogsKey == key, !recentLogs.isEmpty { return }
-        guard !recentLoading else { return }
+        // Both cards ask at once; share one request per key. A different key
+        // (the season or phase changed mid-load) gets its own request, and the
+        // stale one discards its result instead of labelling last season's
+        // games with this season's heading.
+        guard recentLoadingKey != key else { return }
+        recentLoadingKey = key
         recentLoading = true
         recentLoadError = nil
         do {
-            recentLogs = try await fetch(player.playerId, season, activePhase)
+            let logs = try await fetch(player.playerId, season, activePhase)
+            guard recentLoadingKey == key else { return }
+            recentLogs = logs
             recentLogsKey = key
         } catch {
+            guard recentLoadingKey == key else { return }
             // Distinguish "no games" from "fetch failed" - otherwise a network
             // error renders as an honest-looking "No games in the last N days".
-            if !isTaskCancellation(error), recentLogs.isEmpty {
+            if !isTaskCancellation(error), recentLogs.isEmpty || recentLogsKey != key {
+                recentLogs = []
                 recentLogsKey = nil
                 recentLoadError = "Couldn't load recent games. Check your connection and try again."
             }
         }
+        recentLoadingKey = nil
         recentLoading = false
     }
 

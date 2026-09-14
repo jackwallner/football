@@ -544,7 +544,9 @@ struct TeamRankingsCard: View {
             Image(systemName: "chart.bar.xaxis")
                 .font(.system(size: 22))
                 .foregroundStyle(GridironPalette.inkTertiary)
-            Text("Not enough \(side.label.lowercased()) data to aggregate")
+            Text(players.isEmpty
+                 ? "No games played yet this season"
+                 : "Not enough \(side.label.lowercased()) data to aggregate")
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
         }
@@ -553,7 +555,7 @@ struct TeamRankingsCard: View {
     }
 
     private var weightedCaption: some View {
-        Text("Averaged across the \(side.label.lowercased()) roster")
+        Text("Season to date, averaged across the \(side.label.lowercased()) roster")
             .font(GridironType.micro)
             .foregroundStyle(GridironPalette.inkTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -37,6 +37,14 @@ final class DataFreshnessTests: XCTestCase {
     }
 
     @MainActor
+    func testFailedFirstStatusReadStillShowsPlayers() async {
+        let provider = RevisionProvider(revisions: ["v1", "v1"], failFirstCheck: true)
+        let model = DashboardViewModel(provider: provider)
+        await model.load()
+        XCTAssertFalse(model.players.isEmpty)
+    }
+
+    @MainActor
     func testEquivalentRefreshRequestsShareOnePlayerFetch() async {
         let provider = RevisionProvider(revisions: ["v1", "v1"])
         let model = DashboardViewModel(provider: provider)
@@ -53,11 +61,17 @@ private actor RevisionProvider: StatcastProviding {
     let status: DataFreshnessStatus
     var checks = 0
     private(set) var playerFetches = 0
-    init(revisions: [String], status: DataFreshnessStatus = .ready) {
+    let failFirstCheck: Bool
+    init(revisions: [String], status: DataFreshnessStatus = .ready, failFirstCheck: Bool = false) {
         self.revisions = revisions
         self.status = status
+        self.failFirstCheck = failFirstCheck
     }
     func fetchDataFreshness(season: Int) async throws -> DataFreshness? {
+        if failFirstCheck, checks == 0 {
+            checks += 1
+            throw URLError(.notConnectedToInternet)
+        }
         let revision = revisions[min(checks, revisions.count - 1)]
         checks += 1
         return DataFreshness(status: status, revision: revision,
