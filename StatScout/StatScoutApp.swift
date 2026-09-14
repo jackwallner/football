@@ -92,6 +92,7 @@ struct StatScoutApp: App {
 }
 
 struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @EnvironmentObject private var store: StoreService
 
@@ -127,6 +128,18 @@ struct ContentView: View {
         .onAppear { viewModel.applyProState(store.isPro) }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             Task { await viewModel.refreshOnForeground() }
+        }
+        // Foreground checks alone left an open app on Saturday's numbers all
+        // Sunday. While the app is active, ask the status endpoint every two
+        // minutes (one tiny row, throttled inside) and reload when a new
+        // revision is published, so percentiles and boards update in place.
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(120))
+                guard !Task.isCancelled else { return }
+                await viewModel.refreshOnForeground()
+            }
         }
         .onChange(of: store.isPro) { _, isPro in
             viewModel.applyProState(isPro)

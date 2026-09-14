@@ -97,6 +97,30 @@ final class GamesTests: XCTestCase {
         XCTAssertEqual(box.rushers(for: "BUF").first?.playerId, 3)
     }
 
+    func testGameDetailDecodesRatedStatsAndCounts() throws {
+        let json = """
+        [{"game_id":"g","away_team":"BUF","home_team":"HOU",
+          "team_stats":{"away":{"plays":52,"epa_per_play":{"value":0.229,"pct":85},"red_zone_td_rate":null},
+                        "home":{"plays":73,"epa_per_play":{"value":0.069,"pct":62}}},
+          "players":[{"role":"passer","player_id":34857,"name":"J.Allen","team":"BUF","dropbacks":32,"epa":14.54,
+                      "epa_per_dropback":{"value":0.454,"pct":88},"success_rate":{"value":0.438,"pct":null}},
+                     {"role":"kicker","player_id":1,"team":"BUF"}],
+          "win_probability":[[0,0.567],[3600,0.0]],
+          "big_plays":[{"qtr":4,"clock":"01:41","team":"BUF","description":"(1:41) (Shotgun) 17-J.Allen pass deep middle to 5-J.Palmer for 34 yards, TOUCHDOWN.","epa":4.59,"home_wpa":-0.324}]}]
+        """.data(using: .utf8)!
+        let detail = try XCTUnwrap(JSONDecoder.statScout.decode([GameDetail].self, from: json).first)
+        XCTAssertEqual(detail.stats(for: "BUF")["plays"]?.value, 52)
+        XCTAssertEqual(detail.stats(for: "HOU")["epa_per_play"]?.percentile, 62)
+        XCTAssertNil(detail.away["red_zone_td_rate"])
+        XCTAssertEqual(detail.players.count, 1)
+        XCTAssertNil(detail.players[0].successRate?.percentile)
+        XCTAssertEqual(detail.winProbability.last?.elapsed, 3600)
+        XCTAssertEqual(
+            GameDetailView.cleanDescription(detail.bigPlays[0].description),
+            "J.Allen pass deep middle to J.Palmer for 34 yards, TOUCHDOWN."
+        )
+    }
+
     func testWeekRangeLabelNeverStartsBeforeWeekOne() throws {
         let json = """
         {"player_id":1,"season":2026,"player_type":"qb","window_weeks":3,"start_week":-1,"end_week":1,"games":1,

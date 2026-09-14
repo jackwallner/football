@@ -474,6 +474,10 @@ final class DashboardViewModel {
         gameIdsWithStats.contains(game.id)
     }
 
+    func fetchGameDetail(gameId: String) async throws -> GameDetail? {
+        try await provider.fetchGameDetail(gameId: gameId)
+    }
+
     func fetchGameLogs(gameId: String) async throws -> [PlayerGameLog] {
         try await provider.fetchGameLogs(gameId: gameId)
     }

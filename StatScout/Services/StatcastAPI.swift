@@ -33,6 +33,7 @@ protocol StatcastProviding: Sendable {
     func fetchGames(season: Int) async throws -> [Game]
     func fetchGameLogs(gameId: String) async throws -> [PlayerGameLog]
     func fetchGameIdsWithStats(season: Int) async throws -> Set<String>
+    func fetchGameDetail(gameId: String) async throws -> GameDetail?
 }
 
 extension StatcastProviding {
@@ -42,6 +43,7 @@ extension StatcastProviding {
     func fetchGames(season: Int) async throws -> [Game] { [] }
     func fetchGameLogs(gameId: String) async throws -> [PlayerGameLog] { [] }
     func fetchGameIdsWithStats(season: Int) async throws -> Set<String> { [] }
+    func fetchGameDetail(gameId: String) async throws -> GameDetail? { nil }
 }
 
 struct StatcastAPI: StatcastProviding {
@@ -335,6 +337,16 @@ struct StatcastAPI: StatcastProviding {
             URLQueryItem(name: "limit", value: "2000"),
         ])
         return Set(try JSONDecoder().decode([Row].self, from: data).compactMap(\.game_id))
+    }
+
+    /// The play-by-play breakdown for one game, or nil before it is built.
+    func fetchGameDetail(gameId: String) async throws -> GameDetail? {
+        let data = try await get("game_details", [
+            URLQueryItem(name: "select", value: "*"),
+            URLQueryItem(name: "game_id", value: "eq.\(gameId)"),
+            URLQueryItem(name: "limit", value: "1"),
+        ])
+        return try JSONDecoder.statScout.decode([GameDetail].self, from: data).first
     }
 
     private func get(_ table: String, _ queryItems: [URLQueryItem]) async throws -> Data {
