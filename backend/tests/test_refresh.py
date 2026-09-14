@@ -89,3 +89,40 @@ def test_content_hash_changes_with_a_stat():
     from refresh import content_hash
 
     assert content_hash(_candidate("x", 205)) != content_hash(_candidate("x", 206))
+
+
+class _FlakyRPC:
+    def __init__(self, errors):
+        self.errors = list(errors)
+        self.calls = 0
+
+    def rpc(self, function, params):
+        return self
+
+    def execute(self):
+        self.calls += 1
+        if self.errors:
+            raise self.errors.pop(0)
+        return type("R", (), {"data": [{"status": "unchanged"}]})()
+
+
+def test_rpc_retries_gateway_timeouts():
+    from refresh import _rpc
+    client = _FlakyRPC([RuntimeError("{'code': 504, 'details': 'Gateway Timeout'}")])
+    assert _rpc(client, "mark_data_refresh_unchanged", {}, sleep=lambda _: None) == {"status": "unchanged"}
+    assert client.calls == 2
+
+
+def test_rpc_treats_already_applied_retry_as_done():
+    from refresh import _rpc
+    client = _FlakyRPC([RuntimeError("504 Gateway Timeout"), RuntimeError("refresh x is already unchanged")])
+    assert _rpc(client, "mark_data_refresh_unchanged", {}, sleep=lambda _: None) == {"status": "already_applied"}
+
+
+def test_rpc_does_not_retry_real_errors():
+    import pytest
+    from refresh import _rpc
+    client = _FlakyRPC([RuntimeError("refresh output differs from the live revision")])
+    with pytest.raises(RuntimeError):
+        _rpc(client, "mark_data_refresh_unchanged", {}, sleep=lambda _: None)
+    assert client.calls == 1

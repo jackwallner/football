@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import sys
+import time
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from typing import Any, Iterable, Optional
@@ -355,9 +356,36 @@ def _response_data(response: Any) -> Any:
     return payload
 
 
-def _rpc(client: Any, function: str, params: dict[str, Any]) -> Any:
-    response = client.rpc(function, params).execute()
-    return _response_data(response)
+RPC_ATTEMPTS = 3
+TRANSIENT_MARKERS = ("504", "502", "503", "Gateway Timeout", "Bad Gateway", "Service Unavailable", "timed out")
+
+
+def _is_transient(error: Exception) -> bool:
+    text = str(error)
+    return any(marker in text for marker in TRANSIENT_MARKERS)
+
+
+def _rpc(client: Any, function: str, params: dict[str, Any], *, sleep=time.sleep) -> Any:
+    """Call a publisher RPC, retrying gateway blips.
+
+    On 2026-09-14 a two-row ``mark_data_refresh_unchanged`` call hit a 5s
+    Supabase gateway timeout and failed the whole refresh. The RPCs lock the
+    run row, so a retry after a call that did commit is refused with "is
+    already <status>"; that means the first attempt landed and counts as done.
+    """
+    for attempt in range(RPC_ATTEMPTS):
+        try:
+            response = client.rpc(function, params).execute()
+            return _response_data(response)
+        except Exception as error:  # noqa: BLE001 - classify, then re-raise
+            if attempt > 0 and "is already" in str(error):
+                logger.info("%s already applied by an earlier attempt", function)
+                return {"status": "already_applied"}
+            if attempt + 1 >= RPC_ATTEMPTS or not _is_transient(error):
+                raise
+            logger.warning("%s transient failure (%s); retrying", function, str(error)[:120])
+            sleep(2 + attempt * 4)
+    raise RuntimeError("unreachable")
 
 
 def _stage_rows(client: Any, table: str, refresh_id: str, rows: Iterable[dict[str, Any]]) -> int:

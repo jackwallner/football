@@ -145,6 +145,7 @@ jobs:
       # Advanced game pages from play-by-play. Runs after the atomic publish
       # (or its unchanged no-op) so a pbp-only upload still refreshes games.
       - name: Build advanced game details
+        if: ${{ !cancelled() }}
         shell: bash
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
