@@ -10,6 +10,8 @@ struct GameDetailView: View {
 
     @State private var paywallTrigger: PaywallTrigger?
     @State private var detail: GameDetail?
+    @State private var isDetailLoading = false
+    @State private var detailFailed = false
 
     @State private var logs: [PlayerGameLog] = []
     @State private var isLoading = false
@@ -55,10 +57,21 @@ struct GameDetailView: View {
 
     private var boxScore: GameBoxScore { GameBoxScore(logs: logs) }
 
+    /// Tracked apart from the box score, so a request still in flight or one
+    /// that failed never reads as "not published yet".
     private func loadDetail() async {
         guard let game, game.status() != .upcoming else { return }
-        if let loaded = try? await viewModel.fetchGameDetail(gameId: gameId) {
-            detail = loaded
+        isDetailLoading = detail == nil
+        defer { isDetailLoading = false }
+        do {
+            if let loaded = try await viewModel.fetchGameDetail(gameId: gameId) {
+                detail = loaded
+            }
+            detailFailed = false
+        } catch {
+            if !isTaskCancellation(error), detail == nil {
+                detailFailed = true
+            }
         }
     }
 
@@ -184,6 +197,18 @@ struct GameDetailView: View {
                     bigPlaysCard(detail, game: game)
                 }
                 playerEfficiencyCards(detail)
+            } else if isDetailLoading {
+                ProgressView("Loading advanced breakdown")
+                    .font(GridironType.small)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+            } else if detailFailed {
+                notice(
+                    icon: "wifi.exclamationmark",
+                    title: "Couldn't load the advanced breakdown",
+                    text: "Win probability, EPA and success rate didn't load. Check your connection and try again.",
+                    action: ("Try again", { Task { await loadDetail() } })
+                )
             } else {
                 notice(
                     icon: "chart.xyaxis.line",
@@ -215,7 +240,7 @@ struct GameDetailView: View {
                 notice(
                     icon: "clock",
                     title: "Stats arriving",
-                    text: "The final score is in. Player stats usually post within two hours of the final whistle."
+                    text: "The final score is in. Player stats usually post within a few hours of the final whistle."
                 )
             case .inProgress, .awaitingScore:
                 notice(
@@ -819,7 +844,12 @@ struct GameDetailView: View {
         return viewModel.player(id: line.playerId, season: game.season, phase: game.seasonPhase)
     }
 
-    private func notice(icon: String, title: String, text: String) -> some View {
+    private func notice(
+        icon: String,
+        title: String,
+        text: String,
+        action: (label: String, perform: () -> Void)? = nil
+    ) -> some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 22))
@@ -832,6 +862,12 @@ struct GameDetailView: View {
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
+            if let action {
+                Button(action.label, action: action.perform)
+                    .font(GridironType.smallBold)
+                    .buttonStyle(.bordered)
+                    .padding(.top, 4)
+            }
         }
         .padding(24)
         .frame(maxWidth: .infinity)

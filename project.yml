@@ -23,13 +23,12 @@ targets:
     resources:
       - StatScout/PrivacyInfo.xcprivacy
       - StatScout/Data/players-historical.plist
-      - StatScout/Data/players-current.plist
     settings:
       base:
         DEVELOPMENT_TEAM: YXG4MP6W39
         PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.football
         PRODUCT_NAME: "Gridiron StatScout"
-        MARKETING_VERSION: "1.2"
+        MARKETING_VERSION: "1.2.1"
         CURRENT_PROJECT_VERSION: "48"
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: StatScout/Info.plist

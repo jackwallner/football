@@ -147,8 +147,8 @@ struct GamesView: View {
         }
 
         Text(favorites.team == nil
-             ? "Scores post when each game goes final, stats within about two hours. Follow a team from its page to pin its game here."
-             : "Scores post when each game goes final. Player stats usually follow within two hours.")
+             ? "Scores post when each game goes final, stats usually within a few hours. Follow a team from its page to pin its game here."
+             : "Scores post when each game goes final. Player stats usually follow within a few hours.")
             .font(GridironType.micro)
             .foregroundStyle(GridironPalette.inkTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)

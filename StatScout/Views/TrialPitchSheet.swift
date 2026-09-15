@@ -36,7 +36,7 @@ struct TrialPitchSheet: View {
             return [
                 Benefit(icon: "sportscourt.fill",
                         title: "Advanced box scores",
-                        detail: "EPA, CPOE and RYOE for every player, every game."),
+                        detail: "EPA, success rate and CPOE for every player, every game."),
                 Benefit(icon: "flame.fill",
                         title: "The Trends board",
                         detail: "The whole league ranked by who's moving, right now."),
