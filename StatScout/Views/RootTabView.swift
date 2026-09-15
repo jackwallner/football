@@ -261,9 +261,10 @@ struct RootTabView: View {
 
     private var compareTab: some View {
         NavigationStack {
-            // CompareView declares its own ComparisonRoute / YearCompareRoute
-            // destinations, so StandardDestinations is intentionally omitted
-            // here to avoid a duplicate navigationDestination for the same type.
+            // CompareView pushes its own comparisons with item-based
+            // destinations, which never collide with the type-based ones in
+            // StandardDestinations. The full set is needed because a profile
+            // opened here links onward to metric, stat, team and game pages.
             CompareView(
                 viewModel: viewModel,
                 isActive: selection == Tab.compare.rawValue
@@ -272,7 +273,7 @@ struct RootTabView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .modifier(GridironNavBar())
                 .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated, dataCoverage: viewModel.dataCoverage))
-                .modifier(PlayerProfileDestination(viewModel: viewModel))
+                .modifier(StandardDestinations(viewModel: viewModel))
         }
     }
 
@@ -448,11 +449,8 @@ private struct HomeTabToolbar: ViewModifier {
     }
 }
 
-/// Just the player-profile route. Split out of `StandardDestinations` so the
-/// Compare tab, which owns its own comparison routes and so can't take the
-/// whole bundle, can still push a player page. Following a player is free, and
-/// a followed name that can't be tapped through to its own numbers is a dead
-/// row on the one screen the user curated themselves.
+/// The player-profile, game and schedule routes, the part of
+/// `StandardDestinations` every stack that shows a player or a game needs.
 struct PlayerProfileDestination: ViewModifier {
     let viewModel: DashboardViewModel
 

@@ -1,6 +1,5 @@
-Built for game day.
-• New Games tab: scores, schedules and box scores for every game, with advanced EPA breakdowns.
-• Stats opens on familiar leaders like passing yards, with advanced rankings one tap away.
-• New Following view keeps your team and favorite players in one place, free.
-• Search the whole leaderboard without losing a player's league rank.
-• Fresh stats soon after games are published, and every screen shows the week and games included.
+Polish for game day.
+• Returning after a few days now shows your latest saved stats instead of an old opening-week snapshot.
+• Game pages show a loading state and a Try Again button if the advanced breakdown can't load.
+• Stat rows on player pages opened from Compare now open their leaderboards.
+• Clearer StatScout+ description of what advanced box scores include.

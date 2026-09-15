@@ -28,6 +28,10 @@ struct DiskPlayerCache: PlayerCaching {
            Date().timeIntervalSince(modified) > maxAge {
             throw URLError(.resourceUnavailable)
         }
+        return try loadPlayersIgnoringAge()
+    }
+
+    func loadPlayersIgnoringAge() throws -> [Player] {
         let data = try Data(contentsOf: fileURL)
         return try JSONDecoder.statScout.decode([Player].self, from: data)
     }
@@ -67,21 +71,21 @@ struct TwoTierPlayerCache: PlayerCaching {
     private let current: DiskPlayerCache
     private let bundle: Bundle
     private let historicalBundleResourceName: String
-    private let currentBundleResourceName: String
 
     init(
         fileManager: FileManager = .default,
+        directory: URL? = nil,
         bundle: Bundle = .main,
-        historicalBundleResourceName: String = "players-historical",
-        currentBundleResourceName: String = "players-current"
+        historicalBundleResourceName: String = "players-historical"
     ) {
-        let directory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first ?? fileManager.temporaryDirectory
+        let directory = directory
+            ?? fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
         self.historical = PlistPlayerCache(fileURL: directory.appending(path: "players-historical.plist"))
         self.legacyHistorical = DiskPlayerCache(fileURL: directory.appending(path: "players-historical.json"), maxAge: nil)
-        self.current = DiskPlayerCache(fileURL: directory.appending(path: "players-current.json"), maxAge: 48 * 60 * 60)
+        self.current = DiskPlayerCache(fileURL: directory.appending(path: "players-current.json"), maxAge: nil)
         self.bundle = bundle
         self.historicalBundleResourceName = historicalBundleResourceName
-        self.currentBundleResourceName = currentBundleResourceName
     }
 
     func loadPlayers() throws -> [Player] {
@@ -90,16 +94,19 @@ struct TwoTierPlayerCache: PlayerCaching {
         return historicalPlayers + currentPlayers
     }
 
+    /// The last snapshot this device accepted from the server, whatever its age.
+    ///
+    /// Only server data is ever returned. Builds used to fall back to a bundled
+    /// current-season snapshot once this file passed 48 hours, and re-save it as
+    /// fresh, so a fan returning in Week 6 saw the four-team Week 1 export as the
+    /// live leaderboard. An old saved snapshot is still the user's newest real
+    /// data, and the freshness caption restored beside it says how old it is.
     func loadCurrentPlayers() throws -> [Player] {
-        if let cached = try? current.loadPlayers(), PlayerSnapshotValidator.isCompleteCurrent(cached) {
-            return cached
+        guard let cached = try? current.loadPlayersIgnoringAge(),
+              PlayerSnapshotValidator.isCompleteCurrent(cached) else {
+            return []
         }
-        if let players = loadBundledPlayers(named: currentBundleResourceName),
-           PlayerSnapshotValidator.isCompleteCurrent(players) {
-            try? current.savePlayers(players)
-            return players
-        }
-        return []
+        return cached
     }
 
     /// The historical tier, never including the live season.

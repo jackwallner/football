@@ -97,7 +97,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .bestWorst:
             return "The league leader and the league trailer on every NFL metric, side by side, in one board."
         case .advancedBoxScore:
-            return "Every player in every game: EPA, CPOE, RYOE, separation and YAC over expected, beside the box score."
+            return "Every player in every game: EPA, success rate, CPOE and depth of target, beside the box score."
         }
     }
 
@@ -130,7 +130,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         ("chart.bar.fill", "Last 3 / 5 / 8 game form on any player, team or leaderboard"),
         ("person.2.fill", "Head-to-head: any two players, every metric"),
         ("shield.lefthalf.filled", "Team scouting: advanced and standard, season or recent"),
-        ("sportscourt.fill", "Advanced box scores: EPA, CPOE and RYOE for every player, every game"),
+        ("sportscourt.fill", "Advanced box scores: EPA, success rate and CPOE for every player, every game"),
         ("calendar.badge.clock", "Every season back to 2000 + year-over-year trends")
     ]
 
