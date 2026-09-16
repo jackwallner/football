@@ -176,6 +176,12 @@ final class DashboardViewModel {
     var loadingProgress = 0.05
     var errorMessage: String?
     var lastFetchFailed = false
+    /// The last failure was the network, not the data.
+    ///
+    /// Drives the offline framing on the empty board: "Data Error" beside a
+    /// warning triangle is a claim about the stats, and on a first run with no
+    /// signal the stats are fine and the phone is not.
+    var lastFailureWasConnectivity = false
     private var hasStartedLoading = false
     private var loadTask: Task<Void, Never>?
     private var freshnessCheckTask: Task<FreshnessCheckResult, Never>?
@@ -1072,6 +1078,7 @@ final class DashboardViewModel {
         isLoading = players.isEmpty
         errorMessage = nil
         lastFetchFailed = false
+        lastFailureWasConnectivity = false
 
         let freshnessResult = await checkForUpdates(force: true)
         let revisionAtStart = dataFreshness?.revision
@@ -1133,6 +1140,7 @@ final class DashboardViewModel {
         } catch _ as URLError {
             errorMessage = players.isEmpty ? "Can't reach data feed. Check your connection." : "Showing saved data. Pull to refresh when your connection improves."
             lastFetchFailed = true
+            lastFailureWasConnectivity = true
         } catch {
             errorMessage = players.isEmpty ? "Something went wrong loading player data." : "Showing saved data. Pull to refresh to try again."
             lastFetchFailed = true

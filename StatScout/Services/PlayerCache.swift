@@ -64,11 +64,27 @@ struct PlistPlayerCache: PlayerCaching {
     }
 }
 
+/// Proof that the current-season snapshot on disk came from the server, written
+/// beside it whenever this build saves one.
+///
+/// Builds through 1.2.1 wrote server responses and a bundled four-team opening
+/// week export to the same `players-current.json`, with nothing in the file to
+/// tell them apart - and the opening-week validator accepts both, by design, so
+/// it can never be the thing that separates them. Without a marker the only
+/// honest reading of that file is "unknown origin".
+struct CurrentSnapshotProvenance: Codable {
+    /// Bump when what the snapshot file means changes.
+    static let currentSchema = 1
+    var schema: Int = currentSchema
+    var savedAt: Date
+}
+
 /// Two-tier cache: permanent for historical data, expiring for current season.
 struct TwoTierPlayerCache: PlayerCaching {
     private let historical: PlistPlayerCache
     private let legacyHistorical: DiskPlayerCache
     private let current: DiskPlayerCache
+    private let currentProvenanceURL: URL
     private let bundle: Bundle
     private let historicalBundleResourceName: String
 
@@ -84,6 +100,7 @@ struct TwoTierPlayerCache: PlayerCaching {
         self.historical = PlistPlayerCache(fileURL: directory.appending(path: "players-historical.plist"))
         self.legacyHistorical = DiskPlayerCache(fileURL: directory.appending(path: "players-historical.json"), maxAge: nil)
         self.current = DiskPlayerCache(fileURL: directory.appending(path: "players-current.json"), maxAge: nil)
+        self.currentProvenanceURL = directory.appending(path: "players-current-provenance.json")
         self.bundle = bundle
         self.historicalBundleResourceName = historicalBundleResourceName
     }
@@ -102,11 +119,44 @@ struct TwoTierPlayerCache: PlayerCaching {
     /// live leaderboard. An old saved snapshot is still the user's newest real
     /// data, and the freshness caption restored beside it says how old it is.
     func loadCurrentPlayers() throws -> [Player] {
+        // An unprovenanced file predates the marker, so it is either a real
+        // server snapshot saved by 1.2.x or the bundled four-team opening-week
+        // export that 1.2 wrote to this same path after a failed refresh. It
+        // cannot be both, and nothing in it says which - so it is discarded
+        // once, on the first launch after upgrading, rather than kept and
+        // presented as the live league. The cost is one refresh; the next save
+        // writes the marker and this never happens again. See
+        // `CurrentSnapshotProvenance`.
+        guard hasServerProvenance else {
+            discardCurrentSnapshot()
+            return []
+        }
         guard let cached = try? current.loadPlayersIgnoringAge(),
               PlayerSnapshotValidator.isCompleteCurrent(cached) else {
             return []
         }
         return cached
+    }
+
+    private var hasServerProvenance: Bool {
+        guard let data = try? Data(contentsOf: currentProvenanceURL),
+              let marker = try? JSONDecoder.statScout.decode(CurrentSnapshotProvenance.self, from: data)
+        else { return false }
+        return marker.schema == CurrentSnapshotProvenance.currentSchema
+    }
+
+    private func discardCurrentSnapshot() {
+        try? FileManager.default.removeItem(at: current.fileURL)
+        try? FileManager.default.removeItem(at: currentProvenanceURL)
+    }
+
+    private func writeCurrentProvenance() {
+        guard let data = try? JSONEncoder.statScout.encode(CurrentSnapshotProvenance(savedAt: Date())) else { return }
+        try? FileManager.default.createDirectory(
+            at: currentProvenanceURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try? data.write(to: currentProvenanceURL, options: [.atomic])
     }
 
     /// The historical tier, never including the live season.
@@ -173,6 +223,9 @@ struct TwoTierPlayerCache: PlayerCaching {
         }
         if !currentPlayers.isEmpty, PlayerSnapshotValidator.isCompleteCurrent(currentPlayers) {
             try current.savePlayers(currentPlayers)
+            // Only after the rows are safely down, so a failed write never
+            // leaves a marker vouching for a file that isn't there.
+            writeCurrentProvenance()
         }
     }
 }

@@ -89,6 +89,23 @@ struct PlayerProfileView: View {
         history.filter { $0.seasonPhase == player.seasonPhase }
     }
 
+    /// The league cohort every percentile, curve and comparison on this page is
+    /// measured against, for the season the selector is actually on.
+    ///
+    /// `allPlayers` is handed in once, for the season the profile was opened
+    /// in. The season selector moved `displayedPlayer`'s numbers but not the
+    /// field they were ranked inside, so a 2022 line was being scored against
+    /// the 2026 league. Falls back to the injected array whenever there is no
+    /// view model (previews and tests) or the selector hasn't moved.
+    private var cohortPlayers: [Player] {
+        guard let season = activeSeason,
+              season != player.season,
+              let freshnessViewModel
+        else { return allPlayers }
+        let cohort = freshnessViewModel.players(forSeason: season, phase: activePhase)
+        return cohort.isEmpty ? allPlayers : cohort
+    }
+
     /// The phase this profile is reading, for the game-log fetch and its cache
     /// key. The season selector moves within a phase, never across one.
     private var activePhase: SeasonPhase { player.seasonPhase }
@@ -125,13 +142,13 @@ struct PlayerProfileView: View {
     /// Players eligible for comparison: same position group, sorted by overall
     /// percentile proximity to the current player so the closest match is first.
     private var comparablePlayers: [Player] {
-        let myType = player.playerType?.lowercased()
-        let pool = allPlayers.filter { other in
+        let myType = displayedPlayer.playerType?.lowercased()
+        let pool = cohortPlayers.filter { other in
             guard other.playerId != player.playerId else { return false }
             guard let myType else { return true }
             return other.playerType?.lowercased() == myType
         }
-        let mine = player.overallPercentile
+        let mine = displayedPlayer.overallPercentile
         return pool.sorted { a, b in
             abs(a.overallPercentile - mine) < abs(b.overallPercentile - mine)
         }
@@ -140,7 +157,10 @@ struct PlayerProfileView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                PlayerIdentityStrip(player: player)
+                // `displayedPlayer`, so a player who changed clubs wears the
+                // team he actually played for in the season on screen rather
+                // than the one from whichever season you opened the page in.
+                PlayerIdentityStrip(player: displayedPlayer)
 
                 if let freshnessViewModel {
                     DataFreshnessView(
@@ -215,7 +235,7 @@ struct PlayerProfileView: View {
         }
         .sheet(isPresented: $showingPlayerPicker) {
             PlayerPickerSheet(players: comparablePlayers) { selected in
-                comparisonRoute = ComparisonRoute(playerA: player, playerB: selected)
+                comparisonRoute = ComparisonRoute(playerA: displayedPlayer, playerB: selected)
             }
         }
         .sheet(item: $trialPitchTrigger) { trigger in
@@ -360,7 +380,7 @@ struct PlayerProfileView: View {
                 RecentFormCard(
                     player: player,
                     season: activeSeason ?? player.season ?? Calendar.current.component(.year, from: .now),
-                    leaguePlayers: allPlayers,
+                    leaguePlayers: cohortPlayers,
                     fetchGameLogs: fetchGameLogs,
                     freshnessRevision: freshnessViewModel?.freshnessRevision,
                     freshnessStatus: freshnessViewModel?.freshnessStatus,
@@ -740,9 +760,10 @@ struct PlayerProfileView: View {
         }
         .onAppear { rebuildRecentCurves() }
         .onChange(of: allPlayers.count) { _, _ in rebuildRecentCurves() }
+        .onChange(of: activeSeason) { _, _ in rebuildRecentCurves() }
     }
 
-    private var category: MetricCategory { player.primaryCategory }
+    private var category: MetricCategory { displayedPlayer.primaryCategory }
 
     /// Recent-form is anchored to the current season's game logs, so it's only
     /// meaningful while viewing the current season. Historical seasons render
@@ -922,7 +943,7 @@ struct PlayerProfileView: View {
 
         switch effectiveFormDisplayMode {
         case .season:
-            NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason)) {
+            NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason, phase: activePhase)) {
                 MetricBar(metric: metric)
                     .padding(.horizontal, GridironGeo.padCard)
                     .padding(.vertical, 12)
@@ -946,7 +967,7 @@ struct PlayerProfileView: View {
             } else if !metric.id.hasPrefix("recent-stub-") {
                 // No game-log data for this metric - fall back to the season bar
                 // so the recent view still shows every percentile bar.
-                NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason)) {
+                NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason, phase: activePhase)) {
                     MetricBar(metric: metric)
                         .padding(.horizontal, GridironGeo.padCard)
                         .padding(.vertical, 12)
@@ -959,7 +980,7 @@ struct PlayerProfileView: View {
                 .buttonStyle(.plain)
             }
         case .both:
-            NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason)) {
+            NavigationLink(value: MetricRoute(label: metric.label, category: metric.category, season: activeSeason, phase: activePhase)) {
                 DualMetricBar(
                     season: metric,
                     recent: recentMetric,
@@ -993,7 +1014,7 @@ struct PlayerProfileView: View {
 
     private func rebuildRecentCurves() {
         recentCurves = LeaguePercentileCurves(
-            players: allPlayers,
+            players: cohortPlayers,
             categories: [category],
             labels: category.metricPriorityOrder
         )
@@ -1064,7 +1085,7 @@ struct PlayerProfileView: View {
     }
 
     private var standardFallbackCategory: StandardStatCategory {
-        switch player.playerType?.lowercased() {
+        switch displayedPlayer.playerType?.lowercased() {
         case "qb":  return .passing
         case "rb":  return .rushing
         case "wr", "te": return .receiving
@@ -1115,7 +1136,7 @@ struct PlayerProfileView: View {
     private func peerValues(forStat label: String) -> [String] {
         let key = label.uppercased()
         let group = displayedPlayer.positionGroup
-        return allPlayers.compactMap { other in
+        return cohortPlayers.compactMap { other in
             guard other.positionGroup == group,
                   let stat = other.standardStats?.first(where: { $0.label.uppercased() == key })
             else { return nil }
@@ -1311,7 +1332,8 @@ struct PlayerProfileView: View {
             NavigationLink(value: StandardStatRoute(
                 stat: standardStatKey(for: metric.label),
                 category: Self.standardCategory(for: metric.label, fallback: standardFallbackCategory),
-                season: activeSeason
+                season: activeSeason,
+                phase: activePhase
             )) {
                 Group {
                     switch effectiveStandardMode {

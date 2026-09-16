@@ -3,8 +3,12 @@ import SwiftUI
 struct TeamView: View {
     @EnvironmentObject private var store: StoreService
     let team: String
-    let players: [Player]
-    var season: Int? = nil
+    /// Seed roster for previews and tests, used only when there is no view
+    /// model. The live roster is derived, see `players`.
+    var seedPlayers: [Player] = []
+    /// Seed season for previews and tests, used only when there is no view
+    /// model. See `displaySeason`.
+    var seedSeason: Int? = nil
     var viewModel: DashboardViewModel? = nil
     /// (team, season, phase, since).
     var fetchTeamGameLogs: ((String, Int, SeasonPhase, Date) async throws -> [PlayerGameLog])? = nil
@@ -57,8 +61,24 @@ struct TeamView: View {
         }
     }
 
+    /// The roster for the season and phase that are selected *right now*.
+    ///
+    /// This was a one-time array captured when the page was pushed. The nav-bar
+    /// picker here moves `viewModel.selectedSeason`, and `leaguePlayers`
+    /// followed it, but the rows, cards, category filters and sort metrics all
+    /// kept reading the array from arrival: you picked 2024, the picker said
+    /// 2024, the league context was 2024, and the roster underneath was still
+    /// whichever season you happened to open the page in.
+    private var players: [Player] {
+        guard let viewModel else { return seedPlayers }
+        return viewModel.players(forTeam: team)
+    }
+
     private var displaySeason: Int {
-        season ?? players.compactMap(\.season).max() ?? Calendar.current.component(.year, from: Date())
+        viewModel?.selectedSeason
+            ?? seedSeason
+            ?? seedPlayers.compactMap(\.season).max()
+            ?? Calendar.current.component(.year, from: Date())
     }
 
     private var leaguePlayers: [Player] {
@@ -737,8 +757,8 @@ struct TeamView: View {
     NavigationStack {
         TeamView(
             team: "KC",
-            players: SampleData.players.filter { $0.team == "KC" },
-            season: 2025
+            seedPlayers: SampleData.players.filter { $0.team == "KC" },
+            seedSeason: 2025
         )
     }
 }

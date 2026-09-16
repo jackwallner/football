@@ -325,10 +325,20 @@ struct DashboardView: View {
                 .padding(.vertical, 24)
                 .frame(minHeight: 200)
             } else if let errorMessage = viewModel.errorMessage, viewModel.leaderboard.isEmpty {
+                // An offline first run is not a data error. The live season
+                // ships no bundled rows, so there is genuinely nothing to show
+                // until one update lands, and saying "Data Error" beside a
+                // warning triangle blamed the stats for the phone's signal.
+                let isOffline = viewModel.lastFailureWasConnectivity
                 ContentUnavailableView {
-                    Label("Data Error", systemImage: "exclamationmark.triangle")
+                    Label(
+                        isOffline ? "No connection" : "Data Error",
+                        systemImage: isOffline ? "wifi.exclamationmark" : "exclamationmark.triangle"
+                    )
                 } description: {
-                    Text(errorMessage)
+                    Text(isOffline
+                         ? "The current season needs a connection for its first update. Once it has loaded, your saved stats are here offline."
+                         : errorMessage)
                 } actions: {
                     Button("Retry") {
                         Task { await viewModel.load() }
@@ -355,12 +365,40 @@ struct DashboardView: View {
                 .frame(maxWidth: .infinity, minHeight: 200)
             } else if viewModel.leaderboard.isEmpty && !viewModel.isLoading {
                 let hasSeasonData = !viewModel.seasonPlayers.isEmpty
+                // The live season ships no bundled rows on purpose: a snapshot
+                // baked into a build is a week stale by the time anyone
+                // installs it, and there is no honest way to caption it as the
+                // current league. So a first run with no connection genuinely
+                // has nothing here, and says so - "No player data is available
+                // for the 2026 season" reads as a verdict on the season rather
+                // than on the network, and sent people looking for a refresh
+                // control that would not have helped.
+                let needsFirstConnection = !hasSeasonData
+                    && viewModel.selectedSeason == viewModel.freeSeason
+                    && viewModel.lastFetchFailed
                 ContentUnavailableView {
-                    Label(hasSeasonData ? "No matching metrics" : "No players yet", systemImage: "football")
+                    Label(
+                        needsFirstConnection
+                            ? "Connect to load \(SeasonLabel.text(viewModel.selectedSeason))"
+                            : (hasSeasonData ? "No matching metrics" : "No players yet"),
+                        systemImage: needsFirstConnection ? "wifi.exclamationmark" : "football"
+                    )
                 } description: {
-                    Text(hasSeasonData
-                         ? "No metrics are available for \(viewModel.selectedPosition.rawValue) in \(SeasonLabel.text(viewModel.selectedSeason))."
-                         : "No player data is available for the \(SeasonLabel.text(viewModel.selectedSeason)) season.")
+                    if needsFirstConnection {
+                        Text("The current season needs a connection for its first update. Once it has loaded, your saved stats are here offline.")
+                    } else {
+                        Text(hasSeasonData
+                             ? "No metrics are available for \(viewModel.selectedPosition.rawValue) in \(SeasonLabel.text(viewModel.selectedSeason))."
+                             : "No player data is available for the \(SeasonLabel.text(viewModel.selectedSeason)) season.")
+                    }
+                } actions: {
+                    if needsFirstConnection {
+                        Button("Try Again") {
+                            Task { await viewModel.load() }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(GridironPalette.inkTertiary)
+                    }
                 }
                 .padding(.vertical, 24)
                 .frame(minHeight: 200)

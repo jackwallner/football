@@ -12,6 +12,12 @@ struct MetricRoute: Hashable {
     /// season selector, so a route from a 2022 profile has to carry 2022,
     /// otherwise tapping Cmp% there opened the current-season leaderboard.
     var season: Int? = nil
+    /// Which half of that year. A profile is scoped to the phase you arrived
+    /// from and its season selector never crosses one, so a route from a
+    /// playoff profile has to carry `.postseason`: the season alone resolved
+    /// against whatever the tab's phase happened to be, which landed a playoff
+    /// drill-down on the regular-season board under a playoff heading.
+    var phase: SeasonPhase? = nil
 }
 
 /// Drill-down from a traditional stat row to its league leaderboard.
@@ -19,6 +25,8 @@ struct StandardStatRoute: Hashable {
     let stat: String
     let category: StandardStatCategory
     var season: Int? = nil
+    /// See `MetricRoute.phase`.
+    var phase: SeasonPhase? = nil
 }
 
 struct RootTabView: View {
@@ -513,8 +521,6 @@ private struct StandardDestinations: ViewModifier {
             .navigationDestination(for: TeamDestination.self) { dest in
                 TeamView(
                     team: dest.abbr,
-                    players: viewModel.players(forTeam: dest.abbr),
-                    season: viewModel.selectedSeason,
                     viewModel: viewModel,
                     fetchTeamGameLogs: { team, season, phase, since in
                         try await viewModel.fetchTeamGameLogs(
@@ -529,23 +535,33 @@ private struct StandardDestinations: ViewModifier {
             }
             .navigationDestination(for: MetricRoute.self) { route in
                 let season = route.season ?? viewModel.selectedSeason
+                let phase = route.phase ?? viewModel.selectedPhase
                 MetricRankingView(
                     metricLabel: route.label,
                     metricCategory: route.category,
-                    players: viewModel.players(forSeason: season),
+                    players: viewModel.players(forSeason: season, phase: phase),
                     season: season
                 )
                     .modifier(GridironNavBar())
             }
             .navigationDestination(for: StandardStatRoute.self) { route in
                 let season = route.season ?? viewModel.selectedSeason
+                let phase = route.phase ?? viewModel.selectedPhase
                 StandardStatsLeaderboardScreen(
-                    players: viewModel.players(forSeason: season),
+                    players: viewModel.players(forSeason: season, phase: phase),
                     initialStat: route.stat,
                     initialCategory: route.category,
                     season: season
                 )
-                    .navigationTitle(route.stat + " · " + SeasonLabel.text(season))
+                    // The phase only earns title space when it isn't the
+                    // default: an inline title is tight, and "Pass Yds · 2024
+                    // Regular Season" sweeps into a truncation that "Pass Yds ·
+                    // 2024 Playoffs" is worth paying for.
+                    .navigationTitle(
+                        route.stat + " · " + (phase == .regular
+                            ? SeasonLabel.text(season)
+                            : SeasonLabel.text(season, phase: phase))
+                    )
                     .navigationBarTitleDisplayMode(.inline)
                     .modifier(GridironNavBar())
             }
