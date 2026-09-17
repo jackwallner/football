@@ -77,6 +77,18 @@ final class StatScoutV12ScreenshotUITests: XCTestCase {
         capture(app, name: "07_year_history")
     }
 
+    func testCapture08Roster() throws {
+        let app = launch(tab: "teams")
+        waitForText("TEAM ADVANCED STATS", in: app)
+        waitForText("Kansas City Chiefs", in: app)
+
+        let roster = app.buttons["Roster"]
+        XCTAssertTrue(roster.waitForExistence(timeout: 30), "Roster tab should load")
+        roster.tap()
+        waitForText(fixturePlayer, in: app)
+        capture(app, name: "08_roster")
+    }
+
     private func launch(tab: String) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment = [

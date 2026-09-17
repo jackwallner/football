@@ -27,9 +27,9 @@ struct ScreenshotFixtureAPI: StatcastProviding {
 
     private static let season = StatScoutSeason.current
     private static let priorSeason = season - 1
-    // Week 5 is a coherent fictional capture date for the 2026 season. It
-    // keeps the five-game profile and Trends windows honest and repeatable.
-    private static let asOf = makeDate("2026-10-10T20:00:00Z")
+    // Week 2 is a coherent fictional capture date for the 2026 season. It
+    // keeps the current-season windows honest and repeatable.
+    private static let asOf = makeDate("2026-09-16T20:00:00Z")
     private static let playersBySeason: [Int: [Player]] = [
         season: makePlayers(season: season, prior: false),
         priorSeason: makePlayers(season: priorSeason, prior: true),
@@ -89,7 +89,7 @@ struct ScreenshotFixtureAPI: StatcastProviding {
 
     func fetchDataCoverage(season: Int) async throws -> DataCoverage? {
         guard season == Self.season else { return nil }
-        return DataCoverage(asOf: Self.asOf, week: 5, phase: .regular, gamesIncluded: 80)
+        return DataCoverage(asOf: Self.asOf, week: 2, phase: .regular, gamesIncluded: 32)
     }
 
     func fetchDataFreshness(season: Int) async throws -> DataFreshness? {
@@ -100,8 +100,8 @@ struct ScreenshotFixtureAPI: StatcastProviding {
             sourcePublishedAt: Self.asOf,
             publishedAt: Self.asOf,
             checkedAt: Self.asOf,
-            coverage: DataCoverage(asOf: Self.asOf, week: 5, phase: .regular, gamesIncluded: 80),
-            message: "Fixture data through Week 5",
+            coverage: DataCoverage(asOf: Self.asOf, week: 2, phase: .regular, gamesIncluded: 32),
+            message: "Fixture data through Week 2",
             isCached: false
         )
     }
@@ -399,12 +399,12 @@ extension ScreenshotFixtureAPI {
             playerType: type,
             windowWeeks: windowWeeks,
             asOf: asOf,
-            startWeek: max(1, 6 - windowWeeks),
-            endWeek: 5,
+            startWeek: max(1, 3 - windowWeeks),
+            endWeek: 2,
             team: player.team,
-            games: min(windowWeeks, 5),
-            plays: max(plays(for: type) * min(windowWeeks, 5), 1),
-            touches: touches(for: type) * min(windowWeeks, 5),
+            games: min(windowWeeks, 2),
+            plays: max(plays(for: type) * min(windowWeeks, 2), 1),
+            touches: touches(for: type) * min(windowWeeks, 2),
             metrics: metrics,
             priorMetrics: priorMetrics,
             delta: delta
