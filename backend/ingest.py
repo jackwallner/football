@@ -111,14 +111,24 @@ SEVENTEEN_GAME_FIRST_SEASON = 2021
 def qualification_scale(agg: pd.DataFrame, season: int) -> float:
     """Fraction of a full regular season played so far, capped at 1.
 
-    Measured as the most games any player has appeared in, which tracks the
-    number of weeks played. A finished season always scales to 1, so every past
+    Measured as the median club's games played (each club's busiest player).
+    It used to be the most games any single player had appeared in, so one
+    Thursday night game moved the whole league's bar up a week before thirty
+    clubs had played: at 2026 Week 3 that flagged 56% of receiver metrics as
+    unqualified overnight. A finished season always scales to 1, so every past
     season keeps exactly the thresholds it was ranked on.
     """
     if agg.empty or "games" not in agg.columns:
         return 1.0
     full = 17 if season >= SEVENTEEN_GAME_FIRST_SEASON else 16
-    played = pd.to_numeric(agg["games"], errors="coerce").max()
+    games = pd.to_numeric(agg["games"], errors="coerce")
+    if "team" in agg.columns:
+        teams = agg["team"].astype(str).str.strip()
+        known = games[(teams != "") & (teams.str.lower() != "nan") & games.notna()]
+        per_team = known.groupby(teams[known.index]).max()
+        played = float(np.floor(per_team.median())) if not per_team.empty else games.max()
+    else:
+        played = games.max()
     if pd.isna(played) or played <= 0:
         return 1.0
     return min(1.0, float(played) / full)

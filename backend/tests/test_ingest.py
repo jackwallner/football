@@ -126,7 +126,26 @@ def test_week_one_of_a_live_season_qualifies_on_a_prorated_bar():
     assert not ingest.qualifies({"games": 0}, "Defense", "def", scale=scale)
 
 
+def test_one_thursday_game_does_not_raise_the_league_bar():
+    # 30 clubs have played two games, the Thursday pair three.
+    teams = [f"T{i}" for i in range(32)]
+    agg = pd.DataFrame({
+        "team": teams + teams,
+        "games": [3 if i < 2 else 2 for i in range(32)] + [1] * 32,
+    })
+    assert ingest.qualification_scale(agg, 2026) == pytest.approx(2 / 17)
+
+
+def test_bye_weeks_follow_the_median_club():
+    teams = [f"T{i}" for i in range(32)]
+    agg = pd.DataFrame({"team": teams, "games": [5 if i < 4 else 6 for i in range(32)]})
+    assert ingest.qualification_scale(agg, 2026) == pytest.approx(6 / 17)
+
+
 def test_a_finished_season_keeps_its_full_qualification_bar():
+    assert ingest.qualification_scale(
+        pd.DataFrame({"team": ["KC", "BUF", "KC"], "games": [17, 17, 3]}), 2025
+    ) == 1.0
     assert ingest.qualification_scale(pd.DataFrame({"games": [17, 12]}), 2025) == 1.0
     assert ingest.qualification_scale(pd.DataFrame({"games": [16, 9]}), 2019) == 1.0
     assert ingest.qualification_scale(pd.DataFrame(), 2026) == 1.0

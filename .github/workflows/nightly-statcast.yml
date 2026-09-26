@@ -155,6 +155,21 @@ jobs:
           set -o pipefail
           python backend/ingest_game_details.py --season "$SEASON" 2>&1 | tee game_details.log
 
+      # Player bio, contract, snaps and injuries, team power ratings and game
+      # projections (1.2.2+). New tables only, so a failure here never touches
+      # the published snapshots; the daily enrichment workflow retries it.
+      - name: Build player profiles and team ratings
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SEASON: ${{ needs.probe.outputs.season }}
+        run: |
+          set -o pipefail
+          python backend/ingest_enrichment.py --season "$SEASON" 2>&1 | tee enrichment.log
+
       # Adding a metric source only reaches seasons explicitly requested.  The
       # event path above remains current-season only and does not rewrite the
       # historical bundle or career rollup on every probe.
