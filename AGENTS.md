@@ -1,4 +1,4 @@
-# Gridiron StatScout — Project Guide
+# Gridiron StatScout Project Guide
 
 Gridiron StatScout: NFL advanced-stats percentiles / player-comparison app (iOS).
 XcodeGen project/scheme: `StatScout` (names kept to minimize churn), sim lease
@@ -34,10 +34,10 @@ StatScout is backed by a Supabase NFL dataset fed by a nightly pipeline (already
 - Data source, tables, categories, refresh workflows, the Recent Form window,
   pruning, and regenerating the historical bundle are in
   `.claude/rules/backend-pipeline.md`, which loads when you read a matching file;
-  AGENTS.md readers should open it directly. The duplicate-screenshot history is
+  Codex and other agents should open it directly. The duplicate-screenshot history is
   in `.claude/rules/screenshot-history.md`.
 - **TestFlight upload** sources the creds first: `source ~/.football_credentials && bash scripts/testflight.sh`.
 
 ---
 Shared iOS conventions (build, simulator, release scripts, ASC key, review funnel, signing, gotchas):
-always-loaded global CLAUDE.md + the `ios-dev` skill.
+the global agent rules + the `ios-dev` skill.

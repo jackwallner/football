@@ -12,7 +12,7 @@ paths:
 
 # Gridiron StatScout: backend and data pipeline
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here.
 
 - **Data source**: `nflreadpy` (nflverse) — weekly player stats + Next Gen Stats, cloud-IP friendly, no API key. See `handoff/NFL_CONTRACT.md` for the metric/category/schema contract.
 - **Tables**: `player_snapshots` (id, season, season_type, PK (id, season, season_type); metrics/standard_stats/games jsonb; player_type ∈ qb/rb/wr/te/def). `player_game_logs` (PK (player_id, season, season_type, game_date, player_type); columns `game_id`, `plays`, `touches`, metrics jsonb). `player_recent_form` stores the league-anchored 3/5/8-week windows. Current publisher rows carry nullable `refresh_id`, `source_published_at`, and `published_at` metadata, so older rows and the existing app contract remain valid.

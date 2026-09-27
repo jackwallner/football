@@ -6,7 +6,7 @@ paths:
 
 # Gridiron StatScout: the duplicate screenshots fixed in 1.1.0
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here.
 
 **Duplicate screenshots, fixed in 1.1.0** (2026-08-17): live 1.0 shipped the
 en-US `APP_IPHONE_67` set with 10 shots (`01_qb_leaders.png` and
