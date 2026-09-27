@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// One quiet caption that says what the numbers on screen include and how old
-/// they are, e.g. "Week 1 · 14 games · Updated 2h ago".
+/// they are, e.g. "Through Week 3 · 33 games · Updated 2h ago".
 ///
 /// It used to be a bordered card with a status icon, two or three lines of copy
 /// and a Refresh button, repeated at the top of every board. That is a lot of
@@ -107,13 +107,15 @@ struct DataFreshnessView: View {
         }
     }
 
-    /// "Week 1 · 14 games", or "Week 1 · 12 of 14 games in" while a slate is
+    /// "Through Week 3 · 33 games", or "... · 12 of 14 games in" while a slate is
     /// still arriving.
     private var coverageText: String? {
         guard let coverage = freshness?.coverage ?? viewModel.dataCoverage else { return nil }
         var parts: [String] = []
         if let week = coverage.week {
-            parts.append(coverage.phase == .playoffs ? "Playoffs week \(week)" : "Week \(week)")
+            // "Through": the game count after it is cumulative, and "Week 3 ·
+            // 33 games" read as thirty-three games in Week 3.
+            parts.append(coverage.phase == .playoffs ? "Through playoffs week \(week)" : "Through Week \(week)")
         } else {
             parts.append("Through \(coverage.asOf.formatted(DataCoverage.gameDayStyle))")
         }

@@ -110,7 +110,11 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         try container.encode(games, forKey: .games)
     }
 
+    /// Metrics that carry a real rank. See `Metric.isUnranked`.
+    var rankedMetrics: [Metric] { metrics.filter { !$0.isUnranked } }
+
     var overallPercentile: Int {
+        let metrics = rankedMetrics
         guard !metrics.isEmpty else { return 0 }
         // Players who span more than one category (e.g. a rushing QB with both
         // Passing and Rushing metrics) shouldn't have their headline number
@@ -129,7 +133,7 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
     }
 
     var headlineMetric: Metric? {
-        metrics.sorted { $0.percentile > $1.percentile }.first
+        rankedMetrics.sorted { $0.percentile > $1.percentile }.first
     }
 
     var latestGame: GameTrend? {
@@ -156,7 +160,7 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
     }
 
     func percentile(for category: MetricCategory) -> Int? {
-        let categoryMetrics = metrics.filter { $0.category == category }
+        let categoryMetrics = rankedMetrics.filter { $0.category == category }
         guard !categoryMetrics.isEmpty else { return nil }
         let total = categoryMetrics.map(\.percentile).reduce(0, +)
         return Int(round(Double(total) / Double(categoryMetrics.count)))
@@ -195,6 +199,31 @@ struct Metric: Identifiable, Codable, Hashable, Sendable {
     /// metric. Only the live season ships it, because only the live season ships
     /// players under the bar; nil means the row exists because it qualified.
     var qualified: Bool? = nil
+    /// Set false by screens that build a metric from a counting stat outside
+    /// the registry (the profile's standard line), so a zero there is unranked
+    /// by the same rule as below.
+    var rankable: Bool? = nil
+
+    /// A traditional counting stat at zero: 0 INT, 0 sacks, 0 rushing TD.
+    ///
+    /// The feed ranks these with the midpoint of the tie, so at Week 3 the 674
+    /// defenders without an interception were all painted 47th percentile. A
+    /// player who has done none of a thing is not a 47th-percentile player at
+    /// it, and when most of the league is tied at zero there is no honest rank
+    /// at all. The value still shows; the bar, the number and the player's
+    /// overall average leave it out.
+    var isUnranked: Bool {
+        if rankable == false { return true }
+        guard let definition = FootballMetricRegistry.definition(for: label, category: category),
+              definition.kind == .traditional,
+              FootballMetricRegistry.aggregation(for: label, category: category) == .sum,
+              let number = metricNumericValue(value)
+        else { return false }
+        return number == 0
+    }
+
+    /// Below the prorated playing-time bar for this metric.
+    var isSmallSample: Bool { qualified == false }
 }
 
 struct StandardStat: Identifiable, Codable, Hashable, Sendable {
@@ -796,6 +825,21 @@ extension Player {
             if position == "WR" { return .wr }
             if position == "TE" { return .te }
             return primaryCategory == .defense ? .defense : .wr
+        }
+    }
+
+    /// The volume a category's rates were measured over, for a board subtitle:
+    /// "16 att", "23 tgt", "31 car". Nil when the line has none.
+    func volumeCaption(for category: MetricCategory) -> String? {
+        switch category {
+        case .passing:
+            return MetricWeight.attempts.value(for: self).map { "\(Int($0)) att" }
+        case .rushing:
+            return MetricWeight.carries.value(for: self).map { "\(Int($0)) car" }
+        case .receiving:
+            return MetricWeight.targets.value(for: self).map { "\(Int($0)) tgt" }
+        case .defense:
+            return MetricWeight.games.value(for: self).map { "\(Int($0)) G" }
         }
     }
 

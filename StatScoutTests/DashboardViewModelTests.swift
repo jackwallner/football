@@ -2,6 +2,10 @@ import XCTest
 @testable import Gridiron_StatScout
 
 final class DashboardViewModelTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        UserDefaults.standard.removeObject(forKey: "stats.qualifier")
+    }
     @MainActor
     func testAllMetricsKeyCollision() async throws {
         let players: [Player] = [
@@ -326,10 +330,12 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertTrue(vm.players.contains { $0.season == StatScoutSeason.current })
     }
 
-    /// The live season ships players under the bar. All (the default) shows
-    /// them; Qualified hides them only when the user picks it.
+    /// The live season ships players under the bar. Qualified (the default)
+    /// hides them; All shows them, below everyone who qualifies.
     @MainActor
     func testQualifiedFilterHonoursTheLiveSeasonFlag() async {
+        UserDefaults.standard.removeObject(forKey: "stats.qualifier")
+        defer { UserDefaults.standard.removeObject(forKey: "stats.qualifier") }
         let starter = Player(
             playerId: 1, name: "Starter", team: "NE", position: "QB", handedness: "",
             updatedAt: Date(), season: StatScoutSeason.current, playerType: "qb",
@@ -345,10 +351,13 @@ final class DashboardViewModelTests: XCTestCase {
         let vm = DashboardViewModel(provider: MockProvider(players: [starter, backup]))
         await vm.load()
 
-        XCTAssertEqual(vm.qualifierLevel, .all)
-        XCTAssertEqual(Set(vm.leaderboard.map(\.name)), ["Starter", "Backup"])
-        vm.qualifierLevel = .qualified
+        XCTAssertEqual(vm.qualifierLevel, .qualified)
         XCTAssertEqual(vm.leaderboard.map(\.name), ["Starter"])
+        vm.qualifierLevel = .all
+        // The backup's 99th percentile outranks the starter, but a small
+        // sample never tops a board.
+        XCTAssertEqual(vm.leaderboard.map(\.name), ["Starter", "Backup"])
+        XCTAssertEqual(DashboardViewModel(provider: MockProvider(players: [])).qualifierLevel, .all, "the choice persists")
     }
 
     func testMetricDecodesWithAndWithoutTheQualifiedFlag() throws {

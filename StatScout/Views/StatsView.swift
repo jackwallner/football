@@ -6,7 +6,12 @@ struct StatsView: View {
     let viewModel: DashboardViewModel
     @EnvironmentObject private var store: StoreService
 
-    @AppStorage("stats.board") private var board: StatsBoard = .standard
+    /// Advanced first: EPA, CPOE and RYOE are the reason the app exists, and a
+    /// first run used to land on a passing-yards list every free app has.
+    @AppStorage("stats.board") private var board: StatsBoard = .advanced
+    /// Set when DEF, which has no advanced line until PFR publishes, pushed the
+    /// board to Standard, so leaving DEF puts Advanced back.
+    @State private var fellBackFromAdvanced = false
     @State private var showingFollowing = false
     @State private var standardStat = "Pass Yds"
     @State private var standardSortDescending = true
@@ -69,6 +74,10 @@ struct StatsView: View {
             }
             if viewModel.availableAdvancedSortMetrics.isEmpty, board == .advanced {
                 board = .standard
+                fellBackFromAdvanced = true
+            } else if fellBackFromAdvanced, !viewModel.availableAdvancedSortMetrics.isEmpty {
+                if board == .standard { board = .advanced }
+                fellBackFromAdvanced = false
             }
         }
         .sheet(item: $paywallTrigger) { trigger in
@@ -92,6 +101,8 @@ struct StatsView: View {
             )
         case .bestWorst:
             BestWorstBoard(viewModel: viewModel, bindings: bindings)
+        case .contractValue:
+            ContractValueBoard(viewModel: viewModel, bindings: bindings)
         }
     }
 

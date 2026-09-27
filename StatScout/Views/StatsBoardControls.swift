@@ -5,6 +5,7 @@ enum StatsBoard: String, Hashable {
     case advanced
     case standard
     case bestWorst
+    case contractValue
 }
 
 /// Traditional production stats offered for each NFL position group.
@@ -128,6 +129,8 @@ struct StatsBoardStatPicker: View {
             return bindings.standardStat
         case .bestWorst:
             return "Best & Worst"
+        case .contractValue:
+            return "Contract Value"
         }
     }
 
@@ -174,9 +177,10 @@ struct StatsViewMenu: View {
     @Binding var board: StatsBoard
 
     private var isActive: Bool {
-        viewModel.qualifierLevel != .all
+        viewModel.qualifierLevel != .qualified
             || viewModel.selectedConference != .all
             || board == .bestWorst
+            || board == .contractValue
     }
 
     var body: some View {
@@ -234,10 +238,10 @@ struct StatsViewMenu: View {
     private var boardSection: some View {
         Section("Show") {
             Button {
-                if board == .bestWorst { board = .advanced }
+                if board == .bestWorst || board == .contractValue { board = .advanced }
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             } label: {
-                if board != .bestWorst {
+                if board != .bestWorst && board != .contractValue {
                     Label("Leaderboard", systemImage: "checkmark")
                 } else {
                     Text("Leaderboard")
@@ -254,6 +258,19 @@ struct StatsViewMenu: View {
                     Text("Best & Worst")
                 } else {
                     Label("Best & Worst (StatScout+)", systemImage: "crown.fill")
+                }
+            }
+
+            Button {
+                board = .contractValue
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                if board == .contractValue {
+                    Label("Contract Value", systemImage: "checkmark")
+                } else if store.isPro {
+                    Text("Contract Value")
+                } else {
+                    Label("Contract Value (StatScout+)", systemImage: "crown.fill")
                 }
             }
         }

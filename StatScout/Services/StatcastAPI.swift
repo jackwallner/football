@@ -34,6 +34,9 @@ protocol StatcastProviding: Sendable {
     func fetchGameLogs(gameId: String) async throws -> [PlayerGameLog]
     func fetchGameIdsWithStats(season: Int) async throws -> Set<String>
     func fetchGameDetail(gameId: String) async throws -> GameDetail?
+    func fetchPlayerProfiles(season: Int) async throws -> [PlayerProfile]
+    func fetchTeamRatings(season: Int) async throws -> [TeamRating]
+    func fetchGameProjections(season: Int) async throws -> [GameProjection]
 }
 
 extension StatcastProviding {
@@ -44,6 +47,9 @@ extension StatcastProviding {
     func fetchGameLogs(gameId: String) async throws -> [PlayerGameLog] { [] }
     func fetchGameIdsWithStats(season: Int) async throws -> Set<String> { [] }
     func fetchGameDetail(gameId: String) async throws -> GameDetail? { nil }
+    func fetchPlayerProfiles(season: Int) async throws -> [PlayerProfile] { [] }
+    func fetchTeamRatings(season: Int) async throws -> [TeamRating] { [] }
+    func fetchGameProjections(season: Int) async throws -> [GameProjection] { [] }
 }
 
 struct StatcastAPI: StatcastProviding {
@@ -347,6 +353,66 @@ struct StatcastAPI: StatcastProviding {
             URLQueryItem(name: "limit", value: "1"),
         ])
         return try JSONDecoder.statScout.decode([GameDetail].self, from: data).first
+    }
+
+    /// Bio, contract, snaps and injury for every player the live season ships,
+    /// about 1,100 rows. Optional context: a missing table (a build newer than
+    /// the backend) reads as no profiles, never as a player-data error.
+    func fetchPlayerProfiles(season: Int) async throws -> [PlayerProfile] {
+        var all: [PlayerProfile] = []
+        let pageSize = 1000
+        var offset = 0
+        while true {
+            guard let data = try await getOptional("player_profiles", [
+                URLQueryItem(name: "select", value: "*"),
+                URLQueryItem(name: "season", value: "eq.\(season)"),
+                URLQueryItem(name: "order", value: "player_id.asc"),
+                URLQueryItem(name: "limit", value: String(pageSize)),
+                URLQueryItem(name: "offset", value: String(offset)),
+            ]) else { return [] }
+            let rows = try JSONDecoder.statScout.decode([Lenient<PlayerProfile>].self, from: data)
+            all.append(contentsOf: rows.compactMap(\.value))
+            if rows.count < pageSize { return all }
+            offset += pageSize
+        }
+    }
+
+    func fetchTeamRatings(season: Int) async throws -> [TeamRating] {
+        guard let data = try await getOptional("team_ratings", [
+            URLQueryItem(name: "select", value: "*"),
+            URLQueryItem(name: "season", value: "eq.\(season)"),
+            URLQueryItem(name: "order", value: "rank.asc"),
+        ]) else { return [] }
+        return try JSONDecoder.statScout.decode([Lenient<TeamRating>].self, from: data).compactMap(\.value)
+    }
+
+    func fetchGameProjections(season: Int) async throws -> [GameProjection] {
+        guard let data = try await getOptional("game_projections", [
+            URLQueryItem(name: "select", value: "game_id,home_margin,home_win_prob"),
+            URLQueryItem(name: "season", value: "eq.\(season)"),
+            URLQueryItem(name: "limit", value: "400"),
+        ]) else { return [] }
+        return try JSONDecoder.statScout.decode([Lenient<GameProjection>].self, from: data).compactMap(\.value)
+    }
+
+    /// `get`, except a missing table (404) is nil rather than an error.
+    private func getOptional(_ table: String, _ queryItems: [URLQueryItem]) async throws -> Data? {
+        let endpoint = baseURL
+            .appending(path: "rest/v1/\(table)")
+            .appending(queryItems: queryItems)
+        var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(apiKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        if httpResponse.statusCode == 404 { return nil }
+        guard 200..<300 ~= httpResponse.statusCode || httpResponse.statusCode == 206 else {
+            throw URLError(.badServerResponse)
+        }
+        return data
     }
 
     private func get(_ table: String, _ queryItems: [URLQueryItem]) async throws -> Data {

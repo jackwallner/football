@@ -355,6 +355,10 @@ struct StatGlossaryView: View {
 
     private let supplemental: [GlossaryEntry] = [
         .init(id: "general-games", label: "G", category: "General", description: "Games in which the player recorded a tracked statistic."),
+        .init(id: "general-value", label: "Contract Value", category: "General", description: "Production percentile minus pay percentile, both ranked among this season's qualified players at the position who have an active contract. Pay is the deal's yearly average as a share of the salary cap when it was signed. +20 means producing like a player paid far more. Offense only until advanced defensive stats publish. Contracts: OverTheCap via nflverse."),
+        .init(id: "general-power", label: "Power Rating", category: "General", description: "Points per game better or worse than an average team on a neutral field, from EPA per dropback, EPA per run and points, for minus against, adjusted for schedule. Early in the season last year's rating counts as five games of evidence. Two ratings read like a point spread, with about two points for home field. Modeled on Hawk Blogger's HB Power Rankings."),
+        .init(id: "general-small-sample", label: "Small sample", category: "General", description: "Below the playing-time minimum for that stat, prorated by how much of the season the typical team has played. Defenders need a quarter of their team's defensive snaps."),
+        .init(id: "general-not-ranked", label: "Not ranked", category: "General", description: "A counting stat at zero. When most of the league has none of something, a tie at zero has no honest percentile, so the value shows and the bar does not."),
         .init(id: "passing-cmp-att", label: "Cmp/Att", category: "Passing", description: "Pass completions and attempts."),
         .init(id: "passing-cmp", label: "Cmp", category: "Passing", description: "Completed forward passes."),
         .init(id: "passing-att", label: "Att", category: "Passing", description: "Forward pass attempts."),

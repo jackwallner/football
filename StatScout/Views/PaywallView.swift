@@ -29,6 +29,8 @@ enum PaywallTrigger: Identifiable, Hashable {
     case bestWorst
     /// Player-level advanced tables on a game's box score.
     case advancedBoxScore
+    /// The Contract Value board: production against pay, league-wide.
+    case contractValue
 
     var icon: String {
         switch self {
@@ -46,6 +48,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .recentForm:        return "flame.fill"
         case .bestWorst:         return "arrow.up.arrow.down"
         case .advancedBoxScore:  return "sportscourt.fill"
+        case .contractValue:     return "dollarsign.circle.fill"
         }
     }
 
@@ -65,6 +68,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .recentForm:        return "Recent Form"
         case .bestWorst:         return "Best & Worst"
         case .advancedBoxScore:  return "Advanced Box Scores"
+        case .contractValue:     return "Contract Value"
         }
     }
 
@@ -98,6 +102,8 @@ enum PaywallTrigger: Identifiable, Hashable {
             return "The league leader and the league trailer on every NFL metric, side by side, in one board."
         case .advancedBoxScore:
             return "Every player in every game: EPA, success rate, CPOE and depth of target, beside the box score."
+        case .contractValue:
+            return "Every qualified player's production ranked against his pay. The bargains and the overpays at every position, updated every week."
         }
     }
 
@@ -118,6 +124,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         case .recentForm:        return "statscout_paywall_recent_form"
         case .bestWorst:         return "statscout_paywall_best_worst"
         case .advancedBoxScore:  return "statscout_paywall_advanced_box_score"
+        case .contractValue:     return "statscout_paywall_contract_value"
         }
     }
 
@@ -131,6 +138,7 @@ enum PaywallTrigger: Identifiable, Hashable {
         ("person.2.fill", "Head-to-head: any two players, every metric"),
         ("shield.lefthalf.filled", "Team scouting: advanced and standard, season or recent"),
         ("sportscourt.fill", "Advanced box scores: EPA, success rate and CPOE for every player, every game"),
+        ("dollarsign.circle.fill", "Contract Value: the bargains and overpays at every position"),
         ("calendar.badge.clock", "Every season back to 2000 + year-over-year trends")
     ]
 

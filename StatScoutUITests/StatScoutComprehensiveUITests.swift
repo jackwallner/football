@@ -499,8 +499,15 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         }
         teamsTab.tap()
 
-        // The Teams grid owns a always-visible SearchField (a TextField in the
-        // a11y tree, not a UISearchBar).
+        // Search is part of Clubs. Standings and Power are separate saved views.
+        let clubsButton = app.buttons["Clubs"]
+        guard clubsButton.waitForExistence(timeout: 5) else {
+            return XCTFail("Teams Clubs view should exist")
+        }
+        clubsButton.tap()
+
+        // The Teams grid owns a SearchField (a TextField in the a11y tree, not
+        // a UISearchBar).
         let searchField = app.textFields.firstMatch
         guard searchField.waitForExistence(timeout: 30) else {
             return XCTFail("Teams search field should exist")

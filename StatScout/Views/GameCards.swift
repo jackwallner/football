@@ -363,3 +363,135 @@ struct PlayerLastGameCard: View {
         return "vs \(displayTeamAbbr(log.opponent ?? ""))"
     }
 }
+
+/// Every game this season, newest first: week, opponent, result, and the
+/// player's line. The week-by-week view a 17-game sport is read in, free, and
+/// the natural companion to the Pro rolling windows.
+struct PlayerGameLogCard: View {
+    @Bindable var viewModel: DashboardViewModel
+    let player: Player
+    let season: Int
+    let phase: SeasonPhase
+
+    @State private var entries: [Entry] = []
+    @State private var loadedKey: String?
+    @State private var failed = false
+
+    struct Entry: Identifiable, Hashable {
+        let id: String
+        let gameId: String?
+        let gameDate: Date
+        let team: String
+        let opponent: String?
+        let summary: String
+    }
+
+    private var key: String {
+        "\(player.playerId)-\(season)-\(phase.rawValue)-\(viewModel.freshnessRevision ?? "none")"
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            GridironSectionBar(title: "GAME LOG")
+            if entries.isEmpty {
+                Text(failed ? "Couldn't load games. Pull to refresh." : (loadedKey == nil ? "Loading games…" : "No games yet this season."))
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+            } else {
+                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                    row(entry)
+                        .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
+                }
+            }
+        }
+        .background(GridironPalette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
+        .overlay(
+            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
+                .stroke(GridironPalette.hairline, lineWidth: 0.5)
+        )
+        .task(id: key) { await load() }
+    }
+
+    private func load() async {
+        guard loadedKey != key else { return }
+        do {
+            let logs = try await viewModel.fetchGameLogs(playerId: player.playerId, season: season, seasonPhase: phase)
+            entries = Self.entries(from: logs, fallbackTeam: player.team)
+            loadedKey = key
+            failed = false
+        } catch {
+            if !isTaskCancellation(error) { failed = true }
+        }
+    }
+
+    /// One entry per game; a player with two roles in a game (a rushing QB is
+    /// one row, a two-way player two) reads as one line.
+    static func entries(from logs: [PlayerGameLog], fallbackTeam: String) -> [Entry] {
+        let grouped = Dictionary(grouping: logs) { $0.gameId ?? ISO8601DateFormatter().string(from: $0.gameDate) }
+        return grouped.map { id, rows in
+            let first = rows[0]
+            let summary = GameBoxScore(logs: rows).lines
+                .map(GameBoxScore.summary)
+                .filter { !$0.isEmpty }
+                .joined(separator: " · ")
+            return Entry(
+                id: id,
+                gameId: first.gameId,
+                gameDate: first.gameDate,
+                team: first.team ?? fallbackTeam,
+                opponent: first.opponent,
+                summary: summary
+            )
+        }
+        .sorted { $0.gameDate > $1.gameDate }
+    }
+
+    @ViewBuilder
+    private func row(_ entry: Entry) -> some View {
+        let game = entry.gameId.flatMap { viewModel.game(id: $0) }
+        let content = HStack(alignment: .top, spacing: 10) {
+            Text(game.map { $0.seasonPhase == .regular ? "\($0.week)" : $0.gameType } ?? "-")
+                .font(GridironType.statSmall)
+                .foregroundStyle(GridironPalette.inkTertiary)
+                .frame(width: 28, alignment: .leading)
+                .monospacedDigit()
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(game?.matchupLabel(for: entry.team) ?? "vs \(displayTeamAbbr(entry.opponent ?? ""))")
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(GridironPalette.ink)
+                    if let line = game?.resultLine(for: entry.team) {
+                        Text(line)
+                            .font(GridironType.statSmall)
+                            .foregroundStyle(game?.result(for: entry.team) == "L" ? GridironPalette.performanceLow : GridironPalette.performanceHigh)
+                    }
+                    Spacer(minLength: 0)
+                    Text(entry.gameDate.formatted(DataCoverage.gameDayStyle))
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                }
+                Text(entry.summary.isEmpty ? "No box score line" : entry.summary)
+                    .font(GridironType.small)
+                    .foregroundStyle(GridironPalette.inkSecondary)
+                    .monospacedDigit()
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.horizontal, GridironGeo.padInline)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline), alignment: .bottom)
+        .contentShape(Rectangle())
+
+        if let game {
+            NavigationLink(value: GameRoute(gameId: game.id)) { content }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens the game")
+        } else {
+            content
+        }
+    }
+}

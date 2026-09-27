@@ -22,6 +22,29 @@ private func displayTeamFullName(_ abbr: String) -> String {
 struct PlayerIdentityStrip: View {
     let player: Player
     var showOverallBadge: Bool = false
+    /// Bio from `player_profiles`; nil keeps the strip to team and position.
+    var profile: PlayerProfile? = nil
+    var injury: InjuryReport? = nil
+
+    /// "#11 · WR · 24 yrs · 6-1, 196".
+    private var bioLine: String {
+        guard let profile else { return positionAndHandedness(player) }
+        return [
+            profile.jersey.map { "#\($0)" },
+            player.displayPosition,
+            profile.age().map { "\($0) yrs" },
+            profile.sizeLabel,
+        ]
+        .compactMap { $0 }
+        .joined(separator: " · ")
+    }
+
+    /// "Ohio State · 2023 R1 #20".
+    private var originLine: String? {
+        guard let profile else { return nil }
+        let parts = [profile.college, profile.draftLabel].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
@@ -32,12 +55,28 @@ struct PlayerIdentityStrip: View {
                     .font(GridironType.playerName)
                     .foregroundStyle(GridironPalette.inkOnDark)
                     .lineLimit(1).minimumScaleFactor(0.7)
-                Text(displayTeamFullName(player.team))
-                    .font(GridironType.bodyBold)
-                    .foregroundStyle(.white.opacity(0.85))
-                Text(positionAndHandedness(player))
+                HStack(spacing: 8) {
+                    Text(displayTeamFullName(player.team))
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(.white.opacity(0.85))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    if let injury {
+                        InjuryBadge(report: injury)
+                    }
+                }
+                Text(bioLine)
                     .font(GridironType.small)
                     .foregroundStyle(.white.opacity(0.65))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                if let originLine {
+                    Text(originLine)
+                        .font(GridironType.small)
+                        .foregroundStyle(.white.opacity(0.65))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
             }
             Spacer(minLength: 8)
             if showOverallBadge {
@@ -48,6 +87,25 @@ struct PlayerIdentityStrip: View {
         .padding(.vertical, GridironGeo.padPage)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(GridironPalette.midnight)
+    }
+}
+
+/// "OUT · Hamstring", "Q · Ankle": the player's status for his club's next
+/// game, from the weekly injury report.
+struct InjuryBadge: View {
+    let report: InjuryReport
+
+    var body: some View {
+        Text([report.shortStatus.uppercased(), report.injury].compactMap { $0 }.joined(separator: " · "))
+            .font(GridironType.micro)
+            .foregroundStyle(.white)
+            .lineLimit(1)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(
+                Capsule().fill(report.isOut ? GridironPalette.performanceLow : Color(red: 0.72, green: 0.49, blue: 0.08))
+            )
+            .accessibilityLabel("Injury report: \(report.status)\(report.injury.map { ", \($0)" } ?? "")")
     }
 }
 

@@ -44,6 +44,18 @@ struct TrialPitchSheet: View {
                         title: "Recent form everywhere",
                         detail: "Last 3 / 5 / 8 games on any player, team or board.")
             ]
+        case .contractValue:
+            return [
+                Benefit(icon: "dollarsign.circle.fill",
+                        title: "Contract Value",
+                        detail: "Production against pay for every qualified player."),
+                Benefit(icon: "flame.fill",
+                        title: "The Trends board",
+                        detail: "The whole league ranked by who's moving, right now."),
+                Benefit(icon: "person.2.fill",
+                        title: "Head-to-head matchups",
+                        detail: "Stack any two players across every percentile.")
+            ]
         case .playerScouting, .recentForm, .upgrade, .onboarding, .activation, .bestWorst:
             return [
                 Benefit(icon: "flame.fill",

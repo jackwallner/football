@@ -51,6 +51,21 @@ final class GamesTests: XCTestCase {
         XCTAssertEqual(GameWeek.current(in: games, now: date("2027-03-01T00:00:00Z"))?.week, 2)
     }
 
+    func testCompletedWeekStaysUpUntilTheEveOfThursdayNight() {
+        let games = [
+            game("w2a", week: 2, kickoff: "2026-09-18T00:15:00Z"),
+            game("w2z", week: 2, kickoff: "2026-09-22T00:15:00Z", awayScore: 20, homeScore: 17),
+            game("w3a", week: 3, kickoff: "2026-09-25T00:15:00Z"),
+            game("w3b", week: 3, kickoff: "2026-09-27T17:00:00Z"),
+        ]
+        // Wednesday morning Eastern, the day the old rule rolled over.
+        XCTAssertEqual(GameWeek.current(in: games, now: date("2026-09-23T13:00:00Z"))?.week, 2)
+        // Wednesday night, a day before Thursday's kickoff: the new slate.
+        XCTAssertEqual(GameWeek.current(in: games, now: date("2026-09-24T01:00:00Z"))?.week, 3)
+        // Saturday between Thursday and Sunday: still week 3.
+        XCTAssertEqual(GameWeek.current(in: games, now: date("2026-09-26T18:00:00Z"))?.week, 3)
+    }
+
     @MainActor
     func testTeamRecordCountsRegularSeasonFinalsThroughAGame() async {
         let w1 = game("w1", week: 1, kickoff: "2026-09-13T17:00:00Z", away: "BUF", home: "HOU", awayScore: 36, homeScore: 31)

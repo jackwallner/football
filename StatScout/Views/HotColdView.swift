@@ -400,7 +400,11 @@ struct HotColdView: View {
                 .clipped()
                 .overlay(alignment: .bottom) {
                     BlurGateUnlock(
-                        headline: "See the full board: every position ranked by how far they've moved",
+                        // Early on there is no movement yet, and the screen
+                        // says so above; sell what is actually behind the blur.
+                        headline: isEarlySeason
+                            ? "See the full board: every player's last \(viewModel.recentWindow.rawValue) weeks at every position, with movement from Week \(movementStartWeek)"
+                            : "See the full board: every position ranked by how far they've moved",
                         trigger: .recentForm
                     )
                 }

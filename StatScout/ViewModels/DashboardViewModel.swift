@@ -404,6 +404,106 @@ final class DashboardViewModel {
 
     var currentGameWeek: GameWeek? { GameWeek.current(in: games) }
 
+    // MARK: - Enrichment
+
+    /// Bio, contract, snaps and injury for the live season, keyed by player.
+    /// Optional context: empty until `player_profiles` answers, and every
+    /// screen that reads it leaves the line out rather than waiting.
+    private(set) var profiles: [Int: PlayerProfile] = [:] {
+        didSet { contractValueCache = nil }
+    }
+    /// Power ratings for the live season, keyed by normalized team.
+    private(set) var teamRatings: [String: TeamRating] = [:]
+    /// Projected margins for unplayed games, keyed by game id.
+    private(set) var projections: [String: GameProjection] = [:]
+
+    func profile(for player: Player) -> PlayerProfile? {
+        guard let profile = profiles[player.playerId], profile.season == player.season else { return nil }
+        return profile
+    }
+
+    func teamRating(_ team: String) -> TeamRating? {
+        teamRatings[normalizedTeamAbbreviation(team)]
+    }
+
+    func projection(for game: Game) -> GameProjection? {
+        game.isFinal ? nil : projections[game.id]
+    }
+
+    private func loadProfiles() async {
+        guard let loaded = try? await provider.fetchPlayerProfiles(season: freeSeason),
+              !loaded.isEmpty else { return }
+        profiles = Dictionary(loaded.map { ($0.playerId, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Division and league standings from posted finals, every club present.
+    var standings: [String: StandingsRow] {
+        StandingsRow.build(from: games, teams: nflTeamAbbreviations)
+    }
+
+    /// The first regular-season week a club has not finished yet, which is the
+    /// week its injury report is about.
+    func upcomingWeek(forTeam team: String) -> Int? {
+        games.filter { $0.seasonPhase == .regular && !$0.isFinal && $0.involves(team) }
+            .map(\.week)
+            .min()
+    }
+
+    /// The player's game status for his club's next game, or nil when he is
+    /// not on the report or the report is about a game already played.
+    func injuryReport(for player: Player) -> InjuryReport? {
+        guard player.season == freeSeason, player.seasonPhase == .regular else { return nil }
+        return InjuryReport.current(
+            from: profile(for: player),
+            upcomingWeek: upcomingWeek(forTeam: player.team)
+        )
+    }
+
+    // MARK: - Contract value
+
+    @ObservationIgnored private var contractValueCache: (key: String, values: [Int: ContractValue])?
+
+    /// Production against pay for the selected season's offensive players.
+    /// Only the live season has contracts: a deal signed in 2026 says nothing
+    /// about what a player cost in 2019.
+    var contractValues: [Int: ContractValue] {
+        guard selectedSeason == freeSeason, selectedPhase == .regular, !profiles.isEmpty else { return [:] }
+        let key = "\(selectedSeason)-\(displayedDataRevision ?? "none")-\(seasonPlayers.count)"
+        if let cache = contractValueCache, cache.key == key { return cache.values }
+        let values = ContractValue.compute(
+            players: seasonPlayers,
+            profiles: profiles,
+            isQualified: { [unowned self] player in
+                self.isPlayerQualified(player, in: player.positionGroup.primaryCategory)
+            }
+        )
+        contractValueCache = (key, values)
+        return values
+    }
+
+    func contractValue(for player: Player) -> ContractValue? {
+        guard player.season == freeSeason, player.seasonPhase == .regular else { return nil }
+        if player.season == selectedSeason, selectedPhase == .regular {
+            return contractValues[player.playerId]
+        }
+        return nil
+    }
+
+    /// Players on the Value board: the selected position, qualified, with a
+    /// contract, best value first (or worst, with the direction flipped).
+    func contractValueBoard(descending: Bool) -> [(player: Player, value: ContractValue)] {
+        let values = contractValues
+        return seasonPlayers
+            .filter { $0.positionGroup == selectedPosition && matchesSelectedConference($0) }
+            .compactMap { player in values[player.playerId].map { (player, $0) } }
+            .sorted {
+                if $0.value.score != $1.value.score {
+                    return descending ? $0.value.score > $1.value.score : $0.value.score < $1.value.score
+                }
+                return $0.player.name < $1.player.name
+            }
+    }
+
     /// Loads the schedule, at most once a minute unless forced. Failures keep
     /// whatever schedule is already on screen.
     func loadGames(force: Bool = false) async {
@@ -436,6 +536,22 @@ final class DashboardViewModel {
             gameIdsWithStats = loadedIds
             gamesError = nil
             gamesLoadedAt = Date()
+            // Ratings and projections ride along with the schedule they
+            // describe. Optional: a failure keeps whatever was there.
+            async let ratings = try? provider.fetchTeamRatings(season: season)
+            async let projected = try? provider.fetchGameProjections(season: season)
+            if let loadedRatings = await ratings, !loadedRatings.isEmpty {
+                teamRatings = Dictionary(
+                    loadedRatings.map { (normalizedTeamAbbreviation($0.team), $0) },
+                    uniquingKeysWith: { first, _ in first }
+                )
+            }
+            if let loadedProjections = await projected {
+                projections = Dictionary(
+                    loadedProjections.map { ($0.gameId, $0) },
+                    uniquingKeysWith: { first, _ in first }
+                )
+            }
         } catch {
             if !isTaskCancellation(error) {
                 gamesError = "Couldn't load games. Check your connection and try again."
@@ -505,7 +621,11 @@ final class DashboardViewModel {
     private var recentFormTasks: [Int: Task<Void, Never>] = [:]
 
     /// The window the Trends board and the trend arrows read from.
-    var recentWindow: TrendWindow = .five
+    ///
+    /// Three weeks, so movement exists from Week 4. Five left the paid board
+    /// with nothing to rank through the first five weeks of every season,
+    /// which is when the installs happen.
+    var recentWindow: TrendWindow = .three
 
     /// True while a board is showing recent form rather than season totals.
     /// Pro-gated at the call site, free users get a blurred teaser.
@@ -728,7 +848,9 @@ final class DashboardViewModel {
     }
 
     var filteredPlayers: [Player] {
-        seasonPlayers.filter { player in
+        // Resolved once: it walks every metric in the season.
+        let gateLabel = qualifierLevel == .qualified ? currentSortMetricLabelForGate : nil
+        return seasonPlayers.filter { player in
             let matchesSearch = searchText.isEmpty
                 || player.name.localizedCaseInsensitiveContains(searchText)
                 || player.team.localizedCaseInsensitiveContains(searchText)
@@ -738,7 +860,7 @@ final class DashboardViewModel {
             let matchingMetrics = player.metrics.filter {
                 FootballMetricRegistry.isSupported($0, by: selectedPosition)
             }
-            let qualifies = matchingMetrics.contains { isQualified(player, for: $0.category) }
+            let qualifies = isQualifiedForBoard(player, metrics: matchingMetrics, sortLabel: gateLabel)
             return matchesSearch
                 && matchesPosition
                 && matchesConference
@@ -759,23 +881,82 @@ final class DashboardViewModel {
 
         var description: String {
             switch self {
-            case .all: return "No playing-time minimum"
-            case .qualified: return "Next Gen qualifier"
+            case .all: return "Small samples dimmed"
+            case .qualified: return "Playing-time minimum"
             }
         }
     }
 
-    /// No minimum unless the user picks one: the live season ships every player
-    /// who has played, and the early weeks are nothing but small samples.
-    var qualifierLevel: QualifierLevel = .all
+    /// Qualified by default, and remembered.
+    ///
+    /// It used to default to no minimum, which at Week 2 put a one-target
+    /// receiver at the top of EPA/Tgt and eight 100% catch rates on one to
+    /// three targets at the top of Catch%. The live season still ships every
+    /// player who has played; "All players" is one tap away in the View menu,
+    /// and under it small samples are dimmed and sorted below the rest.
+    var qualifierLevel: QualifierLevel = DashboardViewModel.storedQualifierLevel {
+        didSet { UserDefaults.standard.set(qualifierLevel.rawValue, forKey: Self.qualifierKey) }
+    }
+
+    private static let qualifierKey = "stats.qualifier"
+
+    private static var storedQualifierLevel: QualifierLevel {
+        UserDefaults.standard.string(forKey: qualifierKey).flatMap(QualifierLevel.init(rawValue:)) ?? .qualified
+    }
 
     func isQualified(_ player: Player, for category: MetricCategory?) -> Bool {
         switch qualifierLevel {
         case .all:
             return true
         case .qualified:
-            return Self.hasQualifyingMetric(player, in: category)
+            return isPlayerQualified(player, in: category)
         }
+    }
+
+    /// Whether a player clears the bar, whatever the filter says. Defenders
+    /// with snap counts qualify on snap share; everyone else on the feed's own
+    /// prorated flag.
+    func isPlayerQualified(_ player: Player, in category: MetricCategory?) -> Bool {
+        if let snapQualified = defensiveSnapQualification(player) { return snapQualified }
+        return Self.hasQualifyingMetric(player, in: category)
+    }
+
+    /// Per metric: a receiver over the target bar for Catch% is not thereby
+    /// qualified for a Separation board he has no Next Gen sample on.
+    func isQualified(_ player: Player, metric: Metric) -> Bool {
+        if let snapQualified = defensiveSnapQualification(player) { return snapQualified }
+        return metric.qualified != false
+    }
+
+    /// A defender has to play a quarter of his club's defensive snaps.
+    ///
+    /// The feed's defensive bar is games played, which admits every
+    /// special-teamer who stepped on the field. Nil when there is no snap line
+    /// (a past season, or before the first snap-count publish), which falls
+    /// back to the feed's flag.
+    static let defensiveSnapShareMinimum = 0.25
+
+    private func defensiveSnapQualification(_ player: Player) -> Bool? {
+        guard player.isDefensivePlayer,
+              let share = profile(for: player)?.defenseSnapShare else { return nil }
+        return share >= Self.defensiveSnapShareMinimum
+    }
+
+    /// The board's gate: qualified for the metric it is ranked by, or for any
+    /// of its metrics when it has no sort yet.
+    private func isQualifiedForBoard(_ player: Player, metrics: [Metric], sortLabel: String?) -> Bool {
+        guard qualifierLevel == .qualified else { return true }
+        if let label = sortLabel,
+           let metric = metrics.first(where: { $0.label == label }) {
+            return isQualified(player, metric: metric)
+        }
+        return metrics.contains { isQualified(player, metric: $0) }
+    }
+
+    /// The sort label without re-entering `filteredPlayers` (which
+    /// `currentSortMetric` reads through `eligibleMetrics`).
+    private var currentSortMetricLabelForGate: String? {
+        userSortMetric ?? determineSortMetricLabel()
     }
 
     /// The live season flags each metric; past seasons only ever shipped
@@ -791,13 +972,33 @@ final class DashboardViewModel {
               let referenceMetric = eligibleMetrics.first(where: { $0.label == label }) else {
             return filteredPlayers.sorted { $0.name < $1.name }
         }
-        return filteredPlayers.sorted(
+        let sorted = filteredPlayers.sorted(
             by: Self.metricComparator(
                 label: label,
                 category: referenceMetric.category,
                 descending: sortDescending
             )
         )
+        // Small samples go below the rest, in the same order, so the top of a
+        // board is never a one-target receiver. Only reachable under "All
+        // players"; the default filter already leaves them out.
+        let isSmall: (Player) -> Bool = { [unowned self] player in
+            guard let metric = player.metrics.first(where: {
+                $0.label == label && $0.category == referenceMetric.category
+            }) else { return false }
+            return !self.isQualified(player, metric: metric)
+        }
+        return sorted.filter { !isSmall($0) } + sorted.filter(isSmall)
+    }
+
+    /// Board subtitle volume: "16 att", "23 tgt", "142 snaps".
+    func volumeCaption(for player: Player, category: MetricCategory?) -> String? {
+        let category = category ?? player.primaryCategory
+        if category == .defense,
+           let snaps = profile(for: player)?.defenseSnaps, snaps > 0 {
+            return "\(snaps) snaps"
+        }
+        return player.volumeCaption(for: category)
     }
 
     /// Rank by the backend's direction-correct percentile, then use the raw
@@ -1195,6 +1396,7 @@ final class DashboardViewModel {
             )
         }
         persistFreshness()
+        await loadProfiles()
         await loadGames(force: true)
     }
 

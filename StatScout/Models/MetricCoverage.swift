@@ -74,6 +74,29 @@ enum MetricCoverage {
         return nil
     }
 
+    /// The live season's own gap: a source that exists for this year but has
+    /// not published yet. `note(for:)` can only say what a year predates, so at
+    /// 2026 Week 3, with Pro-Football-Reference's advanced defensive table not
+    /// yet out, the defensive boards said nothing about why two thirds of the
+    /// league had no advanced line.
+    static func pendingNote(
+        category: MetricCategory,
+        advancedDefenseStatus: String?,
+        nextGenStatus: String?
+    ) -> String? {
+        func pending(_ status: String?) -> Bool {
+            guard let status = status?.lowercased() else { return false }
+            return status != "ready" && status != "not_applicable" && status != "unavailable"
+        }
+        if category == .defense, pending(advancedDefenseStatus) {
+            return "Advanced defensive stats (pressures, coverage allowed, missed tackles) publish once Pro-Football-Reference posts them for this season, usually within the first month. Until then defenders are ranked on production."
+        }
+        if category != .defense, pending(nextGenStatus) {
+            return "Next Gen Stats (CPOE, separation, RYOE) for the latest games are still arriving."
+        }
+        return nil
+    }
+
     /// Whether a metric is expected to exist at all in this season. Lets a
     /// caller distinguish "nobody qualified" from "not tracked yet".
     static func isTracked(_ label: String, in season: Int) -> Bool {

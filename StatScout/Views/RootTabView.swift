@@ -214,7 +214,13 @@ struct RootTabView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
-        .background(.ultraThinMaterial.opacity(0.8), in: Capsule())
+        // Near-opaque: the old 0.8 ultra-thin material let the two rows
+        // under it read through and collide with the tab labels on every
+        // board. It still floats; it just no longer shares its pixels.
+        .background {
+            Capsule().fill(.regularMaterial)
+            Capsule().fill(GridironPalette.surface.opacity(0.9))
+        }
         .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
         .shadow(color: .black.opacity(0.10), radius: 12, y: 4)
         .padding(.bottom, 12)
@@ -540,7 +546,8 @@ private struct StandardDestinations: ViewModifier {
                     metricLabel: route.label,
                     metricCategory: route.category,
                     players: viewModel.players(forSeason: season, phase: phase),
-                    season: season
+                    season: season,
+                    viewModel: viewModel
                 )
                     .modifier(GridironNavBar())
             }

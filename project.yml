@@ -2,7 +2,7 @@ name: StatScout
 packages:
   RevenueCat:
     url: https://github.com/RevenueCat/purchases-ios-spm.git
-    from: 5.72.0
+    from: 5.91.0
 options:
   deploymentTarget:
     iOS: "17.0"

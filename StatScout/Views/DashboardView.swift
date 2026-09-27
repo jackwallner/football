@@ -78,12 +78,30 @@ struct DashboardView: View {
 
     /// Why an older season shows fewer advanced metrics. Absent for seasons with
     /// the full set, so it never becomes furniture the eye learns to skip.
+    /// Why a season, or the live season so far, shows fewer advanced metrics,
+    /// plus what the dimmed rows and the bars mean.
+    private var coverageNoteText: String? {
+        let category = viewModel.selectedPosition.primaryCategory
+        let isLive = viewModel.selectedSeason == viewModel.freeSeason && viewModel.selectedPhase == .regular
+        let pending = isLive ? MetricCoverage.pendingNote(
+            category: category,
+            advancedDefenseStatus: viewModel.dataFreshness?.advancedDefenseStatus,
+            nextGenStatus: viewModel.dataFreshness?.nextGenStatus
+        ) : nil
+        let noun = viewModel.selectedPosition == .defense ? "defender" : viewModel.selectedPosition.rawValue
+        let cohort = isLive ? "every \(noun) with a line this season" : "every qualified \(noun)"
+        let minimum = viewModel.qualifierLevel == .all
+            ? "Dimmed rows are under the playing-time minimum."
+            : "Players under the playing-time minimum are hidden; View shows them."
+        let legend = isLive ? "Bars show the percentile among \(cohort). \(minimum)" : "Bars show the percentile among \(cohort)."
+        return [MetricCoverage.note(for: viewModel.selectedSeason, category: category), pending, legend]
+            .compactMap { $0 }
+            .joined(separator: " ")
+    }
+
     @ViewBuilder
     private var coverageNote: some View {
-        if let note = MetricCoverage.note(
-            for: viewModel.selectedSeason,
-            category: viewModel.selectedPosition.primaryCategory
-        ) {
+        if let note = coverageNoteText {
             HStack(alignment: .top, spacing: 6) {
                 Image(systemName: "info.circle")
                     .font(.system(size: 10, weight: .semibold))
@@ -412,7 +430,9 @@ struct DashboardView: View {
                                 rank: index + 1,
                                 player: player,
                                 metricLabel: sortMetric.label,
-                                metricCategory: sortMetric.category
+                                metricCategory: sortMetric.category,
+                                volume: viewModel.volumeCaption(for: player, category: sortMetric.category),
+                                isSmallSample: isSmallSample(player, label: sortMetric.label, category: sortMetric.category)
                             )
                         }
                         .buttonStyle(.plain)
@@ -429,6 +449,13 @@ struct DashboardView: View {
         .padding(.horizontal, 12)
         .padding(.top, 8)
         .padding(.bottom, 12)
+    }
+
+    private func isSmallSample(_ player: Player, label: String?, category: MetricCategory?) -> Bool {
+        guard let label,
+              let metric = player.metrics.first(where: { $0.label == label && (category == nil || $0.category == category) })
+        else { return false }
+        return !viewModel.isQualified(player, metric: metric)
     }
 
     private var loadingCard: some View {

@@ -34,6 +34,22 @@ struct GamesView: View {
         return nflTeamAbbreviations.filter { !playing.contains($0) }
     }
 
+    /// "Week 3 · Sep 24 - 28", so the slate and the Stats caption ("Through
+    /// Week 3") are plainly two different things.
+    private var weekDateRange: String? {
+        guard let selectedWeek else { return nil }
+        let days = slate.compactMap(\.kickoff)
+        guard let first = days.min(), let last = days.max() else { return nil }
+        let style = Date.FormatStyle().month(.abbreviated).day()
+        let calendar = Calendar.current
+        let range = calendar.isDate(first, inSameDayAs: last)
+            ? first.formatted(style)
+            : calendar.isDate(first, equalTo: last, toGranularity: .month)
+                ? "\(first.formatted(style)) - \(last.formatted(.dateTime.day()))"
+                : "\(first.formatted(style)) - \(last.formatted(style))"
+        return "\(selectedWeek.label) · \(range)"
+    }
+
     private var favoriteGame: Game? {
         guard let team = favorites.team else { return nil }
         return slate.first { $0.involves(team) }
@@ -47,6 +63,14 @@ struct GamesView: View {
                 } else {
                     weekSelector
                         .padding(.top, 10)
+                    if let range = weekDateRange {
+                        Text(range)
+                            .font(GridironType.micro)
+                            .foregroundStyle(GridironPalette.inkTertiary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+                    }
                     content
                 }
                 Color.clear.frame(height: 88)
@@ -137,6 +161,16 @@ struct GamesView: View {
         if !finals.isEmpty { section(title: "Final", games: finals) }
         if !upcoming.isEmpty { section(title: "Upcoming", games: upcoming) }
 
+        if upcoming.contains(where: { viewModel.projection(for: $0) != nil }) {
+            Text("Projected margins come from StatScout Power Ratings: each club's efficiency and scoring against an average team, adjusted for schedule, plus two points for home field. Details on the Teams tab.")
+                .font(GridironType.micro)
+                .foregroundStyle(GridironPalette.inkTertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+        }
+
         if !byeTeams.isEmpty {
             Text("Bye: " + byeTeams.map(displayTeamAbbr).joined(separator: ", "))
                 .font(GridironType.micro)
@@ -162,7 +196,14 @@ struct GamesView: View {
             GridironSectionBar(title: title)
             ForEach(Array(games.enumerated()), id: \.element.id) { index, game in
                 NavigationLink(value: GameRoute(gameId: game.id)) {
-                    GameRow(game: game, hasStats: viewModel.hasStats(game), highlight: favorites.team)
+                    GameRow(
+                        game: game,
+                        hasStats: viewModel.hasStats(game),
+                        highlight: favorites.team,
+                        awayRecord: viewModel.record(forTeam: game.awayTeam, through: game),
+                        homeRecord: viewModel.record(forTeam: game.homeTeam, through: game),
+                        projection: viewModel.projection(for: game)
+                    )
                         .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
                 }
                 .buttonStyle(.plain)
@@ -211,13 +252,19 @@ struct GameRow: View {
     let game: Game
     let hasStats: Bool
     var highlight: String? = nil
+    /// Each club's record through this game: after it for a final, going into
+    /// it for one still to be played.
+    var awayRecord: String? = nil
+    var homeRecord: String? = nil
+    /// The power ratings' projected margin, upcoming games only.
+    var projection: GameProjection? = nil
 
     var body: some View {
         let status = game.status()
         HStack(spacing: 12) {
             VStack(spacing: 6) {
-                teamLine(game.awayTeam, score: game.awayScore, status: status)
-                teamLine(game.homeTeam, score: game.homeScore, status: status)
+                teamLine(game.awayTeam, score: game.awayScore, status: status, record: awayRecord)
+                teamLine(game.homeTeam, score: game.homeScore, status: status, record: homeRecord)
             }
             .frame(maxWidth: .infinity)
 
@@ -249,7 +296,7 @@ struct GameRow: View {
         .accessibilityHint("Opens the game")
     }
 
-    private func teamLine(_ team: String, score: Int?, status: GameStatus) -> some View {
+    private func teamLine(_ team: String, score: Int?, status: GameStatus, record: String?) -> some View {
         let isWinner = game.result(for: team) == "W"
         let dim = status == .final && !isWinner && game.result(for: team) != "T"
         return HStack(spacing: 8) {
@@ -263,6 +310,13 @@ struct GameRow: View {
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
+            if let record {
+                Text(record)
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                    .monospacedDigit()
+                    .fixedSize()
+            }
             if let highlight, normalizedTeamAbbreviation(highlight) == normalizedTeamAbbreviation(team) {
                 Image(systemName: "star.fill")
                     .font(.system(size: 8, weight: .bold))
@@ -291,7 +345,11 @@ struct GameRow: View {
         switch status {
         case .final: return hasStats ? game.dayLabel : "Stats arriving"
         case .inProgress, .awaitingScore: return "Score at final"
-        case .upcoming: return game.kickoff.map { $0.formatted(.dateTime.month(.abbreviated).day()) }
+        case .upcoming:
+            if let projection {
+                return projection.label(home: game.homeTeam, away: game.awayTeam)
+            }
+            return game.kickoff.map { $0.formatted(.dateTime.month(.abbreviated).day()) }
         }
     }
 
@@ -305,7 +363,8 @@ struct GameRow: View {
         case .inProgress, .awaitingScore:
             return "\(away) at \(home), in progress"
         case .upcoming:
-            return "\(away) at \(home), \(game.dayLabel) at \(game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "time TBD")"
+            let projected = projection.map { ", projected \($0.label(home: game.homeTeam, away: game.awayTeam))" } ?? ""
+            return "\(away) at \(home), \(game.dayLabel) at \(game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "time TBD")\(projected)"
         }
     }
 }

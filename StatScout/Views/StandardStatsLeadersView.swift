@@ -85,6 +85,18 @@ struct StandardStatsLeadersView: View {
                     .padding(.horizontal, 12)
                     .padding(.top, 8)
                     .padding(.bottom, 12)
+                if let pendingNote {
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 10, weight: .semibold))
+                        Text(pendingNote)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                }
                 Color.clear.frame(height: 88)
                 }
             }
@@ -321,12 +333,18 @@ struct StandardStatsLeadersView: View {
                 .frame(width: 44, alignment: .leading)
 
                 let pct = percentile(for: player, peerValues: peerValues)
+                // A zero count has no honest rank; see `Metric.isUnranked`.
+                let isZero = numericStat(for: player) == 0
                 HStack(spacing: 8) {
-                    PercentileBarMini(percentile: pct)
-                        .frame(width: 34)
+                    if isZero {
+                        Color.clear.frame(width: 34, height: 7)
+                    } else {
+                        PercentileBarMini(percentile: pct)
+                            .frame(width: 34)
+                    }
                     Text(statDisplay(for: player))
                         .font(GridironType.statMed)
-                        .foregroundStyle(GridironPalette.turf)
+                        .foregroundStyle(isZero ? GridironPalette.inkTertiary : GridironPalette.turf)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                         .frame(width: 58, alignment: .trailing)
@@ -334,7 +352,9 @@ struct StandardStatsLeadersView: View {
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(
-                    "\(selectedStat): \(statDisplay(for: player)), \(pct.ordinalString) percentile"
+                    isZero
+                        ? "\(selectedStat): \(statDisplay(for: player)), not ranked"
+                        : "\(selectedStat): \(statDisplay(for: player)), \(pct.ordinalString) percentile"
                 )
             }
             .frame(height: GridironGeo.rowHeight)
@@ -370,7 +390,20 @@ struct StandardStatsLeadersView: View {
 
     private var sampleLabel: String {
         guard let viewModel else { return "PLAYER" }
-        return viewModel.qualifierLevel == .qualified ? "QUALIFIED PLAYERS" : "ALL PLAYERS · NO MINIMUM"
+        return viewModel.qualifierLevel == .qualified ? "QUALIFIED PLAYERS" : "ALL PLAYERS"
+    }
+
+    /// Defense on the live season, while PFR's advanced table is still out:
+    /// this board is the whole defensive picture, and it should say why.
+    private var pendingNote: String? {
+        guard let viewModel,
+              viewModel.selectedSeason == viewModel.freeSeason,
+              viewModel.selectedPhase == .regular else { return nil }
+        return MetricCoverage.pendingNote(
+            category: selectedPosition.primaryCategory,
+            advancedDefenseStatus: viewModel.dataFreshness?.advancedDefenseStatus,
+            nextGenStatus: nil
+        )
     }
 
     /// The volume behind the headline number: attempts for a passing stat,
@@ -393,6 +426,11 @@ struct StandardStatsLeadersView: View {
         }
         if stat.hasPrefix("REC") {
             return denominator(value("Rec/Tgt")).map { "\($0) tgt" }
+        }
+        if selectedPosition == .defense, let viewModel,
+           let caption = viewModel.volumeCaption(for: player, category: .defense),
+           caption.hasSuffix("snaps") {
+            return caption
         }
         guard stat != "G", let games = value("G") else { return nil }
         return games == "1" ? "1 game" : "\(games) games"

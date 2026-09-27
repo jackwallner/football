@@ -160,7 +160,11 @@ struct PlayerProfileView: View {
                 // `displayedPlayer`, so a player who changed clubs wears the
                 // team he actually played for in the season on screen rather
                 // than the one from whichever season you opened the page in.
-                PlayerIdentityStrip(player: displayedPlayer)
+                PlayerIdentityStrip(
+                    player: displayedPlayer,
+                    profile: liveProfile,
+                    injury: freshnessViewModel?.injuryReport(for: displayedPlayer)
+                )
 
                 if let freshnessViewModel {
                     DataFreshnessView(
@@ -366,6 +370,37 @@ struct PlayerProfileView: View {
         .buttonStyle(.plain)
     }
 
+    /// Bio, contract and snaps, for the live season's page only: a 2026
+    /// contract says nothing about what a player cost in 2019.
+    private var liveProfile: PlayerProfile? {
+        freshnessViewModel?.profile(for: displayedPlayer)
+    }
+
+    @ViewBuilder
+    private var contractValueCard: some View {
+        if let profile = liveProfile, profile.contractLabel != nil, let freshnessViewModel {
+            ContractValueCard(
+                player: displayedPlayer,
+                profile: profile,
+                value: freshnessViewModel.contractValue(for: displayedPlayer),
+                coverage: freshnessViewModel.dataCoverage?.week.map { "through Week \($0)" }
+            )
+        }
+    }
+
+    /// Defensive pages on the live season, while PFR's advanced table is out.
+    private var defensivePendingNote: String? {
+        guard displayedPlayer.positionGroup == .defense,
+              let freshnessViewModel,
+              displayedPlayer.season == freshnessViewModel.freeSeason,
+              displayedPlayer.seasonPhase == .regular else { return nil }
+        return MetricCoverage.pendingNote(
+            category: .defense,
+            advancedDefenseStatus: freshnessViewModel.dataFreshness?.advancedDefenseStatus,
+            nextGenStatus: nil
+        )
+    }
+
     private var advancedContent: some View {
         VStack(spacing: 12) {
             // No headline card. It printed the player's top advanced metric
@@ -375,6 +410,21 @@ struct PlayerProfileView: View {
             // to read it against. Its season picker was a duplicate too: the
             // percentile card's own section bar carries one.
             percentileRankingsCard
+
+            if let note = defensivePendingNote {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 10, weight: .semibold))
+                    Text(note)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(GridironType.micro)
+                .foregroundStyle(GridironPalette.inkTertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 4)
+            }
+
+            contractValueCard
 
             if !store.isPro {
                 RecentFormCard(
@@ -498,6 +548,16 @@ struct PlayerProfileView: View {
     private var standardContent: some View {
         VStack(spacing: 12) {
             standardStatsGridCard
+            if let freshnessViewModel,
+               let season = activeSeason ?? player.season,
+               (recentFormSeasons ?? [currentSeason]).contains(season) {
+                PlayerGameLogCard(
+                    viewModel: freshnessViewModel,
+                    player: displayedPlayer,
+                    season: season,
+                    phase: activePhase
+                )
+            }
         }
         .padding(.horizontal, 12)
         .padding(.top, 12)
@@ -1172,7 +1232,10 @@ struct PlayerProfileView: View {
                     label: stat.label.uppercased(),
                     value: stat.value,
                     percentile: pct,
-                    category: Self.standardCategory(for: stat.label, fallback: standardFallbackCategory).metricCategory
+                    category: Self.standardCategory(for: stat.label, fallback: standardFallbackCategory).metricCategory,
+                    // A zero count has no honest rank, same rule as the feed's
+                    // metrics (`Metric.isUnranked`).
+                    rankable: counting && metricNumericValue(stat.value) == 0 ? false : nil
                 )
             }
     }

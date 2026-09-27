@@ -5,13 +5,16 @@ struct MetricRankingView: View {
     let metricCategory: MetricCategory
     let players: [Player]
     let season: Int?
+    /// Supplies qualification and volume; nil in previews.
+    var viewModel: DashboardViewModel? = nil
     @State private var sortDescending: Bool
 
-    init(metricLabel: String, metricCategory: MetricCategory, players: [Player], season: Int?) {
+    init(metricLabel: String, metricCategory: MetricCategory, players: [Player], season: Int?, viewModel: DashboardViewModel? = nil) {
         self.metricLabel = metricLabel
         self.metricCategory = metricCategory
         self.players = players
         self.season = season
+        self.viewModel = viewModel
         // Default to "best first" for the active metric (descending for
         // higher-is-better, ascending for pitcher xwOBA / ERA / WHIP / etc.).
         // User can still flip via the header chevron.
@@ -19,7 +22,7 @@ struct MetricRankingView: View {
     }
 
     private var rankedPlayers: [Player] {
-        players
+        let sorted = players
             .filter { player in
                 player.metrics.contains {
                     $0.label == metricLabel && $0.category == metricCategory
@@ -32,6 +35,14 @@ struct MetricRankingView: View {
                     descending: sortDescending
                 )
             )
+        // Same rule as the Stats board: small samples stay listed, below.
+        return sorted.filter { !isSmallSample($0) } + sorted.filter(isSmallSample)
+    }
+
+    private func isSmallSample(_ player: Player) -> Bool {
+        guard let metric = player.metrics.first(where: { $0.label == metricLabel && $0.category == metricCategory })
+        else { return false }
+        return viewModel.map { !$0.isQualified(player, metric: metric) } ?? metric.isSmallSample
     }
 
     var body: some View {
@@ -79,7 +90,10 @@ struct MetricRankingView: View {
                                 rank: index + 1,
                                 player: player,
                                 metricLabel: metricLabel,
-                                metricCategory: metricCategory
+                                metricCategory: metricCategory,
+                                volume: viewModel?.volumeCaption(for: player, category: metricCategory)
+                                    ?? player.volumeCaption(for: metricCategory),
+                                isSmallSample: isSmallSample(player)
                             )
                         }
                         .buttonStyle(.plain)

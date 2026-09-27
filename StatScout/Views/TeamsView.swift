@@ -27,6 +27,19 @@ struct TeamsView: View {
     // Auto-enter the favorite team once per launch; popping back must not
     // re-push it, or the user can never reach the list.
     @State private var didAutoEnterFavorite = false
+    @AppStorage("teams.view") private var mode: TeamsMode = .clubs
+
+    enum TeamsMode: String, Hashable {
+        case clubs
+        case standings
+        case power
+    }
+
+    /// Standings and power ratings are built from this season's games, so they
+    /// only exist on the live season.
+    private var showsLeagueTables: Bool {
+        viewModel.selectedSeason == viewModel.freeSeason && viewModel.selectedPhase == .regular
+    }
 
     private static let allTeams: [String] = nflTeamAbbreviations
 
@@ -92,7 +105,26 @@ struct TeamsView: View {
                 } else if isInitiallyLoading {
                     teamsLoadingState
                 } else {
-                    allTeamsSection
+                    if showsLeagueTables {
+                        GridironSegmented(
+                            segments: [
+                                .init(value: TeamsMode.clubs, label: "Clubs"),
+                                .init(value: TeamsMode.standings, label: "Standings"),
+                                .init(value: TeamsMode.power, label: "Power"),
+                            ],
+                            selection: $mode
+                        )
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 12)
+                    }
+                    switch showsLeagueTables ? mode : .clubs {
+                    case .clubs:
+                        allTeamsSection
+                    case .standings:
+                        StandingsView(viewModel: viewModel, divisions: Self.divisions)
+                    case .power:
+                        PowerRankingsView(viewModel: viewModel)
+                    }
                 }
                 // Scroll-under spacer so the last grid row isn't trapped behind
                 // the floating tab bar - matches the Dashboard pattern.
@@ -382,11 +414,25 @@ struct TeamsView: View {
         .accessibilityLabel([teamFullName(abbr), weekStatus(abbr)?.spoken].compactMap { $0 }.joined(separator: ", "))
     }
 
-    /// This week's result, kickoff or bye under each club, so the grid doubles
-    /// as the week at a glance. Only for the live season, where it is true.
+    /// The club's record under each disk, or "Live" while it is playing. It
+    /// used to be this week's kickoff day, which from Tuesday to Saturday put
+    /// "Sun" under 28 of the 32 clubs and said nothing about any of them.
     private func weekStatus(_ abbr: String) -> (text: String, spoken: String, color: Color)? {
         guard viewModel.selectedSeason == viewModel.freeSeason,
-              let week = viewModel.currentGameWeek else { return nil }
+              viewModel.selectedPhase == .regular else { return nil }
+        if let game = viewModel.currentGame(forTeam: abbr),
+           [.inProgress, .awaitingScore].contains(game.status()) {
+            return ("Live", "playing \(game.matchupLabel(for: abbr))", GridironPalette.performanceLow)
+        }
+        if let record = viewModel.record(forTeam: abbr) {
+            return (record, "record \(record)", GridironPalette.inkSecondary)
+        }
+        return legacyWeekStatus(abbr)
+    }
+
+    /// Before a club's first final: its first kickoff day, or its bye.
+    private func legacyWeekStatus(_ abbr: String) -> (text: String, spoken: String, color: Color)? {
+        guard let week = viewModel.currentGameWeek else { return nil }
         guard let game = viewModel.currentGame(forTeam: abbr) else {
             return week.phase == .regular ? ("Bye", "bye week", GridironPalette.inkTertiary) : nil
         }
@@ -424,74 +470,6 @@ private struct TeamAbbrDisk: View {
         }
         .frame(height: 48)
         .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 0.5))
-    }
-}
-
-// MARK: - Team Grid Tile
-
-/// Large logo-led tile for the redesigned Teams grid. Tap to navigate; the
-/// favorite star sits in the upper-right corner and the full team name reads
-/// below the abbreviation disk. Long-press surfaces the favorite toggle.
-struct TeamGridTile: View {
-    let abbr: String
-    let isFavorite: Bool
-    var onFavoriteTap: (() -> Void)? = nil
-    let destination: TeamDestination
-
-    var body: some View {
-        ZStack(alignment: .topTrailing) {
-            NavigationLink(value: destination) {
-                tileBody
-            }
-            .buttonStyle(.plain)
-
-            Button {
-                onFavoriteTap?()
-            } label: {
-                Image(systemName: isFavorite ? "star.fill" : "star")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(isFavorite ? Color.yellow : GridironPalette.inkTertiary)
-                    .padding(6)
-                    .background(Circle().fill(GridironPalette.surface))
-                    .overlay(Circle().stroke(GridironPalette.hairline, lineWidth: 0.5))
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel(isFavorite ? "Remove favorite" : "Set as favorite")
-            .padding(6)
-        }
-    }
-
-    private var tileBody: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(NFLTeamColor.color(abbr))
-                    .frame(width: 64, height: 64)
-                    .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
-                Text(abbr)
-                    .font(.system(size: 18, weight: .bold, design: .default))
-                    .foregroundStyle(.white)
-            }
-            .frame(height: 64)
-
-            Text(teamFullName(abbr))
-                .font(GridironType.smallBold)
-                .foregroundStyle(GridironPalette.ink)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-        }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 8)
-        .frame(maxWidth: .infinity, minHeight: 130)
-        .background(isFavorite ? GridironPalette.surfaceAlt : GridironPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
-        .overlay(
-            RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
-                .stroke(isFavorite ? GridironPalette.turf : GridironPalette.hairline,
-                        lineWidth: isFavorite ? 1.5 : 0.5)
-        )
     }
 }
 

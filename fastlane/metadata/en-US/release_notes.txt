@@ -1,5 +1,4 @@
-Polish for game day.
-• Returning after a few days now shows your latest saved stats instead of an old opening-week snapshot.
-• Game pages show a loading state and a Try Again button if the advanced breakdown can't load.
-• Stat rows on player pages opened from Compare now open their leaderboards.
-• Clearer StatScout+ description of what advanced box scores include.
+• Rankings show the playing-time minimum, volume, and when zero-count stats are unranked.
+• Player pages add bio details, injury status, contract value, and a game log.
+• Games and Teams show records, standings, power ratings, and projected margins.
+• Trends starts with a three-week view and explains when movement begins.

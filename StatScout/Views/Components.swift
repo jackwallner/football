@@ -106,21 +106,72 @@ struct MetricBar: View {
     var showValue: Bool = true
 
     private var accessibilityLabel: String {
+        if metric.isUnranked {
+            return "\(metric.label): \(metric.value), not ranked"
+        }
         let valueText = metric.value.isEmpty ? "\(metric.percentile.ordinalString) percentile" : "\(metric.value), \(metric.percentile.ordinalString) percentile"
-        return "\(metric.label): \(valueText)"
+        let sample = metric.isSmallSample ? ", small sample" : ""
+        return "\(metric.label): \(valueText)\(sample)"
     }
 
     var body: some View {
         HStack(spacing: 12) {
             // Label column - left aligned
-            Text(metric.label)
-                .font(GridironType.bodyBold)
-                .foregroundStyle(GridironPalette.ink)
-                .frame(width: 70, alignment: .leading)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(metric.label)
+                    .font(GridironType.bodyBold)
+                    .foregroundStyle(GridironPalette.ink)
+                if metric.isSmallSample, !metric.isUnranked {
+                    Text("Small sample")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+            }
+            .frame(width: 70, alignment: .leading)
 
-            // Percentile bar - takes remaining space
+            if metric.isUnranked {
+                // A zero count has no honest rank (see `Metric.isUnranked`):
+                // an empty track, no bubble, no colour.
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(GridironPalette.surfaceSunk)
+                        .frame(height: 10)
+                    Text("Not ranked")
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                        .padding(.horizontal, 6)
+                        .background(Capsule().fill(GridironPalette.surfaceSunk))
+                        .padding(.leading, 8)
+                }
+                .frame(height: 28)
+                .frame(maxWidth: .infinity)
+            } else {
+                percentileTrack
+                    .opacity(metric.isSmallSample ? 0.45 : 1)
+            }
+
+            // Value column - far right, fixed width (sized for "30.0 ft/s" / "0.421" range)
+            if showValue && !metric.value.isEmpty {
+                Text(metric.value)
+                    .font(GridironType.statMed)
+                    .foregroundStyle(metric.isSmallSample || metric.isUnranked ? GridironPalette.inkSecondary : GridironPalette.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(width: 72, alignment: .trailing)
+            } else {
+                Color.clear
+                    .frame(width: 72)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var percentileTrack: some View {
             let percentileValue = max(0, min(100, metric.percentile))
-            GeometryReader { proxy in
+            return GeometryReader { proxy in
                 let circleSize: CGFloat = 28
                 let trackWidth = proxy.size.width - circleSize
                 let offset = (circleSize / 2) + (trackWidth * CGFloat(percentileValue) / 100.0)
@@ -149,22 +200,6 @@ struct MetricBar: View {
                 }
             }
             .frame(height: 28)
-
-            // Value column - far right, fixed width (sized for "30.0 ft/s" / "0.421" range)
-            if showValue && !metric.value.isEmpty {
-                Text(metric.value)
-                    .font(GridironType.statMed)
-                    .foregroundStyle(GridironPalette.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(width: 72, alignment: .trailing)
-            } else {
-                Color.clear
-                    .frame(width: 72)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
     }
 }
 
@@ -467,6 +502,8 @@ struct TrendArrow: View {
 struct PercentileBarMini: View {
     let percentile: Int
     var height: CGFloat = 7
+    /// Overrides the percentile ramp, for a rank where high is not "good" (pay).
+    var tint: Color? = nil
 
     var body: some View {
         GeometryReader { proxy in
@@ -476,7 +513,7 @@ struct PercentileBarMini: View {
                     .frame(height: height)
 
                 RoundedRectangle(cornerRadius: height/2)
-                    .fill(GridironPalette.color(forPercentile: percentile))
+                    .fill(tint ?? GridironPalette.color(forPercentile: percentile))
                     .frame(width: proxy.size.width * CGFloat(percentile) / 100.0, height: height)
             }
         }
@@ -592,6 +629,12 @@ struct LeaderboardTableRow: View {
     /// wrong ruler for five games' worth of numbers, and there is no window
     /// curve to colour it against.
     var valueOverride: String? = nil
+    /// The volume behind the ranked number, "16 att" or "142 snaps", printed
+    /// after the position. A rate with no denominator beside it gave a
+    /// 16-attempt backup the same authority as a 60-attempt starter.
+    var volume: String? = nil
+    /// Under the playing-time bar for the ranked metric: value and bar dimmed.
+    var isSmallSample: Bool = false
 
     private var displayMetric: Metric? {
         guard let label = metricLabel else { return nil }
@@ -619,9 +662,16 @@ struct LeaderboardTableRow: View {
     }
 
     private var displayValueColor: Color {
-        valueOverride == nil
+        if isSmallSample || displayMetric?.isUnranked == true { return GridironPalette.inkTertiary }
+        return valueOverride == nil
             ? GridironPalette.textColor(forPercentile: displayPercentile)
             : GridironPalette.ink
+    }
+
+    private var subtitle: String {
+        [player.displayPosition, volume, isSmallSample ? "small sample" : nil]
+            .compactMap { $0 }
+            .joined(separator: " · ")
     }
 
     var body: some View {
@@ -641,9 +691,11 @@ struct LeaderboardTableRow: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
-                    Text(player.displayPosition)
+                    Text(subtitle)
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -665,8 +717,13 @@ struct LeaderboardTableRow: View {
                     // beside five games' worth of numbers reads as that
                     // number's rank, which it is not.
                     if valueOverride == nil {
-                        PercentileBarMini(percentile: displayPercentile)
-                            .frame(width: 40)
+                        if displayMetric?.isUnranked == true {
+                            Color.clear.frame(width: 40, height: 7)
+                        } else {
+                            PercentileBarMini(percentile: displayPercentile)
+                                .frame(width: 40)
+                                .opacity(isSmallSample ? 0.35 : 1)
+                        }
                     }
                     Text(displayValueText)
                         .font(GridironType.statSmall)

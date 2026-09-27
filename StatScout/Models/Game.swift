@@ -214,19 +214,27 @@ struct GameWeek: Hashable, Identifiable, Sendable {
 
     /// The week a fan means by "this week".
     ///
-    /// A week stays current until a day and a half after its last kickoff, so
-    /// Monday night's result is still on screen Tuesday morning and the next
-    /// slate takes over by Wednesday. Before the season it is the first week;
-    /// after it, the last.
+    /// A week stays current until a day before the next week's first kickoff:
+    /// Monday night's result, and the whole weekend's finals, stay on screen
+    /// through Wednesday, when the talk is still about them, and the next slate
+    /// takes over on the eve of Thursday night. It used to hand over 36 hours
+    /// after the last kickoff, which put a list of future kickoff times with no
+    /// scores in it on the front door from Wednesday morning. Before the season
+    /// it is the first week; after it, the last.
     static func current(in games: [Game], now: Date = .now) -> GameWeek? {
         let weeks = weeks(in: games)
-        for week in weeks {
-            let kickoffs = games.filter { $0.week == week.week && $0.seasonPhase == week.phase }
-                .compactMap(\.kickoff)
-            guard let last = kickoffs.max() else { continue }
-            if last.addingTimeInterval(36 * 3_600) > now { return week }
+        for (index, week) in weeks.enumerated() {
+            guard index + 1 < weeks.count,
+                  let nextFirst = firstKickoff(of: weeks[index + 1], in: games) else { return week }
+            if now < nextFirst.addingTimeInterval(-24 * 3_600) { return week }
         }
         return weeks.last
+    }
+
+    private static func firstKickoff(of week: GameWeek, in games: [Game]) -> Date? {
+        games.filter { $0.week == week.week && $0.seasonPhase == week.phase }
+            .compactMap(\.kickoff)
+            .min()
     }
 
     func games(from games: [Game]) -> [Game] {
