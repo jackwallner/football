@@ -23,7 +23,7 @@ final class PaywallFunnelUITests: XCTestCase {
         // apps in this fleet have a PRODUCT_NAME that differs from the target
         // name, and XCUIApplication() cannot resolve those, failing with "pid 0".
         let app = XCUIApplication(bundleIdentifier: "com.jackwallner.football")
-        app.launchArguments += ["-rcfunnelprobe", "-rcfunnelprobepurchase"]
+        app.launchArguments += ["-ResetUITestState", "-rcfunnelprobe", "-rcfunnelprobepurchase"]
         app.launchEnvironment["RC_PROBE_USER"] = probeUser
         app.launch()
 

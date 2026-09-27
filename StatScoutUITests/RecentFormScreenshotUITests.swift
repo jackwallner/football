@@ -20,6 +20,11 @@ final class RecentFormScreenshotUITests: XCTestCase {
         // waits and synthesised swipes is what produced "Failed to get background
         // assertion for target app" - a flake in the harness, not the app.
         app.launchArguments += ["-hasCompletedOnboarding", "YES"]
+        // The selected Stats board persists between launches. This test needs
+        // a player leaderboard so it can open a profile.
+        app.launchArguments += ["-stats.board", "advanced"]
+        app.launchArguments += ["-stats.qualifier", "All Players"]
+        app.launchArguments += ["-ResetUITestState"]
         app.launch()
 
         // Player rows are buttons labelled "<rank>, <name>, <pos>, <team>, <stat>"

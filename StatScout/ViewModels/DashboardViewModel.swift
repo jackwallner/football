@@ -887,13 +887,9 @@ final class DashboardViewModel {
         }
     }
 
-    /// Qualified by default, and remembered.
-    ///
-    /// It used to default to no minimum, which at Week 2 put a one-target
-    /// receiver at the top of EPA/Tgt and eight 100% catch rates on one to
-    /// three targets at the top of Catch%. The live season still ships every
-    /// player who has played; "All players" is one tap away in the View menu,
-    /// and under it small samples are dimmed and sorted below the rest.
+    /// All players by default, with small samples dimmed and sorted below
+    /// qualified players. Users can choose Qualified in the View menu to hide
+    /// the small samples.
     var qualifierLevel: QualifierLevel = DashboardViewModel.storedQualifierLevel {
         didSet { UserDefaults.standard.set(qualifierLevel.rawValue, forKey: Self.qualifierKey) }
     }
@@ -901,7 +897,7 @@ final class DashboardViewModel {
     private static let qualifierKey = "stats.qualifier"
 
     private static var storedQualifierLevel: QualifierLevel {
-        UserDefaults.standard.string(forKey: qualifierKey).flatMap(QualifierLevel.init(rawValue:)) ?? .qualified
+        UserDefaults.standard.string(forKey: qualifierKey).flatMap(QualifierLevel.init(rawValue:)) ?? .all
     }
 
     func isQualified(_ player: Player, for category: MetricCategory?) -> Bool {

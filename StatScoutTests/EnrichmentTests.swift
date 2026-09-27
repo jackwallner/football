@@ -188,6 +188,7 @@ final class EnrichmentTests: XCTestCase {
         let vm = DashboardViewModel(provider: provider)
         await vm.load()
         vm.selectedPosition = .defense
+        vm.qualifierLevel = .qualified
 
         XCTAssertEqual(vm.leaderboard.map(\.playerId), [1])
         XCTAssertEqual(vm.volumeCaption(for: regular, category: .defense), "180 snaps")
@@ -204,6 +205,7 @@ final class EnrichmentTests: XCTestCase {
         let vm = DashboardViewModel(provider: MockProvider(players: [receiver]))
         await vm.load()
         vm.selectedPosition = .wr
+        vm.qualifierLevel = .qualified
         vm.setUserSortMetric("Separation")
         XCTAssertTrue(vm.leaderboard.isEmpty, "qualified for EPA/Tgt is not qualified for Separation")
         vm.setUserSortMetric("EPA/Tgt")

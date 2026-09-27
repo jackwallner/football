@@ -330,8 +330,8 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertTrue(vm.players.contains { $0.season == StatScoutSeason.current })
     }
 
-    /// The live season ships players under the bar. Qualified (the default)
-    /// hides them; All shows them, below everyone who qualifies.
+    /// The live season ships players under the bar. All Players (the default)
+    /// keeps them dimmed below qualified players; Qualified hides them.
     @MainActor
     func testQualifiedFilterHonoursTheLiveSeasonFlag() async {
         UserDefaults.standard.removeObject(forKey: "stats.qualifier")
@@ -351,13 +351,13 @@ final class DashboardViewModelTests: XCTestCase {
         let vm = DashboardViewModel(provider: MockProvider(players: [starter, backup]))
         await vm.load()
 
-        XCTAssertEqual(vm.qualifierLevel, .qualified)
-        XCTAssertEqual(vm.leaderboard.map(\.name), ["Starter"])
-        vm.qualifierLevel = .all
+        XCTAssertEqual(vm.qualifierLevel, .all)
         // The backup's 99th percentile outranks the starter, but a small
         // sample never tops a board.
         XCTAssertEqual(vm.leaderboard.map(\.name), ["Starter", "Backup"])
-        XCTAssertEqual(DashboardViewModel(provider: MockProvider(players: [])).qualifierLevel, .all, "the choice persists")
+        vm.qualifierLevel = .qualified
+        XCTAssertEqual(vm.leaderboard.map(\.name), ["Starter"])
+        XCTAssertEqual(DashboardViewModel(provider: MockProvider(players: [])).qualifierLevel, .qualified, "the choice persists")
     }
 
     func testMetricDecodesWithAndWithoutTheQualifiedFlag() throws {

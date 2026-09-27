@@ -29,6 +29,9 @@ final class SeasonPickerUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments += ["-hasCompletedOnboarding", "YES"]
+        app.launchArguments += ["-stats.board", "advanced"]
+        app.launchArguments += ["-stats.qualifier", "All Players"]
+        app.launchArguments += ["-ResetUITestState"]
         app.launch()
     }
 

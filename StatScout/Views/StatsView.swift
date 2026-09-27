@@ -6,9 +6,7 @@ struct StatsView: View {
     let viewModel: DashboardViewModel
     @EnvironmentObject private var store: StoreService
 
-    /// Advanced first: EPA, CPOE and RYOE are the reason the app exists, and a
-    /// first run used to land on a passing-yards list every free app has.
-    @AppStorage("stats.board") private var board: StatsBoard = .advanced
+    @AppStorage("stats.board") private var board: StatsBoard = .standard
     /// Set when DEF, which has no advanced line until PFR publishes, pushed the
     /// board to Standard, so leaving DEF puts Advanced back.
     @State private var fellBackFromAdvanced = false

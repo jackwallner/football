@@ -7,6 +7,12 @@ struct StatScoutApp: App {
     @StateObject private var store = StoreService.shared
 
     init() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-ResetUITestState"),
+           let bundleIdentifier = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
+        }
+        #endif
         ReviewPromptTracker.recordAppLaunch()
         ConversionDiagnostics.recordAppOpen()
         #if DEBUG

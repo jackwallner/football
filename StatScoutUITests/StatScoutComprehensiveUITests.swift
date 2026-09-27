@@ -8,6 +8,12 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
+        // Stats board selection persists on the user's device. This suite
+        // exercises the main player leaderboard, so do not inherit Contract
+        // Value or Best & Worst from an earlier simulator run.
+        app.launchArguments += ["-stats.board", "advanced"]
+        app.launchArguments += ["-stats.qualifier", "All Players"]
+        app.launchArguments += ["-ResetUITestState"]
         // Without this every test in this file lands on the onboarding pager
         // rather than the board it means to exercise.
         app.launchArguments += ["-hasCompletedOnboarding", "YES"]
@@ -515,8 +521,10 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         searchField.tap()
         searchField.typeText("Chiefs")
 
-        // Team disks show the abbreviation and carry the full name as their label.
-        let match = app.buttons["Kansas City Chiefs"]
+        // Team disks append the current record or game status to the full name.
+        let match = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label CONTAINS %@", "Kansas City Chiefs")
+        ).firstMatch
         XCTAssertTrue(match.waitForExistence(timeout: 10), "Should find the Chiefs in search results")
     }
 

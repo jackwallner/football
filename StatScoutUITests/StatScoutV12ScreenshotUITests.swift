@@ -100,6 +100,9 @@ final class StatScoutV12ScreenshotUITests: XCTestCase {
         app.launchArguments = [
             "-ScreenshotData",
             "-hasCompletedOnboarding", "YES",
+            "-stats.board", "advanced",
+            "-stats.qualifier", "All Players",
+            "-ResetUITestState",
             "-StartTab", tab,
         ]
         app.launch()

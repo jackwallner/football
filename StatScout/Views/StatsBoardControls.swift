@@ -177,7 +177,7 @@ struct StatsViewMenu: View {
     @Binding var board: StatsBoard
 
     private var isActive: Bool {
-        viewModel.qualifierLevel != .qualified
+        viewModel.qualifierLevel != .all
             || viewModel.selectedConference != .all
             || board == .bestWorst
             || board == .contractValue
