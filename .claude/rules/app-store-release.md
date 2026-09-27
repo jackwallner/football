@@ -15,8 +15,9 @@ paths:
 - App Store version 1.2.1 is `READY_FOR_SALE`.
 - App Store version 1.2.2 is `WAITING_FOR_REVIEW`, with `releaseType` set to
   `MANUAL`.
-- TestFlight build 52 is `VALID` and attached to 1.2.2. The version was
-  submitted for review on 2026-09-27.
+- TestFlight build 53 is `VALID` and attached to 1.2.2. Build 52 was first
+  submitted on 2026-09-27, then pulled the same day for a fix (a passer's 0 INT
+  showed as "Not ranked") and 1.2.2 was resubmitted with build 53.
 - All 50 version localizations have What's New copy. The full release notes are
   in en-US; the other locales use translated summaries.
 
