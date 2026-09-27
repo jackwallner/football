@@ -334,7 +334,10 @@ struct StandardStatsLeadersView: View {
 
                 let pct = percentile(for: player, peerValues: peerValues)
                 // A zero count has no honest rank; see `Metric.isUnranked`.
+                // Not for a lower-is-better count: a passer's 0 INT is the
+                // best line on the board, not an absence.
                 let isZero = numericStat(for: player) == 0
+                    && StandardStatSemantics.higherIsBetter(label: selectedStat)
                 HStack(spacing: 8) {
                     if isZero {
                         Color.clear.frame(width: 34, height: 7)

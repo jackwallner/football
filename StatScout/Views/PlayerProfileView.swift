@@ -1234,8 +1234,11 @@ struct PlayerProfileView: View {
                     percentile: pct,
                     category: Self.standardCategory(for: stat.label, fallback: standardFallbackCategory).metricCategory,
                     // A zero count has no honest rank, same rule as the feed's
-                    // metrics (`Metric.isUnranked`).
-                    rankable: counting && metricNumericValue(stat.value) == 0 ? false : nil
+                    // metrics (`Metric.isUnranked`), except where fewer is
+                    // better: a passer's 0 INT ranks at the top.
+                    rankable: counting
+                        && StandardStatSemantics.higherIsBetter(label: stat.label)
+                        && metricNumericValue(stat.value) == 0 ? false : nil
                 )
             }
     }
