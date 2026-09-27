@@ -1,6 +1,1 @@
-Gemaakt voor de wedstrijddag.
-• Nieuw tabblad Games: uitslagen, speelschema en box scores van elke wedstrijd, met geavanceerde EPA-analyse.
-• Stats opent met vertrouwde ranglijsten zoals passing yards, en geavanceerde rankings zijn één tik verwijderd.
-• Nieuwe Following-weergave: je team en favoriete spelers op één plek, gratis.
-• Zoek in de hele ranglijst zonder dat een speler zijn plek in de competitie verliest.
-• Verse statistieken kort na publicatie, en elk scherm toont de week en de meegenomen wedstrijden.
+• Spelersprofielen tonen nu biografie, blessurestatus, contractwaarde en wedstrijdlogboek. Wedstrijden en Teams tonen sterktebeoordelingen en voorspelde puntenverschillen. Trends opent met drie weken en ranglijsten leggen de minimale speeltijd uit.

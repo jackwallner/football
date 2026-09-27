@@ -1,6 +1,1 @@
-Ustvarjeno za dan tekme.
-• Nov zavihek Games: rezultati, razpored in statistika vsake tekme z napredno analizo EPA.
-• Stats se odpre z znanimi vodilnimi, kot so jardi podaj, napredne lestvice pa so le en dotik stran.
-• Nov pogled Following: vaša ekipa in priljubljeni igralci na enem mestu, brezplačno.
-• Iščite po celotni lestvici, ne da bi igralec izgubil mesto v ligi.
-• Sveža statistika kmalu po objavi, vsak zaslon pa pokaže teden in vključene tekme.
+• Profili igralcev zdaj vključujejo biografijo, stanje poškodbe, vrednost pogodbe in dnevnik tekem. Tekme in Ekipe prikazujejo ocene moči ter predvidene razlike v točkah. Trendi se začnejo s tritedenskim pogledom, lestvice pa pojasnijo najmanjši čas igre.

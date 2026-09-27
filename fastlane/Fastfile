@@ -149,6 +149,7 @@ platform :ios do
       skip_metadata: true,
       skip_screenshots: true,
       force: true,
+      ignore_language_directory_validation: true,
       submit_for_review: true,
       automatic_release: false,
       run_precheck_before_submit: false,

@@ -1,6 +1,1 @@
-Dibina untuk hari perlawanan.
-• Tab Games baharu: skor, jadual dan box score setiap perlawanan, dengan analisis EPA lanjutan.
-• Stats dibuka dengan pendahulu yang biasa seperti ela hantaran, dan kedudukan lanjutan hanya satu ketikan.
-• Paparan Following baharu menghimpunkan pasukan dan pemain kegemaran anda di satu tempat, percuma.
-• Cari seluruh papan pendahulu tanpa kehilangan kedudukan liga pemain.
-• Statistik terkini sejurus selepas diterbitkan, dan setiap skrin menunjukkan minggu serta perlawanan yang disertakan.
+• Bios pemain baharu, butiran kecederaan dan kontrak, log permainan, penarafan kuasa pasukan, unjuran margin, kedudukan yang lebih jelas, dan paparan Trend selama tiga minggu.

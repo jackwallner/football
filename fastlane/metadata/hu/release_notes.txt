@@ -1,6 +1,1 @@
-A meccsnapra készült.
-• Új Games lap: eredmények, menetrend és statisztika minden meccsről, fejlett EPA-elemzéssel.
-• A Stats ismerős listákkal nyílik, például passzolt yardokkal, a haladó rangsorok pedig egy koppintásnyira vannak.
-• Új Following nézet: csapatod és kedvenc játékosaid egy helyen, ingyen.
-• Keress a teljes ranglistán úgy, hogy a játékos ligahelyezése megmarad.
-• Friss statisztikák röviddel a közzététel után, és minden képernyő mutatja a hetet és a benne lévő meccseket.
+• A játékosprofilok most életrajzot, sérülési állapotot, szerződésértéket és meccsnaplót tartalmaznak. A Meccsek és a Csapatok erősségi értékeléseket és várható pontkülönbségeket mutatnak. A Trendek háromhetes nézettel indul, a ranglisták pedig jelzik a minimális játékidőt.

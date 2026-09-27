@@ -1,6 +1,1 @@
-Feito para o dia de jogo.
-• Novo separador Games: resultados, calendário e estatísticas de cada jogo, com análise avançada de EPA.
-• O Stats abre com líderes conhecidos, como jardas de passe, e os rankings avançados estão à distância de um toque.
-• Nova vista Following: a sua equipa e os seus jogadores favoritos num só lugar, grátis.
-• Pesquise a classificação completa sem perder a posição de cada jogador na liga.
-• Estatísticas atualizadas pouco depois da publicação, e cada ecrã mostra a semana e os jogos incluídos.
+• Os perfis mostram biografia, estado de lesão, valor do contrato e registo de jogos. Jogos e Equipas mostram avaliações de força e diferenças de pontuação previstas. Tendências começa com uma vista de três semanas, e as classificações explicam o tempo mínimo de jogo.

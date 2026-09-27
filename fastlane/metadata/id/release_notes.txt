@@ -1,6 +1,1 @@
-Dibuat untuk hari pertandingan.
-• Tab Games baru: skor, jadwal, dan box score setiap pertandingan, dengan analisis EPA lanjutan.
-• Stats dibuka dengan pemimpin yang familier seperti passing yards, dan peringkat lanjutan cukup satu ketukan.
-• Tampilan Following baru menyatukan tim dan pemain favoritmu di satu tempat, gratis.
-• Cari di seluruh papan peringkat tanpa kehilangan peringkat liga pemain.
-• Statistik segar tak lama setelah dipublikasikan, dan setiap layar menampilkan minggu serta pertandingan yang disertakan.
+• Profil pemain kini menampilkan bio, status cedera, nilai kontrak, dan log pertandingan. Pertandingan dan Tim menampilkan peringkat kekuatan serta selisih skor yang diproyeksikan. Tren dimulai dengan tampilan tiga minggu, dan peringkat menjelaskan minimum waktu bermain.

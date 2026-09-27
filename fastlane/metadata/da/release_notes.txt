@@ -1,6 +1,1 @@
-Bygget til kampdag.
-• Ny Games-fane: resultater, kampprogram og statistik for hver kamp med avanceret EPA-analyse.
-• Stats åbner med velkendte førere som pasningsyards, og avancerede ranglister er et tryk væk.
-• Ny Following-visning samler dit hold og dine yndlingsspillere ét sted, gratis.
-• Søg i hele ranglisten uden at miste spillerens placering i ligaen.
-• Friske statistikker kort efter offentliggørelse, og hver skærm viser uge og inkluderede kampe.
+• Spillerprofiler viser nu biografi, skadesstatus, kontraktværdi og kamplog. Kampe og Hold viser styrkevurderinger og forventede pointforskelle. Trends viser tre uger, og ranglister forklarer minimumskravet til spilletid.

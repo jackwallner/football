@@ -1,6 +1,1 @@
-Stvoreno za dan utakmice.
-• Nova kartica Games: rezultati, raspored i statistika svake utakmice uz naprednu EPA analizu.
-• Stats se otvara poznatim vodećima poput jardi dodavanja, a napredne ljestvice su na jedan dodir.
-• Novi prikaz Following: vaša momčad i omiljeni igrači na jednom mjestu, besplatno.
-• Pretražujte cijelu ljestvicu bez gubitka igračeva poretka u ligi.
-• Svježa statistika ubrzo nakon objave, a svaki zaslon prikazuje tjedan i uključene utakmice.
+• Profili igrača sada prikazuju biografiju, stanje ozljede, vrijednost ugovora i zapis utakmica. Utakmice i Timovi prikazuju ocjene snage i predviđene bodovne razlike. Trendovi počinju s prikazom tri tjedna, a ljestvice objašnjavaju minimalno vrijeme igre.

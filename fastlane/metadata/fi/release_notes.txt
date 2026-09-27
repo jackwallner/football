@@ -1,6 +1,1 @@
-Tehty ottelupäivää varten.
-• Uusi Games-välilehti: tulokset, otteluohjelma ja tilastot jokaisesta ottelusta sekä edistynyt EPA-analyysi.
-• Stats avautuu tutuilla kärkilistoilla, kuten syöttöjaardeilla, ja edistyneet rankingit ovat yhden napautuksen päässä.
-• Uusi Following-näkymä kokoaa joukkueesi ja suosikkipelaajasi yhteen paikkaan, ilmaiseksi.
-• Hae koko listalta niin, että pelaajan sijoitus liigassa säilyy.
-• Tuoreet tilastot pian julkaisun jälkeen, ja jokainen näkymä kertoo viikon ja mukana olevat ottelut.
+• Pelaajaprofiileissa näkyvät nyt elämäkerta, loukkaantumistilanne, sopimuksen arvo ja otteluloki. Ottelut ja Joukkueet näyttävät joukkueiden vahvuusarviot ja ennustetut piste-erot. Trendit alkaa kolmen viikon näkymästä, ja sijoitukset kertovat peliajan vähimmäisvaatimuksista.

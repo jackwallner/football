@@ -1,6 +1,1 @@
-Hecho para el día de partido.
-• Nueva pestaña Games: marcadores, calendario y estadísticas de cada partido, con análisis avanzado de EPA.
-• Stats abre con líderes conocidos como yardas por pase, y los rankings avanzados están a un toque.
-• Nueva vista Following: tu equipo y tus jugadores favoritos en un solo lugar, gratis.
-• Busca en toda la tabla sin perder la posición de cada jugador en la liga.
-• Estadísticas frescas poco después de publicarse, y cada pantalla muestra la semana y los partidos incluidos.
+• Los perfiles incluyen biografía, estado de lesiones, valor del contrato y registro de partidos. Partidos y Equipos añaden valoraciones de fuerza y diferencias de puntos previstas. Tendencias muestra tres semanas y las clasificaciones explican el mínimo de tiempo de juego.

@@ -1,6 +1,4 @@
-Built for game day.
-• New Games tab: scores, fixtures and box scores for every game, with advanced EPA breakdowns.
-• Stats opens on familiar leaders like passing yards, with advanced rankings one tap away.
-• New Following view keeps your team and favourite players in one place, free.
-• Search the whole leaderboard without losing a player's league rank.
-• Fresh stats soon after games are published, and every screen shows the week and games included.
+• Rankings show the playing-time minimum, volume, and when zero-count stats are unranked.
+• Player pages add bio details, injury status, contract value, and a game log.
+• Games and Teams show records, standings, power ratings, and projected margins.
+• Trends starts with a three-week view and explains when movement begins.

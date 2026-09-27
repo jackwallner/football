@@ -1,6 +1,1 @@
-Byggd för matchdagen.
-• Ny flik Games: resultat, spelschema och statistik för varje match, med avancerad EPA-analys.
-• Stats öppnar med välbekanta ledare som passningsyards, och avancerade rankningar är ett tryck bort.
-• Ny Following-vy samlar ditt lag och dina favoritspelare på ett ställe, gratis.
-• Sök i hela topplistan utan att spelaren tappar sin placering i ligan.
-• Färsk statistik strax efter publicering, och varje skärm visar vecka och inkluderade matcher.
+• Spelarprofiler visar nu biografi, skadestatus, kontraktsvärde och matchlogg. Matcher och Lag visar styrkebetyg och förväntade poängskillnader. Trender börjar med tre veckor, och rankningarna förklarar minsta speltid.

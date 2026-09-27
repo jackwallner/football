@@ -13,11 +13,16 @@ paths:
 ## Current release, 2026-09-27
 
 - App Store version 1.2.1 is `READY_FOR_SALE`.
-- Version 1.2.2 is `PREPARE_FOR_SUBMISSION`, with `releaseType` set to `MANUAL`.
-- TestFlight build 51 is `VALID` and attached to 1.2.2. The version has not been
-  submitted for review.
-- The draft has all 50 version localizations copied from the live listing. The
-  new What's New text is set in en-US.
+- App Store version 1.2.2 is `WAITING_FOR_REVIEW`, with `releaseType` set to
+  `MANUAL`.
+- TestFlight build 52 is `VALID` and attached to 1.2.2. The version was
+  submitted for review on 2026-09-27.
+- All 50 version localizations have What's New copy. The full release notes are
+  in en-US; the other locales use translated summaries.
+
+The `submit_review` lane uses `automatic_release: false`. `Deliverfile` lists
+the locales currently accepted by Fastlane. The 11 retired App Store locales
+are handled by the `fill_deprecated_locales` lane.
 
 ## Draft version helper
 

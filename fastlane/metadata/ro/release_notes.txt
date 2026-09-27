@@ -1,6 +1,1 @@
-Creat pentru ziua meciului.
-• Filă nouă Games: scoruri, program și statistici pentru fiecare meci, cu analiză EPA avansată.
-• Stats se deschide cu clasamente cunoscute, precum yarzii din pase, iar clasamentele avansate sunt la o atingere.
-• Noua vizualizare Following: echipa ta și jucătorii preferați într-un singur loc, gratuit.
-• Caută în tot clasamentul fără ca jucătorul să își piardă locul în ligă.
-• Statistici proaspete la scurt timp după publicare, iar fiecare ecran arată săptămâna și meciurile incluse.
+• Profilurile jucătorilor includ acum biografie, starea accidentărilor, valoarea contractului și jurnalul meciurilor. Meciuri și Echipe afișează evaluări de forță și diferențe de scor estimate. Tendințe începe cu o vizualizare de trei săptămâni, iar clasamentele explică timpul minim de joc.
