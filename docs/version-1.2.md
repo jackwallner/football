@@ -21,7 +21,7 @@ and a TestFlight upload verify the release.
 
 ## Audit decisions
 
-The useful findings in `laudit912.md` are the once-daily source race, stale
+The useful findings in `../project-docs/audits/laudit912.md` are the once-daily source race, stale
 Recent Form caches, the date-only correction watermark, concurrent live writes,
 and delete-before-rebuild risk. Address these together before increasing writes.
 
@@ -70,7 +70,7 @@ part of this change.
 
 ## Sources
 
-- [Audit](../laudit912.md)
+- [Audit](../project-docs/audits/laudit912.md)
 - [nflverse source publication notes](https://github.com/nflverse/nflverse-data/blob/main/README.Rmd)
 - [GitHub Actions billing](https://docs.github.com/en/actions/concepts/billing-and-usage)
 - [Apple screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)

@@ -6,7 +6,7 @@
 promotional text and description. Screenshots exist in `en-US` only, deliberately — ASC falls
 back to the primary language, and baseball runs 50 live localizations the same way.
 
-Tiering, rationale and the full per-locale table live in [`../aso-plan.md`](../aso-plan.md) §5.
+Tiering, rationale and the full per-locale table live in [`../project-docs/marketing/aso-plan.md`](../project-docs/marketing/aso-plan.md) §5.
 
 The 49 non-English folders that originally shipped in this repo were **stale Baseball Savvy
 StatScout metadata** (MLB Statcast, xwOBA, Japanese baseball copy). They were replaced wholesale,

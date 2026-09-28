@@ -76,12 +76,12 @@ This matters because the underlying feed already has enough identity to start a 
 
 ### Relevant implementation evidence
 
-- The root navigation has exactly four tabs, Stats, Trends, Teams, and Compare. [RootTabView.swift](StatScout/Views/RootTabView.swift#L140)
-- The app API exposes player snapshots, player game logs, team game logs, Recent Form, and freshness. It has no fetch-games or fetch-game-detail contract. [StatcastAPI.swift](StatScout/Services/StatcastAPI.swift#L11)
-- Player game logs carry team, opponent, date, week, raw counts, and metrics in the backend. The iOS model does not decode the backend game_id field. [PlayerGameLog.swift](StatScout/Models/PlayerGameLog.swift#L5)
-- The event-aware migration already adds game_id to player_game_logs and indexes it. [20260912000000_event_aware_refresh.sql](supabase/migrations/20260912000000_event_aware_refresh.sql#L89)
-- The backend currently uses the schedule to map game_id to a game date when ingesting logs. [ingest_game_logs.py](backend/ingest_game_logs.py#L135)
-- The backend uses schedule home_score and away_score fields to determine whether a game is complete, but the app has no schedule/game model or score endpoint. [refresh.py](backend/refresh.py#L141)
+- The root navigation has exactly four tabs, Stats, Trends, Teams, and Compare. [RootTabView.swift](../../StatScout/Views/RootTabView.swift#L140)
+- The app API exposes player snapshots, player game logs, team game logs, Recent Form, and freshness. It has no fetch-games or fetch-game-detail contract. [StatcastAPI.swift](../../StatScout/Services/StatcastAPI.swift#L11)
+- Player game logs carry team, opponent, date, week, raw counts, and metrics in the backend. The iOS model does not decode the backend game_id field. [PlayerGameLog.swift](../../StatScout/Models/PlayerGameLog.swift#L5)
+- The event-aware migration already adds game_id to player_game_logs and indexes it. [20260912000000_event_aware_refresh.sql](../../supabase/migrations/20260912000000_event_aware_refresh.sql#L89)
+- The backend currently uses the schedule to map game_id to a game date when ingesting logs. [ingest_game_logs.py](../../backend/ingest_game_logs.py#L135)
+- The backend uses schedule home_score and away_score fields to determine whether a game is complete, but the app has no schedule/game model or score endpoint. [refresh.py](../../backend/refresh.py#L141)
 
 ## The new-user journey
 
@@ -167,7 +167,7 @@ The app opens to a player leaderboard and has four navigation destinations:
 - Teams
 - Compare
 
-There is no Games, Schedule, Scores, Results, Week, or Scoreboard destination. The onboarding copy explicitly describes these four tabs as covering “every angle of the game,” which sets an expectation the current navigation does not meet. [StatScoutApp.swift](StatScout/StatScoutApp.swift#L456)
+There is no Games, Schedule, Scores, Results, Week, or Scoreboard destination. The onboarding copy explicitly describes these four tabs as covering “every angle of the game,” which sets an expectation the current navigation does not meet. [StatScoutApp.swift](../../StatScout/StatScoutApp.swift#L456)
 
 The current freshness line tells the fan that ten games are represented, but a count is not a game list. It cannot answer even the basic question of which games those ten are.
 
@@ -225,7 +225,7 @@ The standard Stats board shows player, team abbreviation, rank, selected stat, a
 
 The player profile shows Advanced, Standard, and Year Compare. Its Standard view can show useful values such as completions/attempts, games, yards, touchdowns, and interceptions, but it still does not identify the game that produced the Week 1 line.
 
-The player game-log API is currently used to build Recent Form for one player, and team game logs are used for team recent aggregates. Those are analysis inputs, not user-visible game records. [StatcastAPI.swift](StatScout/Services/StatcastAPI.swift#L80)
+The player game-log API is currently used to build Recent Form for one player, and team game logs are used for team recent aggregates. Those are analysis inputs, not user-visible game records. [StatcastAPI.swift](../../StatScout/Services/StatcastAPI.swift#L80)
 
 ### Fan impact
 
@@ -252,7 +252,7 @@ At minimum, add a compact “Week 1” or “Last game” context to player rows
 - One or two key stats.
 - “View game” action.
 
-Do not join by date alone. The backend already carries game_id on the live game-log rows, and the migration adds that field to the table. The iOS model currently omits it from CodingKeys, so it is not available to the UI. [PlayerGameLog.swift](StatScout/Models/PlayerGameLog.swift#L28)
+Do not join by date alone. The backend already carries game_id on the live game-log rows, and the migration adds that field to the table. The iOS model currently omits it from CodingKeys, so it is not available to the UI. [PlayerGameLog.swift](../../StatScout/Models/PlayerGameLog.swift#L28)
 
 ### Acceptance criteria
 
@@ -274,7 +274,7 @@ The Trends screen offers:
 
 The screen also explains that it compares the selected number of league weeks with the same span before them.
 
-The current Week 1 data has only one game in the recent-form window. The model marks any form with fewer than two games as a small sample. The ranking filters those forms out. [RecentForm.swift](StatScout/Models/RecentForm.swift#L125)
+The current Week 1 data has only one game in the recent-form window. The model marks any form with fewer than two games as a small sample. The ranking filters those forms out. [RecentForm.swift](../../StatScout/Models/RecentForm.swift#L125)
 
 The runtime result is:
 
@@ -346,7 +346,7 @@ The grid is alphabetical by team name. It does not distinguish:
 - Teams whose player data is delayed.
 - Teams with no current data.
 
-The team tiles are compact colored abbreviations. They are visually clean and useful for a football-literate user, but they are not game status indicators. [TeamsView.swift](StatScout/Views/TeamsView.swift#L264)
+The team tiles are compact colored abbreviations. They are visually clean and useful for a football-literate user, but they are not game status indicators. [TeamsView.swift](../../StatScout/Views/TeamsView.swift#L264)
 
 ### Runtime example
 
@@ -405,7 +405,7 @@ The current freshness treatment is much better than having no status. The app sh
 
 > Week 1 · 10 games · Updated 14m ago
 
-It is tappable and can trigger a refresh. The caption correctly focuses on the time the stats changed, not merely the last status check. [DataFreshnessView.swift](StatScout/Views/DataFreshnessView.swift#L3)
+It is tappable and can trigger a refresh. The caption correctly focuses on the time the stats changed, not merely the last status check. [DataFreshnessView.swift](../../StatScout/Views/DataFreshnessView.swift#L3)
 
 However, the live publisher status at audit time was:
 
@@ -424,7 +424,7 @@ There is also no per-game or per-section readiness. A fan cannot tell whether:
 - Defensive coverage metrics are pending.
 - A game has no applicable metric versus a metric that has not arrived.
 
-The detailed caveat that advanced metrics may arrive later than game totals exists in the About Percentiles content, not in the context of a specific game or player. [PlayerProfileView.swift](StatScout/Views/PlayerProfileView.swift#L1351)
+The detailed caveat that advanced metrics may arrive later than game totals exists in the About Percentiles content, not in the context of a specific game or player. [PlayerProfileView.swift](../../StatScout/Views/PlayerProfileView.swift#L1351)
 
 ### Fan impact
 
@@ -473,7 +473,7 @@ The Stats board starts with:
 - Standard stats.
 - Pass Yds selected.
 
-The default qualifier is All Players, described as “No playing-time minimum.” [DashboardViewModel.swift](StatScout/ViewModels/DashboardViewModel.swift#L644)
+The default qualifier is All Players, described as “No playing-time minimum.” [DashboardViewModel.swift](../../StatScout/ViewModels/DashboardViewModel.swift#L644)
 
 That is defensible for a discovery product that wants every player from Week 1, but it is not self-explanatory on a league leaders screen. One game is an inherently noisy sample. A player can rank highly on a small number of attempts, targets, or snaps.
 
@@ -520,7 +520,7 @@ The first two onboarding pages are clear:
 - “Your Pocket Scout.”
 - “Find Insights Fast.”
 
-The second page lists Stats, Trends, Teams, and Compare, but not games. The final page sells StatScout+ and makes the purchase CTA the primary bottom button. “Get Started” is a lower-contrast text action above it. [StatScoutApp.swift](StatScout/StatScoutApp.swift#L252)
+The second page lists Stats, Trends, Teams, and Compare, but not games. The final page sells StatScout+ and makes the purchase CTA the primary bottom button. “Get Started” is a lower-contrast text action above it. [StatScoutApp.swift](../../StatScout/StatScoutApp.swift#L252)
 
 The fan has not yet seen:
 
@@ -571,9 +571,9 @@ Recent Form is a central paid feature. The player profile advertises:
 
 > See last 3 / 5 / 8 game form for any player
 
-The free experience shows a blurred static teaser. The teaser numbers are explicitly illustrative and are not fetched from the live game logs. [RecentFormCard.swift](StatScout/Views/RecentFormCard.swift#L147)
+The free experience shows a blurred static teaser. The teaser numbers are explicitly illustrative and are not fetched from the live game logs. [RecentFormCard.swift](../../StatScout/Views/RecentFormCard.swift#L147)
 
-The same approach is used for recent team bars. The free team teaser contains static sample totals such as 3,980 pass yards and 1,720 rush yards, not the selected team's real Week 1 values. [TeamFormCard.swift](StatScout/Views/TeamFormCard.swift#L335)
+The same approach is used for recent team bars. The free team teaser contains static sample totals such as 3,980 pass yards and 1,720 rush yards, not the selected team's real Week 1 values. [TeamFormCard.swift](../../StatScout/Views/TeamFormCard.swift#L335)
 
 In Week 1, the user has only one game in hand, so three, five, and eight game form cannot yet be filled. That makes the game's most important paid selling point feel distant twice:
 
@@ -624,7 +624,7 @@ The team percentile card is built by aggregating player values across the roster
 
 The standard team card adds current roster season lines, with a note that a traded player brings his whole year with him. The implementation is useful as a team roster profile, but it is not the same thing as a game box score or an official team total.
 
-The dashboard also has a legacy teamScores cache that averages player overall percentiles. That value is not an NFL score and must not be reused for a scoreboard. [DashboardViewModel.swift](StatScout/ViewModels/DashboardViewModel.swift#L1237)
+The dashboard also has a legacy teamScores cache that averages player overall percentiles. That value is not an NFL score and must not be reused for a scoreboard. [DashboardViewModel.swift](../../StatScout/ViewModels/DashboardViewModel.swift#L1237)
 
 ### Fan impact
 
@@ -760,7 +760,7 @@ This gives a new fan an immediate anchor while preserving the app's analytical i
 
 The freshness caption re-renders its age every minute, which is good. It does not itself fetch new data every minute.
 
-Foreground status checks are throttled to five minutes normally and two minutes when the status is pending. The current screen can also be refreshed by tapping the caption or pulling to refresh. [DashboardViewModel.swift](StatScout/ViewModels/DashboardViewModel.swift#L863)
+Foreground status checks are throttled to five minutes normally and two minutes when the status is pending. The current screen can also be refreshed by tapping the caption or pulling to refresh. [DashboardViewModel.swift](../../StatScout/ViewModels/DashboardViewModel.swift#L863)
 
 For a fan watching a Sunday game, the likely expectation is that a final score or newly published stat appears without requiring them to understand the refresh model.
 

@@ -7,7 +7,7 @@ owner `football`. Bundle id `com.jackwallner.football`, product name "Gridiron S
 **App Store name:** **"Football Next: StatScout"** (ASC app `6792930447`), chosen
 for ASO. In-app it is still `PRODUCT_NAME: "Gridiron StatScout"`, home-screen
 `StatScout`, paid tier `StatScout+`.
-ASO plan: `aso-plan.md` · `docs/astro-aso-setup.md` · `docs/localization-aso.md`.
+ASO plan: `project-docs/marketing/aso-plan.md` · `docs/astro-aso-setup.md` · `docs/localization-aso.md`.
 
 **This repo is NOT the fastlane template canonical source.** That lives in the
 baseball StatScout repo. Metadata/screenshots here are app-specific.

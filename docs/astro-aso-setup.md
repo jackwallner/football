@@ -20,7 +20,7 @@ Astro synced across stores. Pending Jack's approval, then build attach + submit.
 ## Locales
 
 All **50** ASC locales are staged on draft 1.0. Per-locale names, subtitles, tiering and the
-word-sense corrections found in review: [`../aso-plan.md`](../aso-plan.md) §5. Screenshots are
+word-sense corrections found in review: [`../project-docs/marketing/aso-plan.md`](../project-docs/marketing/aso-plan.md) §5. Screenshots are
 `en-US` only by design (ASC falls back to the primary language).
 
 ## Current draft metadata (en-US)
@@ -46,7 +46,7 @@ pop 20). `epa` is kept only as a combo token for `football epa` (diff 15); its s
   ratings
 - **Walls (do not field-slot):** `epa`, `dfs`, `snap share`, `american football`, `sports
   analytics`, `football app`
-- Full tag breakdown and competitor tiers: [`../aso-plan.md`](../aso-plan.md)
+- Full tag breakdown and competitor tiers: [`../project-docs/marketing/aso-plan.md`](../project-docs/marketing/aso-plan.md)
 
 ## Commands
 
