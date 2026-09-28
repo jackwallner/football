@@ -10,11 +10,12 @@ paths:
 
 # App Store release workflow
 
-## Current release, 2026-09-27
+## Current release, 2026-09-28
 
-- App Store version 1.2.1 is `READY_FOR_SALE`.
-- App Store version 1.2.2 is `WAITING_FOR_REVIEW`, with `releaseType` set to
-  `MANUAL`.
+- App Store version 1.2.2 (build 53) is `READY_FOR_SALE`. Approved, then released
+  manually on 2026-09-28 via `POST /v1/appStoreVersionReleaseRequests` after
+  testing against live week 3 data.
+- App Store version 1.2.1 is superseded.
 - TestFlight build 53 is `VALID` and attached to 1.2.2. Build 52 was first
   submitted on 2026-09-27, then pulled the same day for a fix (a passer's 0 INT
   showed as "Not ranked") and 1.2.2 was resubmitted with build 53.
