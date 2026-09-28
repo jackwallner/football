@@ -19,3 +19,4 @@ Developer notes and historical audits for this repository. The published site re
 ## Marketing
 
 - [aso-plan.md](marketing/aso-plan.md): aso-plan.md: Football Next: StatScout ASO Plan
+- [apple-ads-2026-09-28.md](marketing/apple-ads-2026-09-28.md): Apple Ads test: Football US Analytics Exact 2609
