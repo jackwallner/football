@@ -22,6 +22,18 @@ paths:
 - All 50 version localizations have What's New copy. The full release notes are
   in en-US; the other locales use translated summaries.
 
+## Pending release, 2026-09-29
+
+- App Store version 1.2.3 (build 55) is `WAITING_FOR_REVIEW`. Build 55 is
+  `VALID` and attached. Submitted through `submit_review` on 2026-09-29 with
+  manual release (`automatic_release: false`).
+- Fixes position-board defaults: QB Pass Yds, RB Rush Yds, WR/TE Rec Yds, and
+  DEF Tackles. A stat carries across positions only when the user selected it.
+- All 50 version localizations have updated What's New copy. Existing
+  promotional text was preserved.
+- Version 1.2.2 (build 53) remains live until 1.2.3 is approved and manually
+  released.
+
 The `submit_review` lane uses `automatic_release: false`. `Deliverfile` lists
 the locales currently accepted by Fastlane. The 11 retired App Store locales
 are handled by the `fill_deprecated_locales` lane.
