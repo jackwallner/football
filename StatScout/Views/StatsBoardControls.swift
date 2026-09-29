@@ -31,6 +31,23 @@ enum StandardStatCatalog {
     static func defaultStat(for position: PlayerPositionGroup) -> String {
         stats(for: position).first ?? "G"
     }
+
+    /// The stat to show after the position tab changes.
+    ///
+    /// A stat the user picked on purpose follows them to any position that
+    /// offers it. The previous position's own default does not: it is not a
+    /// choice, and carrying it over ranked receivers by Rush Yds after a
+    /// QB, RB, WR walk through the tabs.
+    static func stat(
+        keeping current: String,
+        from old: PlayerPositionGroup,
+        to new: PlayerPositionGroup
+    ) -> String {
+        if current != defaultStat(for: old), stats(for: new).contains(current) {
+            return current
+        }
+        return defaultStat(for: new)
+    }
 }
 
 /// The one control used everywhere to choose which statistic a board ranks.

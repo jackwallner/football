@@ -61,12 +61,12 @@ struct StatsView: View {
                 onSelectPhase: { viewModel.selectedPhase = $0 }
             )
         )
-        .onChange(of: viewModel.selectedPosition) { _, next in
-            let stats = StandardStatCatalog.stats(for: next)
-            if !stats.contains(standardStat) {
-                standardStat = StandardStatCatalog.defaultStat(for: next)
+        .onChange(of: viewModel.selectedPosition) { old, next in
+            let kept = StandardStatCatalog.stat(keeping: standardStat, from: old, to: next)
+            if kept != standardStat {
+                standardStat = kept
                 standardSortDescending = StandardStatCatalog.defaultDescending(
-                    for: standardStat,
+                    for: kept,
                     position: next
                 )
             }

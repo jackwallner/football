@@ -10,6 +10,31 @@ final class StandardStatsTests: XCTestCase {
         XCTAssertEqual(StandardStatCatalog.defaultStat(for: .defense), "Tackles")
     }
 
+    func testWalkingThePositionTabsRanksEachPositionByItsOwnDefault() {
+        var stat = StandardStatCatalog.defaultStat(for: .qb)
+        var position = PlayerPositionGroup.qb
+        for next in [PlayerPositionGroup.rb, .wr, .te, .defense, .qb] {
+            stat = StandardStatCatalog.stat(keeping: stat, from: position, to: next)
+            position = next
+            XCTAssertEqual(stat, StandardStatCatalog.defaultStat(for: next))
+        }
+    }
+
+    func testDeliberatelyChosenStatFollowsToPositionsThatOfferIt() {
+        XCTAssertEqual(
+            StandardStatCatalog.stat(keeping: "Rush TD", from: .qb, to: .rb),
+            "Rush TD"
+        )
+        XCTAssertEqual(
+            StandardStatCatalog.stat(keeping: "Rush TD", from: .rb, to: .wr),
+            "Rush TD"
+        )
+        XCTAssertEqual(
+            StandardStatCatalog.stat(keeping: "Rush TD", from: .wr, to: .defense),
+            "Tackles"
+        )
+    }
+
     func testQuarterbackInterceptionsDefaultLowestFirst() {
         XCTAssertFalse(StandardStatCatalog.defaultDescending(for: "INT", position: .qb))
         XCTAssertTrue(StandardStatCatalog.defaultDescending(for: "Def INT", position: .defense))
