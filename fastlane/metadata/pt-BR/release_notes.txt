@@ -1,1 +1,1 @@
-• Os perfis mostram biografia, estado de lesão, valor do contrato e registro de jogos. Jogos e Times mostram avaliações de força e diferenças de pontuação previstas. Tendências começa com uma visão de três semanas, e as classificações explicam o tempo mínimo de jogo.
+Os painéis por posição agora abrem com a estatística padrão de cada posição. Ao trocar de posição, só a estatística que você escolheu é mantida.

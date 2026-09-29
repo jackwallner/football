@@ -1,1 +1,1 @@
-• Profilurile jucătorilor includ acum biografie, starea accidentărilor, valoarea contractului și jurnalul meciurilor. Meciuri și Echipe afișează evaluări de forță și diferențe de scor estimate. Tendințe începe cu o vizualizare de trei săptămâni, iar clasamentele explică timpul minim de joc.
+Panourile pe poziții se deschid acum cu statistica implicită pentru fiecare poziție. La schimbarea poziției, se păstrează doar statistica selectată de tine.

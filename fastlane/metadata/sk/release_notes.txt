@@ -1,1 +1,1 @@
-• Profily hráčov teraz obsahujú životopis, stav zranenia, hodnotu zmluvy a denník zápasov. Zápasy a Tímy zobrazujú hodnotenie sily a predpokladaný bodový rozdiel. Trendy sa začínajú trojtýždňovým pohľadom a rebríčky vysvetľujú minimálny čas hry.
+Prehľady pozícií sa teraz otvárajú s predvolenou štatistikou danej pozície. Pri zmene pozície sa zachová iba štatistika, ktorú ste vybrali.

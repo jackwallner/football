@@ -1,1 +1,1 @@
-• Oyuncu profilleri artık biyografi, sakatlık durumu, sözleşme değeri ve maç günlüğü içeriyor. Maçlar ve Takımlar güç puanlarını ve öngörülen skor farklarını gösteriyor. Trendler üç haftalık görünümle başlıyor, sıralamalar da minimum oynama süresini açıklıyor.
+Pozisyon tabloları artık her pozisyonun varsayılan istatistiğiyle açılıyor. Pozisyon değiştirdiğinizde yalnızca seçtiğiniz istatistik korunuyor.

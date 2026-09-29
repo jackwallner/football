@@ -1,1 +1,1 @@
-• Los perfiles incluyen biografía, estado de lesiones, valor del contrato y registro de partidos. Partidos y Equipos añaden valoraciones de fuerza y diferencias de puntos previstas. Tendencias muestra tres semanas y las clasificaciones explican el mínimo de tiempo de juego.
+Las tablas por posición ahora se abren con la estadística predeterminada de cada posición. Al cambiar de posición, solo se conserva la estadística que has elegido.

@@ -1,1 +1,1 @@
-• I profili mostrano ora biografia, stato degli infortuni, valore del contratto e registro delle partite. Partite e Squadre mostrano valutazioni di forza e differenze di punteggio previste. Tendenze inizia con una vista di tre settimane e le classifiche spiegano il tempo di gioco minimo.
+Le classifiche per ruolo ora si aprono con la statistica predefinita di ciascun ruolo. Quando cambi ruolo, viene mantenuta solo la statistica che hai scelto.

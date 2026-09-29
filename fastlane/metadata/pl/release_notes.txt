@@ -1,1 +1,1 @@
-• Profile graczy zawierają teraz biografię, status kontuzji, wartość kontraktu i dziennik meczów. Mecze i Drużyny pokazują ocenę siły oraz prognozowaną różnicę punktów. Trendy zaczynają się od trzech tygodni, a rankingi wyjaśniają minimalny czas gry.
+Tabele pozycji otwierają się teraz z domyślną statystyką dla danej pozycji. Po zmianie pozycji pozostaje tylko wybrana przez Ciebie statystyka.

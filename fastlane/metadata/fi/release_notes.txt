@@ -1,1 +1,1 @@
-• Pelaajaprofiileissa näkyvät nyt elämäkerta, loukkaantumistilanne, sopimuksen arvo ja otteluloki. Ottelut ja Joukkueet näyttävät joukkueiden vahvuusarviot ja ennustetut piste-erot. Trendit alkaa kolmen viikon näkymästä, ja sijoitukset kertovat peliajan vähimmäisvaatimuksista.
+Pelipaikkakohtaiset tilastotaulukot avautuvat nyt kyseisen pelipaikan oletustilastoon. Pelipaikkaa vaihdettaessa säilyy vain itse valitsemasi tilasto.

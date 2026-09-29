@@ -1,1 +1,1 @@
-• Spillerprofiler viser nå biografi, skadestatus, kontraktsverdi og kamplogg. Kamper og Lag viser styrkevurderinger og forventede poengforskjeller. Trender starter med en visning på tre uker, og rangeringene forklarer minimum spilletid.
+Posisjonstavlene åpnes nå med standardstatistikken for hver posisjon. Når du bytter posisjon, beholdes bare statistikken du har valgt.

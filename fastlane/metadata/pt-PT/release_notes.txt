@@ -1,1 +1,1 @@
-• Os perfis mostram biografia, estado de lesão, valor do contrato e registo de jogos. Jogos e Equipas mostram avaliações de força e diferenças de pontuação previstas. Tendências começa com uma vista de três semanas, e as classificações explicam o tempo mínimo de jogo.
+Os quadros por posição abrem agora com a estatística predefinida de cada posição. Ao mudar de posição, só é mantida a estatística que selecionou.

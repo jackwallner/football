@@ -1,1 +1,1 @@
-• Les profils affichent maintenant la biographie, l’état des blessures, la valeur du contrat et l’historique des matchs. Matchs et Équipes ajoutent les évaluations de force et les écarts de score prévus. Tendances commence sur trois semaines et les classements expliquent le temps de jeu minimum.
+Les tableaux par poste s’ouvrent désormais sur la statistique par défaut de chaque poste. En changeant de poste, seule la statistique que vous avez choisie est conservée.

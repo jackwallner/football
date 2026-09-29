@@ -1,1 +1,1 @@
-• Els perfils nous inclouen biografia, estat de lesions, valor del contracte i registres de partits. Partits i Equips afegeixen puntuacions de força i diferències de punts previstes. Tendències mostra tres setmanes i les classificacions aclareixen el mínim de joc.
+Els taulers de posició ara s’obren amb l’estadística predeterminada de cada posició. En canviar de posició, només es conserva l’estadística que has triat.

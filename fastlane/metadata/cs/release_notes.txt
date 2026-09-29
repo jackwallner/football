@@ -1,1 +1,1 @@
-• Profily hráčů nově obsahují životopis, stav zranění, hodnotu smlouvy a zápasový deník. Zápasy a Týmy přidávají hodnocení síly a očekávané bodové rozdíly. Trendy nyní zobrazují tři týdny a žebříčky vysvětlují minimální herní čas.
+Přehledy pozic se nyní otevírají s výchozí statistikou dané pozice. Při přepnutí pozice se zachová jen statistika, kterou jste vybrali.

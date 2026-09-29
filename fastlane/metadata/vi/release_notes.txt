@@ -1,1 +1,1 @@
-• Hồ sơ cầu thủ hiện có tiểu sử, tình trạng chấn thương, giá trị hợp đồng và nhật ký trận đấu. Trận đấu và Đội bóng hiển thị đánh giá sức mạnh và chênh lệch điểm dự kiến. Xu hướng bắt đầu với chế độ xem ba tuần và bảng xếp hạng giải thích thời lượng thi đấu tối thiểu.
+Bảng vị trí giờ đây mở với thống kê mặc định của từng vị trí. Khi đổi vị trí, chỉ thống kê bạn đã chọn mới được giữ lại.

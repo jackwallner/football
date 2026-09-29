@@ -1,1 +1,1 @@
-• Spillerprofiler viser nu biografi, skadesstatus, kontraktværdi og kamplog. Kampe og Hold viser styrkevurderinger og forventede pointforskelle. Trends viser tre uger, og ranglister forklarer minimumskravet til spilletid.
+Positionsoversigterne åbner nu med standardstatistikken for hver position. Ved skift af position følger kun den statistik med, som du selv har valgt.

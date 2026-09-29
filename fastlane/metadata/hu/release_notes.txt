@@ -1,1 +1,1 @@
-• A játékosprofilok most életrajzot, sérülési állapotot, szerződésértéket és meccsnaplót tartalmaznak. A Meccsek és a Csapatok erősségi értékeléseket és várható pontkülönbségeket mutatnak. A Trendek háromhetes nézettel indul, a ranglisták pedig jelzik a minimális játékidőt.
+A posztok táblái most az adott poszt alapértelmezett statisztikájával nyílnak meg. Posztváltáskor csak az általad kiválasztott statisztika marad.

@@ -1,1 +1,1 @@
-• Bios pemain baharu, butiran kecederaan dan kontrak, log permainan, penarafan kuasa pasukan, unjuran margin, kedudukan yang lebih jelas, dan paparan Trend selama tiga minggu.
+Papan posisi kini dibuka dengan statistik lalai bagi setiap posisi. Apabila anda bertukar posisi, hanya statistik yang anda pilih dikekalkan.

@@ -1,1 +1,1 @@
-• Spelarprofiler visar nu biografi, skadestatus, kontraktsvärde och matchlogg. Matcher och Lag visar styrkebetyg och förväntade poängskillnader. Trender börjar med tre veckor, och rankningarna förklarar minsta speltid.
+Positionslistorna öppnas nu med standardstatistiken för varje position. När du byter position följer bara statistiken du valt med.
