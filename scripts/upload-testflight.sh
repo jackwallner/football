@@ -32,8 +32,17 @@ if [[ ! -f "$PLIST" ]]; then
   exit 1
 fi
 
+# Prefer the ASC API key (from ~/.football_credentials) so the upload doesn't
+# depend on Xcode's Apple ID session, which expires or breaks unattended.
+AUTH=()
+AUTH_LABEL="local Xcode session"
+if [[ -n "${ASC_KEY_PATH:-}" && -n "${ASC_API_KEY_ID:-}" && -n "${ASC_ISSUER_ID:-}" ]]; then
+  AUTH=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_API_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+  AUTH_LABEL="ASC API key $ASC_API_KEY_ID"
+fi
+
 mkdir -p "$STAGING"
-echo "Uploading archive via App Store Connect (local Xcode session)..."
+echo "Uploading archive via App Store Connect ($AUTH_LABEL)..."
 echo "  archive: $ARCHIVE"
 echo "  plist:   $PLIST"
 
@@ -41,6 +50,7 @@ xcodebuild -exportArchive \
   -archivePath "$ARCHIVE" \
   -exportPath "$STAGING" \
   -exportOptionsPlist "$PLIST" \
-  -allowProvisioningUpdates
+  -allowProvisioningUpdates \
+  ${AUTH[@]+"${AUTH[@]}"}
 
 echo "If upload succeeded, check App Store Connect → TestFlight for \"Processing\"."

@@ -54,8 +54,15 @@ fi
 echo "==> Cleaning..."
 xcodebuild -project StatScout.xcodeproj -scheme "$SCHEME" clean
 
+# Sign with the ASC API key when available, not Xcode's Apple ID session.
+AUTH=()
+if [ -n "$ASC_KEY_PATH" ] && [ -n "$ASC_API_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ]; then
+  AUTH=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_API_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+  export ASC_KEY_PATH ASC_API_KEY_ID ASC_ISSUER_ID
+fi
+
 echo "==> Archiving..."
-xcodebuild -project StatScout.xcodeproj -scheme "$SCHEME" -configuration Release archive -archivePath "$ARCHIVE_PATH" -destination "generic/platform=iOS" -allowProvisioningUpdates
+xcodebuild -project StatScout.xcodeproj -scheme "$SCHEME" -configuration Release archive -archivePath "$ARCHIVE_PATH" -destination "generic/platform=iOS" -allowProvisioningUpdates ${AUTH[@]+"${AUTH[@]}"}
 
 echo "==> Exporting & Uploading..."
 exec "$DIR/upload-testflight.sh" "$ARCHIVE_PATH"
