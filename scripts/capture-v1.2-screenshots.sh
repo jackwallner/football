@@ -38,7 +38,7 @@ VERSION="$(awk '/MARKETING_VERSION/ {gsub(/[":]/, "", $2); print $2; exit}' proj
 # canonical capture.
 xcodebuild test \
     -project StatScout.xcodeproj \
-    -scheme StatScout \
+    -scheme StatScoutUITests \
     -destination "id=$UDID" \
     -derivedDataPath "$ROOT/build/DerivedData12" \
     -resultBundlePath "$RESULT" \

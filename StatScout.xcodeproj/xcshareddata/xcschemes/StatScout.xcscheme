@@ -50,17 +50,6 @@
                ReferencedContainer = "container:StatScout.xcodeproj">
             </BuildableReference>
          </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "DC4BFEC196200B1709D13E28"
-               BuildableName = "StatScoutUITests.xctest"
-               BlueprintName = "StatScoutUITests"
-               ReferencedContainer = "container:StatScout.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

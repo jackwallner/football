@@ -126,7 +126,8 @@ targets:
           fi
 
 schemes:
-  # The paywall purchase probe, on its own scheme so the app is NOT built as a
+  # UI tests, on their own scheme so the default `xcodebuild test -scheme
+  # StatScout` run stays unit-only and the app is NOT built as a
   # unit-test host. The StatScout scheme includes StatScoutTests, which makes
   # Xcode embed Testing.framework and the XCTest frameworks into the app bundle
   # and requires the simulator's Testing interop runtime. The target build
@@ -153,7 +154,6 @@ schemes:
       config: Debug
       targets:
         - StatScoutTests
-        - StatScoutUITests
     profile:
       config: Release
     analyze:
