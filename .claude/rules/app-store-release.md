@@ -38,6 +38,19 @@ The `submit_review` lane uses `automatic_release: false`. `Deliverfile` lists
 the locales currently accepted by Fastlane. The 11 retired App Store locales
 are handled by the `fill_deprecated_locales` lane.
 
+## Pending release, 2026-10-10
+
+- App Store version 1.2.5 (build 57) is `WAITING_FOR_REVIEW`, release type
+  MANUAL. It adds the `footballnext://<tab>` URL scheme, which in-app events
+  need for their deep link. What's New copies 1.2.4's per-locale text.
+- In-app event `6821469037` ("2026 Season Percentiles", NEW_SEASON badge,
+  Oct 12 to Nov 11, deep link `footballnext://stats`) was submitted in the
+  same review submission. Spec and media:
+  `project-docs/marketing/in-app-events/2026-midseason/`; tooling:
+  `scripts/asc-app-event.py`. The event goes live on approval even though
+  1.2.5 releases manually, so release 1.2.5 promptly after approval or the
+  live 1.2.4 opens the deep link without routing (it still launches).
+
 ## Draft version helper
 
 `ASC_DRAFT_VERSION` is the version to bump from, not the target version. For
