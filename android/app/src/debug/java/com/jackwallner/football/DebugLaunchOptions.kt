@@ -12,6 +12,8 @@ import com.jackwallner.football.data.PlanPeriod
  *
  *     adb shell am start -n com.jackwallner.football/.MainActivity \
  *         --ez resetAll true --ez onboarded true --ez forcePro true --ei tab 2
+ *
+ * `--ez screenshotData true` swaps in the fictional fixture feed for store captures.
  */
 object DebugLaunchOptions {
     var launchTab: Int? = null
@@ -23,6 +25,12 @@ object DebugLaunchOptions {
         val extras = intent?.extras ?: return
         if (extras.getBoolean("uiTest")) graph.review.isAutomationRun = true
         if (extras.getBoolean("resetAll")) graph.defaults.keys().forEach(graph.defaults::remove)
+        if (extras.getBoolean("screenshotData")) {
+            ScreenshotFixtureApi.prepareDefaults(graph.defaults)
+            graph.feedOverride = ScreenshotFixtureApi to ScreenshotFixtureApi.cache
+            graph.review.isAutomationRun = true
+        }
+        extras.getString("statsBoard")?.let { graph.defaults.putString("stats.board", it) }
         if (extras.getBoolean("onboarded")) graph.defaults.putBoolean("hasCompletedOnboarding", true)
         if (extras.getBoolean("forcePro")) graph.subscriptions.forceProForDebug()
         if (extras.getBoolean("previewStore")) graph.subscriptions.loadPreviewPlans(previewPlans(), history = extras.getBoolean("previewTrialUsed"))

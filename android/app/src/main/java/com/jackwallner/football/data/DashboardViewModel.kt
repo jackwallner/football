@@ -919,7 +919,8 @@ class DashboardViewModel(
                 )
             }
         } else if (playersToIngest.isNotEmpty()) {
-            ingestPlayers(playersToIngest)
+            // Past seasons can finish loading during the awaits above; merge again so they survive.
+            ingestPlayers(mergePlayers(playersToIngest))
         }
         if (loadedCurrentData) {
             dataCoverage = dataFreshness?.coverage ?: candidateCoverage
@@ -1003,8 +1004,9 @@ class DashboardViewModel(
         loadingMessage = "Preparing season history…"
         loadingProgress = 0.78
         if (historical.isNotEmpty()) {
-            val merged = withContext(io) { mergePlayers(historical) }
-            ingestPlayers(merged)
+            // Merge on the main thread with no suspension before ingest, so a current-season
+            // ingest that lands meanwhile is never overwritten by a stale snapshot.
+            ingestPlayers(mergePlayers(historical))
             hasLoadedHistorical = true
         }
         isHistoricalLoading = false

@@ -53,7 +53,7 @@ interface StatcastProviding {
 }
 
 /** PostgREST over HTTPS, the same queries the iOS `StatcastAPI` makes. */
-class StatcastApi(private val baseUrl: String, private val apiKey: String) : StatcastProviding {
+class StatcastApi(private val baseUrl: String, private val apiKey: String, private val log: (String) -> Unit = {}) : StatcastProviding {
     private val json = Json { ignoreUnknownKeys = true }
 
     /** Career rollup (season 0) plus every season before the live one. */
@@ -257,13 +257,16 @@ class StatcastApi(private val baseUrl: String, private val apiKey: String) : Sta
             connection.setRequestProperty("Authorization", "Bearer $apiKey")
             connection.setRequestProperty("apikey", apiKey)
             connection.setRequestProperty("Accept", "application/json")
+            val t0 = System.currentTimeMillis()
             val status = connection.responseCode
+            val t1 = System.currentTimeMillis()
             if (status == 404 && missingIsNull) return@withContext null
             val ok = status in 200..299 || (allowPartial && status == 206)
             if (!ok) throw BadServerResponse(status)
             val body = connection.inputStream.use { it.readBytes().decodeToString() }
+            val t2 = System.currentTimeMillis()
             try {
-                json.parseToJsonElement(body)
+                json.parseToJsonElement(body).also { log("$table ${body.length}B status ${t1 - t0}ms body ${t2 - t1}ms parse ${System.currentTimeMillis() - t2}ms") }
             } catch (error: kotlinx.serialization.SerializationException) {
                 throw DataFormatException(error.message ?: "Bad JSON")
             }

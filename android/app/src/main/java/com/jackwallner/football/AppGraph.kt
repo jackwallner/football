@@ -6,6 +6,7 @@ import com.jackwallner.football.data.DashboardViewModel
 import com.jackwallner.football.data.FavoritesStore
 import com.jackwallner.football.data.OfflineStatcastApi
 import com.jackwallner.football.data.PaywallGate
+import com.jackwallner.football.data.PlayerCaching
 import com.jackwallner.football.data.ReviewPromptTracker
 import com.jackwallner.football.data.SharedPreferencesStore
 import com.jackwallner.football.data.StatcastApi
@@ -29,16 +30,21 @@ class AppGraph(context: Context) {
 
     /** Null when the build has no feed configuration: the app says so instead of showing an empty league. */
     val api: StatcastProviding? = if (BuildConfig.SUPABASE_URL.startsWith("https://") && BuildConfig.SUPABASE_ANON_KEY.isNotBlank()) {
-        StatcastApi(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+        StatcastApi(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) { if (BuildConfig.BUILD_TYPE != "release") android.util.Log.d("StatScoutLoad", it) }
     } else null
 
-    val dashboard = DashboardViewModel(
-        provider = api ?: OfflineStatcastApi,
-        cache = TwoTierPlayerCache(appContext.cacheDir) {
-            runCatching { appContext.assets.open("players-historical.json.gz") }.getOrNull()
-        },
+    /** Debug screenshot runs swap in a fixture feed before anything reads [dashboard]. */
+    var feedOverride: Pair<StatcastProviding, PlayerCaching?>? = null
+
+    val dashboard by lazy {
+        DashboardViewModel(
+            provider = feedOverride?.first ?: api ?: OfflineStatcastApi,
+            cache = if (feedOverride != null) feedOverride?.second else TwoTierPlayerCache(appContext.cacheDir) {
+                runCatching { appContext.assets.open("players-historical.json.gz") }.getOrNull()
+            },
         defaults = defaults,
         scope = scope,
-        log = { if (BuildConfig.DEBUG) android.util.Log.d("StatScoutLoad", it) },
-    )
+            log = { if (BuildConfig.BUILD_TYPE != "release") android.util.Log.d("StatScoutLoad", it) },
+        )
+    }
 }
