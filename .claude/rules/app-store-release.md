@@ -48,8 +48,8 @@ are handled by the `fill_deprecated_locales` lane.
   same review submission. Spec and media:
   `project-docs/marketing/in-app-events/2026-midseason/`; tooling:
   `scripts/asc-app-event.py`. The event goes live on approval even though
-  1.2.5 releases manually, so release 1.2.5 promptly after approval or the
-  live 1.2.4 opens the deep link without routing (it still launches).
+  1.2.5 releases manually, so release 1.2.5 promptly after approval: 1.2.4
+  has no URL scheme, so the event's deep link cannot open it.
 
 ## Draft version helper
 
