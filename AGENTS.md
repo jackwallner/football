@@ -14,6 +14,9 @@ baseball StatScout repo. Metadata/screenshots here are app-specific.
 
 **App Store release workflow and current state:** `.claude/rules/app-store-release.md`.
 
+**Android port** (`android/`, Play package `com.jackwallner.football`): identity, products,
+RevenueCat IDs, emulator, store assets and Play state are in `.claude/rules/android.md`.
+
 **App Store reviews:** enjoyment funnel in `StatScout/Services/ReviewPromptTracker.swift`
 (passive triggers: 3rd+ player profile open, Pro player comparison). feedback
 `jackwallner+bb@gmail.com`.
