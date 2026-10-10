@@ -89,9 +89,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    // The bundled history is already gzip; storing it again compressed costs a
-    // second inflate on every past-season load.
-    androidResources { noCompress += "gz" }
+    // The bundled history is gzip JSON named .bin: the asset packager silently
+    // inflates and renames any .gz asset, and storing it compressed again would
+    // cost a second inflate on every past-season load.
+    androidResources { noCompress += "bin" }
     testOptions {
         animationsDisabled = true
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
@@ -123,6 +124,8 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("androidx.test:core-ktx:1.7.0")
+    // Compose test pulls an older Espresso that calls InputManager.getInstance, gone on API 36.
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     androidTestImplementation("androidx.test.uiautomator:uiautomator:2.4.0")
     androidTestUtil("androidx.test:orchestrator:1.6.1")
     testImplementation("junit:junit:4.13.2")

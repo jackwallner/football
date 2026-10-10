@@ -40,7 +40,7 @@ class AppGraph(context: Context) {
         DashboardViewModel(
             provider = feedOverride?.first ?: api ?: OfflineStatcastApi,
             cache = if (feedOverride != null) feedOverride?.second else TwoTierPlayerCache(appContext.cacheDir) {
-                runCatching { appContext.assets.open("players-historical.json.gz") }.getOrNull()
+                runCatching { appContext.assets.open(HISTORY_ASSET) }.getOrNull()
             },
         defaults = defaults,
         scope = scope,
@@ -48,3 +48,6 @@ class AppGraph(context: Context) {
         )
     }
 }
+
+/** Gzip JSON of every past season. Not `.gz`: the packager would inflate and rename it. */
+private const val HISTORY_ASSET = "players-historical.bin"

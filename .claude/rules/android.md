@@ -54,7 +54,9 @@ paths:
   emulator speed checks; the Debug build is far slower to parse the 2.4 MB
   player feed on the emulator (about 75 s versus under 1 s).
 - `scripts/sync-android-historical.py` regenerates
-  `app/src/main/assets/players-historical.json.gz` from the iOS bundle.
+  `app/src/main/assets/players-historical.bin` (gzip JSON) from the iOS bundle.
+  Never name an asset `.gz`: the packager inflates it and drops the extension,
+  so `assets.open` fails and past seasons silently vanish.
 - Increment `versionCode` on every Play upload.
 
 ## Emulator (remote MacBook Pro only)

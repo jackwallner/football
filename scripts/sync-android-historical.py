@@ -3,7 +3,7 @@
 
 Reads StatScout/Data/players-historical.json (the same export the iOS plist is
 built from, see scripts/export_historical.py) and writes a compact gzip JSON
-array to android/app/src/main/assets/players-historical.json.gz. Fields the app
+array to android/app/src/main/assets/players-historical.bin. Fields the app
 never reads (image_url, source, empty games, per-metric ids) are dropped; the
 Kotlin decoder derives ids. Rerun after every export_historical.py run.
 """
@@ -13,7 +13,7 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "StatScout" / "Data" / "players-historical.json"
-TARGET = ROOT / "android" / "app" / "src" / "main" / "assets" / "players-historical.json.gz"
+TARGET = ROOT / "android" / "app" / "src" / "main" / "assets" / "players-historical.bin"
 
 
 def compact(player: dict) -> dict:
