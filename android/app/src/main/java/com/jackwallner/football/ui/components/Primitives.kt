@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -29,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
@@ -163,7 +165,13 @@ fun MetricBar(metric: Metric, modifier: Modifier = Modifier, showValue: Boolean 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.width(70.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            FitText(metric.label, GridironType.bodyBold, GridironPalette.ink, minScale = 0.7f)
+            // Wraps to two lines (hyphenated) rather than shrinking, as on iOS.
+            Text(
+                metric.label,
+                style = GridironType.bodyBold.copy(hyphens = androidx.compose.ui.text.style.Hyphens.Auto, lineBreak = androidx.compose.ui.text.style.LineBreak.Paragraph),
+                color = GridironPalette.ink,
+                maxLines = 2,
+            )
             if (metric.isSmallSample && !metric.isUnranked) {
                 Text("Small sample", fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = GridironPalette.inkTertiary, maxLines = 1)
             }
@@ -364,17 +372,20 @@ fun LeaderboardTableHeader(
         Text("PLAYER", style = GridironType.micro, color = GridironPalette.inkTertiary, modifier = Modifier.weight(1f))
         Text("TEAM", style = GridironType.micro, color = GridironPalette.inkTertiary, modifier = Modifier.width(44.dp))
         Row(Modifier.width(104.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-            GridironMenu(
-                sections = listOf(MenuSection(null, metrics.map { MenuItem(it, checked = it == sortLabel) { onSelectMetric(it) } })),
-            ) { open ->
+            val label = @Composable { open: () -> Unit ->
                 Row(
-                    Modifier.clickable(onClick = open).padding(vertical = 4.dp).semantics { contentDescription = "Metric, $sortLabel" },
+                    Modifier.widthIn(max = 82.dp).clickable(onClick = open).padding(vertical = 4.dp).semantics { contentDescription = "Metric, $sortLabel" },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
-                    FitText(sortLabel.uppercase(), GridironType.micro, GridironPalette.turf, Modifier.weight(1f, fill = false), minScale = 0.7f)
-                    SfIcon("chevron.down", 10.dp, GridironPalette.turf)
+                    FitText(sortLabel.uppercase(), GridironType.micro, GridironPalette.turf, Modifier.widthIn(max = 70.dp), minScale = 0.7f)
+                    if (metrics.isNotEmpty()) SfIcon("chevron.down", 10.dp, GridironPalette.turf)
                 }
+            }
+            // With no metric list the label is part of the sort toggle, as on the iOS board.
+            if (metrics.isEmpty()) label(onToggleDirection)
+            else GridironMenu(sections = listOf(MenuSection(null, metrics.map { MenuItem(it, checked = it == sortLabel) { onSelectMetric(it) } }))) { open ->
+                label(open)
             }
             Box(
                 Modifier.size(width = 22.dp, height = 28.dp).clickable(onClick = onToggleDirection)
@@ -601,4 +612,35 @@ fun TeamIdentityStrip(team: String, season: Int? = null) {
 fun rememberHaptic(): () -> Unit {
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     return remember(haptic) { { haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.SegmentTick) } }
+}
+
+/**
+ * One slice of a card drawn as separate lazy items: the outline's sides on every
+ * slice, its top edge and corners on the first, its bottom on the last.
+ */
+fun Modifier.cardSlice(first: Boolean, last: Boolean, stroke: Color = GridironPalette.hairline): Modifier {
+    val radius = GridironGeo.radiusCard
+    val shape = RoundedCornerShape(
+        topStart = if (first) radius else 0.dp,
+        topEnd = if (first) radius else 0.dp,
+        bottomStart = if (last) radius else 0.dp,
+        bottomEnd = if (last) radius else 0.dp,
+    )
+    return this.clip(shape).background(GridironPalette.surface).drawWithContent {
+        drawContent()
+        val w = GridironGeo.hairline.toPx()
+        val r = radius.toPx()
+        drawRect(stroke, topLeft = Offset(0f, if (first) r else 0f), size = androidx.compose.ui.geometry.Size(w, size.height - (if (first) r else 0f) - (if (last) r else 0f)))
+        drawRect(stroke, topLeft = Offset(size.width - w, if (first) r else 0f), size = androidx.compose.ui.geometry.Size(w, size.height - (if (first) r else 0f) - (if (last) r else 0f)))
+        if (first) {
+            drawRect(stroke, topLeft = Offset(r, 0f), size = androidx.compose.ui.geometry.Size(size.width - 2 * r, w))
+            drawArc(stroke, 180f, 90f, false, topLeft = Offset(w / 2, w / 2), size = androidx.compose.ui.geometry.Size(2 * r, 2 * r), style = androidx.compose.ui.graphics.drawscope.Stroke(w))
+            drawArc(stroke, 270f, 90f, false, topLeft = Offset(size.width - 2 * r - w / 2, w / 2), size = androidx.compose.ui.geometry.Size(2 * r, 2 * r), style = androidx.compose.ui.graphics.drawscope.Stroke(w))
+        }
+        if (last) {
+            drawRect(stroke, topLeft = Offset(r, size.height - w), size = androidx.compose.ui.geometry.Size(size.width - 2 * r, w))
+            drawArc(stroke, 90f, 90f, false, topLeft = Offset(w / 2, size.height - 2 * r - w / 2), size = androidx.compose.ui.geometry.Size(2 * r, 2 * r), style = androidx.compose.ui.graphics.drawscope.Stroke(w))
+            drawArc(stroke, 0f, 90f, false, topLeft = Offset(size.width - 2 * r - w / 2, size.height - 2 * r - w / 2), size = androidx.compose.ui.geometry.Size(2 * r, 2 * r), style = androidx.compose.ui.graphics.drawscope.Stroke(w))
+        }
+    }
 }

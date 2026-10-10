@@ -299,3 +299,29 @@ private fun Modifier.swallowTouches(): Modifier = pointerInput(Unit) {
         while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
     }
 }
+
+/** The nav-bar season pill for a screen that keeps its own season and phase (Trends, a team page). */
+@Composable
+fun SeasonPhaseNavPillFor(
+    seasons: List<Int>,
+    selectedSeason: Int,
+    selectedPhase: com.jackwallner.football.model.SeasonPhase,
+    onSelectSeason: (Int) -> Unit,
+    onSelectPhase: (com.jackwallner.football.model.SeasonPhase) -> Unit,
+) {
+    val vm = LocalGraph.current.dashboard
+    SeasonPhasePicker(
+        seasons = seasons,
+        selectedSeason = selectedSeason,
+        selectedPhase = selectedPhase,
+        isSeasonLocked = vm::isSeasonLocked,
+        onSelectSeason = onSelectSeason,
+        onSelectPhase = onSelectPhase,
+    ) { open ->
+        GridironNavPill(
+            SeasonLabel.text(selectedSeason) + " · " + selectedPhase.label,
+            open,
+            description = "Season and season type, ${SeasonLabel.text(selectedSeason)}, ${selectedPhase.label}",
+        )
+    }
+}

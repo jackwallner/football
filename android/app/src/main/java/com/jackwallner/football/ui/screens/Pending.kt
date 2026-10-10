@@ -13,16 +13,5 @@ import com.jackwallner.football.ui.nav.Route
 
 @Composable internal fun Pending(name: String) = Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(name) }
 
-@Composable fun StatsScreen() { HomeTopBar("Stats"); Pending("Stats") }
-@Composable fun TrendsScreen(isActive: Boolean) { HomeTopBar("Trends"); Pending("Trends") }
-@Composable fun CompareScreen(isActive: Boolean) { HomeTopBar("Compare"); Pending("Compare") }
-@Composable fun PlayerProfileRoute(player: Player) = PushedScreen(player.name) { Pending("Profile") }
-@Composable fun MetricRankingRoute(route: Route.Metric) = PushedScreen(route.label) { Pending(route.label) }
-@Composable fun StandardStatRoute(route: Route.StandardStat) = PushedScreen(route.stat) { Pending(route.stat) }
-@Composable fun PlayerComparisonScreen(a: Player, b: Player) = PushedScreen("Compare") { Pending("H2H") }
-@Composable fun YearComparisonScreen(player: Player) = PushedScreen("Year") { Pending("Year") }
-@Composable fun SettingsScreen() = PushedScreen("Settings") { Pending("Settings") }
-@Composable fun StatGlossaryScreen() = PushedScreen("Glossary") { Pending("Glossary") }
-@Composable fun FollowingStatsScreen() = PushedScreen("Following") { Pending("Following") }
-@Composable fun FeedbackSheet(onDismiss: () -> Unit) = Pending("Feedback")
-@Composable fun ConfigMissingScreen() = Pending("Config missing")
+@Composable fun FollowingStatsScreen() = PushedScreen("Following") { FollowingStatsView(com.jackwallner.football.ui.LocalGraph.current.dashboard) }
+@Composable fun YearComparisonScreen(player: Player) { val vm = com.jackwallner.football.ui.LocalGraph.current.dashboard; PushedScreen(player.name) { YearComparisonView(vm.playerHistories[player.playerId].orEmpty().filter { it.seasonPhase == player.seasonPhase }) } }

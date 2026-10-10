@@ -63,6 +63,7 @@ class DashboardViewModel(
     private val scope: CoroutineScope,
     private val io: CoroutineDispatcher = Dispatchers.Default,
     private val clock: () -> Instant = Instant::now,
+    private val log: (String) -> Unit = {},
 ) {
     // MARK: Selection
 
@@ -829,7 +830,9 @@ class DashboardViewModel(
         loadingMessage = if (players.isEmpty()) "Loading saved players…" else "Refreshing player data…"
         loadingProgress = if (players.isEmpty()) 0.12 else 0.2
 
+        val started = System.currentTimeMillis()
         val cached = withContext(io) { runCatching { cache?.loadCurrentPlayers() }.getOrNull().orEmpty() }
+        log("cache ${cached.size} players in ${System.currentTimeMillis() - started}ms")
         if (players.isEmpty() && cached.isNotEmpty()) ingestPlayers(cached)
 
         loadingMessage = "Checking for updates…"
@@ -840,6 +843,7 @@ class DashboardViewModel(
         lastFailureWasConnectivity = false
 
         val freshnessResult = checkForUpdates(true)
+        log("status $freshnessResult at ${System.currentTimeMillis() - started}ms")
         val revisionAtStart = dataFreshness?.revision
 
         var acceptedCurrent: List<Player> = emptyList()
@@ -848,6 +852,7 @@ class DashboardViewModel(
 
         try {
             val current = provider.fetchCurrentPlayers()
+            log("fetched ${current.size} players at ${System.currentTimeMillis() - started}ms")
             val fallback = cached.ifEmpty { playerHistories.values.flatten() }
             val hasCompleteFallback = PlayerSnapshotValidator.isCompleteCurrent(fallback)
             val passes = PlayerSnapshotValidator.isCompleteCurrent(current)
@@ -894,6 +899,7 @@ class DashboardViewModel(
         }
         isLoading = false
         loadingProgress = 1.0
+        log("board ready at ${System.currentTimeMillis() - started}ms")
 
         val candidateCoverage = runCatchingNonCancel { provider.fetchDataCoverage(freeSeason) }
 

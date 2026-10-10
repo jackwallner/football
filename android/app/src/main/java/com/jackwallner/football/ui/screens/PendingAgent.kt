@@ -17,6 +17,6 @@ import com.jackwallner.football.ui.nav.Route
 @Composable fun GameDetailScreen(gameId: String) = PushedScreen("Game") { Pending(gameId) }
 @Composable fun TeamScheduleScreen(team: String) = PushedScreen("Schedule") { Pending(team) }
 @Composable fun TeamScreen(abbr: String) = PushedScreen(abbr) { Pending(abbr) }
-@Composable fun TeamComparisonScreen(a: String, b: String) = PushedScreen("Teams") { Pending("Teams") }
+@Composable fun TeamComparisonScreen(route: Route.TeamComparison) = PushedScreen("Teams") { Pending("Teams") }
 @Composable fun StandingsScreen() = PushedScreen("Standings") { Pending("Standings") }
 @Composable fun PowerRankingsScreen() = PushedScreen("Power") { Pending("Power") }

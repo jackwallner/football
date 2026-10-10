@@ -49,6 +49,7 @@ import com.jackwallner.football.data.PaywallTrigger
 import com.jackwallner.football.data.PurchaseOutcome
 import com.jackwallner.football.ui.LocalAppActions
 import com.jackwallner.football.ui.LocalGraph
+import com.jackwallner.football.ui.components.DarkStatusIcons
 import com.jackwallner.football.ui.components.SfIcon
 import com.jackwallner.football.ui.findActivity
 import com.jackwallner.football.ui.theme.GridironPalette
@@ -117,6 +118,7 @@ fun OnboardingScreen(onFinish: () -> Unit, startPage: Int = 0) {
     val ctaLabel = if (monthly != null && disclosure != null) store.onboardingMonthlyCTALabel else "Upgrade to StatScout+"
 
     LaunchedEffect(Unit) { if (store.offeringId == null) store.fetchProducts() }
+    DarkStatusIcons()
     // Becoming Pro here (purchase or restore) finishes onboarding, as on iOS.
     var wasPro by remember { mutableStateOf(store.isPro) }
     LaunchedEffect(store.isPro) {

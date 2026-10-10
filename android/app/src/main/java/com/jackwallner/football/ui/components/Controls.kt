@@ -138,7 +138,7 @@ fun GridironChip(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         icon?.let { SfIcon(it, 14.dp, glyph) }
-        title?.let { FitText(it, GridironType.smallBold, if (isActive) Color.White else GridironPalette.ink, Modifier.weight(1f, fill = false), minScale = 0.75f) }
+        title?.let { Text(it, style = GridironType.smallBold, color = if (isActive) Color.White else GridironPalette.ink, maxLines = 1, softWrap = false) }
         if (isLocked) SfIcon("crown.fill", 11.dp, CrownYellow)
         when (trailing) {
             ChipTrailing.None -> Unit

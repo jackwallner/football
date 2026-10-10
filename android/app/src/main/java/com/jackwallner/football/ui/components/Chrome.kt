@@ -186,3 +186,16 @@ fun StatScoutSheet(visible: Boolean, onDismiss: () -> Unit, fullHeight: Boolean 
         }
     }
 }
+
+/** Dark status-bar icons while a light, full-screen surface (onboarding) is up; restores on exit. */
+@Composable
+fun DarkStatusIcons() {
+    val view = LocalView.current
+    androidx.compose.runtime.DisposableEffect(view) {
+        val window = (view.context as? android.app.Activity)?.window
+        val controller = window?.let { androidx.core.view.WindowCompat.getInsetsController(it, view) }
+        val previous = controller?.isAppearanceLightStatusBars
+        controller?.isAppearanceLightStatusBars = true
+        onDispose { if (previous != null) controller.isAppearanceLightStatusBars = previous }
+    }
+}

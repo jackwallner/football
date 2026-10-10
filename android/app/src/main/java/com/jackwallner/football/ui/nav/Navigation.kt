@@ -42,7 +42,8 @@ sealed interface Route {
     data class StandardStat(val stat: String, val category: String, val season: Int? = null, val phase: SeasonPhase? = null) : Route
     data class Comparison(val playerA: Player, val playerB: Player) : Route
     data class YearCompare(val player: Player) : Route
-    data class TeamComparison(val teamA: String, val teamB: String) : Route
+    data class TeamComparison(val teamA: String, val teamB: String, val seasonA: Int, val phaseA: SeasonPhase, val seasonB: Int, val phaseB: SeasonPhase) : Route
+    data class YearCompareRoute(val playerId: Int, val playerName: String, val phase: SeasonPhase) : Route
     data object Standings : Route
     data object PowerRankings : Route
     data object Settings : Route

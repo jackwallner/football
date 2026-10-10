@@ -39,5 +39,6 @@ class AppGraph(context: Context) {
         },
         defaults = defaults,
         scope = scope,
+        log = { if (BuildConfig.DEBUG) android.util.Log.d("StatScoutLoad", it) },
     )
 }
