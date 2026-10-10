@@ -93,7 +93,15 @@ hidden). `python3 scripts/play_screenshot_compositor.py` writes the seven
   audience 18+, data safety (purchase history, app interactions, device IDs;
   collected, not shared, encrypted in transit, deletion URL), advertising ID
   (no), government, financial, health (none).
-- No release, no track, nothing sent for review. Subscriptions and the lifetime
-  product cannot be created until an AAB with the BILLING permission is
-  uploaded; RevenueCat's Play app then needs a Play service account (ask Jack
-  before creating or granting it).
+- No release, no track, nothing sent for review. Signed AAB versionCode 1
+  built and verified, not uploaded.
+- RevenueCat Play products are created and attached to the packages and
+  entitlement (`...monthly:monthly`, `...yearly:yearly`, `...pro` one-time).
+- Blocked on Jack: grant the fleet service account
+  `revenuecat-service-account@gen-lang-client-0612253531` this app in Play
+  Console (mirror Sober's permissions) and upload its JSON
+  (`~/.config/google-play/mahj-service-account.json`) to RevenueCat app
+  `app384d77e843`. Then run
+  `PLAY_SERVICE_ACCOUNT_JSON=... ./scripts/play-upload.sh internal-draft`
+  and `PLAY_SERVICE_ACCOUNT_JSON=... python3 scripts/play-products.py`
+  (Play needs an uploaded BILLING bundle before products exist).
