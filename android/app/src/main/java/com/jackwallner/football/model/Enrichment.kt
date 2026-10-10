@@ -64,7 +64,7 @@ data class PlayerProfile(
     val contractLabel: String?
         get() {
             val apy = contractAPY?.takeIf { it > 0 } ?: return null
-            return if (apy >= 10) String.format(Locale.US, "$%.1fM/yr", apy) else String.format(Locale.US, "$%.2fM/yr", apy)
+            return if (apy >= 10) "$${cFixed(apy, 1)}M/yr" else "$${cFixed(apy, 2)}M/yr"
         }
 
     fun snapShare(defense: Boolean): Double? = if (defense) defenseSnapShare else offenseSnapShare

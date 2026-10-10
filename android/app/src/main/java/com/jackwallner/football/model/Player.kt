@@ -184,6 +184,10 @@ data class Player(
 /** Swift's `round` (half away from zero) on a non-negative mean. */
 internal fun swiftRound(value: Double): Int = swiftRoundDouble(value).toInt()
 
+/** C `printf("%.Nf")`: rounds the exact binary value (0.155 prints 0.15), where Java's `String.format` rounds the shortest decimal (0.16). */
+internal fun cFixed(value: Double, decimals: Int): String =
+    java.math.BigDecimal(value).setScale(decimals, java.math.RoundingMode.HALF_EVEN).toPlainString()
+
 /** Swift's `.rounded()`: half away from zero (Java's `Math.round` rounds -0.5 up). */
 internal fun swiftRoundDouble(value: Double): Double = if (value < 0) -Math.floor(-value + 0.5) else Math.floor(value + 0.5)
 
@@ -343,9 +347,9 @@ data class MetricValueFormat(
 ) {
     fun string(value: Double): String {
         var text = when {
-            decimals == 0 && hasGrouping -> NumberFormat.getIntegerInstance(Locale.US).format(Math.round(value))
-            decimals == 0 -> Math.round(value).toString()
-            else -> String.format(Locale.US, "%.${decimals}f", value)
+            decimals == 0 && hasGrouping -> NumberFormat.getIntegerInstance(Locale.US).format(swiftRoundDouble(value).toLong())
+            decimals == 0 -> swiftRoundDouble(value).toLong().toString()
+            else -> cFixed(value, decimals)
         }
         if (isSigned && value > 0) text = "+$text"
         if (isPercent) text += "%"
