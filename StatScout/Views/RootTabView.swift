@@ -138,6 +138,10 @@ struct RootTabView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(GridironPalette.canvas.ignoresSafeArea())
         .ignoresSafeArea(edges: .bottom)
+        // App Store in-app events open `footballnext://<tab>`, e.g. `footballnext://stats`.
+        .onOpenURL { url in
+            if let tab = Tab.named(url.host) { selection = tab.rawValue }
+        }
         #if DEBUG
         .onAppear {
             if let tab = Tab.launchArgument { selection = tab.rawValue }
@@ -149,6 +153,10 @@ struct RootTabView: View {
         case stats, games, trends, teams, compare
 
         var id: Int { rawValue }
+
+        static func named(_ name: String?) -> Tab? {
+            allCases.first { $0.title.lowercased() == name?.lowercased() }
+        }
 
         #if DEBUG
         /// Launch with `-StartTab trends|teams|compare` to open straight on a
@@ -162,7 +170,7 @@ struct RootTabView: View {
             let arguments = ProcessInfo.processInfo.arguments
             guard let index = arguments.firstIndex(of: "-StartTab"),
                   index + 1 < arguments.count else { return nil }
-            return allCases.first { $0.title.lowercased() == arguments[index + 1].lowercased() }
+            return named(arguments[index + 1])
         }
         #endif
 

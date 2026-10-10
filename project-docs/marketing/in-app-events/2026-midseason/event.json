@@ -1,0 +1,19 @@
+{
+  "app_id": "6792930447",
+  "reference_name": "2026 Season Percentiles",
+  "badge": "NEW_SEASON",
+  "purpose": "APPROPRIATE_FOR_ALL_USERS",
+  "priority": "HIGH",
+  "purchase_requirement": "NO_COST_ASSOCIATED",
+  "primary_locale": "en-US",
+  "publish_start": "2026-10-12T16:00:00Z",
+  "event_start": "2026-10-12T16:00:00Z",
+  "event_end": "2026-11-11T16:00:00Z",
+  "deep_link": "footballnext://stats",
+  "event_id": "6821469037",
+  "name": "2026 Season Percentiles",
+  "short_description": "Every player ranked, updated after every game",
+  "long_description": "See where every QB, RB, WR, TE and defender ranks against the league in advanced stats, refreshed soon after each game.",
+  "event_card": "event-card-1920x1080.png",
+  "details_page": "event-details-1080x1920.png"
+}

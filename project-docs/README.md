@@ -20,3 +20,4 @@ Developer notes and historical audits for this repository. The published site re
 
 - [aso-plan.md](marketing/aso-plan.md): aso-plan.md: Football Next: StatScout ASO Plan
 - [apple-ads-2026-09-28.md](marketing/apple-ads-2026-09-28.md): Apple Ads test: Football US Analytics Exact 2609
+- [in-app-events/2026-midseason/](marketing/in-app-events/2026-midseason/event.json): 2026 Season Percentiles in-app event spec and media, created with `scripts/asc-app-event.py`
