@@ -29,7 +29,7 @@ fun Destination(route: Route) {
         is Route.StandardStat -> StandardStatRoute(route)
         is Route.Comparison -> PlayerComparisonScreen(route.playerA, route.playerB)
         is Route.YearCompare -> YearComparisonScreen(route.player)
-        is Route.TeamComparison -> TeamComparisonScreen(route.teamA, route.teamB)
+        is Route.TeamComparison -> TeamComparisonScreen(route)
         Route.Standings -> StandingsScreen()
         Route.PowerRankings -> PowerRankingsScreen()
         Route.Settings -> SettingsScreen()
