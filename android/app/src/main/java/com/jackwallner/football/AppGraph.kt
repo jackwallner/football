@@ -1,6 +1,9 @@
 package com.jackwallner.football
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.jackwallner.football.data.ConversionDiagnostics
 import com.jackwallner.football.data.DashboardViewModel
 import com.jackwallner.football.data.FavoritesStore
@@ -32,6 +35,9 @@ class AppGraph(context: Context) {
     val api: StatcastProviding? = if (BuildConfig.SUPABASE_URL.startsWith("https://") && BuildConfig.SUPABASE_ANON_KEY.isNotBlank()) {
         StatcastApi(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY) { if (BuildConfig.BUILD_TYPE != "release") android.util.Log.d("StatScoutLoad", it) }
     } else null
+
+    /** Tab name from a `footballnext://<tab>` link, consumed by the root screen. */
+    var pendingTab by mutableStateOf<String?>(null)
 
     /** Debug screenshot runs swap in a fixture feed before anything reads [dashboard]. */
     var feedOverride: Pair<StatcastProviding, PlayerCaching?>? = null

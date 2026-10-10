@@ -1,5 +1,6 @@
 package com.jackwallner.football
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -29,6 +30,7 @@ class MainActivity : ComponentActivity() {
             graph.review.recordAppLaunch()
             graph.diagnostics.recordAppOpen()
             DebugLaunchOptions.apply(graph, intent)
+            handleDeepLink(intent)
         }
         // Light icons over the midnight bar at the top; dark icons over the cream canvas below.
         enableEdgeToEdge(
@@ -44,6 +46,17 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleDeepLink(intent)
+    }
+
+    /** `footballnext://stats` and friends, the iOS in-app event links. */
+    private fun handleDeepLink(intent: Intent?) {
+        val uri = intent?.data ?: return
+        if (uri.scheme == "footballnext") graph.pendingTab = uri.host
     }
 
     override fun onResume() {

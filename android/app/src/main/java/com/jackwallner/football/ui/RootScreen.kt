@@ -100,6 +100,11 @@ fun RootScreen(graph: AppGraph) {
     var hasCompletedOnboarding by remember { mutableStateOf(graph.defaults.getBoolean(SEEN_KEY)) }
     var selection by rememberSaveable { mutableIntStateOf(DebugLaunchOptions.launchTab ?: 0) }
     val navigators = remember { AppTab.entries.associateWith { Navigator() } }
+    LaunchedEffect(graph.pendingTab) {
+        val name = graph.pendingTab ?: return@LaunchedEffect
+        AppTab.entries.firstOrNull { it.title.equals(name, ignoreCase = true) }?.let { selection = it.ordinal }
+        graph.pendingTab = null
+    }
     var paywall by remember { mutableStateOf<PaywallTrigger?>(null) }
     var pitch by remember { mutableStateOf<PaywallTrigger?>(null) }
     var showFeedback by remember { mutableStateOf(false) }
