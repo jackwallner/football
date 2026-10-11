@@ -94,8 +94,12 @@ hidden). `python3 scripts/play_screenshot_compositor.py` writes the seven
   collected, not shared, encrypted in transit, deletion URL), advertising ID
   (no), government, financial, health (none).
 - Internal testing: release "1.2.4" (versionCode 1) uploaded as a draft
-  2026-10-10, not rolled out; nothing sent for review. The next upload needs
-  versionCode 2.
+  2026-10-10, not rolled out. The next upload needs versionCode 2.
+- Production: 178 countries targeted; draft release "1 (1.2.4)" with
+  versionCode 1 and en-US notes saved, not previewed or sent. What is left
+  is Jack's: Production > edit release > Next > Save, then Publishing
+  overview > Send app for review. The service account lacks production
+  release permission, so the API cannot stage production.
 - Play products ACTIVE: monthly $1.49 and yearly $7.99 (each with
   `trial-7d`), lifetime `com.jackwallner.football.pro` $15.99. Ethiopia is not
   billable; Argentina, Azerbaijan and Uzbekistan are priced in USD.
