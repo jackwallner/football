@@ -364,7 +364,7 @@ struct StandardStatsLeadersView: View {
             .frame(height: GridironGeo.rowHeight)
             .padding(.horizontal, GridironGeo.padInline)
             .background(
-                stripe.isMultiple(of: 2)
+                (stripe + 1).isMultiple(of: 2)
                     ? GridironPalette.surfaceAlt
                     : GridironPalette.surface
             )
