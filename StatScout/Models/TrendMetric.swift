@@ -18,6 +18,48 @@ struct TrendMetric: Identifiable, Hashable, Sendable {
 
     var id: String { key }
 
+    /// Window totals rather than rates. Two windows rarely hold the same number
+    /// of games (byes, a week still in progress), so the board compares these
+    /// per game: three weeks with a Thursday game in them is not a hot streak.
+    var isCount: Bool { Self.countKeys.contains(key) }
+
+    private static let countKeys: Set<String> = [
+        "pass_yards", "pass_tds", "completions", "attempts", "interceptions",
+        "rush_yards", "rush_tds", "carries", "rush_first_downs",
+        "receptions", "rec_yards", "rec_tds", "targets", "yac",
+        "rushing_epa", "receiving_epa", "rush_yoe",
+        "tackles", "sacks", "def_ints", "passes_defended", "tfl", "qb_hits", "forced_fumbles",
+    ]
+
+    /// A count's per-game figure: one decimal and a "/g", so 0.7 TD a game
+    /// does not round to 1.
+    func formatPerGame(_ value: Double) -> String {
+        String(format: "%.1f", value) + "/g"
+    }
+
+    /// This metric's then, now and change for one player's row. Counts are
+    /// per game when the rollup says how many games each window holds;
+    /// everything else is the window value as published.
+    func values(in form: RecentForm) -> (then: Double?, now: Double?, delta: Double?) {
+        guard isCount else {
+            return (form.priorMetrics[key], form.metrics[key], form.delta[key])
+        }
+        let nowGames = form.metrics["games"] ?? Double(form.games)
+        let now = nowGames > 0 ? form.metrics[key].map { $0 / nowGames } : nil
+        guard let priorGames = form.priorMetrics["games"], priorGames > 0,
+              let priorTotal = form.priorMetrics[key] else {
+            // A rollup from before the window game counts shipped: there is
+            // no honest per-game prior, so there is no change to rank either.
+            return (nil, now, nil)
+        }
+        let then = priorTotal / priorGames
+        return (then, now, now.map { $0 - then })
+    }
+
+    func display(_ value: Double) -> String {
+        isCount ? formatPerGame(value) : format(value)
+    }
+
     func format(_ value: Double) -> String {
         if decimals == 0 {
             return Int(value.rounded()).formatted(.number.grouping(.automatic)) + unit

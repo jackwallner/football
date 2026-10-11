@@ -422,7 +422,13 @@ struct TeamsView: View {
               viewModel.selectedPhase == .regular else { return nil }
         if let game = viewModel.currentGame(forTeam: abbr),
            [.inProgress, .awaitingScore].contains(game.status()) {
-            return ("Live", "playing \(game.matchupLabel(for: abbr))", GridironPalette.performanceLow)
+            // Keep the record beside it: game day is when people check it.
+            let record = viewModel.record(forTeam: abbr)
+            return (
+                record.map { "\($0) · Live" } ?? "Live",
+                "playing \(game.matchupLabel(for: abbr))" + (record.map { ", record \($0)" } ?? ""),
+                GridironPalette.performanceLow
+            )
         }
         if let record = viewModel.record(forTeam: abbr) {
             return (record, "record \(record)", GridironPalette.inkSecondary)
@@ -439,7 +445,7 @@ struct TeamsView: View {
         switch game.status() {
         case .final:
             let line = game.resultLine(for: abbr) ?? "Final"
-            let color = game.result(for: abbr) == "L" ? GridironPalette.performanceLow : GridironPalette.performanceHigh
+            let color = GridironPalette.resultColor(game.result(for: abbr))
             return (line, "\(line) \(game.matchupLabel(for: abbr))", color)
         case .inProgress, .awaitingScore:
             return ("Live", "playing \(game.matchupLabel(for: abbr))", GridironPalette.performanceLow)

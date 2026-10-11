@@ -108,7 +108,7 @@ struct GameDetailView: View {
                             scoreText(game.homeScore, winner: game.result(for: game.homeTeam) != "L")
                         }
                     } else {
-                        Text(status == .upcoming ? game.kickoffLabel : "In progress")
+                        Text(status == .upcoming ? game.kickoffLabel : status.liveLabel)
                             .font(GridironType.cardTitle)
                             .foregroundStyle(status == .upcoming ? GridironPalette.ink : GridironPalette.performanceLow)
                     }
@@ -149,11 +149,13 @@ struct GameDetailView: View {
                         .minimumScaleFactor(0.7)
                 }
                 .frame(width: 48, height: 48)
+                // Two lines reserved either way, so "Tampa Bay Buccaneers"
+                // and "Dallas Cowboys" keep their logos level.
                 Text(teamFullName(team))
                     .font(GridironType.smallBold)
                     .foregroundStyle(GridironPalette.ink)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
+                    .lineLimit(2, reservesSpace: true)
                     .minimumScaleFactor(0.85)
                 Text(([label] + [game.seasonPhase == .regular ? viewModel.record(forTeam: team, through: game) : nil].compactMap { $0 }).joined(separator: " · "))
                     .font(GridironType.micro)
@@ -533,7 +535,7 @@ struct GameDetailView: View {
                 let swing = home ? play.homeWPA : -play.homeWPA
                 HStack(alignment: .top, spacing: 10) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Q\(play.qtr) \(play.clock.hasPrefix("0") ? String(play.clock.dropFirst()) : play.clock)")
+                        Text("\(play.qtr >= 5 ? "OT" : "Q\(play.qtr)") \(play.clock.hasPrefix("0") ? String(play.clock.dropFirst()) : play.clock)")
                             .lineLimit(1)
                             .font(GridironType.micro)
                             .foregroundStyle(GridironPalette.inkTertiary)
@@ -753,12 +755,189 @@ struct GameDetailView: View {
         }
     }
 
+    /// The pregame page: the line, the two clubs side by side, and who to
+    /// watch. It used to be a single "Not started yet" notice, on the screen a
+    /// fan opens most in the days before kickoff.
+    @ViewBuilder
     private func upcomingCard(_ game: Game) -> some View {
-        notice(
-            icon: "calendar",
-            title: "Not started yet",
-            text: "The score and box score post here when the game goes final. Scout both rosters from the team pages above."
-        )
+        let projection = viewModel.projection(for: game)
+        let away = viewModel.teamRating(game.awayTeam)
+        let home = viewModel.teamRating(game.homeTeam)
+        let leaders = matchupLeaders(game)
+
+        if let projection {
+            projectionCard(projection, game: game)
+        }
+        if let away, let home {
+            taleOfTheTape(game, away: away, home: home)
+        }
+        if !leaders.isEmpty {
+            playersToWatch(game, leaders: leaders)
+        }
+        if projection == nil, away == nil || home == nil, leaders.isEmpty {
+            notice(
+                icon: "calendar",
+                title: "Not started yet",
+                text: "The score and box score post here when the game goes final. Scout both rosters from the team pages above."
+            )
+        } else {
+            footnote("The score, box score and play-by-play breakdown post here when the game goes final.")
+        }
+    }
+
+    private func projectionCard(_ projection: GameProjection, game: Game) -> some View {
+        let homeShare = min(max(projection.homeWinProbability, 0.01), 0.99)
+        return card(title: "Projection") {
+            VStack(spacing: 10) {
+                Text(projection.label(home: game.homeTeam, away: game.awayTeam))
+                    .font(GridironType.statLarge)
+                    .foregroundStyle(GridironPalette.ink)
+                GeometryReader { proxy in
+                    HStack(spacing: 2) {
+                        Rectangle()
+                            .fill(NFLTeamColor.color(game.awayTeam))
+                            .frame(width: proxy.size.width * (1 - homeShare))
+                        Rectangle()
+                            .fill(NFLTeamColor.color(game.homeTeam))
+                    }
+                    .clipShape(Capsule())
+                }
+                .frame(height: 10)
+                HStack {
+                    Text("\(displayTeamAbbr(game.awayTeam)) \(Int(((1 - homeShare) * 100).rounded()))%")
+                    Spacer()
+                    Text("Win chance")
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                    Spacer()
+                    Text("\(displayTeamAbbr(game.homeTeam)) \(Int((homeShare * 100).rounded()))%")
+                }
+                .font(GridironType.smallBold)
+                .foregroundStyle(GridironPalette.inkSecondary)
+                .monospacedDigit()
+                Text("From the two StatScout Power Ratings plus home field.")
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(GridironGeo.padCard)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(
+                "Projection \(projection.label(home: game.homeTeam, away: game.awayTeam)). "
+                    + "\(teamFullName(game.awayTeam)) \(Int(((1 - homeShare) * 100).rounded())) percent, "
+                    + "\(teamFullName(game.homeTeam)) \(Int((homeShare * 100).rounded())) percent to win."
+            )
+        }
+    }
+
+    private func taleOfTheTape(_ game: Game, away: TeamRating, home: TeamRating) -> some View {
+        func perGame(_ total: Int, _ rating: TeamRating) -> Double {
+            rating.games > 0 ? Double(total) / Double(rating.games) : 0
+        }
+        let signed: (Double) -> String = { TeamRating.signed($0) }
+        let oneDecimal: (Double) -> String = { String(format: "%.1f", $0) }
+        return card(title: "Tale of the tape") {
+            HStack {
+                Text(displayTeamAbbr(game.awayTeam)).frame(width: 64, alignment: .leading)
+                Spacer()
+                Text(displayTeamAbbr(game.homeTeam)).frame(width: 64, alignment: .trailing)
+            }
+            .font(GridironType.smallBold)
+            .foregroundStyle(GridironPalette.inkSecondary)
+            .padding(.horizontal, GridironGeo.padCard)
+            .frame(height: 30)
+            .background(GridironPalette.surfaceAlt)
+
+            comparisonRow("Power rank", Double(away.rank), Double(home.rank), higherIsBetter: false) { "#\(Int($0))" }
+            comparisonRow("Power rating", away.rating, home.rating, higherIsBetter: true, format: signed)
+            comparisonRow("Offense", away.offense, home.offense, higherIsBetter: true, format: signed)
+            comparisonRow("Defense", away.defense, home.defense, higherIsBetter: true, format: signed)
+            comparisonRow("Points / game", perGame(away.pointsFor, away), perGame(home.pointsFor, home), higherIsBetter: true, format: oneDecimal)
+            comparisonRow("Allowed / game", perGame(away.pointsAgainst, away), perGame(home.pointsAgainst, home), higherIsBetter: false, format: oneDecimal)
+            footnoteRow("Ratings are points better or worse than an average team on a neutral field, through Week \(max(away.throughWeek, home.throughWeek)).")
+        }
+    }
+
+    /// Each club's season leader in the four lines a preview leads with.
+    struct MatchupLeader: Identifiable {
+        let title: String
+        let away: (player: Player, value: String)?
+        let home: (player: Player, value: String)?
+        var id: String { title }
+    }
+
+    private func matchupLeaders(_ game: Game) -> [MatchupLeader] {
+        let pool = viewModel.players(forSeason: game.season, phase: .regular)
+        guard !pool.isEmpty else { return [] }
+        let lines: [(title: String, stat: String, unit: String)] = [
+            ("Passing", "Pass Yds", "yds"),
+            ("Rushing", "Rush Yds", "yds"),
+            ("Receiving", "Rec Yds", "yds"),
+            ("Pass rush", "Sacks", "sacks"),
+        ]
+        func leader(_ team: String, stat: String, unit: String) -> (player: Player, value: String)? {
+            let abbr = normalizedTeamAbbreviation(team)
+            let best = pool
+                .filter { normalizedTeamAbbreviation($0.team) == abbr }
+                .compactMap { player -> (Player, Double, String)? in
+                    guard let raw = player.standardStats?.first(where: { $0.label == stat })?.value,
+                          let value = metricNumericValue(raw), value > 0 else { return nil }
+                    return (player, value, raw)
+                }
+                .max { $0.1 < $1.1 }
+            return best.map { ($0.0, "\($0.2) \(unit)") }
+        }
+        return lines.compactMap { line in
+            let away = leader(game.awayTeam, stat: line.stat, unit: line.unit)
+            let home = leader(game.homeTeam, stat: line.stat, unit: line.unit)
+            guard away != nil || home != nil else { return nil }
+            return MatchupLeader(title: line.title, away: away, home: home)
+        }
+    }
+
+    private func playersToWatch(_ game: Game, leaders: [MatchupLeader]) -> some View {
+        card(title: "Season leaders") {
+            ForEach(Array(leaders.enumerated()), id: \.element.id) { index, leader in
+                VStack(spacing: 4) {
+                    Text(leader.title.uppercased())
+                        .font(GridironType.micro)
+                        .foregroundStyle(GridironPalette.inkTertiary)
+                    HStack(alignment: .top, spacing: 12) {
+                        leaderCell(leader.away, alignment: .leading)
+                        leaderCell(leader.home, alignment: .trailing)
+                    }
+                }
+                .padding(.horizontal, GridironGeo.padCard)
+                .padding(.vertical, 10)
+                .background(index % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func leaderCell(_ entry: (player: Player, value: String)?, alignment: HorizontalAlignment) -> some View {
+        let frameAlignment: Alignment = alignment == .leading ? .leading : .trailing
+        if let entry {
+            NavigationLink(value: entry.player) {
+                VStack(alignment: alignment, spacing: 1) {
+                    Text(entry.player.name)
+                        .font(GridironType.bodyBold)
+                        .foregroundStyle(GridironPalette.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Text(entry.value)
+                        .font(GridironType.statSmall)
+                        .foregroundStyle(GridironPalette.inkSecondary)
+                }
+                .frame(maxWidth: .infinity, alignment: frameAlignment)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(entry.player.name), \(entry.value)")
+        } else {
+            Text("-")
+                .font(GridironType.statSmall)
+                .foregroundStyle(GridironPalette.inkTertiary)
+                .frame(maxWidth: .infinity, alignment: frameAlignment)
+        }
     }
 
     // MARK: - Pieces

@@ -127,9 +127,11 @@ struct GameBoxScore: Sendable {
     func defenders(for team: String) -> [PlayerLine] {
         lines(for: team)
             .filter { $0.tackles > 0 || $0.value("def_sacks") > 0 || $0.value("def_interceptions") > 0 }
+            // Tackles first, the way every box score lists a defense; sacks
+            // and picks break ties.
             .sorted {
-                ($0.value("def_sacks") + $0.value("def_interceptions"), $0.tackles)
-                    > ($1.value("def_sacks") + $1.value("def_interceptions"), $1.tackles)
+                ($0.tackles, $0.value("def_sacks"), $0.value("def_interceptions"))
+                    > ($1.tackles, $1.value("def_sacks"), $1.value("def_interceptions"))
             }
     }
 

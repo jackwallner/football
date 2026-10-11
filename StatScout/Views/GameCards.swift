@@ -75,7 +75,7 @@ struct TeamWeekGameCard: View {
             if let line = game.resultLine(for: team) {
                 Text(line)
                     .font(GridironType.statMed)
-                    .foregroundStyle(game.result(for: team) == "L" ? GridironPalette.performanceLow : GridironPalette.performanceHigh)
+                    .foregroundStyle(GridironPalette.resultColor(game.result(for: team)))
             }
             Image(systemName: "chevron.right")
                 .font(.system(size: 11, weight: .semibold))
@@ -84,11 +84,12 @@ struct TeamWeekGameCard: View {
     }
 
     private func detail(_ game: Game) -> String {
-        switch game.status() {
+        let status = game.status()
+        switch status {
         case .final:
             return viewModel.hasStats(game) ? "Final · box score" : "Final · stats arriving"
         case .inProgress, .awaitingScore:
-            return "In progress"
+            return status.liveLabel
         case .upcoming:
             return "\(game.dayLabel), \(game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "time TBD")"
         }
@@ -233,9 +234,9 @@ struct TeamScheduleView: View {
             if let line = game.resultLine(for: team) {
                 Text(line)
                     .font(GridironType.statMed)
-                    .foregroundStyle(game.result(for: team) == "L" ? GridironPalette.performanceLow : GridironPalette.performanceHigh)
+                    .foregroundStyle(GridironPalette.resultColor(game.result(for: team)))
             } else {
-                Text(game.status() == .upcoming ? (game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "TBD") : "In progress")
+                Text(game.status() == .upcoming ? (game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "TBD") : game.status().liveLabel)
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
             }
@@ -286,6 +287,7 @@ struct PlayerLastGameCard: View {
         guard loadedKey != key else { return }
         do {
             let logs = try await viewModel.fetchGameLogs(playerId: player.playerId, season: season, seasonPhase: phase)
+            await viewModel.loadArchivedGames(season: season)
             log = logs.max { $0.gameDate < $1.gameDate }
             loadedKey = key
         } catch {
@@ -321,7 +323,7 @@ struct PlayerLastGameCard: View {
                 if let result = game?.resultLine(for: team) {
                     Text(result)
                         .font(GridironType.statSmall)
-                        .foregroundStyle(game?.result(for: team) == "L" ? GridironPalette.performanceLow : GridironPalette.performanceHigh)
+                        .foregroundStyle(GridironPalette.resultColor(game?.result(for: team)))
                 }
                 Spacer(minLength: 0)
             }
@@ -419,6 +421,7 @@ struct PlayerGameLogCard: View {
         guard loadedKey != key else { return }
         do {
             let logs = try await viewModel.fetchGameLogs(playerId: player.playerId, season: season, seasonPhase: phase)
+            await viewModel.loadArchivedGames(season: season)
             entries = Self.entries(from: logs, fallbackTeam: player.team)
             loadedKey = key
             failed = false
@@ -466,7 +469,7 @@ struct PlayerGameLogCard: View {
                     if let line = game?.resultLine(for: entry.team) {
                         Text(line)
                             .font(GridironType.statSmall)
-                            .foregroundStyle(game?.result(for: entry.team) == "L" ? GridironPalette.performanceLow : GridironPalette.performanceHigh)
+                            .foregroundStyle(GridironPalette.resultColor(game?.result(for: entry.team)))
                     }
                     Spacer(minLength: 0)
                     Text(entry.gameDate.formatted(DataCoverage.gameDayStyle))

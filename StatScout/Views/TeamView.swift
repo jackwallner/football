@@ -391,7 +391,9 @@ struct TeamView: View {
             if isRosterRecent {
                 GridironSegmented(
                     segments: RecentWindow.allCases.map {
-                        .init(value: $0, label: $0.segmentLabel)
+                        // The roster reads the league-week rollup, so its
+                        // windows are weeks, not this club's last N games.
+                        .init(value: $0, label: "\($0.rawValue) weeks")
                     },
                     selection: $rosterWindow
                 )
@@ -595,7 +597,12 @@ struct TeamView: View {
 
     private var rosterSection: some View {
         VStack(spacing: 0) {
-            if players.isEmpty {
+            if players.isEmpty, viewModel?.isHistoricalLoading == true {
+                ProgressView("Loading \(String(displaySeason))")
+                    .font(GridironType.small)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+            } else if players.isEmpty {
                 emptyStateView(
                     icon: "person.2.slash",
                     title: "No players tracked",
@@ -613,7 +620,7 @@ struct TeamView: View {
             } else if isRosterRecent && !hasRecentData {
                 HStack(spacing: 10) {
                     ProgressView().scaleEffect(0.75)
-                    Text("Loading the last \(rosterWindow.rawValue) games…")
+                    Text("Loading the last \(rosterWindow.rawValue) weeks…")
                         .font(GridironType.small)
                         .foregroundStyle(GridironPalette.inkSecondary)
                 }
@@ -627,7 +634,7 @@ struct TeamView: View {
                     LeaderboardTableHeader(
                         sortDescending: sortDescending,
                         sortLabel: isRosterRecent
-                            ? "\(sortLabel) · \(rosterWindow.rawValue)G"
+                            ? "\(sortLabel) · \(rosterWindow.rawValue) WK"
                             : sortLabel
                     )
                 }
@@ -644,6 +651,9 @@ struct TeamView: View {
                             trendDecimals: rowDisplayMetric.label.map {
                                 RecentMetricKey.decimals(for: $0)
                             } ?? 3,
+                            trendLowerIsBetter: rowDisplayMetric.label.map {
+                                RecentMetricKey.lowerIsBetter($0)
+                            } ?? false,
                             valueOverride: isRosterRecent ? recentValueText(player) : nil
                         )
                     }
@@ -725,7 +735,9 @@ struct TeamView: View {
                 if viewModel.isSeasonLocked(season) {
                     trialTrigger = .lockedSeason(season)
                 } else {
-                    viewModel.selectedSeason = season
+                    // Through selectSeason, which also loads the bundled
+                    // history a past season needs.
+                    viewModel.selectSeason(season)
                 }
             },
             onSelectPhase: { viewModel.selectedPhase = $0 }

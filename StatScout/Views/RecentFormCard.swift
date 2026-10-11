@@ -212,7 +212,7 @@ struct RecentFormCard: View {
         case .offline, .failed:
             return "Recent game data is unavailable right now"
         default:
-            return "No games in the last \(windowGames) games"
+            return "No games played yet this season"
         }
     }
 

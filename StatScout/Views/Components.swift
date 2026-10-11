@@ -118,9 +118,13 @@ struct MetricBar: View {
         HStack(spacing: 12) {
             // Label column - left aligned
             VStack(alignment: .leading, spacing: 1) {
+                // One-word labels stay on one line and shrink instead of
+                // hyphenating ("Aggres-siveness", "Explosive / %").
                 Text(metric.label)
                     .font(GridironType.bodyBold)
                     .foregroundStyle(GridironPalette.ink)
+                    .lineLimit(metric.label.contains(" ") ? 2 : 1)
+                    .minimumScaleFactor(0.7)
                 if metric.isSmallSample, !metric.isUnranked {
                     Text("Small sample")
                         .font(.system(size: 9, weight: .semibold))
@@ -129,7 +133,7 @@ struct MetricBar: View {
                         .minimumScaleFactor(0.8)
                 }
             }
-            .frame(width: 70, alignment: .leading)
+            .frame(width: 84, alignment: .leading)
 
             if metric.isUnranked {
                 // A zero count has no honest rank (see `Metric.isUnranked`):
@@ -624,6 +628,8 @@ struct LeaderboardTableRow: View {
     var metricCategory: MetricCategory? = nil
     var trendDelta: Double? = nil
     var trendDecimals: Int = 3
+    /// Green for a falling INT%, Sack% or Fumble%.
+    var trendLowerIsBetter: Bool = false
     /// The rolling-window value, shown in place of the season number when the
     /// list is ranking by recent form. Uncoloured: the season percentile is the
     /// wrong ruler for five games' worth of numbers, and there is no window
@@ -743,7 +749,7 @@ struct LeaderboardTableRow: View {
             .frame(width: trendDelta == nil ? 92 : 56, alignment: .trailing)
 
             if let trendDelta {
-                TrendArrow(delta: trendDelta, decimals: trendDecimals)
+                TrendArrow(delta: trendDelta, decimals: trendDecimals, lowerIsBetter: trendLowerIsBetter)
                     .frame(width: 46, alignment: .trailing)
             }
         }

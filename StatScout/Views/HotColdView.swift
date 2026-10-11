@@ -57,7 +57,7 @@ struct HotColdView: View {
     /// an interception rate or a sack rate, so the board ranks on this rather
     /// than on the raw delta.
     private func improvement(_ form: RecentForm) -> Double? {
-        guard let delta = form.delta[metric.key] else { return nil }
+        guard let delta = metric.values(in: form).delta else { return nil }
         return metric.lowerIsBetter ? -delta : delta
     }
 
@@ -68,7 +68,7 @@ struct HotColdView: View {
     /// then the board ranks the current window by level instead of showing an
     /// empty "no movement" screen in the weeks new fans arrive.
     private var isEarlySeason: Bool {
-        !forms.isEmpty && !forms.contains { $0.priorMetrics[metric.key] != nil }
+        !forms.isEmpty && !forms.contains { metric.values(in: $0).then != nil }
     }
 
     /// The first week a comparison exists for the selected window.
@@ -78,10 +78,10 @@ struct HotColdView: View {
     /// A volume floor still applies, so one long catch can't top Y/R.
     private var earlyRanked: [RecentForm] {
         forms
-            .filter { $0.metrics[metric.key] != nil && !$0.isSmallSample(minimumGames: 1) }
+            .filter { metric.values(in: $0).now != nil && !$0.isSmallSample(minimumGames: 1) }
             .sorted {
-                let a = $0.metrics[metric.key] ?? 0
-                let b = $1.metrics[metric.key] ?? 0
+                let a = metric.values(in: $0).now ?? 0
+                let b = metric.values(in: $1).now ?? 0
                 return metric.lowerIsBetter ? a < b : a > b
             }
     }
@@ -483,7 +483,7 @@ struct HotColdView: View {
     private func earlyRow(form: RecentForm, rank: Int, index: Int) -> some View {
         let player = viewModel.players(forSeason: form.season, phase: form.seasonPhase)
             .first { $0.playerId == form.playerId }
-        let value = form.metrics[metric.key].map { metric.format($0) } ?? "-"
+        let value = metric.values(in: form).now.map { metric.display($0) } ?? "-"
         let rowContent = HStack(spacing: 10) {
             Text("\(rank)")
                 .font(GridironType.statSmall)
@@ -559,9 +559,10 @@ struct HotColdView: View {
             forSeason: form.season,
             phase: form.seasonPhase
         ).first { $0.playerId == form.playerId }
-        let delta = form.delta[metric.key] ?? 0
-        let now = form.metrics[metric.key]
-        let then = form.priorMetrics[metric.key]
+        let values = metric.values(in: form)
+        let delta = values.delta ?? 0
+        let now = values.now
+        let then = values.then
 
         let rowContent = HStack(spacing: 10) {
             if let rank {
@@ -595,7 +596,7 @@ struct HotColdView: View {
                 // how many games and when they were.
                 if let then, let now {
                     Text([
-                        "\(metric.format(then)) → \(metric.format(now))",
+                        "\(metric.display(then)) → \(metric.display(now))",
                         form.weekRangeLabel ?? "\(form.games)G",
                     ].joined(separator: " · "))
                         .font(GridironType.micro)
@@ -605,7 +606,7 @@ struct HotColdView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            TrendArrow(delta: delta, decimals: metric.decimals, lowerIsBetter: metric.lowerIsBetter)
+            TrendArrow(delta: delta, decimals: metric.isCount ? 1 : metric.decimals, lowerIsBetter: metric.lowerIsBetter)
                 .frame(width: 56, alignment: .trailing)
         }
         .padding(.horizontal, GridironGeo.padInline)
@@ -654,14 +655,14 @@ struct HotColdView: View {
                 Text(teaser.name)
                     .font(GridironType.bodyBold)
                     .foregroundStyle(GridironPalette.ink)
-                Text("\(metric.format(teaser.then)) → \(metric.format(teaser.now)) · Weeks \(teaser.startWeek)-\(teaser.endWeek)")
+                Text("\(metric.display(teaser.then)) → \(metric.display(teaser.now)) · Weeks \(teaser.startWeek)-\(teaser.endWeek)")
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             TrendArrow(
                 delta: teaser.now - teaser.then,
-                decimals: metric.decimals,
+                decimals: metric.isCount ? 1 : metric.decimals,
                 lowerIsBetter: metric.lowerIsBetter
             )
             .frame(width: 56, alignment: .trailing)
@@ -735,7 +736,8 @@ struct HotColdView: View {
         // percentage reads 58%→66% and a yardage total reads 240→380.
         let scale: Double
         let spread: Double
-        switch metric.decimals {
+        switch metric.isCount ? -1 : metric.decimals {
+        case -1: scale = 70;   spread = 32
         case 0:  scale = 280;  spread = 130
         case 2:  scale = 0.12; spread = 0.22
         default: scale = metric.unit == "%" ? 58 : 7.2

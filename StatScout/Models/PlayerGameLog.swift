@@ -160,10 +160,11 @@ struct RecentFormWindow {
             combined["tackles"] = (solo ?? 0) + (assists ?? 0)
         }
 
+        // Games, not rows: a team window has one row per player per game.
         return RecentFormWindow(
             label: label,
             span: span,
-            games: logs.count,
+            games: Set(logs.map(\.gameDate)).count,
             plays: plays,
             touches: touches,
             metrics: combined

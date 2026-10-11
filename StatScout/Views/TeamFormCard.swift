@@ -46,8 +46,8 @@ struct TeamRankingsCard: View {
     @State private var logs: [PlayerGameLog] = []
     @State private var loading = false
     @State private var loadError: String?
-    @State private var offenseCurves: LeaguePercentileCurves?
-    @State private var defenseCurves: LeaguePercentileCurves?
+    @State private var offenseTable: TeamLeagueTable?
+    @State private var defenseTable: TeamLeagueTable?
 
     enum Side: String, CaseIterable, Identifiable {
         case offense, defense
@@ -78,8 +78,8 @@ struct TeamRankingsCard: View {
     /// flag the window as a small sample.
     private let smallSamplePlaysThreshold = 40
 
-    private var curves: LeaguePercentileCurves? {
-        side == .defense ? defenseCurves : offenseCurves
+    private var table: TeamLeagueTable? {
+        side == .defense ? defenseTable : offenseTable
     }
 
     var body: some View {
@@ -167,7 +167,7 @@ struct TeamRankingsCard: View {
             guard let window = recentWindow else { return [:] }
             let pairs = seasonRows.compactMap { row -> (String, Metric)? in
                 guard let recent = recentMetric(
-                    forSeasonLabel: row.label,
+                    forSeasonLabel: TeamLeagueTable.baseLabel(row.label),
                     window: window
                 ) else { return nil }
                 return (row.label, recent)
@@ -235,7 +235,7 @@ struct TeamRankingsCard: View {
 
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
-                    NavigationLink(value: MetricRoute(label: metric.label, category: metric.category)) {
+                    NavigationLink(value: MetricRoute(label: TeamLeagueTable.baseLabel(metric.label), category: metric.category)) {
                         MetricBar(metric: metric)
                             .padding(.horizontal, GridironGeo.padCard)
                             .padding(.vertical, 12)
@@ -254,13 +254,18 @@ struct TeamRankingsCard: View {
         }
     }
 
-    /// One bar per roster metric - roster mean placed on the league curve. Each
-    /// bar keeps its own metric category (Passing / Rushing / Receiving) so the
+    /// One bar per roster metric: the club's pooled value (totals per game,
+    /// rates weighted by volume) ranked against the other 31 clubs. Each bar
+    /// keeps its own metric category (Passing / Rushing / Receiving) so the
     /// leaderboard link routes correctly.
+    ///
+    /// It used to average the roster's raw values and place that on the
+    /// individual-player curve, so a club's "Pass Yds" was its QBs' mean and
+    /// "Rush TD 0.2" sat next to a 44th percentile.
     private func aggregateSeasonRows() -> [Metric] {
         let cats = side.categories
         let pool = players.filter { p in cats.contains { p.matchesPlayerType(for: $0) } }
-        guard !pool.isEmpty, let curves else { return [] }
+        guard !pool.isEmpty, let table else { return [] }
 
         // Ordered (label, category) pairs present on the roster.
         var pairs: [(label: String, category: MetricCategory)] = []
@@ -268,26 +273,19 @@ struct TeamRankingsCard: View {
         for cat in cats {
             let present = Set(pool.flatMap { p in p.metrics.filter { $0.category == cat }.map(\.label) })
             for label in cat.metricPriorityOrder where present.contains(label) {
+                guard !RosterAggregate.descriptiveOnlyLabels.contains(label) else { continue }
                 if seen.insert(label).inserted { pairs.append((label, cat)) }
             }
         }
 
         return pairs.compactMap { pair -> Metric? in
-            var sum = 0.0
-            var count = 0.0
-            for player in pool {
-                guard let m = player.metrics.first(where: { $0.label == pair.label && $0.category == pair.category }),
-                      let v = DashboardViewModel.rawNumeric(m.value) else { continue }
-                sum += v
-                count += 1
-            }
-            guard count > 0 else { return nil }
-            let avg = sum / count
-            guard let pct = curves.curve(for: pair.label)?.percentile(for: avg) else { return nil }
+            guard let value = TeamLeagueTable.teamValue(label: pair.label, category: pair.category, roster: pool),
+                  let pct = table.percentile(for: value, label: pair.label, category: pair.category)
+            else { return nil }
             return Metric(
                 id: "teamavg-\(pair.label)",
-                label: pair.label,
-                value: formattedValue(avg, label: pair.label),
+                label: TeamLeagueTable.displayLabel(pair.label, category: pair.category),
+                value: formattedValue(value, label: pair.label),
                 percentile: pct,
                 category: pair.category
             )
@@ -296,6 +294,7 @@ struct TeamRankingsCard: View {
 
     private func formattedValue(_ v: Double, label: String) -> String {
         if label.hasSuffix("%") { return String(format: "%.1f%%", v) }
+        if ["EPA/Play", "EPA/Rush", "EPA/Tgt", "RACR"].contains(label) { return String(format: "%.2f", v) }
         if abs(v) >= 100 { return String(format: "%.0f", v) }
         return String(format: "%.1f", v)
     }
@@ -304,8 +303,10 @@ struct TeamRankingsCard: View {
 
     private var sideLogs: [PlayerGameLog] {
         let onSide = logs.filter { side.includes(playerType: $0.playerType) }
-        // Most-recent N game dates across the roster define the window.
-        let recentDates = Set(onSide.map(\.gameDate).sorted(by: >).prefix(windowGames))
+        // Most-recent N game dates across the roster define the window. Dedupe
+        // first: every player has a row per game, so the raw list's first five
+        // entries were five copies of the last game.
+        let recentDates = Set(Set(onSide.map(\.gameDate)).sorted(by: >).prefix(windowGames))
         return onSide.filter { recentDates.contains($0.gameDate) }
     }
 
@@ -488,7 +489,7 @@ struct TeamRankingsCard: View {
     /// on the league curve); the rest fall back to their season aggregate bar.
     private func recentDisplayRows(window w: RecentFormWindow) -> [Metric] {
         let seasonRows = aggregateSeasonRows()
-        let existing = Set(seasonRows.map(\.label))
+        let existing = Set(seasonRows.map { TeamLeagueTable.baseLabel($0.label) })
         let stubs: [Metric] = recentSpecs.compactMap { spec in
             guard !existing.contains(spec.seasonLabel),
                   recentMetric(forSeasonLabel: spec.seasonLabel, window: w) != nil else { return nil }
@@ -500,21 +501,28 @@ struct TeamRankingsCard: View {
                 category: category(forLabel: spec.seasonLabel)
             )
         }
-        return (seasonRows + stubs).map { recentMetric(forSeasonLabel: $0.label, window: w) ?? $0 }
+        return (seasonRows + stubs).map {
+            recentMetric(forSeasonLabel: TeamLeagueTable.baseLabel($0.label), window: w) ?? $0
+        }
     }
 
     /// The recent-window bar for a given season label, or nil if the window has
     /// no game-log data for it (caller falls back to the season aggregate bar).
+    /// Window totals are divided by the games in the window and ranked against
+    /// every club's season per-game figure, so three games are never measured
+    /// on a ruler of full-season totals.
     private func recentMetric(forSeasonLabel label: String, window w: RecentFormWindow) -> Metric? {
+        let category = category(forLabel: label)
         guard let spec = recentSpecs.first(where: { $0.seasonLabel == label }),
-              let v = w.metrics[spec.key],
-              let pct = curves?.curve(for: label)?.percentile(for: v) else { return nil }
+              let total = w.metrics[spec.key], w.games > 0,
+              let pct = table?.percentile(for: total / Double(w.games), label: label, category: category)
+        else { return nil }
         return Metric(
             id: "team-recent-\(spec.key)",
-            label: label,
-            value: String(format: spec.format, v),
+            label: TeamLeagueTable.displayLabel(label, category: category),
+            value: formattedValue(total / Double(w.games), label: label),
             percentile: pct,
-            category: category(forLabel: label)
+            category: category
         )
     }
 
@@ -555,7 +563,7 @@ struct TeamRankingsCard: View {
     }
 
     private var weightedCaption: some View {
-        Text("Season to date, averaged across the \(side.label.lowercased()) roster")
+        Text("Season to date: totals per game, rates weighted by volume. Bars rank each club against the other 31.")
             .font(GridironType.micro)
             .foregroundStyle(GridironPalette.inkTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -564,10 +572,66 @@ struct TeamRankingsCard: View {
     }
 
     private func rebuildCurves() {
-        let rosterLabels = players.flatMap { $0.metrics.map(\.label) }
-        let recentLabels = MetricCategory.allCases.flatMap { $0.metricPriorityOrder }
-        let labels = Array(Set(rosterLabels + recentLabels))
-        offenseCurves = LeaguePercentileCurves(players: leaguePlayers, categories: [.passing, .rushing, .receiving], labels: labels)
-        defenseCurves = LeaguePercentileCurves(players: leaguePlayers, categories: [.defense], labels: labels)
+        offenseTable = TeamLeagueTable(players: leaguePlayers, categories: Side.offense.categories)
+        defenseTable = TeamLeagueTable(players: leaguePlayers, categories: Side.defense.categories)
+    }
+}
+
+/// Every club's pooled value for each metric, the ruler a team bar sits on.
+/// Counting stats are per game so a club with a bye is not ranked on one game
+/// fewer; rates use the registry's volume weighting.
+struct TeamLeagueTable {
+    private let valuesByKey: [String: [Double]]
+
+    init(players: [Player], categories: [MetricCategory]) {
+        let pool = players.filter { p in categories.contains { p.matchesPlayerType(for: $0) } }
+        let byTeam = Dictionary(grouping: pool) { normalizedTeamAbbreviation($0.team) }
+        var result: [String: [Double]] = [:]
+        for category in categories {
+            for label in category.metricPriorityOrder {
+                let values = byTeam.values.compactMap {
+                    Self.teamValue(label: label, category: category, roster: $0)
+                }
+                if values.count >= 2 { result[Self.key(label, category)] = values }
+            }
+        }
+        valuesByKey = result
+    }
+
+    static func key(_ label: String, _ category: MetricCategory) -> String {
+        category.rawValue + "|" + label
+    }
+
+    /// A club's value: summed totals divided by its games, or the weighted rate.
+    static func teamValue(label: String, category: MetricCategory, roster: [Player]) -> Double? {
+        guard let pooled = RosterAggregate.value(label: label, category: category, roster: roster) else { return nil }
+        guard isPerGame(label, category: category) else { return pooled }
+        guard let games = RosterAggregate.teamGames(roster: roster) else { return nil }
+        return pooled / games
+    }
+
+    static func isPerGame(_ label: String, category: MetricCategory) -> Bool {
+        if case .sum = FootballMetricRegistry.aggregation(for: label, category: category) { return true }
+        return false
+    }
+
+    static func displayLabel(_ label: String, category: MetricCategory) -> String {
+        isPerGame(label, category: category) ? label + "/G" : label
+    }
+
+    static func baseLabel(_ displayLabel: String) -> String {
+        displayLabel.hasSuffix("/G") ? String(displayLabel.dropLast(2)) : displayLabel
+    }
+
+    /// Share of the other clubs this value beats, 1 to 99, direction-aware.
+    func percentile(for value: Double, label: String, category: MetricCategory) -> Int? {
+        guard let values = valuesByKey[Self.key(label, category)] else { return nil }
+        let higherIsBetter = FootballMetricRegistry.definition(for: label, category: category)?.higherIsBetter ?? true
+        let worse = values.filter { higherIsBetter ? $0 < value : $0 > value }.count
+        let ties = values.filter { $0 == value }.count
+        // The club itself is one of the ties; it neither beats nor loses to itself.
+        let others = max(1, values.count - 1)
+        let score = (Double(worse) + Double(max(0, ties - 1)) / 2) / Double(others) * 100
+        return min(99, max(1, Int(score.rounded())))
     }
 }

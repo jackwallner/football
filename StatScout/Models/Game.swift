@@ -164,6 +164,11 @@ enum GameStatus: Equatable, Sendable {
     case awaitingScore
     case final
 
+    /// The one word every screen uses for a game with no posted final.
+    var liveLabel: String {
+        self == .awaitingScore ? "Final soon" : "In progress"
+    }
+
     var sortOrder: Int {
         switch self {
         case .inProgress: return 0

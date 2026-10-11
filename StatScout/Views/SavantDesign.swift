@@ -19,6 +19,15 @@ enum GridironPalette {
     static let performanceHigh = Color(red: 0.02, green: 0.46, blue: 0.20)
     static let performanceMid  = Color(red: 0.40, green: 0.38, blue: 0.31)
     static let performanceLow  = Color(red: 0.70, green: 0.20, blue: 0.08)
+
+    /// W green, L red, and a tie neither: it used to fall through to green.
+    static func resultColor(_ result: String?) -> Color {
+        switch result {
+        case "W": return performanceHigh
+        case "L": return performanceLow
+        default: return inkSecondary
+        }
+    }
     static let up           = performanceHigh
     static let down         = performanceLow
     static let flat         = inkTertiary

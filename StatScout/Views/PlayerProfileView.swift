@@ -123,12 +123,19 @@ struct PlayerProfileView: View {
         return SeasonLabel.text(season, phase: player.seasonPhase)
     }
 
-    private var profileMetricKind: MetricKind {
-        displayedPlayer.positionGroup == .defense ? .traditional : .advanced
+    /// Defenders get both kinds: the PFR pass-rush and coverage numbers
+    /// (2018 on) and the counting stats, which are the only percentiles a
+    /// defender has before 2018. Showing only the counts hid Pressures and
+    /// every coverage stat the Stats board ranks defenders by.
+    private var profileMetrics: [Metric] {
+        if displayedPlayer.positionGroup == .defense {
+            return FootballMetricRegistry.sorted(displayedPlayer.metrics)
+        }
+        return displayedPlayer.metrics(kind: .advanced)
     }
 
     private var groupedMetrics: [(family: MetricFamily, metrics: [Metric])] {
-        let eligible = displayedPlayer.metrics(kind: profileMetricKind)
+        let eligible = profileMetrics
         let grouped = Dictionary(grouping: eligible) { metric in
             FootballMetricRegistry.definition(for: metric.label, category: metric.category)?.family ?? .production
         }
@@ -570,7 +577,7 @@ struct PlayerProfileView: View {
                 historicalLoadingCard
             } else if !hasLoadedHistorical, loadHistorical != nil {
                 loadHistoricalCard
-            } else if history.count < 2 {
+            } else if Set(phaseHistory.compactMap(\.season).filter { !StatScoutSeason.isAllTime($0) }).count < 2 {
                 ContentUnavailableView {
                     Label("Not enough history", systemImage: "calendar.badge.clock")
                 } description: {
@@ -794,15 +801,21 @@ struct PlayerProfileView: View {
                 .padding(.vertical, 24)
             } else {
                 ForEach(groupedMetrics, id: \.family) { group in
-                    let rows = displayedMetrics(in: group.metrics)
-                    if !rows.isEmpty {
+                    if !group.metrics.isEmpty {
                         GridironSubSectionBar(
                             title: group.family.rawValue.uppercased()
                         )
 
-                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
+                        ForEach(Array(group.metrics.enumerated()), id: \.element.id) { index, metric in
                             percentileMetricRow(metric: metric, index: index)
                         }
+                    }
+                }
+                let extras = recentOnlyRows
+                if !extras.isEmpty {
+                    GridironSubSectionBar(title: "BOX SCORE · LAST \(recentWindowGames)")
+                    ForEach(Array(extras.enumerated()), id: \.element.id) { index, metric in
+                        percentileMetricRow(metric: metric, index: index)
                     }
                 }
             }
@@ -852,7 +865,7 @@ struct PlayerProfileView: View {
         case .offline, .failed:
             return "Recent game data is unavailable right now"
         default:
-            return "No games in the last \(recentWindowGames) games"
+            return "No games played yet this season"
         }
     }
 
@@ -879,28 +892,24 @@ struct PlayerProfileView: View {
         )
     }
 
-    private func displayedMetrics(in metrics: [Metric]) -> [Metric] {
-        guard effectiveFormDisplayMode == .recent, store.isPro else { return metrics }
-        // Recent mode: show every season bar - metrics with window data render the
-        // recent value, the rest fall back to the season bar (handled in
-        // `percentileMetricRow`). Additionally inject a stub for any game-log spec
-        // the season snapshot omits (Gridiron sometimes drops e.g. Hard-Hit%) so its
-        // recent bar still appears even with no season row to hang it on.
-        let targetCategory: MetricCategory = category
-        guard metrics.first?.category == targetCategory else { return metrics }
-        let existing = Set(metrics.map { $0.label })
-        let stubs: [Metric] = recentSpecs.compactMap { spec in
+    /// Recent mode only: the window figures the advanced card has no season
+    /// row for (Pass Yds, Cmp%, Y/A on a quarterback), in their own section
+    /// after the percentile groups. They used to be appended to every group,
+    /// so each one appeared under every heading.
+    private var recentOnlyRows: [Metric] {
+        guard effectiveFormDisplayMode == .recent, store.isPro else { return [] }
+        let existing = Set(profileMetrics.filter { $0.category == category }.map(\.label))
+        return recentSpecs.compactMap { spec in
             guard !existing.contains(spec.label) else { return nil }
             let stub = Metric(
                 id: "recent-stub-\(spec.label)",
                 label: spec.label,
                 value: "",
                 percentile: 0,
-                category: targetCategory
+                category: category
             )
             return recentMetric(for: stub) != nil ? stub : nil
         }
-        return metrics + stubs
     }
 
     /// One metric the last-N-games window can reconstruct, and how.
@@ -914,11 +923,14 @@ struct PlayerProfileView: View {
     private struct RecentSpec {
         let label: String
         let format: String
+        /// A counting stat. Its window figure is ranked per game, never on the
+        /// ruler of full-season totals.
+        var isTotal = false
         let value: ([String: Double]) -> Double?
     }
 
     private static func total(_ key: String, _ label: String, _ format: String = "%.0f") -> RecentSpec {
-        RecentSpec(label: label, format: format) { $0[key] }
+        RecentSpec(label: label, format: format, isTotal: true) { $0[key] }
     }
 
     /// A rate, from sums. Nil when the denominator is absent or zero, so an
@@ -1061,8 +1073,25 @@ struct PlayerProfileView: View {
     private func recentMetric(for seasonMetric: Metric) -> Metric? {
         guard let w = recentWindow,
               let spec = recentSpecs.first(where: { $0.label == seasonMetric.label }),
-              let v = spec.value(w.metrics),
-              let pct = recentCurves?.curve(for: spec.label)?.percentile(for: v) else { return nil }
+              let v = spec.value(w.metrics) else { return nil }
+        if spec.isTotal {
+            // Three games of yards against season totals put every hot streak
+            // at the bottom of the league. Per game against per game instead.
+            guard w.games > 0 else { return nil }
+            let perGame = v / Double(w.games)
+            guard let pct = perGamePercentile(label: spec.label, category: seasonMetric.category, value: perGame)
+            else { return nil }
+            return Metric(
+                id: "recent-\(spec.label)",
+                label: seasonMetric.label,
+                value: (perGame < 10 && perGame != perGame.rounded()
+                    ? String(format: "%.1f", perGame)
+                    : String(format: "%.0f", perGame)) + "/g",
+                percentile: pct,
+                category: seasonMetric.category
+            )
+        }
+        guard let pct = recentCurves?.curve(for: spec.label)?.percentile(for: v) else { return nil }
         return Metric(
             id: "recent-\(spec.label)",
             label: seasonMetric.label,
@@ -1070,6 +1099,24 @@ struct PlayerProfileView: View {
             percentile: pct,
             category: seasonMetric.category
         )
+    }
+
+    /// Where a per-game figure sits among the cohort's season per-game rates.
+    private func perGamePercentile(label: String, category: MetricCategory, value: Double) -> Int? {
+        let peers = cohortPlayers.compactMap { peer -> Double? in
+            guard peer.matchesPlayerType(for: category),
+                  let metric = peer.metrics.first(where: { $0.label == label && $0.category == category }),
+                  !metric.isUnranked,
+                  let total = metricNumericValue(metric.value),
+                  let games = MetricWeight.games.value(for: peer) else { return nil }
+            return total / games
+        }
+        guard peers.count >= 2 else { return nil }
+        let higherIsBetter = FootballMetricRegistry.definition(for: label, category: category)?.higherIsBetter ?? true
+        let worse = peers.filter { higherIsBetter ? $0 < value : $0 > value }.count
+        let ties = peers.filter { $0 == value }.count
+        let score = (Double(worse) + Double(ties) / 2) / Double(peers.count) * 100
+        return min(99, max(1, Int(score.rounded())))
     }
 
     private func rebuildRecentCurves() {
@@ -1283,24 +1330,43 @@ struct PlayerProfileView: View {
     }
 
     /// The recent-window version of one traditional stat, or nil when the window
-    /// has no figure for it. Percentile comes from the same league season
-    /// distribution the season row uses, so both sit on one ruler.
+    /// has no figure for it. Every stat here is a count, so it is shown and
+    /// ranked per game against the same cohort's season per-game figures: a
+    /// three-game total on the ruler of season totals sat near the bottom of
+    /// the league for every hot streak.
     private func recentStandardMetric(for seasonMetric: Metric) -> Metric? {
         guard let key = Self.standardRecentKeys[seasonMetric.label],
-              let value = standardRecentWindow?.metrics[key] else { return nil }
-        let text = seasonMetric.label == "SACKS"
-            ? String(format: "%.1f", value)
-            : Int(value.rounded()).formatted(.number.grouping(.automatic))
+              let window = standardRecentWindow, window.games > 0,
+              let value = window.metrics[key] else { return nil }
+        let perGame = value / Double(window.games)
+        let text = (perGame < 10 && perGame != perGame.rounded()
+            ? String(format: "%.1f", perGame)
+            : String(format: "%.0f", perGame)) + "/g"
+        let peers = peerPerGameValues(forStat: seasonMetric.label)
         return Metric(
             id: "std-recent-\(seasonMetric.label)",
             label: seasonMetric.label,
             value: text,
-            percentile: standardStatPercentile(
+            percentile: StandardStatSemantics.percentile(
                 label: seasonMetric.label,
-                value: text
+                value: String(perGame),
+                peerValues: peers
             ),
             category: seasonMetric.category
         )
+    }
+
+    /// Same-position season figures for one count, divided by games played.
+    private func peerPerGameValues(forStat label: String) -> [String] {
+        let key = label.uppercased()
+        let group = displayedPlayer.positionGroup
+        return cohortPlayers.compactMap { other in
+            guard other.positionGroup == group,
+                  let stat = other.standardStats?.first(where: { $0.label.uppercased() == key }),
+                  let total = metricNumericValue(stat.value),
+                  let games = MetricWeight.games.value(for: other) else { return nil }
+            return String(total / games)
+        }
     }
 
     private var standardStatsGridCard: some View {

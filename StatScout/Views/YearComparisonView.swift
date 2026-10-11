@@ -9,8 +9,13 @@ struct YearComparisonView: View {
     private var recentYear: Int { max(yearA, yearB) }
     private var priorYear: Int { min(yearA, yearB) }
 
+    /// Real seasons only. The career rollup is stored as season 0, and it
+    /// showed up in this menu as a year called "0".
     private var availableYears: [Int] {
-        history.compactMap(\.season).uniqued().sorted(by: >)
+        history.compactMap(\.season)
+            .filter { !StatScoutSeason.isAllTime($0) }
+            .uniqued()
+            .sorted(by: >)
     }
 
     private var playerYearA: Player? {

@@ -562,6 +562,18 @@ final class DashboardViewModel {
 
     func game(id: String) -> Game? {
         games.first { $0.id == id }
+            ?? archivedGames.values.lazy.compactMap { $0[id] }.first
+    }
+
+    /// Older seasons' schedules, fetched on demand by the game-log cards so a
+    /// past season's log still shows its week, opponent and result.
+    private(set) var archivedGames: [Int: [String: Game]] = [:]
+
+    func loadArchivedGames(season: Int) async {
+        guard season != freeSeason, archivedGames[season] == nil,
+              let loaded = try? await provider.fetchGames(season: season),
+              !loaded.isEmpty else { return }
+        archivedGames[season] = Dictionary(loaded.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
     /// A team's game in the week the Games tab calls current, or nil on a bye.

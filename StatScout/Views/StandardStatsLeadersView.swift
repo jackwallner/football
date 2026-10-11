@@ -272,6 +272,7 @@ struct StandardStatsLeadersView: View {
                 .background(GridironPalette.surface)
             } else {
                 let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                let ranks = competitionRanks(sortedPlayers)
                 let ranked = Array(sortedPlayers.enumerated()).filter { _, player in
                     query.isEmpty || player.name.localizedCaseInsensitiveContains(query)
                         || player.team.localizedCaseInsensitiveContains(query)
@@ -283,7 +284,7 @@ struct StandardStatsLeadersView: View {
                         .padding(.vertical, 24)
                 }
                 ForEach(ranked, id: \.element.id) { index, player in
-                    playerRow(rank: index + 1, player: player, peerValues: peerValues)
+                    playerRow(rank: ranks[index], stripe: index, player: player, peerValues: peerValues)
                 }
             }
         }
@@ -295,7 +296,22 @@ struct StandardStatsLeadersView: View {
         )
     }
 
-    private func playerRow(rank: Int, player: Player, peerValues: [String]) -> some View {
+    /// Shared ranks for ties (1, 2, 2, 4), the way a stat sheet prints them;
+    /// two quarterbacks on 479 yards are not 21st and 22nd.
+    private func competitionRanks(_ players: [Player]) -> [Int] {
+        let values = players.map { numericStat(for: $0) }
+        var ranks: [Int] = []
+        for index in values.indices {
+            if index > 0, values[index] != nil, values[index] == values[index - 1] {
+                ranks.append(ranks[index - 1])
+            } else {
+                ranks.append(index + 1)
+            }
+        }
+        return ranks
+    }
+
+    private func playerRow(rank: Int, stripe: Int, player: Player, peerValues: [String]) -> some View {
         NavigationLink(value: player) {
             HStack(spacing: 0) {
                 Text("\(rank)")
@@ -363,7 +379,7 @@ struct StandardStatsLeadersView: View {
             .frame(height: GridironGeo.rowHeight)
             .padding(.horizontal, GridironGeo.padInline)
             .background(
-                rank.isMultiple(of: 2)
+                stripe.isMultiple(of: 2)
                     ? GridironPalette.surfaceAlt
                     : GridironPalette.surface
             )

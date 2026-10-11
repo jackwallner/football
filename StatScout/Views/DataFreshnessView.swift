@@ -112,6 +112,11 @@ struct DataFreshnessView: View {
     private var coverageText: String? {
         guard let coverage = freshness?.coverage ?? viewModel.dataCoverage else { return nil }
         var parts: [String] = []
+        if let week = coverage.week, let slate = partialSlate(week: week, phase: coverage.phase) {
+            // Thursday's game is in and Sunday's are not. "Through Week 5"
+            // read as a finished week; say how much of it is here.
+            return "Week \(week) · \(slate.done) of \(slate.total) games in"
+        }
         if let week = coverage.week {
             // "Through": the game count after it is cumulative, and "Week 3 ·
             // 33 games" read as thirty-three games in Week 3.
@@ -127,6 +132,20 @@ struct DataFreshnessView: View {
             }
         }
         return parts.joined(separator: " · ")
+    }
+
+    /// The latest week's games with stats out of all its games, when that week
+    /// is still being played. Nil once it is complete or before the schedule
+    /// has loaded.
+    private func partialSlate(week: Int, phase: SeasonPhase) -> (done: Int, total: Int)? {
+        guard phase == .regular else { return nil }
+        let slate = viewModel.games.filter {
+            $0.season == viewModel.freeSeason && $0.seasonPhase == .regular && $0.week == week
+        }
+        guard !slate.isEmpty else { return nil }
+        let done = slate.filter { viewModel.hasStats($0) }.count
+        guard done > 0, done < slate.count else { return nil }
+        return (done, slate.count)
     }
 
     /// When the numbers last changed, which is what a fan means by "updated".

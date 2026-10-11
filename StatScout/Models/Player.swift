@@ -542,9 +542,9 @@ enum PlayerPositionGroup: String, CaseIterable, Identifiable, Hashable, Sendable
     var preferredTraditionalMetrics: [String] {
         switch self {
         case .qb: return ["Pass Yds", "Pass TD", "Cmp%"]
-        case .rb: return ["Rush Yds", "Rush TD", "Car"]
+        case .rb: return ["Rush Yds", "Rush TD", "Y/C"]
         case .wr, .te: return ["Rec Yds", "Rec TD", "Rec"]
-        case .defense: return ["Tackles", "Sacks", "Def INT"]
+        case .defense: return ["Tackles", "Sacks", "INT"]
         }
     }
 }
@@ -749,6 +749,50 @@ enum FootballMetricRegistry {
     }
 }
 
+/// One metric pooled across a roster with the registry's aggregation rule:
+/// counting stats add up, rates are weighted by the volume behind them.
+enum RosterAggregate {
+    /// Pooled values that describe roster shape rather than quality. A team's
+    /// summed Target Share mostly counts how many receivers qualified, so it is
+    /// context, never something to rank or award.
+    static let descriptiveOnlyLabels: Set<String> = ["Target Share", "WOPR"]
+
+    static func value(label: String, category: MetricCategory, roster: [Player]) -> Double? {
+        let rule = FootballMetricRegistry.aggregation(for: label, category: category)
+        let values = roster.compactMap { player -> (value: Double, weight: Double)? in
+            guard let metric = player.metrics.first(where: {
+                $0.label == label && $0.category == category
+            }), let value = metricNumericValue(metric.value) else { return nil }
+            switch rule {
+            case .sum:
+                return (value, 1)
+            case .weighted(let weight):
+                // No volume means no rate to trust: drop the player rather than
+                // let an unweighted value slide in as if it were weight 1.
+                guard let w = weight.value(for: player) else { return nil }
+                return (value, w)
+            }
+        }
+        guard !values.isEmpty else { return nil }
+        switch rule {
+        case .sum:
+            return values.reduce(0) { $0 + $1.value }
+        case .weighted:
+            let totalWeight = values.reduce(0) { $0 + $1.weight }
+            guard totalWeight > 0 else { return nil }
+            return values.reduce(0) { $0 + $1.value * $1.weight } / totalWeight
+        }
+    }
+
+    /// Games a club has played, read off its roster: the most games any one
+    /// player has. Every snap belongs to somebody, so the busiest player has
+    /// been there for all of them.
+    static func teamGames(roster: [Player]) -> Double? {
+        let games = roster.compactMap { MetricWeight.games.value(for: $0) }.max()
+        return games.flatMap { $0 > 0 ? $0 : nil }
+    }
+}
+
 /// How several players' values for one metric collapse into a single number.
 enum MetricAggregation: Hashable, Sendable {
     /// Counting stats and totals: add them up.
@@ -799,6 +843,26 @@ enum MetricWeight: Hashable, Sendable {
               value > 0
         else { return nil }
         return value
+    }
+}
+
+extension Player {
+    /// A rough "how much has this player done" score, for ordering a list of
+    /// names before anyone types: PPR fantasy scoring for the offense, a common
+    /// IDP scale for defenders. Never displayed.
+    var prominence: Double {
+        func stat(_ label: String) -> Double {
+            guard let raw = standardStats?.first(where: { $0.label == label })?.value else { return 0 }
+            if raw.contains("/") {
+                return metricNumericValue(String(raw.split(separator: "/").first ?? "")) ?? 0
+            }
+            return metricNumericValue(raw) ?? 0
+        }
+        let offense = stat("Pass Yds") / 25 + stat("Pass TD") * 4 - stat("INT") * 2
+            + stat("Rush Yds") / 10 + stat("Rush TD") * 6
+            + stat("Rec/Tgt") + stat("Rec Yds") / 10 + stat("Rec TD") * 6
+        let defense = stat("Tackles") + stat("Sacks") * 4 + stat("Def INT") * 6
+        return offense + defense
     }
 }
 

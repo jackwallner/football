@@ -807,9 +807,16 @@ struct CompareView: View {
                     Circle()
                         .fill(team.map(NFLTeamColor.color) ?? GridironPalette.surfaceAlt)
                         .frame(width: 48, height: 48)
-                    Text(team.map(displayTeamAbbr) ?? "+")
-                        .font(GridironType.smallBold)
-                        .foregroundStyle(team == nil ? GridironPalette.inkTertiary : .white)
+                    if let team {
+                        Text(displayTeamAbbr(team))
+                            .font(GridironType.smallBold)
+                            .foregroundStyle(.white)
+                    } else {
+                        // Same glyph as the empty player slot above it.
+                        Image(systemName: "plus")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(GridironPalette.inkTertiary)
+                    }
                 }
                 Text(team.map(teamFullName) ?? placeholder)
                     .font(GridironType.smallBold)
@@ -977,7 +984,7 @@ private struct YearCompareDestination: View {
 
     private var history: [Player] {
         (viewModel.playerHistories[route.playerId] ?? []).filter {
-            $0.seasonPhase == route.phase
+            $0.seasonPhase == route.phase && !StatScoutSeason.isAllTime($0.season ?? 0)
         }
     }
 
@@ -1073,11 +1080,26 @@ struct ComparePlayerPicker: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
 
+    /// Most productive first, so the stars are on screen before anyone types.
+    /// Alphabetical put A'Shawn Robinson and a page of backups above every
+    /// quarterback anyone came here to compare.
+    private var ranked: [Player] {
+        let scored: [(player: Player, score: Double)] = players.map { ($0, $0.prominence) }
+        let sorted = scored.sorted { lhs, rhs in
+            if lhs.score == rhs.score { return lhs.player.name < rhs.player.name }
+            return lhs.score > rhs.score
+        }
+        return sorted.map(\.player)
+    }
+
     private var filtered: [Player] {
-        guard !searchText.isEmpty else { return players }
-        return players.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.team.localizedCaseInsensitiveContains(searchText)
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return ranked }
+        return ranked.filter { player in
+            if player.name.localizedCaseInsensitiveContains(query) { return true }
+            if player.team.localizedCaseInsensitiveContains(query) { return true }
+            if teamFullName(player.team).localizedCaseInsensitiveContains(query) { return true }
+            return player.displayPosition.caseInsensitiveCompare(query) == .orderedSame
         }
     }
 
@@ -1120,7 +1142,7 @@ struct ComparePlayerPicker: View {
                     }
                 }
             }
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search players")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Name, team or position")
             .navigationTitle(season.map { "Select Player · " + String($0) } ?? "Select Player")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1211,7 +1233,7 @@ struct TeamComparisonView: View {
     /// Roster aggregates that are context rather than a verdict. Both are shares
     /// of a team's own passing volume, so summing them across a roster measures
     /// how much of the offence we track, not how good it is.
-    private static let descriptiveOnlyLabels: Set<String> = ["Target Share", "WOPR"]
+    private static let descriptiveOnlyLabels = RosterAggregate.descriptiveOnlyLabels
 
     private var rosterA: [Player] {
         playersA.filter {
@@ -1293,31 +1315,7 @@ struct TeamComparisonView: View {
         category: MetricCategory,
         roster: [Player]
     ) -> Double? {
-        let values = roster.compactMap { player -> (value: Double, weight: Double)? in
-            guard let metric = player.metrics.first(where: {
-                $0.label == label && $0.category == category
-            }), let value = DashboardViewModel.rawNumeric(metric.value) else { return nil }
-
-            switch FootballMetricRegistry.aggregation(for: label, category: category) {
-            case .sum:
-                return (value, 1)
-            case .weighted(let weight):
-                // No volume means no rate to trust: drop the player rather than
-                // let an unweighted value slide in as if it were weight 1.
-                guard let w = weight.value(for: player) else { return nil }
-                return (value, w)
-            }
-        }
-        guard !values.isEmpty else { return nil }
-
-        switch FootballMetricRegistry.aggregation(for: label, category: category) {
-        case .sum:
-            return values.reduce(0) { $0 + $1.value }
-        case .weighted:
-            let totalWeight = values.reduce(0) { $0 + $1.weight }
-            guard totalWeight > 0 else { return nil }
-            return values.reduce(0) { $0 + $1.value * $1.weight } / totalWeight
-        }
+        RosterAggregate.value(label: label, category: category, roster: roster)
     }
 
     private func standardRows(for category: MetricCategory) -> [StatRow] {
