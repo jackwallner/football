@@ -312,6 +312,27 @@ func metricNumericValue(_ value: String) -> Double? {
     return scanner.scanDouble()
 }
 
+/// Shared ranks for ties (1, 2, 2, 4), the way a stat sheet prints them: two
+/// quarterbacks on 479 yards are not 21st and 22nd. `values` is in display
+/// order; a nil never ties.
+func competitionRanks(_ values: [Double?]) -> [Int] {
+    var ranks: [Int] = []
+    for index in values.indices {
+        if index > 0, values[index] != nil, values[index] == values[index - 1] {
+            ranks.append(ranks[index - 1])
+        } else {
+            ranks.append(index + 1)
+        }
+    }
+    return ranks
+}
+
+/// A player's value for one metric, as a number, for ranking.
+func metricValue(_ player: Player, label: String, category: MetricCategory) -> Double? {
+    player.metrics.first { $0.label == label && $0.category == category }
+        .flatMap { metricNumericValue($0.value) }
+}
+
 /// The display shape of a metric value, read back off the feed's own strings.
 ///
 /// The pipeline formats every metric server-side (`"6.2%"`, `"+2.3"`, `"3,322"`,

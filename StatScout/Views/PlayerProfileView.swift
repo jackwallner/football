@@ -744,7 +744,7 @@ struct PlayerProfileView: View {
     private var percentileRankingsCard: some View {
         VStack(spacing: 0) {
             GridironSectionBar(
-                title: displayedPlayer.positionGroup == .defense ? "PRODUCTION PERCENTILES" : "ADVANCED PERCENTILES",
+                title: displayedPlayer.positionGroup == .defense ? "DEFENSE PERCENTILES" : "ADVANCED PERCENTILES",
                 trailing: AnyView(
                     HStack(spacing: 4) {
                         seasonMenu

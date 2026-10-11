@@ -423,12 +423,18 @@ struct DashboardView: View {
             } else {
                 sortHeader
                 let sortMetric = viewModel.currentSortMetricForDisplay
+                let board = viewModel.leaderboard
+                let ranks = competitionRanks(board.map { player -> Double? in
+                    guard let label = sortMetric.label, let category = sortMetric.category else { return nil }
+                    return metricValue(player, label: label, category: category)
+                })
                 LazyVStack(spacing: 0) {
-                    ForEach(Array(viewModel.leaderboard.enumerated()), id: \.element.id) { index, player in
+                    ForEach(Array(board.enumerated()), id: \.element.id) { index, player in
                         NavigationLink(value: player) {
                             LeaderboardTableRow(
-                                rank: index + 1,
+                                rank: ranks[index],
                                 player: player,
+                                stripe: index,
                                 metricLabel: sortMetric.label,
                                 metricCategory: sortMetric.category,
                                 volume: viewModel.volumeCaption(for: player, category: sortMetric.category),

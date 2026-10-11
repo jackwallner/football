@@ -272,7 +272,7 @@ struct StandardStatsLeadersView: View {
                 .background(GridironPalette.surface)
             } else {
                 let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                let ranks = competitionRanks(sortedPlayers)
+                let ranks = competitionRanks(sortedPlayers.map { numericStat(for: $0) })
                 let ranked = Array(sortedPlayers.enumerated()).filter { _, player in
                     query.isEmpty || player.name.localizedCaseInsensitiveContains(query)
                         || player.team.localizedCaseInsensitiveContains(query)
@@ -294,21 +294,6 @@ struct StandardStatsLeadersView: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
-    }
-
-    /// Shared ranks for ties (1, 2, 2, 4), the way a stat sheet prints them;
-    /// two quarterbacks on 479 yards are not 21st and 22nd.
-    private func competitionRanks(_ players: [Player]) -> [Int] {
-        let values = players.map { numericStat(for: $0) }
-        var ranks: [Int] = []
-        for index in values.indices {
-            if index > 0, values[index] != nil, values[index] == values[index - 1] {
-                ranks.append(ranks[index - 1])
-            } else {
-                ranks.append(index + 1)
-            }
-        }
-        return ranks
     }
 
     private func playerRow(rank: Int, stripe: Int, player: Player, peerValues: [String]) -> some View {

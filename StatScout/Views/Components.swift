@@ -624,6 +624,8 @@ struct InlineLoadError: View {
 struct LeaderboardTableRow: View {
     let rank: Int
     let player: Player
+    /// Row position for the zebra band, when tied ranks repeat a number.
+    var stripe: Int? = nil
     var metricLabel: String? = nil
     var metricCategory: MetricCategory? = nil
     var trendDelta: Double? = nil
@@ -760,7 +762,7 @@ struct LeaderboardTableRow: View {
         // surface is where the eye loses its place tracking a name across to a
         // number; the band is what carries it. Keyed on `rank` (1-based) so the
         // first row is the plain surface and the card's top edge stays clean.
-        .background(rank % 2 == 1 ? GridironPalette.surface : GridironPalette.surfaceAlt)
+        .background((stripe ?? rank - 1) % 2 == 0 ? GridironPalette.surface : GridironPalette.surfaceAlt)
         .contentShape(Rectangle())
     }
 }

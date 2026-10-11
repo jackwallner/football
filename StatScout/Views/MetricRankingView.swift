@@ -84,11 +84,15 @@ struct MetricRankingView: View {
                     // Sorted by raw stat value - header carries the metric label
                     // (e.g. "xwOBA") so the column matches what's in each row.
                     LeaderboardTableHeader(sortDescending: sortDescending, sortLabel: metricLabel)
+                    let ranks = competitionRanks(rankedPlayers.map {
+                        metricValue($0, label: metricLabel, category: metricCategory)
+                    })
                     ForEach(Array(rankedPlayers.enumerated()), id: \.element.id) { index, player in
                         NavigationLink(value: player) {
                             LeaderboardTableRow(
-                                rank: index + 1,
+                                rank: ranks[index],
                                 player: player,
+                                stripe: index,
                                 metricLabel: metricLabel,
                                 metricCategory: metricCategory,
                                 volume: viewModel?.volumeCaption(for: player, category: metricCategory)
