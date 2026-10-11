@@ -237,6 +237,14 @@ func teamFullName(_ abbr: String) -> String {
         "SEA": "Seattle Seahawks", "SF": "San Francisco 49ers", "TB": "Tampa Bay Buccaneers",
         "TEN": "Tennessee Titans", "WAS": "Washington Commanders"
     ]
+    // A past season's row keeps the club's name from that season: a 2015
+    // "OAK" line said "Las Vegas Raiders" beside it.
+    let relocated: [String: String] = [
+        "OAK": "Oakland Raiders", "SD": "San Diego Chargers", "SDG": "San Diego Chargers",
+        "STL": "St. Louis Rams",
+    ]
+    let key = abbr.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+    if let name = relocated[key] { return name }
     let normalized = normalizedTeamAbbreviation(abbr)
     return map[normalized] ?? abbr
 }
