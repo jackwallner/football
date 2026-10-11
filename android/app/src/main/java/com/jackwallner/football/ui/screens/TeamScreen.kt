@@ -304,8 +304,10 @@ fun TeamScreen(abbr: String) {
                         )
 
                         if (isRosterRecent) {
+                            // The roster reads the league-week rollup, so its windows
+                            // are weeks, not this club's last N games.
                             GridironSegmented(
-                                RecentWindow.entries.map { Segment(it, it.segmentLabel) },
+                                RecentWindow.entries.map { Segment(it, "${it.value} weeks") },
                                 rosterWindow,
                                 { rosterWindow = it },
                                 Modifier.padding(horizontal = 12.dp).padding(top = 8.dp),
@@ -370,6 +372,7 @@ fun TeamScreen(abbr: String) {
                             abbr = abbr,
                             season = displaySeason,
                             players = players,
+                            isHistoryLoading = vm.isHistoricalLoading,
                             filteredPlayers = filteredPlayers,
                             noCategoryMatch = searchText.isEmpty() && selectedCategory != null,
                             isRosterRecent = isRosterRecent,
@@ -553,6 +556,7 @@ private fun RosterSection(
     abbr: String,
     season: Int,
     players: List<Player>,
+    isHistoryLoading: Boolean,
     filteredPlayers: List<Player>,
     noCategoryMatch: Boolean,
     isRosterRecent: Boolean,
@@ -571,6 +575,7 @@ private fun RosterSection(
     val navigator = LocalNavigator.current
     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 12.dp).gridironCard()) {
         when {
+            players.isEmpty() && isHistoryLoading -> GamesTeamsUi.Spinner("Loading $season", Modifier.padding(vertical = 40.dp))
             players.isEmpty() -> GamesTeamsUi.Unavailable(
                 "person.2.slash", "No players tracked",
                 "No players are tracked for ${teamFullName(abbr)} in the $season season.",
@@ -581,11 +586,11 @@ private fun RosterSection(
                 if (noCategoryMatch) "No players match the selected category for this team." else "Try a different search term.",
                 Modifier.padding(vertical = 48.dp),
             )
-            isRosterRecent && !hasRecentData -> GamesTeamsUi.InlineSpinner("Loading the last ${rosterWindow.value} games…", Modifier.padding(vertical = 8.dp))
+            isRosterRecent && !hasRecentData -> GamesTeamsUi.InlineSpinner("Loading the last ${rosterWindow.value} weeks…", Modifier.padding(vertical = 8.dp))
             else -> {
                 LeaderboardTableHeader(
                     sortDescending = sortDescending,
-                    sortLabel = if (isRosterRecent) "$sortLabel · ${rosterWindow.value}G" else sortLabel,
+                    sortLabel = if (isRosterRecent) "$sortLabel · ${rosterWindow.value} WK" else sortLabel,
                     metrics = sortLabels,
                     onSelectMetric = onPickLabel,
                     onToggleDirection = onToggleDirection,
@@ -598,6 +603,7 @@ private fun RosterSection(
                         metricCategory = rowCategory,
                         trendDelta = if (isRosterRecent) recentDelta(player) else null,
                         trendDecimals = rowLabel?.let { RecentMetricKey.decimals(it) } ?: 3,
+                        trendLowerIsBetter = rowLabel?.let { RecentMetricKey.lowerIsBetter(it) } ?: false,
                         valueOverride = if (isRosterRecent) recentValueText(player) else null,
                         onClick = { navigator.push(Route.PlayerProfile(player)) },
                     )

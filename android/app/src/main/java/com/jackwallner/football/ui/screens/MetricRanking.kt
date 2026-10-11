@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.jackwallner.football.data.DashboardViewModel
 import com.jackwallner.football.model.Player
 import com.jackwallner.football.model.SeasonLabel
+import com.jackwallner.football.model.competitionRanks
+import com.jackwallner.football.model.metricValue
 import com.jackwallner.football.ui.LocalGraph
 import com.jackwallner.football.ui.components.EmptyState
 import com.jackwallner.football.ui.components.GridironSectionBar
@@ -88,11 +90,13 @@ fun MetricRankingRoute(route: Route.Metric) {
                 }
             } else {
                 item { Box(Modifier.padding(horizontal = 12.dp).cardSlice(false, false)) { LeaderboardTableHeader(descending, label) { descending = !descending } } }
+                val ranks = competitionRanks(ranked.map { metricValue(it, label, category) })
                 itemsIndexed(ranked, key = { _, p -> p.id }) { index, player ->
                     Box(Modifier.padding(horizontal = 12.dp).cardSlice(false, index == ranked.lastIndex)) {
                         LeaderboardTableRow(
-                            rank = index + 1,
+                            rank = ranks[index],
                             player = player,
+                            stripe = index,
                             metricLabel = label,
                             metricCategory = category,
                             volume = vm.volumeCaption(player, category),

@@ -25,17 +25,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
-import com.jackwallner.football.data.DashboardViewModel
 import com.jackwallner.football.data.PaywallTrigger
 import com.jackwallner.football.model.DataFreshnessStatus
+import com.jackwallner.football.model.FootballMetricRegistry
 import com.jackwallner.football.model.Metric
+import com.jackwallner.football.model.MetricAggregation
 import com.jackwallner.football.model.MetricCategory
 import com.jackwallner.football.model.Player
 import com.jackwallner.football.model.PlayerGameLog
 import com.jackwallner.football.model.RecentFormWindow
 import com.jackwallner.football.model.RecentWindow
+import com.jackwallner.football.model.RosterAggregate
 import com.jackwallner.football.model.SeasonPhase
 import com.jackwallner.football.model.StatScoutSeason
+import com.jackwallner.football.model.normalizedTeamAbbreviation
+import com.jackwallner.football.model.swiftRoundDouble
 import com.jackwallner.football.ui.LocalGraph
 import com.jackwallner.football.ui.components.BlurGateUnlock
 import com.jackwallner.football.ui.components.CrownYellow
@@ -79,59 +83,58 @@ internal enum class TeamSide(val raw: String, val label: String) {
 typealias TeamGameLogFetcher = suspend (String, Int, SeasonPhase, Instant) -> List<PlayerGameLog>
 
 /**
- * Maps a raw metric value onto the league's full-season percentile scale by
- * reusing the app's own value-to-percentile calibration: for each metric every
- * qualified player's (raw season value, season percentile) pair, sorted by
- * value, interpolated. This lets a recent-window bar sit on the same ruler as
- * the season bar.
+ * Every club's pooled value for each metric, the ruler a team bar sits on.
+ * Counting stats are per game so a club with a bye is not ranked on one game
+ * fewer; rates use the registry's volume weighting.
  */
-internal class TeamPercentileCurve private constructor(private val points: List<Pair<Double, Double>>) {
-    /** Interpolates the percentile (1-100) for a value. Direction is encoded in the points themselves. */
-    fun percentile(value: Double): Int {
-        if (value <= points.first().first) return clamp(points.first().second)
-        if (value >= points.last().first) return clamp(points.last().second)
-        for (i in 1 until points.size) {
-            if (value <= points[i].first) {
-                val (v0, p0) = points[i - 1]
-                val (v1, p1) = points[i]
-                val t = if (v1 == v0) 0.0 else (value - v0) / (v1 - v0)
-                return clamp(p0 + t * (p1 - p0))
-            }
-        }
-        return clamp(points.last().second)
-    }
-
-    private fun clamp(p: Double): Int = Math.round(p).toInt().coerceIn(1, 100)
-
-    companion object {
-        /** Two points are enough to interpolate between, and two is what an opening week provides. */
-        fun from(raw: List<Pair<Double, Double>>): TeamPercentileCurve? {
-            val sorted = raw.sortedBy { it.first }
-            return if (sorted.size >= 2) TeamPercentileCurve(sorted) else null
-        }
-    }
-}
-
-/** Per-metric curves for one player population, keyed by the season metric label. */
-internal class TeamPercentileCurves(players: List<Player>, categories: List<MetricCategory>, labels: List<String>) {
-    private val byLabel: Map<String, TeamPercentileCurve>
+internal class TeamLeagueTable(players: List<Player>, categories: List<MetricCategory>) {
+    private val valuesByKey: Map<String, List<Double>>
 
     init {
-        val pool = players.filter { player -> categories.any { player.matchesPlayerType(it) } }
-        val result = HashMap<String, TeamPercentileCurve>()
-        for (label in labels) {
-            val points = ArrayList<Pair<Double, Double>>()
-            for (player in pool) {
-                val metric = player.metrics.firstOrNull { it.label == label && it.category in categories } ?: continue
-                val value = DashboardViewModel.rawNumeric(metric.value) ?: continue
-                points += value to metric.percentile.toDouble()
+        val pool = players.filter { p -> categories.any { p.matchesPlayerType(it) } }
+        val byTeam = pool.groupBy { normalizedTeamAbbreviation(it.team) }
+        val result = HashMap<String, List<Double>>()
+        for (category in categories) {
+            for (label in category.metricPriorityOrder) {
+                val values = byTeam.values.mapNotNull { teamValue(label, category, it) }
+                if (values.size >= 2) result[key(label, category)] = values
             }
-            TeamPercentileCurve.from(points)?.let { result[label] = it }
         }
-        byLabel = result
+        valuesByKey = result
     }
 
-    fun curve(label: String): TeamPercentileCurve? = byLabel[label]
+    /** Share of the other clubs this value beats, 1 to 99, direction-aware. */
+    fun percentile(value: Double, label: String, category: MetricCategory): Int? {
+        val values = valuesByKey[key(label, category)] ?: return null
+        val higherIsBetter = FootballMetricRegistry.definition(label, category)?.higherIsBetter ?: true
+        val worse = values.count { if (higherIsBetter) it < value else it > value }
+        val ties = values.count { it == value }
+        // The club itself is one of the ties; it neither beats nor loses to itself.
+        val others = maxOf(1, values.size - 1)
+        val score = (worse + maxOf(0, ties - 1) / 2.0) / others * 100
+        return swiftRoundDouble(score).toInt().coerceIn(1, 99)
+    }
+
+    companion object {
+        fun key(label: String, category: MetricCategory): String = category.raw + "|" + label
+
+        /** A club's value: summed totals divided by its games, or the weighted rate. */
+        fun teamValue(label: String, category: MetricCategory, roster: List<Player>): Double? {
+            val pooled = RosterAggregate.value(label, category, roster) ?: return null
+            if (!isPerGame(label, category)) return pooled
+            val games = RosterAggregate.teamGames(roster) ?: return null
+            return pooled / games
+        }
+
+        fun isPerGame(label: String, category: MetricCategory): Boolean =
+            FootballMetricRegistry.aggregation(label, category) == MetricAggregation.Sum
+
+        fun displayLabel(label: String, category: MetricCategory): String =
+            if (isPerGame(label, category)) "$label/G" else label
+
+        fun baseLabel(displayLabel: String): String =
+            if (displayLabel.endsWith("/G")) displayLabel.dropLast(2) else displayLabel
+    }
 }
 
 private enum class FormMode(val raw: String) {
@@ -146,13 +149,14 @@ private enum class FormMode(val raw: String) {
  * "team-as-a-player" and renders its profile as percentile bars on the league
  * ruler, with a Season / Recent toggle that mirrors the player page.
  *
- * Season is the roster's mean of every metric for the active side, placed on
- * the league curve; tapping a bar opens that metric's leaderboard. Recent is
- * the same aggregation over the last 3 / 5 / 8 games of game logs, StatScout+
- * only, with the standard blur and call to action.
+ * Season pools every metric for the active side (totals per game, rates
+ * weighted by volume) and ranks the club against the other 31; tapping a bar
+ * opens that metric's leaderboard. Recent is the last 3 / 5 / 8 games of game
+ * logs per game on the same club ruler, StatScout+ only, with the standard blur
+ * and call to action.
  *
  * @param players the roster for this team and season.
- * @param leaguePlayers the league pool used to build the value-to-percentile curve.
+ * @param leaguePlayers the league pool every club's value is pooled from.
  * @param seasonPhase which half of the year the numbers come from; the rolling
  *   window is filtered to the same phase.
  * @param fetchTeamGameLogs fetches (team, season, phase, since) game logs.
@@ -181,12 +185,9 @@ fun TeamRankingsCard(
     var loading by remember { mutableStateOf(false) }
     var loadError by remember { mutableStateOf<String?>(null) }
 
-    val curves = remember(leaguePlayers.size, players.size) {
-        val rosterLabels = players.flatMap { p -> p.metrics.map { it.label } }
-        val recentLabels = MetricCategory.entries.flatMap { it.metricPriorityOrder }
-        val labels = (rosterLabels + recentLabels).distinct()
-        TeamPercentileCurves(leaguePlayers, TeamSide.OFFENSE.categories, labels) to
-            TeamPercentileCurves(leaguePlayers, TeamSide.DEFENSE.categories, labels)
+    val table = remember(leaguePlayers) {
+        TeamLeagueTable(leaguePlayers, TeamSide.OFFENSE.categories) to
+            TeamLeagueTable(leaguePlayers, TeamSide.DEFENSE.categories)
     }.let { if (side == TeamSide.DEFENSE) it.second else it.first }
 
     // The mode actually rendered. `mode` is view state and the season is a
@@ -218,7 +219,7 @@ fun TeamRankingsCard(
         if (effectiveMode.usesRecent && isPro) load()
     }
 
-    val form = FormData(team, side, players, curves, logs, windowGames)
+    val form = FormData(team, side, players, table, logs, windowGames)
 
     Column(Modifier.fillMaxWidth().gridironCard().testTag("teamRankingsCard")) {
         GridironSectionBar("TEAM ADVANCED STATS", trailing = if (isPro) null else ({ ProBadge() }))
@@ -261,20 +262,25 @@ private class FormData(
     val team: String,
     val side: TeamSide,
     val players: List<Player>,
-    val curves: TeamPercentileCurves,
+    val table: TeamLeagueTable,
     val logs: List<PlayerGameLog>,
     val windowGames: Int,
 ) {
     /** Smallest team-window play count we'll treat as trustworthy. */
     val smallSamplePlaysThreshold = 40
 
-    /** One bar per roster metric: the roster mean placed on the league curve. Each keeps its own category so the leaderboard link routes correctly. */
+    /**
+     * One bar per roster metric: the club's pooled value (totals per game, rates
+     * weighted by volume) ranked against the other 31 clubs. Each keeps its own
+     * category so the leaderboard link routes correctly.
+     */
     val seasonRows: List<Metric> by lazy { aggregateSeasonRows() }
 
     private val sideLogs: List<PlayerGameLog>
         get() {
             val onSide = logs.filter { side.includes(it.playerType) }
             // The most recent N game dates across the roster define the window.
+            // Dedupe first: every player has a row per game.
             val recentDates = onSide.map { it.gameDate }.distinct().sortedDescending().take(windowGames).toSet()
             return onSide.filter { it.gameDate in recentDates }
         }
@@ -295,48 +301,43 @@ private class FormData(
         for (cat in cats) {
             val present = pool.flatMap { p -> p.metrics.filter { it.category == cat }.map { it.label } }.toSet()
             for (label in cat.metricPriorityOrder) {
+                if (label in RosterAggregate.descriptiveOnlyLabels) continue
                 if (label in present && seen.add(label)) pairs += label to cat
             }
         }
 
         return pairs.mapNotNull { (label, category) ->
-            var sum = 0.0
-            var count = 0.0
-            for (player in pool) {
-                val metric = player.metrics.firstOrNull { it.label == label && it.category == category } ?: continue
-                val value = DashboardViewModel.rawNumeric(metric.value) ?: continue
-                sum += value
-                count += 1
-            }
-            if (count <= 0) return@mapNotNull null
-            val average = sum / count
-            val pct = curves.curve(label)?.percentile(average) ?: return@mapNotNull null
-            Metric(label = label, value = formattedValue(average, label), percentile = pct, category = category, id = "teamavg-$label")
+            val value = TeamLeagueTable.teamValue(label, category, pool) ?: return@mapNotNull null
+            val pct = table.percentile(value, label, category) ?: return@mapNotNull null
+            Metric(
+                label = TeamLeagueTable.displayLabel(label, category),
+                value = formattedValue(value, label),
+                percentile = pct,
+                category = category,
+                id = "teamavg-$label",
+            )
         }
     }
 
     private fun formattedValue(v: Double, label: String): String = when {
         label.endsWith("%") -> String.format(Locale.US, "%.1f%%", v)
+        label in setOf("EPA/Play", "EPA/Rush", "EPA/Tgt", "RACR") -> String.format(Locale.US, "%.2f", v)
         abs(v) >= 100 -> String.format(Locale.US, "%.0f", v)
         else -> String.format(Locale.US, "%.1f", v)
     }
 
     /** Maps a recent game-log metric key onto the matching season aggregate label. */
-    private val recentSpecs: List<Triple<String, String, String>>
+    private val recentSpecs: List<Pair<String, String>>
         get() = if (side == TeamSide.DEFENSE) {
-            listOf(
-                Triple("tackles", "Tackles", "%.0f"),
-                Triple("def_sacks", "Sacks", "%.1f"),
-                Triple("def_interceptions", "INT", "%.0f"),
-            )
+            listOf("tackles" to "Tackles", "def_sacks" to "Sacks", "def_interceptions" to "INT")
         } else {
             listOf(
-                Triple("passing_yards", "Pass Yds", "%.0f"),
-                Triple("passing_tds", "Pass TD", "%.0f"),
-                Triple("rushing_yards", "Rush Yds", "%.0f"),
-                Triple("rushing_tds", "Rush TD", "%.0f"),
-                Triple("receiving_yards", "Rec Yds", "%.0f"),
-                Triple("receptions", "Rec", "%.0f"),
+                "passing_yards" to "Pass Yds",
+                "passing_tds" to "Pass TD",
+                "rushing_yards" to "Rush Yds",
+                "rushing_tds" to "Rush TD",
+                "receiving_yards" to "Rec Yds",
+                "receptions" to "Rec",
             )
         }
 
@@ -346,16 +347,26 @@ private class FormData(
         return side.categories.firstOrNull() ?: MetricCategory.PASSING
     }
 
-    /** The recent-window bar for a season label, or null when the window has no game-log data for it. */
+    /**
+     * The recent-window bar for a season label (base or "/G" display label), or
+     * null when the window has no game-log data for it. Window totals are
+     * divided by the games in the window and ranked against every club's season
+     * per-game figure, so three games are never measured on a ruler of
+     * full-season totals.
+     */
     fun recentMetric(label: String, window: RecentFormWindow): Metric? {
-        val spec = recentSpecs.firstOrNull { it.second == label } ?: return null
-        val value = window.metrics[spec.first] ?: return null
-        val pct = curves.curve(label)?.percentile(value) ?: return null
+        val base = TeamLeagueTable.baseLabel(label)
+        val category = categoryFor(base)
+        val spec = recentSpecs.firstOrNull { it.second == base } ?: return null
+        val total = window.metrics[spec.first] ?: return null
+        if (window.games <= 0) return null
+        val perGame = total / window.games
+        val pct = table.percentile(perGame, base, category) ?: return null
         return Metric(
-            label = label,
-            value = String.format(Locale.US, spec.third, value),
+            label = TeamLeagueTable.displayLabel(base, category),
+            value = formattedValue(perGame, base),
             percentile = pct,
-            category = categoryFor(label),
+            category = category,
             id = "team-recent-${spec.first}",
         )
     }
@@ -366,7 +377,7 @@ private class FormData(
      * on the league curve); the rest fall back to their season aggregate bar.
      */
     fun recentDisplayRows(window: RecentFormWindow): List<Metric> {
-        val existing = seasonRows.map { it.label }.toSet()
+        val existing = seasonRows.map { TeamLeagueTable.baseLabel(it.label) }.toSet()
         val stubs = recentSpecs.mapNotNull { spec ->
             if (spec.second in existing || recentMetric(spec.second, window) == null) return@mapNotNull null
             Metric(
@@ -408,13 +419,13 @@ private fun SeasonBars(form: FormData, rosterEmpty: Boolean) {
             BarRow(
                 metric, index,
                 Modifier.clickable(onClickLabel = "See the league leaderboard for ${metric.label}") {
-                    navigator.push(Route.Metric(metric.label, metric.category))
+                    navigator.push(Route.Metric(TeamLeagueTable.baseLabel(metric.label), metric.category))
                 },
             )
         }
     }
     Text(
-        "Season to date, averaged across the ${form.side.label.lowercase()} roster",
+        "Season to date: totals per game, rates weighted by volume. Bars rank each club against the other 31.",
         style = GridironType.micro,
         color = GridironPalette.inkTertiary,
         modifier = Modifier.fillMaxWidth().padding(horizontal = GridironGeo.padCard, vertical = 10.dp),

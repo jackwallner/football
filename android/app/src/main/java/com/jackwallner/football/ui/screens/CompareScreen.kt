@@ -47,6 +47,7 @@ import com.jackwallner.football.data.PaywallTrigger
 import com.jackwallner.football.model.Player
 import com.jackwallner.football.model.SeasonLabel
 import com.jackwallner.football.model.SeasonPhase
+import com.jackwallner.football.model.StatScoutSeason
 import com.jackwallner.football.model.displayTeamAbbr
 import com.jackwallner.football.model.normalizedTeamAbbreviation
 import com.jackwallner.football.model.teamFullName
@@ -288,7 +289,7 @@ fun CompareScreen(isActive: Boolean) {
                     PickerTarget.PLAYER_B -> state.seasonB to state.phaseB
                     else -> state.seasonA to state.yearPhase
                 }
-                val candidates = vm.players(season, phase).sortedBy { it.name }.filter { c ->
+                val candidates = vm.players(season, phase).filter { c ->
                     when (target) {
                         PickerTarget.PLAYER_A -> (c.playerId != state.playerB?.playerId || season != state.seasonB || phase != state.phaseB) &&
                             (resolvedB?.canCompareHeadToHead(c) ?: true)
@@ -297,7 +298,7 @@ fun CompareScreen(isActive: Boolean) {
                         else -> true
                     }
                 }
-                PlayerPickerSheet(candidates, "Select Player · $season", season, vm.isHistoricalLoading, { picker = null }) { selected ->
+                PlayerPickerSheet(candidates, "Select Player · $season", season, vm.isHistoricalLoading, byProminence = true, onCancel = { picker = null }) { selected ->
                     picker = null
                     when (target) {
                         PickerTarget.PLAYER_A -> state.playerA = selected
@@ -522,7 +523,11 @@ private fun TeamSlotColumn(
             Box(
                 Modifier.size(48.dp).clip(CircleShape).background(team?.let { NFLTeamColor.color(it) } ?: GridironPalette.surfaceAlt),
                 contentAlignment = Alignment.Center,
-            ) { Text(team?.let(::displayTeamAbbr) ?: "+", style = GridironType.smallBold, color = if (team == null) GridironPalette.inkTertiary else Color.White) }
+            ) {
+                // Same glyph as the empty player slot above it.
+                if (team != null) Text(displayTeamAbbr(team), style = GridironType.smallBold, color = Color.White)
+                else SfIcon("plus", 16.dp, GridironPalette.inkTertiary)
+            }
             FitText(team?.let(::teamFullName) ?: placeholder, GridironType.smallBold, if (team == null) GridironPalette.inkTertiary else GridironPalette.ink, minScale = 0.7f)
         }
         // Team-scoped, so no All Time: a career line carries the last club and would miscredit the franchise.
@@ -563,7 +568,8 @@ fun YearCompareDestination(route: Route.YearCompareRoute) {
     val navigator = LocalNavigator.current
     var current by remember { mutableStateOf(route) }
     var picking by remember { mutableStateOf(false) }
-    val history = vm.playerHistories[current.playerId].orEmpty().filter { it.seasonPhase == current.phase }
+    val history = vm.playerHistories[current.playerId].orEmpty()
+        .filter { it.seasonPhase == current.phase && !StatScoutSeason.isAllTime(it.season ?: 0) }
     val latest = history.maxByOrNull { it.season ?: 0 }
     PushedScreen(current.playerName) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottomBarPadding())) {
@@ -600,7 +606,7 @@ fun YearCompareDestination(route: Route.YearCompareRoute) {
         }
     }
     StatScoutSheet(picking, { picking = false }) {
-        PlayerPickerSheet(vm.players(vm.selectedSeason, current.phase).sortedBy { it.name }, "Select Player · ${vm.selectedSeason}", vm.selectedSeason, vm.isHistoricalLoading, { picking = false }) { p ->
+        PlayerPickerSheet(vm.players(vm.selectedSeason, current.phase), "Select Player · ${vm.selectedSeason}", vm.selectedSeason, vm.isHistoricalLoading, byProminence = true, onCancel = { picking = false }) { p ->
             picking = false
             current = Route.YearCompareRoute(p.playerId, p.name, current.phase)
         }

@@ -333,6 +333,24 @@ fun metricNumericValue(value: String): Double? {
     return match.value.toDoubleOrNull()
 }
 
+/**
+ * Shared ranks for ties (1, 2, 2, 4), the way a stat sheet prints them: two
+ * quarterbacks on 479 yards are not 21st and 22nd. [values] is in display
+ * order; a null never ties.
+ */
+fun competitionRanks(values: List<Double?>): List<Int> {
+    val ranks = ArrayList<Int>(values.size)
+    for (index in values.indices) {
+        if (index > 0 && values[index] != null && values[index] == values[index - 1]) ranks += ranks[index - 1]
+        else ranks += index + 1
+    }
+    return ranks
+}
+
+/** A player's value for one metric, as a number, for ranking. */
+fun metricValue(player: Player, label: String, category: MetricCategory): Double? =
+    player.metrics.firstOrNull { it.label == label && it.category == category }?.let { metricNumericValue(it.value) }
+
 private val NUMBER_PREFIX = Regex("^[+-]?(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?")
 
 /**
@@ -420,9 +438,9 @@ enum class PlayerPositionGroup(val raw: String) {
     val preferredTraditionalMetrics: List<String>
         get() = when (this) {
             QB -> listOf("Pass Yds", "Pass TD", "Cmp%")
-            RB -> listOf("Rush Yds", "Rush TD", "Car")
+            RB -> listOf("Rush Yds", "Rush TD", "Y/C")
             WR, TE -> listOf("Rec Yds", "Rec TD", "Rec")
-            DEFENSE -> listOf("Tackles", "Sacks", "Def INT")
+            DEFENSE -> listOf("Tackles", "Sacks", "INT")
         }
 }
 
@@ -478,6 +496,68 @@ enum class MetricWeight {
         return metricNumericValue(parts[1])?.takeIf { it > 0 }
     }
 }
+
+/**
+ * One metric pooled across a roster with the registry's aggregation rule:
+ * counting stats add up, rates are weighted by the volume behind them.
+ */
+object RosterAggregate {
+    /**
+     * Pooled values that describe roster shape rather than quality. A team's
+     * summed Target Share mostly counts how many receivers qualified, so it is
+     * context, never something to rank or award.
+     */
+    val descriptiveOnlyLabels: Set<String> = setOf("Target Share", "WOPR")
+
+    fun value(label: String, category: MetricCategory, roster: List<Player>): Double? {
+        val rule = FootballMetricRegistry.aggregation(label, category)
+        val values = roster.mapNotNull { player ->
+            val metric = player.metrics.firstOrNull { it.label == label && it.category == category } ?: return@mapNotNull null
+            val value = metricNumericValue(metric.value) ?: return@mapNotNull null
+            when (rule) {
+                MetricAggregation.Sum -> value to 1.0
+                // No volume means no rate to trust: drop the player rather than
+                // let an unweighted value slide in as if it were weight 1.
+                is MetricAggregation.Weighted -> rule.weight.value(player)?.let { value to it }
+            }
+        }
+        if (values.isEmpty()) return null
+        return when (rule) {
+            MetricAggregation.Sum -> values.sumOf { it.first }
+            is MetricAggregation.Weighted -> {
+                val totalWeight = values.sumOf { it.second }
+                if (totalWeight <= 0) null else values.sumOf { it.first * it.second } / totalWeight
+            }
+        }
+    }
+
+    /**
+     * Games a club has played, read off its roster: the most games any one
+     * player has. Every snap belongs to somebody, so the busiest player has
+     * been there for all of them.
+     */
+    fun teamGames(roster: List<Player>): Double? =
+        roster.mapNotNull { MetricWeight.GAMES.value(it) }.maxOrNull()?.takeIf { it > 0 }
+}
+
+/**
+ * A rough "how much has this player done" score, for ordering a list of names
+ * before anyone types: PPR fantasy scoring for the offense, a common IDP scale
+ * for defenders. Never displayed.
+ */
+val Player.prominence: Double
+    get() {
+        fun stat(label: String): Double {
+            val raw = standardStats?.firstOrNull { it.label == label }?.value ?: return 0.0
+            if (raw.contains("/")) return metricNumericValue(raw.substringBefore("/")) ?: 0.0
+            return metricNumericValue(raw) ?: 0.0
+        }
+        val offense = stat("Pass Yds") / 25 + stat("Pass TD") * 4 - stat("INT") * 2 +
+            stat("Rush Yds") / 10 + stat("Rush TD") * 6 +
+            stat("Rec/Tgt") + stat("Rec Yds") / 10 + stat("Rec TD") * 6
+        val defense = stat("Tackles") + stat("Sacks") * 4 + stat("Def INT") * 6
+        return offense + defense
+    }
 
 object FootballMetricRegistry {
     private val QB = setOf(PlayerPositionGroup.QB)

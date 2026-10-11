@@ -77,12 +77,52 @@ object MetricCoverage {
 data class TrendMetric(val key: String, val label: String, val unit: String, val decimals: Int, val lowerIsBetter: Boolean) {
     val id: String get() = key
 
+    /**
+     * Window totals rather than rates. Two windows rarely hold the same number
+     * of games (byes, a week still in progress), so the board compares these
+     * per game: three weeks with a Thursday game in them is not a hot streak.
+     */
+    val isCount: Boolean get() = key in COUNT_KEYS
+
+    /** A count's per-game figure: one decimal and a "/g", so 0.7 TD a game does not round to 1. */
+    fun formatPerGame(value: Double): String = String.format(Locale.US, "%.1f", value) + "/g"
+
+    /** This metric's then, now and change for one row. */
+    data class Values(val then: Double?, val now: Double?, val delta: Double?)
+
+    /**
+     * Counts are per game when the rollup says how many games each window
+     * holds; everything else is the window value as published.
+     */
+    fun values(form: RecentForm): Values {
+        if (!isCount) return Values(form.priorMetrics[key], form.metrics[key], form.delta[key])
+        val nowGames = form.metrics["games"] ?: form.games.toDouble()
+        val now = if (nowGames > 0) form.metrics[key]?.let { it / nowGames } else null
+        val priorGames = form.priorMetrics["games"]
+        val priorTotal = form.priorMetrics[key]
+        // A rollup from before the window game counts shipped: there is no
+        // honest per-game prior, so there is no change to rank either.
+        if (priorGames == null || priorGames <= 0 || priorTotal == null) return Values(null, now, null)
+        val then = priorTotal / priorGames
+        return Values(then, now, now?.let { it - then })
+    }
+
+    fun display(value: Double): String = if (isCount) formatPerGame(value) else format(value)
+
     fun format(value: Double): String {
         if (decimals == 0) return NumberFormat.getIntegerInstance(Locale.US).format(swiftRoundDouble(value).toLong()) + unit
         return String.format(Locale.US, "%.${decimals}f", value) + unit
     }
 
     companion object {
+        private val COUNT_KEYS = setOf(
+            "pass_yards", "pass_tds", "completions", "attempts", "interceptions",
+            "rush_yards", "rush_tds", "carries", "rush_first_downs",
+            "receptions", "rec_yards", "rec_tds", "targets", "yac",
+            "rushing_epa", "receiving_epa", "rush_yoe",
+            "tackles", "sacks", "def_ints", "passes_defended", "tfl", "qb_hits", "forced_fumbles",
+        )
+
         private fun m(key: String, label: String, unit: String, decimals: Int, lower: Boolean = false) = TrendMetric(key, label, unit, decimals, lower)
 
         val qbAdvanced = listOf(

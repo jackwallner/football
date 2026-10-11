@@ -47,7 +47,9 @@ import com.jackwallner.football.model.Player
 import com.jackwallner.football.model.PlayerPositionGroup
 import com.jackwallner.football.model.SeasonLabel
 import com.jackwallner.football.model.SeasonPhase
+import com.jackwallner.football.model.competitionRanks
 import com.jackwallner.football.model.displayTeamAbbr
+import com.jackwallner.football.model.metricValue
 import com.jackwallner.football.model.teamFullName
 import com.jackwallner.football.ui.HomeTopBar
 import com.jackwallner.football.ui.LocalAppActions
@@ -372,6 +374,13 @@ private fun AdvancedBoard(vm: DashboardViewModel, state: StatsBoardState) {
             RefreshableBox({ vm.load() }, Modifier.fillMaxSize()) {
                 val sort = vm.currentSortMetricForDisplay
                 val leaderboard = vm.leaderboard
+                val ranks = competitionRanks(
+                    leaderboard.map { player ->
+                        val label = sort.first
+                        val category = sort.second
+                        if (label == null || category == null) null else metricValue(player, label, category)
+                    },
+                )
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = bottomBarPadding()) {
                     if (vm.players.isNotEmpty() && activeSearch) item { TeamResults(vm.searchedTeams.take(3)) }
                     item { Spacer(Modifier.height(8.dp)) }
@@ -387,8 +396,9 @@ private fun AdvancedBoard(vm: DashboardViewModel, state: StatsBoardState) {
                         itemsIndexed(leaderboard, key = { _, p -> p.id }) { index, player ->
                             Box(Modifier.padding(horizontal = 12.dp).cardSlice(false, index == leaderboard.lastIndex)) {
                                 LeaderboardTableRow(
-                                    rank = index + 1,
+                                    rank = ranks[index],
                                     player = player,
+                                    stripe = index,
                                     metricLabel = sort.first,
                                     metricCategory = sort.second,
                                     volume = vm.volumeCaption(player, sort.second),

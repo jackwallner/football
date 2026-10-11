@@ -46,6 +46,7 @@ import com.jackwallner.football.model.MetricCategory
 import com.jackwallner.football.model.MetricCoverage
 import com.jackwallner.football.model.MetricFamily
 import com.jackwallner.football.model.MetricKind
+import com.jackwallner.football.model.MetricWeight
 import com.jackwallner.football.model.Player
 import com.jackwallner.football.model.PlayerGameLog
 import com.jackwallner.football.model.PlayerPositionGroup
@@ -54,6 +55,7 @@ import com.jackwallner.football.model.RecentWindow
 import com.jackwallner.football.model.SeasonLabel
 import com.jackwallner.football.model.SeasonPhase
 import com.jackwallner.football.model.StandardStatSemantics
+import com.jackwallner.football.model.StatScoutSeason
 import com.jackwallner.football.model.metricNumericValue
 import com.jackwallner.football.model.swiftRoundDouble
 import com.jackwallner.football.ui.LocalAppActions
@@ -88,7 +90,6 @@ import com.jackwallner.football.ui.nav.rememberRetained
 import com.jackwallner.football.ui.theme.GridironGeo
 import com.jackwallner.football.ui.theme.GridironPalette
 import com.jackwallner.football.ui.theme.GridironType
-import java.text.NumberFormat
 import java.util.Locale
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.abs
@@ -298,6 +299,7 @@ fun PlayerProfileScreen(player: Player, history: List<Player>, vm: DashboardView
                             state = state,
                             effectiveForm = effectiveForm,
                             curves = curves,
+                            cohort = cohort,
                             freshnessStatus = vm.freshnessStatus,
                             onMetric = { m -> navigator.push(Route.Metric(m.label, m.category, activeSeason, activePhase)) },
                         )
@@ -337,7 +339,7 @@ fun PlayerProfileScreen(player: Player, history: List<Player>, vm: DashboardView
                         !isPro -> YearComparePreview(player.name)
                         vm.isHistoricalLoading -> HistoricalLoadingCard(vm.loadingMessage, vm.loadingProgress)
                         !vm.hasLoadedHistorical -> LoadHistoryCard { scope.launch { vm.loadHistoricalIfNeeded() } }
-                        history.size < 2 -> Box(Modifier.padding(horizontal = 12.dp).padding(top = 12.dp).fillMaxWidth().gridironCard().padding(vertical = 24.dp)) {
+                        phaseHistory.mapNotNull { it.season }.filter { !StatScoutSeason.isAllTime(it) }.toSet().size < 2 -> Box(Modifier.padding(horizontal = 12.dp).padding(top = 12.dp).fillMaxWidth().gridironCard().padding(vertical = 24.dp)) {
                             EmptyState("Not enough history", "calendar.badge.clock", "${player.name} doesn't have multiple seasons of data to compare.")
                         }
                         else -> YearComparisonView(phaseHistory)
@@ -375,11 +377,16 @@ private fun PercentileCard(
     state: ProfileState,
     effectiveForm: FormDisplayMode,
     curves: LeaguePercentileCurves,
+    cohort: List<Player>,
     freshnessStatus: com.jackwallner.football.model.DataFreshnessStatus,
     onMetric: (Metric) -> Unit,
 ) {
-    val kind = if (displayed.positionGroup == PlayerPositionGroup.DEFENSE) MetricKind.TRADITIONAL else MetricKind.ADVANCED
-    val grouped = displayed.metrics(kind).groupBy { FootballMetricRegistry.definition(it.label, it.category)?.family ?: MetricFamily.PRODUCTION }
+    // Defenders get both kinds: the PFR pass-rush and coverage numbers (2018 on)
+    // and the counting stats, which are the only percentiles a defender has
+    // before 2018. Showing only the counts hid Pressures and every coverage stat.
+    val profileMetrics = if (displayed.positionGroup == PlayerPositionGroup.DEFENSE) FootballMetricRegistry.sorted(displayed.metrics)
+    else displayed.metrics(MetricKind.ADVANCED)
+    val grouped = profileMetrics.groupBy { FootballMetricRegistry.definition(it.label, it.category)?.family ?: MetricFamily.PRODUCTION }
     val groups = MetricFamily.entries.mapNotNull { f -> grouped[f]?.takeIf { it.isNotEmpty() }?.let { f to FootballMetricRegistry.sorted(it) } }
     val category = displayed.primaryCategory
     val window = state.recentLogs.sortedByDescending { it.gameDate }.take(state.recentWindowGames).takeIf { it.isNotEmpty() }
@@ -390,26 +397,32 @@ private fun PercentileCard(
         val w = window ?: return null
         val spec = specs.firstOrNull { it.label == season.label } ?: return null
         val v = spec.value(w.metrics) ?: return null
+        if (spec.isTotal) {
+            // Three games of yards against season totals put every hot streak at
+            // the bottom of the league. Per game against per game instead.
+            if (w.games <= 0) return null
+            val perGame = v / w.games
+            val pct = perGamePercentile(cohort, spec.label, season.category, perGame) ?: return null
+            return Metric(season.label, perGameText(perGame), pct, season.category, id = "recent-${spec.label}")
+        }
         val pct = curves.curve(spec.label)?.percentile(v) ?: return null
         return Metric(season.label, String.format(Locale.US, spec.format, v), pct, season.category, id = "recent-${spec.label}")
     }
 
-    fun displayedMetrics(metrics: List<Metric>): List<Metric> {
-        if (effectiveForm != FormDisplayMode.RECENT || !isPro) return metrics
-        if (metrics.firstOrNull()?.category != category) return metrics
-        val existing = metrics.map { it.label }.toSet()
-        // A recent figure for a metric the season snapshot omits still gets its row.
-        val stubs = specs.mapNotNull { spec ->
+    // Recent mode only: window figures the card has no season row for (Pass Yds,
+    // Cmp%, Y/A on a quarterback), in their own section after the percentile
+    // groups rather than repeated under every heading.
+    val recentOnlyRows: List<Metric> = if (effectiveForm != FormDisplayMode.RECENT || !isPro) emptyList() else {
+        val existing = profileMetrics.filter { it.category == category }.map { it.label }.toSet()
+        specs.mapNotNull { spec ->
             if (spec.label in existing) return@mapNotNull null
-            val stub = Metric(spec.label, "", 0, category, id = "recent-stub-${spec.label}")
-            stub.takeIf { recentMetric(it) != null }
+            Metric(spec.label, "", 0, category, id = "recent-stub-${spec.label}").takeIf { recentMetric(it) != null }
         }
-        return metrics + stubs
     }
 
     Column(Modifier.fillMaxWidth().gridironCard()) {
         GridironSectionBar(
-            if (displayed.positionGroup == PlayerPositionGroup.DEFENSE) "PRODUCTION PERCENTILES" else "ADVANCED PERCENTILES",
+            if (displayed.positionGroup == PlayerPositionGroup.DEFENSE) "DEFENSE PERCENTILES" else "ADVANCED PERCENTILES",
             trailing = {
                 seasonMenu()
                 Text(
@@ -446,10 +459,9 @@ private fun PercentileCard(
             Box(Modifier.padding(vertical = 24.dp)) {
                 EmptyState("No metrics available", "chart.bar", "Percentile rankings are not available for this player in the $seasonLabel season.")
             }
-        } else groups.forEach { (family, metrics) ->
-            val rows = displayedMetrics(metrics)
+        } else (groups + listOfNotNull(recentOnlyRows.takeIf { it.isNotEmpty() }?.let { null to it })).forEach { (family, rows) ->
             if (rows.isEmpty()) return@forEach
-            GridironSubSectionBar(family.label.uppercase())
+            GridironSubSectionBar(family?.label?.uppercase() ?: "BOX SCORE · LAST ${state.recentWindowGames}")
             rows.forEachIndexed { index, metric ->
                 val recent = recentMetric(metric)
                 val bg = if (index % 2 == 0) GridironPalette.surface else GridironPalette.surfaceAlt
@@ -469,10 +481,37 @@ private fun PercentileCard(
     }
 }
 
-/** One metric the player's own game logs can rebuild exactly; rates come from summed numerators and denominators. */
-private class RecentSpec(val label: String, val format: String, val value: (Map<String, Double>) -> Double?)
+/**
+ * One metric the player's own game logs can rebuild exactly; rates come from
+ * summed numerators and denominators. [isTotal] marks a counting stat, whose
+ * window figure is ranked per game, never on the ruler of full-season totals.
+ */
+private class RecentSpec(val label: String, val format: String, val isTotal: Boolean = false, val value: (Map<String, Double>) -> Double?)
 
-private fun total(key: String, label: String, format: String = "%.0f") = RecentSpec(label, format) { it[key] }
+private fun total(key: String, label: String, format: String = "%.0f") = RecentSpec(label, format, isTotal = true) { it[key] }
+
+/** "317/g", or one decimal under ten when the figure is not whole ("0.7/g"). */
+internal fun perGameText(perGame: Double): String =
+    (if (perGame < 10 && perGame != swiftRoundDouble(perGame)) String.format(Locale.US, "%.1f", perGame)
+    else String.format(Locale.US, "%.0f", perGame)) + "/g"
+
+/** Where a per-game figure sits among the cohort's season per-game rates. */
+internal fun perGamePercentile(cohort: List<Player>, label: String, category: MetricCategory, value: Double): Int? {
+    val peers = cohort.mapNotNull { peer ->
+        if (!peer.matchesPlayerType(category)) return@mapNotNull null
+        val metric = peer.metrics.firstOrNull { it.label == label && it.category == category } ?: return@mapNotNull null
+        if (metric.isUnranked) return@mapNotNull null
+        val total = metricNumericValue(metric.value) ?: return@mapNotNull null
+        val games = MetricWeight.GAMES.value(peer) ?: return@mapNotNull null
+        total / games
+    }
+    if (peers.size < 2) return null
+    val higherIsBetter = FootballMetricRegistry.definition(label, category)?.higherIsBetter ?: true
+    val worse = peers.count { if (higherIsBetter) it < value else it > value }
+    val ties = peers.count { it == value }
+    val score = (worse + ties / 2.0) / peers.size * 100
+    return swiftRoundDouble(score).toInt().coerceIn(1, 99)
+}
 
 private fun rate(label: String, format: String, numerator: String, over: List<String>, scale: Double = 1.0) = RecentSpec(label, format) { m ->
     val den = over.sumOf { m[it] ?: 0.0 }
@@ -582,12 +621,27 @@ private fun StandardStatsCard(
     val span = state.standardWindow.value
     val window = state.recentLogs.sortedByDescending { it.gameDate }.take(span).takeIf { it.isNotEmpty() }?.let { RecentFormWindow.build("Last $span", span, it) }
     val caption = window?.games?.let { RecentFormWindow.caption(it, span) } ?: state.standardWindow.segmentLabel
+    // Same-position season figures for one count, divided by games played.
+    fun peerPerGameValues(label: String): List<String> {
+        val key = label.uppercase()
+        return cohort.mapNotNull { other ->
+            if (other.positionGroup != group) return@mapNotNull null
+            val stat = other.standardStats?.firstOrNull { it.label.uppercase() == key } ?: return@mapNotNull null
+            val total = metricNumericValue(stat.value) ?: return@mapNotNull null
+            val games = MetricWeight.GAMES.value(other) ?: return@mapNotNull null
+            (total / games).toString()
+        }
+    }
+    // Every stat here is a count, so it is shown and ranked per game against the
+    // cohort's season per-game figures, never on the ruler of season totals.
     fun recent(season: Metric): Metric? {
         val key = STANDARD_RECENT_KEYS[season.label] ?: return null
-        val value = window?.metrics?.get(key) ?: return null
-        val text = if (season.label == "SACKS") String.format(Locale.US, "%.1f", value)
-        else NumberFormat.getIntegerInstance(Locale.US).format(swiftRoundDouble(value).toLong())
-        return Metric(season.label, text, percentile(season.label, text), season.category, id = "std-recent-${season.label}")
+        val w = window ?: return null
+        if (w.games <= 0) return null
+        val value = w.metrics[key] ?: return null
+        val perGame = value / w.games
+        val pct = StandardStatSemantics.percentile(season.label, perGame.toString(), peerPerGameValues(season.label))
+        return Metric(season.label, perGameText(perGame), pct, season.category, id = "std-recent-${season.label}")
     }
     fun statKey(display: String) = displayed.standardStats.orEmpty().firstOrNull { it.label.uppercase() == display }?.label ?: display
 

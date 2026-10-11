@@ -70,7 +70,9 @@ data class RecentFormWindow(
             val solo = combined["def_tackles_solo"]
             val assists = combined["def_tackle_assists"]
             if (solo != null || assists != null) combined["tackles"] = (solo ?: 0.0) + (assists ?: 0.0)
-            return RecentFormWindow(label, span, logs.size, logs.sumOf { it.plays }, logs.sumOf { it.touches }, combined)
+            // Games, not rows: a team window has one row per player per game.
+            val games = logs.map { it.gameDate }.toSet().size
+            return RecentFormWindow(label, span, games, logs.sumOf { it.plays }, logs.sumOf { it.touches }, combined)
         }
     }
 }
@@ -126,8 +128,8 @@ data class RecentForm(
             seasonPhase = o.string("season_type")?.let { SeasonPhase.from(it) ?: throw RowDecodeException("bad phase") } ?: SeasonPhase.REGULAR,
             playerType = o.requireString("player_type"),
             windowWeeks = o.int("window_weeks") ?: o.requireInt("window_games"),
-            // A Postgres date; the device calendar, as iOS reads it.
-            asOf = o.string("as_of")?.let { parseDay(it, java.time.ZoneId.systemDefault()) },
+            // A Postgres date at Eastern midnight, the zone every label formats it in.
+            asOf = o.string("as_of")?.let { parseDay(it) },
             startWeek = o.int("start_week"),
             endWeek = o.int("end_week"),
             team = o.string("team"),

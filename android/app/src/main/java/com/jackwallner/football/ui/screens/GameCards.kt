@@ -135,9 +135,9 @@ private fun ChipLink(hint: String, onClick: () -> Unit, modifier: Modifier = Mod
     ) { content() }
 }
 
-private fun weekDetail(viewModel: DashboardViewModel, game: Game): String = when (game.status()) {
+private fun weekDetail(viewModel: DashboardViewModel, game: Game): String = when (val status = game.status()) {
     GameStatus.FINAL -> if (viewModel.hasStats(game)) "Final · box score" else "Final · stats arriving"
-    GameStatus.IN_PROGRESS, GameStatus.AWAITING_SCORE -> "In progress"
+    GameStatus.IN_PROGRESS, GameStatus.AWAITING_SCORE -> status.liveLabel
     GameStatus.UPCOMING -> "${game.dayLabel()}, ${game.kickoff?.let { GamesTeamsUi.shortTime(it) } ?: "time TBD"}"
 }
 
@@ -254,7 +254,7 @@ private fun ScheduleRow(game: Game, team: String, modifier: Modifier = Modifier)
             Text(line, style = GridironType.statMed, color = GamesTeamsUi.resultColor(game.result(team)))
         } else {
             Text(
-                if (game.status() == GameStatus.UPCOMING) game.kickoff?.let { GamesTeamsUi.shortTime(it) } ?: "TBD" else "In progress",
+                if (game.status() == GameStatus.UPCOMING) game.kickoff?.let { GamesTeamsUi.shortTime(it) } ?: "TBD" else game.status().liveLabel,
                 style = GridironType.small,
                 color = GridironPalette.inkSecondary,
             )
@@ -289,6 +289,7 @@ fun PlayerLastGameCard(
         if (loadedKey == key) return@LaunchedEffect
         try {
             val logs = viewModel.fetchGameLogs(player.playerId, season, phase)
+            viewModel.loadArchivedGames(season)
             log = logs.maxByOrNull { it.gameDate }
             loadedKey = key
         } catch (e: CancellationException) {
@@ -360,6 +361,7 @@ fun PlayerGameLogCard(
         if (loadedKey == key) return@LaunchedEffect
         try {
             val logs = viewModel.fetchGameLogs(player.playerId, season, phase)
+            viewModel.loadArchivedGames(season)
             entries = gameLogEntries(logs, player.team)
             loadedKey = key
             failed = false

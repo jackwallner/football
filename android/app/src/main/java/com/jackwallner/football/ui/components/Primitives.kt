@@ -164,14 +164,14 @@ fun MetricBar(metric: Metric, modifier: Modifier = Modifier, showValue: Boolean 
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.width(70.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            // Wraps to two lines (hyphenated) rather than shrinking, as on iOS.
-            Text(
-                metric.label,
-                style = GridironType.bodyBold.copy(hyphens = androidx.compose.ui.text.style.Hyphens.Auto, lineBreak = androidx.compose.ui.text.style.LineBreak.Paragraph),
-                color = GridironPalette.ink,
-                maxLines = 2,
-            )
+        Column(Modifier.width(84.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            // Multi-word labels wrap to two lines; one-word labels stay on one
+            // line and shrink instead of hyphenating ("Aggres-siveness").
+            if (metric.label.contains(" ")) {
+                Text(metric.label, style = GridironType.bodyBold, color = GridironPalette.ink, maxLines = 2)
+            } else {
+                FitText(metric.label, GridironType.bodyBold, GridironPalette.ink, minScale = 0.7f)
+            }
             if (metric.isSmallSample && !metric.isUnranked) {
                 Text("Small sample", fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = GridironPalette.inkTertiary, maxLines = 1)
             }
@@ -404,10 +404,14 @@ fun LeaderboardTableHeader(
 fun LeaderboardTableRow(
     rank: Int,
     player: Player,
+    /** Row position for the zebra band, when tied ranks repeat a number. */
+    stripe: Int? = null,
     metricLabel: String? = null,
     metricCategory: MetricCategory? = null,
     trendDelta: Double? = null,
     trendDecimals: Int = 3,
+    /** Green for a falling INT%, Sack% or Fumble%. */
+    trendLowerIsBetter: Boolean = false,
     valueOverride: String? = null,
     volume: String? = null,
     isSmallSample: Boolean = false,
@@ -427,7 +431,7 @@ fun LeaderboardTableRow(
     val subtitle = listOfNotNull(player.displayPosition, volume, if (isSmallSample) "small sample" else null).joinToString(" · ")
     Row(
         Modifier.fillMaxWidth().height(52.dp)
-            .background(if (rank % 2 == 1) GridironPalette.surface else GridironPalette.surfaceAlt)
+            .background(if ((stripe ?: (rank - 1)) % 2 == 0) GridironPalette.surface else GridironPalette.surfaceAlt)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = GridironGeo.padInline)
             .testTag("leaderboardRow"),
@@ -461,7 +465,7 @@ fun LeaderboardTableRow(
             }
         }
         if (trendDelta != null) {
-            Box(Modifier.width(46.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(trendDelta, trendDecimals) }
+            Box(Modifier.width(46.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(trendDelta, trendDecimals, trendLowerIsBetter) }
         }
     }
 }

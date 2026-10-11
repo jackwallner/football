@@ -49,8 +49,7 @@ internal object GamesTeamsUi {
         DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).format(instant.atZone(ZoneId.systemDefault()))
 
     /** Wins read green, losses red. */
-    fun resultColor(result: String?): Color =
-        if (result == "L") GridironPalette.performanceLow else GridironPalette.performanceHigh
+    fun resultColor(result: String?): Color = GridironPalette.resultColor(result)
 
     /** The counterpart of SwiftUI's `ContentUnavailableView`. */
     @Composable

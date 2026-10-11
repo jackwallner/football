@@ -55,12 +55,16 @@ import com.jackwallner.football.data.PaywallTrigger
 import com.jackwallner.football.model.Game
 import com.jackwallner.football.model.GameBoxScore
 import com.jackwallner.football.model.GameDetail
+import com.jackwallner.football.model.GameProjection
 import com.jackwallner.football.model.GameStatus
+import com.jackwallner.football.model.Player
 import com.jackwallner.football.model.PlayerGameLog
 import com.jackwallner.football.model.RatedValue
 import com.jackwallner.football.model.SeasonPhase
+import com.jackwallner.football.model.TeamRating
 import com.jackwallner.football.model.displayTeamAbbr
 import com.jackwallner.football.model.formatUpToOneDecimal
+import com.jackwallner.football.model.metricNumericValue
 import com.jackwallner.football.model.normalizedTeamAbbreviation
 import com.jackwallner.football.model.ordinal
 import com.jackwallner.football.model.teamFullName
@@ -212,7 +216,7 @@ private fun Header(game: Game) {
                     }
                 } else {
                     Text(
-                        if (status == GameStatus.UPCOMING) game.kickoffLabel() else "In progress",
+                        if (status == GameStatus.UPCOMING) game.kickoffLabel() else status.liveLabel,
                         style = GridironType.cardTitle,
                         color = if (status == GameStatus.UPCOMING) GridironPalette.ink else GridironPalette.performanceLow,
                     )
@@ -250,12 +254,15 @@ private fun TeamColumn(team: String, game: Game, label: String, modifier: Modifi
                 Modifier.padding(horizontal = 4.dp), minScale = 0.7f, textAlign = TextAlign.Center,
             )
         }
+        // Two lines reserved either way, so "Tampa Bay Buccaneers" and
+        // "Dallas Cowboys" keep their logos level.
         Text(
             teamFullName(team),
             style = GridironType.smallBold,
             color = GridironPalette.ink,
             textAlign = TextAlign.Center,
             maxLines = 2,
+            minLines = 2,
         )
         Text(
             (listOf(label) + listOfNotNull(record)).joinToString(" · "),
@@ -351,11 +358,7 @@ private fun DetailBody(
                 "Game in progress",
                 "The score and box score post when the game goes final.",
             )
-            GameStatus.UPCOMING -> Notice(
-                sf("calendar"),
-                "Not started yet",
-                "The score and box score post here when the game goes final. Scout both rosters from the team pages above.",
-            )
+            GameStatus.UPCOMING -> UpcomingCards(game)
         }
     }
 }
@@ -424,6 +427,182 @@ private fun Notice(
     }
 }
 
+// MARK: - Upcoming
+
+/**
+ * The pregame page: the line, the two clubs side by side, and who to watch. It
+ * used to be a single "Not started yet" notice, on the screen a fan opens most
+ * in the days before kickoff.
+ */
+@Composable
+private fun UpcomingCards(game: Game) {
+    val vm = LocalGraph.current.dashboard
+    val projection = vm.projection(game)
+    val away = vm.teamRating(game.awayTeam)
+    val home = vm.teamRating(game.homeTeam)
+    val pool = vm.players(game.season, SeasonPhase.REGULAR)
+    val leaders = remember(game.id, pool) { matchupLeaders(game, pool) }
+
+    projection?.let { ProjectionCard(it, game) }
+    if (away != null && home != null) TaleOfTheTape(game, away, home)
+    if (leaders.isNotEmpty()) SeasonLeadersCard(leaders)
+    if (projection == null && (away == null || home == null) && leaders.isEmpty()) {
+        Notice(
+            sf("calendar"),
+            "Not started yet",
+            "The score and box score post here when the game goes final. Scout both rosters from the team pages above.",
+        )
+    } else {
+        Footnote("The score, box score and play-by-play breakdown post here when the game goes final.")
+    }
+}
+
+@Composable
+private fun ProjectionCard(projection: GameProjection, game: Game) {
+    val homeShare = projection.homeWinProbability.coerceIn(0.01, 0.99)
+    val awayPct = swiftRoundValue((1 - homeShare) * 100)
+    val homePct = swiftRoundValue(homeShare * 100)
+    val line = projection.label(game.homeTeam, game.awayTeam)
+    CardBlock("Projection") {
+        Column(
+            Modifier.fillMaxWidth().padding(GridironGeo.padCard).clearAndSetSemantics {
+                contentDescription = "Projection $line. ${teamFullName(game.awayTeam)} $awayPct percent, " +
+                    "${teamFullName(game.homeTeam)} $homePct percent to win."
+            },
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(line, style = GridironType.statLarge, color = GridironPalette.ink)
+            Row(Modifier.fillMaxWidth().height(10.dp).clip(CircleShape), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                Box(Modifier.weight((1 - homeShare).toFloat()).fillMaxSize().background(NFLTeamColor.color(game.awayTeam)))
+                Box(Modifier.weight(homeShare.toFloat()).fillMaxSize().background(NFLTeamColor.color(game.homeTeam)))
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                val style = GridironType.smallBold.copy(fontFeatureSettings = "tnum")
+                Text("${displayTeamAbbr(game.awayTeam)} $awayPct%", style = style, color = GridironPalette.inkSecondary)
+                Spacer(Modifier.weight(1f))
+                Text("Win chance", style = style, color = GridironPalette.inkTertiary)
+                Spacer(Modifier.weight(1f))
+                Text("${displayTeamAbbr(game.homeTeam)} $homePct%", style = style, color = GridironPalette.inkSecondary)
+            }
+            Text(
+                "From the two StatScout Power Ratings plus home field.",
+                style = GridironType.micro,
+                color = GridironPalette.inkTertiary,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun TaleOfTheTape(game: Game, away: TeamRating, home: TeamRating) {
+    fun perGame(total: Int, rating: TeamRating): Double = if (rating.games > 0) total.toDouble() / rating.games else 0.0
+    val signed: (Double) -> String = { TeamRating.signed(it) }
+    val oneDecimal: (Double) -> String = { String.format(Locale.US, "%.1f", it) }
+    CardBlock("Tale of the tape") {
+        Row(
+            Modifier.fillMaxWidth().height(30.dp).background(GridironPalette.surfaceAlt).padding(horizontal = GridironGeo.padCard),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(displayTeamAbbr(game.awayTeam), style = GridironType.smallBold, color = GridironPalette.inkSecondary, modifier = Modifier.width(64.dp))
+            Spacer(Modifier.weight(1f))
+            Text(
+                displayTeamAbbr(game.homeTeam),
+                style = GridironType.smallBold,
+                color = GridironPalette.inkSecondary,
+                textAlign = TextAlign.End,
+                modifier = Modifier.width(64.dp),
+            )
+        }
+        ComparisonRow("Power rank", away.rank.toDouble(), home.rank.toDouble(), game, higherIsBetter = false) { "#${it.toInt()}" }
+        ComparisonRow("Power rating", away.rating, home.rating, game, higherIsBetter = true, format = signed)
+        ComparisonRow("Offense", away.offense, home.offense, game, higherIsBetter = true, format = signed)
+        ComparisonRow("Defense", away.defense, home.defense, game, higherIsBetter = true, format = signed)
+        ComparisonRow("Points / game", perGame(away.pointsFor, away), perGame(home.pointsFor, home), game, higherIsBetter = true, format = oneDecimal)
+        ComparisonRow("Allowed / game", perGame(away.pointsAgainst, away), perGame(home.pointsAgainst, home), game, higherIsBetter = false, format = oneDecimal)
+        FootnoteRow(
+            "Ratings are points better or worse than an average team on a neutral field, through Week ${max(away.throughWeek, home.throughWeek)}.",
+        )
+    }
+}
+
+/** Each club's season leader in the four lines a preview leads with. */
+internal data class MatchupLeader(val title: String, val away: Pair<Player, String>?, val home: Pair<Player, String>?)
+
+internal fun matchupLeaders(game: Game, pool: List<Player>): List<MatchupLeader> {
+    if (pool.isEmpty()) return emptyList()
+    val lines = listOf(
+        Triple("Passing", "Pass Yds", "yds"),
+        Triple("Rushing", "Rush Yds", "yds"),
+        Triple("Receiving", "Rec Yds", "yds"),
+        Triple("Pass rush", "Sacks", "sacks"),
+    )
+    fun leader(team: String, stat: String, unit: String): Pair<Player, String>? {
+        val abbr = normalizedTeamAbbreviation(team)
+        var best: Triple<Player, Double, String>? = null
+        for (player in pool) {
+            if (normalizedTeamAbbreviation(player.team) != abbr) continue
+            val raw = player.standardStats?.firstOrNull { it.label == stat }?.value ?: continue
+            val value = metricNumericValue(raw) ?: continue
+            if (value <= 0) continue
+            if (best == null || value > best.second) best = Triple(player, value, raw)
+        }
+        return best?.let { it.first to "${it.third} $unit" }
+    }
+    return lines.mapNotNull { (title, stat, unit) ->
+        val away = leader(game.awayTeam, stat, unit)
+        val home = leader(game.homeTeam, stat, unit)
+        if (away == null && home == null) null else MatchupLeader(title, away, home)
+    }
+}
+
+@Composable
+private fun SeasonLeadersCard(leaders: List<MatchupLeader>) {
+    CardBlock("Season leaders") {
+        leaders.forEachIndexed { index, leader ->
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(if (index % 2 == 0) GridironPalette.surface else GridironPalette.surfaceAlt)
+                    .padding(horizontal = GridironGeo.padCard, vertical = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(leader.title.uppercase(), style = GridironType.micro, color = GridironPalette.inkTertiary)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+                    LeaderCell(leader.away, leading = true, Modifier.weight(1f))
+                    LeaderCell(leader.home, leading = false, Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LeaderCell(entry: Pair<Player, String>?, leading: Boolean, modifier: Modifier = Modifier) {
+    val navigator = LocalNavigator.current
+    val align = if (leading) Alignment.Start else Alignment.End
+    if (entry == null) {
+        Column(modifier, horizontalAlignment = align) {
+            Text("-", style = GridironType.statSmall, color = GridironPalette.inkTertiary)
+        }
+        return
+    }
+    val (player, value) = entry
+    Column(
+        modifier.clickable { navigator.push(Route.PlayerProfile(player)) }
+            .clearAndSetSemantics { contentDescription = "${player.name}, $value" },
+        horizontalAlignment = align,
+        verticalArrangement = Arrangement.spacedBy(1.dp),
+    ) {
+        FitText(
+            player.name, GridironType.bodyBold, GridironPalette.ink,
+            minScale = 0.8f, textAlign = if (leading) TextAlign.Start else TextAlign.End,
+        )
+        Text(value, style = GridironType.statSmall, color = GridironPalette.inkSecondary)
+    }
+}
+
 // MARK: - Box score pieces
 
 @Composable
@@ -481,11 +660,18 @@ private fun TeamStatsCard(boxScore: GameBoxScore, game: Game) {
 }
 
 @Composable
-private fun ComparisonRow(label: String, away: Double, home: Double, game: Game, higherIsBetter: Boolean) {
+private fun ComparisonRow(
+    label: String,
+    away: Double,
+    home: Double,
+    game: Game,
+    higherIsBetter: Boolean,
+    format: (Double) -> String = ::formatCount,
+) {
     val awayBetter = if (higherIsBetter) away > home else away < home
     val homeBetter = if (higherIsBetter) home > away else home < away
-    val awayText = formatCount(away)
-    val homeText = formatCount(home)
+    val awayText = format(away)
+    val homeText = format(home)
     Row(
         Modifier.fillMaxWidth().height(36.dp).bottomHairline(GridironPalette.divider).padding(horizontal = GridironGeo.padCard)
             .clearAndSetSemantics {
@@ -739,7 +925,7 @@ private fun BigPlaysCard(detail: GameDetail, game: Game) {
             ) {
                 Column(Modifier.width(58.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        "Q${play.qtr} ${if (play.clock.startsWith("0")) play.clock.drop(1) else play.clock}",
+                        "${if (play.qtr >= 5) "OT" else "Q${play.qtr}"} ${if (play.clock.startsWith("0")) play.clock.drop(1) else play.clock}",
                         style = GridironType.micro,
                         color = GridironPalette.inkTertiary,
                         maxLines = 1,

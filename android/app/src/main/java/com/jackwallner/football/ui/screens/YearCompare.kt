@@ -29,6 +29,7 @@ import com.jackwallner.football.data.PaywallTrigger
 import com.jackwallner.football.model.MetricCategory
 import com.jackwallner.football.model.Player
 import com.jackwallner.football.model.StandardStatSemantics
+import com.jackwallner.football.model.StatScoutSeason
 import com.jackwallner.football.model.ordinal
 import com.jackwallner.football.ui.components.BlurGateUnlock
 import com.jackwallner.football.ui.components.CrownYellow
@@ -110,7 +111,9 @@ private data class MetricComparison(
 /** Any two seasons of one player, side by side: totals first, then each advanced category. */
 @Composable
 fun YearComparisonView(history: List<Player>) {
-    val years = history.mapNotNull { it.season }.distinct().sortedDescending()
+    // Real seasons only. The career rollup is stored as season 0, and it showed
+    // up in this menu as a year called "0".
+    val years = history.mapNotNull { it.season }.filter { !StatScoutSeason.isAllTime(it) }.distinct().sortedDescending()
     var yearA by remember { mutableIntStateOf(0) }
     var yearB by remember { mutableIntStateOf(0) }
     LaunchedEffect(years) {

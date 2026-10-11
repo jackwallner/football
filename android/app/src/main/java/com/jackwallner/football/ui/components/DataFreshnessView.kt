@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.jackwallner.football.data.DashboardViewModel
 import com.jackwallner.football.model.DataFreshnessStatus
 import com.jackwallner.football.model.DateText
+import com.jackwallner.football.model.Game
 import com.jackwallner.football.model.SeasonPhase
 import com.jackwallner.football.ui.theme.GridironPalette
 import com.jackwallner.football.ui.theme.GridironType
@@ -109,8 +110,15 @@ private fun joined(vararg parts: String?): String =
 /** "Through Week 3 · 33 games", or "12 of 14 games in" while a slate is still arriving. */
 private fun coverageText(vm: DashboardViewModel): String? {
     val coverage = vm.freshnessForDisplay?.coverage ?: vm.dataCoverage ?: return null
-    val parts = mutableListOf<String>()
     val week = coverage.week
+    if (week != null && coverage.phase == SeasonPhase.REGULAR) {
+        // Thursday's game is in and Sunday's are not. "Through Week 5" read as a
+        // finished week; say how much of it is here.
+        partialSlate(vm.games, vm.freeSeason, week) { vm.hasStats(it) }?.let { (done, total) ->
+            return "Week $week · $done of $total games in"
+        }
+    }
+    val parts = mutableListOf<String>()
     parts += if (week != null) {
         if (coverage.phase == SeasonPhase.PLAYOFFS) "Through playoffs week $week" else "Through Week $week"
     } else "Through ${DateText.gameDay(coverage.asOf)}"
@@ -120,6 +128,18 @@ private fun coverageText(vm: DashboardViewModel): String? {
         else if (included == 1) "1 game" else "$included games"
     }
     return parts.joinToString(" · ")
+}
+
+/**
+ * The latest week's games with stats out of all its games, when that week is
+ * still being played. Null once it is complete or before the schedule has loaded.
+ */
+internal fun partialSlate(games: List<Game>, season: Int, week: Int, hasStats: (Game) -> Boolean): Pair<Int, Int>? {
+    val slate = games.filter { it.season == season && it.seasonPhase == SeasonPhase.REGULAR && it.week == week }
+    if (slate.isEmpty()) return null
+    val done = slate.count(hasStats)
+    if (done <= 0 || done >= slate.size) return null
+    return done to slate.size
 }
 
 private fun updatedText(vm: DashboardViewModel, now: Instant): String? {

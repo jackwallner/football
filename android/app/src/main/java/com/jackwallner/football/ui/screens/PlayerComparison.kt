@@ -52,6 +52,8 @@ import com.jackwallner.football.model.SeasonPhase
 import com.jackwallner.football.model.StandardStatSemantics
 import com.jackwallner.football.model.displayTeamAbbr
 import com.jackwallner.football.model.ordinal
+import com.jackwallner.football.model.prominence
+import com.jackwallner.football.model.teamFullName
 import com.jackwallner.football.ui.LocalAppActions
 import com.jackwallner.football.ui.LocalGraph
 import com.jackwallner.football.ui.components.ChipButton
@@ -280,6 +282,7 @@ fun PlayerComparisonView(playerA: Player, playerB: Player, catalog: ComparisonCa
             title = side.season?.let { "Select Player · $it" } ?: "Select Player",
             season = side.season,
             isLoading = catalog.isLoadingHistory(),
+            byProminence = true,
             onCancel = { picker = null },
         ) { selected ->
             picker = null
@@ -423,23 +426,33 @@ private fun MetricValueCell(metric: Metric?, other: Metric?, modifier: Modifier)
     }
 }
 
-/** A searchable player list in a sheet; the profile's and Compare's pickers are the same control. */
+/**
+ * A searchable player list in a sheet; the profile's and Compare's pickers are
+ * the same control. [byProminence] is Compare's picker: most productive first,
+ * so the stars are on screen before anyone types (alphabetical put a page of
+ * backups above every quarterback), and search also matches the full team name
+ * and an exact position.
+ */
 @Composable
 fun PlayerPickerSheet(
     players: List<Player>,
     title: String,
     season: Int? = null,
     isLoading: Boolean = false,
+    byProminence: Boolean = false,
     onCancel: () -> Unit,
     onSelect: (Player) -> Unit,
 ) {
     var searchText by remember { mutableStateOf("") }
-    val filtered = if (searchText.isEmpty()) players else players.filter {
-        it.name.contains(searchText, ignoreCase = true) || it.team.contains(searchText, ignoreCase = true)
+    val ordered = remember(players, byProminence) { if (byProminence) rankedByProminence(players) else players }
+    val query = searchText.trim()
+    val filtered = if (query.isEmpty()) ordered else ordered.filter {
+        it.name.contains(query, ignoreCase = true) || it.team.contains(query, ignoreCase = true) ||
+            (byProminence && (teamFullName(it.team).contains(query, ignoreCase = true) || it.displayPosition.equals(query, ignoreCase = true)))
     }
     Column(Modifier.fillMaxSize().background(GridironPalette.canvas)) {
         GridironTopBar(title = title, leading = { TextAction("Cancel", GridironType.body, Color.White, onCancel) })
-        SearchField(searchText, { searchText = it }, Modifier.padding(12.dp), prompt = "Search players")
+        SearchField(searchText, { searchText = it }, Modifier.padding(12.dp), prompt = if (byProminence) "Name, team or position" else "Search players")
         if (filtered.isEmpty()) {
             EmptyState(
                 if (isLoading) "Loading players…" else "No players",
@@ -473,3 +486,9 @@ fun PlayerPickerSheet(
         }
     }
 }
+
+/** Most productive first (see [prominence]); ties by name. */
+internal fun rankedByProminence(players: List<Player>): List<Player> =
+    players.map { it to it.prominence }
+        .sortedWith(compareByDescending<Pair<Player, Double>> { it.second }.thenBy { it.first.name })
+        .map { it.first }

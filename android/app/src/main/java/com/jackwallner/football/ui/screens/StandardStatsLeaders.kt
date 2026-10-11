@@ -41,6 +41,7 @@ import com.jackwallner.football.model.SeasonLabel
 import com.jackwallner.football.model.SeasonPhase
 import com.jackwallner.football.model.StandardStat
 import com.jackwallner.football.model.StandardStatSemantics
+import com.jackwallner.football.model.competitionRanks
 import com.jackwallner.football.model.displayTeamAbbr
 import com.jackwallner.football.model.metricNumericValue
 import com.jackwallner.football.model.ordinal
@@ -201,6 +202,7 @@ fun StandardStatsLeadersView(
                 query.isEmpty() || p.name.contains(query, true) || p.team.contains(query, true) || teamFullName(p.team).contains(query, true)
             }
             val peerValues = filtered.mapNotNull { standardStat(it)?.value }
+            val ranks = competitionRanks(sorted.map { numericStat(it) })
             LazyColumn(Modifier.fillMaxSize(), contentPadding = bottomBarPadding()) {
                 item { Spacer(Modifier.height(8.dp)) }
                 item {
@@ -244,7 +246,7 @@ fun StandardStatsLeadersView(
                             }
                         }
                         itemsIndexed(ranked, key = { _, it -> it.value.id }) { position, (index, player) ->
-                            val rank = index + 1
+                            val rank = ranks[index]
                             val stat = standardStat(player)
                             val pct = stat?.let { StandardStatSemantics.percentile(it.label, it.value, peerValues) } ?: 50
                             // A zero count has no honest rank; a passer's 0 INT is the best line, not an absence.
@@ -252,7 +254,7 @@ fun StandardStatsLeadersView(
                             val display = stat?.value ?: "-"
                             Row(
                                 Modifier.padding(horizontal = 12.dp).cardSlice(false, position == ranked.lastIndex).fillMaxWidth().height(52.dp)
-                                    .background(if (rank % 2 == 0) GridironPalette.surfaceAlt else GridironPalette.surface)
+                                    .background(if (index % 2 == 0) GridironPalette.surface else GridironPalette.surfaceAlt)
                                     .bottomHairline()
                                     .clickable { navigator.push(Route.PlayerProfile(player)) }
                                     .padding(horizontal = GridironGeo.padInline)

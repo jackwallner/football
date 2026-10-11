@@ -108,7 +108,7 @@ class LeaguePercentileCurves(players: List<Player>, categories: List<MetricCateg
 fun recentEmptyText(status: DataFreshnessStatus?, windowGames: Int): String = when (status) {
     DataFreshnessStatus.PENDING, DataFreshnessStatus.PARTIAL, DataFreshnessStatus.CHECKING -> "Recent game data is still arriving"
     DataFreshnessStatus.OFFLINE, DataFreshnessStatus.FAILED -> "Recent game data is unavailable right now"
-    else -> "No games in the last $windowGames games"
+    else -> "No games played yet this season"
 }
 
 /**

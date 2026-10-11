@@ -434,6 +434,23 @@ class DashboardViewModel(
     }
 
     fun game(id: String): Game? = games.firstOrNull { it.id == id }
+        ?: archivedGames.values.firstNotNullOfOrNull { it[id] }
+
+    /**
+     * Older seasons' schedules, fetched on demand by the game-log cards so a
+     * past season's log still shows its week, opponent and result.
+     */
+    var archivedGames by mutableStateOf<Map<Int, Map<String, Game>>>(emptyMap())
+        private set
+
+    suspend fun loadArchivedGames(season: Int) {
+        if (season == freeSeason || archivedGames.containsKey(season)) return
+        val loaded = runCatchingNonCancel { provider.fetchGames(season) }
+        if (loaded.isNullOrEmpty()) return
+        val byId = LinkedHashMap<String, Game>()
+        for (game in loaded) byId.putIfAbsent(game.id, game)
+        archivedGames = archivedGames + (season to byId)
+    }
 
     /** A team's game in the current week, or null on a bye. */
     fun currentGame(team: String): Game? {

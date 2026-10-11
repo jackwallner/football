@@ -101,7 +101,12 @@ class GameBoxScore(logs: List<PlayerGameLog>) {
 
     fun defenders(team: String) = lines(team)
         .filter { it.tackles > 0 || it.value("def_sacks") > 0 || it.value("def_interceptions") > 0 }
-        .sortedWith(compareByDescending<PlayerLine> { it.value("def_sacks") + it.value("def_interceptions") }.thenByDescending { it.tackles })
+        // Tackles first, the way every box score lists a defense; sacks and picks break ties.
+        .sortedWith(
+            compareByDescending<PlayerLine> { it.tackles }
+                .thenByDescending { it.value("def_sacks") }
+                .thenByDescending { it.value("def_interceptions") },
+        )
 
     /** The most valuable players of the game by total EPA, both teams. */
     fun epaLeaders(limit: Int = 5): List<PlayerLine> =

@@ -33,6 +33,13 @@ object GridironPalette {
     val performanceHigh = rgb(0.02, 0.46, 0.20)
     val performanceMid = rgb(0.40, 0.38, 0.31)
     val performanceLow = rgb(0.70, 0.20, 0.08)
+
+    /** W green, L red, and a tie neither: it used to fall through to green. */
+    fun resultColor(result: String?): Color = when (result) {
+        "W" -> performanceHigh
+        "L" -> performanceLow
+        else -> inkSecondary
+    }
     val up = performanceHigh
     val down = performanceLow
     val flat = inkTertiary

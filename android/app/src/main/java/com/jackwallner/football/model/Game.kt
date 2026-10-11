@@ -111,7 +111,12 @@ data class Game(
     }
 }
 
-enum class GameStatus(val sortOrder: Int) { IN_PROGRESS(0), AWAITING_SCORE(1), FINAL(2), UPCOMING(3) }
+enum class GameStatus(val sortOrder: Int) {
+    IN_PROGRESS(0), AWAITING_SCORE(1), FINAL(2), UPCOMING(3);
+
+    /** The one word every screen uses for a game with no posted final. */
+    val liveLabel: String get() = if (this == AWAITING_SCORE) "Final soon" else "In progress"
+}
 
 /** A selectable week of the schedule: regular-season weeks, then playoff rounds. */
 data class GameWeek(val week: Int, val phase: SeasonPhase, val label: String) {

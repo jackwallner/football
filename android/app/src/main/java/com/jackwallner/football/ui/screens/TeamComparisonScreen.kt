@@ -36,11 +36,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jackwallner.football.data.DashboardViewModel
 import com.jackwallner.football.model.FootballMetricRegistry
-import com.jackwallner.football.model.MetricAggregation
 import com.jackwallner.football.model.MetricCategory
 import com.jackwallner.football.model.MetricKind
 import com.jackwallner.football.model.MetricValueFormat
 import com.jackwallner.football.model.Player
+import com.jackwallner.football.model.RosterAggregate
 import com.jackwallner.football.model.SeasonLabel
 import com.jackwallner.football.model.SeasonPhase
 import com.jackwallner.football.model.displayTeamAbbr
@@ -130,7 +130,7 @@ private data class StatGroup(val title: String, val rows: List<StatRow>)
  * a team's own passing volume, so summing them across a roster measures how
  * much of the offence we track, not how good it is.
  */
-private val DESCRIPTIVE_ONLY_LABELS = setOf("Target Share", "WOPR")
+private val DESCRIPTIVE_ONLY_LABELS = RosterAggregate.descriptiveOnlyLabels
 
 /**
  * Two clubs side by side: advanced rows from `metrics`, standard rows from
@@ -234,27 +234,8 @@ private fun advancedRows(category: MetricCategory, rosterA: List<Player>, roster
 }
 
 /** Pools one metric across a roster using the registry's aggregation rule. */
-private fun aggregate(label: String, category: MetricCategory, roster: List<Player>): Double? {
-    val rule = FootballMetricRegistry.aggregation(label, category)
-    val values = roster.mapNotNull { player ->
-        val metric = player.metrics.firstOrNull { it.label == label && it.category == category } ?: return@mapNotNull null
-        val value = DashboardViewModel.rawNumeric(metric.value) ?: return@mapNotNull null
-        when (rule) {
-            MetricAggregation.Sum -> value to 1.0
-            // No volume means no rate to trust: drop the player rather than let
-            // an unweighted value slide in as if it were weight 1.
-            is MetricAggregation.Weighted -> rule.weight.value(player)?.let { value to it }
-        }
-    }
-    if (values.isEmpty()) return null
-    return when (rule) {
-        MetricAggregation.Sum -> values.sumOf { it.first }
-        is MetricAggregation.Weighted -> {
-            val totalWeight = values.sumOf { it.second }
-            if (totalWeight <= 0) null else values.sumOf { it.first * it.second } / totalWeight
-        }
-    }
-}
+private fun aggregate(label: String, category: MetricCategory, roster: List<Player>): Double? =
+    RosterAggregate.value(label, category, roster)
 
 private fun standardRows(category: MetricCategory, rosterA: List<Player>, rosterB: List<Player>): List<StatRow> = when (category) {
     MetricCategory.PASSING -> listOf(

@@ -104,14 +104,14 @@ fun TrendsScreen(isActive: Boolean) {
     val roster = remember(vm.playerHistories, selectedSeason, selectedPhase) {
         vm.players(selectedSeason, selectedPhase).associateBy { it.playerId }
     }
-    fun improvement(form: RecentForm): Double? = form.delta[metric.key]?.let { if (metric.lowerIsBetter) -it else it }
+    fun improvement(form: RecentForm): Double? = metric.values(form).delta?.let { if (metric.lowerIsBetter) -it else it }
     // No prior window yet anywhere on the board: rank the current window by level instead.
-    val isEarlySeason = forms.isNotEmpty() && forms.none { it.priorMetrics[metric.key] != null }
+    val isEarlySeason = forms.isNotEmpty() && forms.none { metric.values(it).then != null }
     val movementStartWeek = vm.recentWindow.value + 1
-    val earlyRanked = forms.filter { it.metrics[metric.key] != null && !it.isSmallSample(1) }
+    val earlyRanked = forms.filter { metric.values(it).now != null && !it.isSmallSample(1) }
         .sortedWith { a, b ->
-            val x = a.metrics[metric.key] ?: 0.0
-            val y = b.metrics[metric.key] ?: 0.0
+            val x = metric.values(a).now ?: 0.0
+            val y = metric.values(b).now ?: 0.0
             if (metric.lowerIsBetter) x.compareTo(y) else y.compareTo(x)
         }
     val earlyTitle = "${side.label.uppercase()} · ${(forms.firstNotNullOfOrNull { it.weekRangeLabel } ?: "This season").uppercase()} LEADERS"
@@ -264,7 +264,7 @@ fun TrendsScreen(isActive: Boolean) {
 @Composable
 private fun EarlyRow(form: RecentForm, rank: Int, index: Int, metric: TrendMetric, player: Player?) {
     val navigator = LocalNavigator.current
-    val value = form.metrics[metric.key]?.let(metric::format) ?: "-"
+    val value = metric.values(form).now?.let(metric::display) ?: "-"
     Row(
         Modifier.fillMaxWidth().height(52.dp).background(if (index % 2 == 0) GridironPalette.surface else GridironPalette.surfaceAlt).bottomHairline()
             .then(if (player != null) Modifier.combinedClickable(onClick = { navigator.push(Route.PlayerProfile(player)) }) else Modifier)
@@ -294,9 +294,10 @@ private fun MoveRow(form: RecentForm, rank: Int?, index: Int, metric: TrendMetri
     val navigator = LocalNavigator.current
     val favorites = LocalGraph.current.favorites
     var menu by remember { mutableStateOf(false) }
-    val delta = form.delta[metric.key] ?: 0.0
-    val now = form.metrics[metric.key]
-    val then = form.priorMetrics[metric.key]
+    val values = metric.values(form)
+    val delta = values.delta ?: 0.0
+    val now = values.now
+    val then = values.then
     Box {
         Row(
             Modifier.fillMaxWidth().height(52.dp).background(if (index % 2 == 0) GridironPalette.surface else GridironPalette.surfaceAlt).bottomHairline()
@@ -316,14 +317,14 @@ private fun MoveRow(form: RecentForm, rank: Int?, index: Int, metric: TrendMetri
                 // THEN to NOW, plus the weeks it covers.
                 if (then != null && now != null) {
                     FitText(
-                        listOf("${metric.format(then)} → ${metric.format(now)}", form.weekRangeLabel ?: "${form.games}G").joinToString(" · "),
+                        listOf("${metric.display(then)} → ${metric.display(now)}", form.weekRangeLabel ?: "${form.games}G").joinToString(" · "),
                         GridironType.micro,
                         GridironPalette.inkTertiary,
                         minScale = 0.85f,
                     )
                 }
             }
-            Box(Modifier.width(56.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(delta, metric.decimals, metric.lowerIsBetter) }
+            Box(Modifier.width(56.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(delta, if (metric.isCount) 1 else metric.decimals, metric.lowerIsBetter) }
         }
         DropdownMenu(menu, { menu = false }, containerColor = GridironPalette.surface) {
             val following = favorites.isFavorite(form.playerId)
@@ -352,9 +353,9 @@ private fun TeaserRowView(teaser: TeaserRow, index: Int, metric: TrendMetric) {
         PlayerHeadshot(teaser.team, teaser.initials, 34.dp)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(teaser.name, style = GridironType.bodyBold, color = GridironPalette.ink, maxLines = 1)
-            Text("${metric.format(teaser.then)} → ${metric.format(teaser.now)} · Weeks ${teaser.startWeek}-${teaser.endWeek}", style = GridironType.micro, color = GridironPalette.inkTertiary, maxLines = 1)
+            Text("${metric.display(teaser.then)} → ${metric.display(teaser.now)} · Weeks ${teaser.startWeek}-${teaser.endWeek}", style = GridironType.micro, color = GridironPalette.inkTertiary, maxLines = 1)
         }
-        Box(Modifier.width(56.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(teaser.now - teaser.then, metric.decimals, metric.lowerIsBetter) }
+        Box(Modifier.width(56.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(teaser.now - teaser.then, if (metric.isCount) 1 else metric.decimals, metric.lowerIsBetter) }
     }
 }
 
@@ -379,7 +380,8 @@ private fun teaserRows(vm: DashboardViewModel, metric: TrendMetric, showingCold:
             Triple("Player Sixteen", "PIT", "PS"), Triple("Player Seventeen", "DEN", "PS"), Triple("Player Eighteen", "NYJ", "PE"),
         ).map { it to stableSeed("$seed-${it.first}") }.sortedBy { it.second }.map { it.first }
     }
-    val (scale, spread) = when (metric.decimals) {
+    val (scale, spread) = when (if (metric.isCount) -1 else metric.decimals) {
+        -1 -> 70.0 to 32.0
         0 -> 280.0 to 130.0
         2 -> 0.12 to 0.22
         else -> if (metric.unit == "%") 58.0 to 12.0 else 7.2 to 2.4

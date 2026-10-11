@@ -362,7 +362,13 @@ private fun weekStatus(abbr: String): WeekStatus? {
     if (vm.selectedSeason != vm.freeSeason || vm.selectedPhase != SeasonPhase.REGULAR) return null
     val game = vm.currentGame(abbr)
     if (game != null && (game.status() == GameStatus.IN_PROGRESS || game.status() == GameStatus.AWAITING_SCORE)) {
-        return WeekStatus("Live", "playing ${game.matchupLabel(abbr)}", GridironPalette.performanceLow)
+        // Keep the record beside it: game day is when people check it.
+        val record = vm.record(abbr)
+        return WeekStatus(
+            record?.let { "$it · Live" } ?: "Live",
+            "playing ${game.matchupLabel(abbr)}" + (record?.let { ", record $it" } ?: ""),
+            GridironPalette.performanceLow,
+        )
     }
     vm.record(abbr)?.let { return WeekStatus(it, "record $it", GridironPalette.inkSecondary) }
     return legacyWeekStatus(abbr)
