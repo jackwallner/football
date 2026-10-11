@@ -85,6 +85,19 @@ def test_racr_divides_summed_rec_yards_by_summed_air_yards():
     assert _aggregate(logs)["racr"] == pytest.approx(100 / 60, abs=0.005)
 
 
+def test_window_records_its_game_count_for_per_game_comparison():
+    """A window with a bye (or an unplayed Sunday) holds fewer games than the
+    one before it; the count rides along so the app can compare per game."""
+    current = [
+        _log("2025-10-02", 5, {"passing_yards": 300}),
+        _log("2025-09-28", 4, {"passing_yards": 250}),
+    ]
+    prior = [_log(d, w, {"passing_yards": 200}) for d, w in
+             [("2025-09-21", 3), ("2025-09-14", 2), ("2025-09-07", 1)]]
+    assert _aggregate(current)["games"] == 2
+    assert _aggregate(prior)["games"] == 3
+
+
 def test_tackles_combine_solo_and_assists():
     logs = [
         _log("2025-09-08", 1, {"def_tackles_solo": 6, "def_tackle_assists": 2}, player_type="def"),

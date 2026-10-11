@@ -86,8 +86,11 @@ WEIGHTED_NGS: dict[str, str] = {
     "avg_time_to_throw": "attempts",
     "avg_separation": "targets",
     "avg_yac_above_expectation": "targets",
-    "rush_yoe": "carries",
 }
+# Optional NGS totals: a game's rush yards over expected is that game's total,
+# so a window adds them up, the same as the season figure. Averaging per-game
+# totals weighted by carries produced a number on neither scale.
+SUM_NGS = ("rush_yoe",)
 
 # Decimal places per metric, per the rollup contract. Counting stats default
 # to 0 (see _places).
@@ -141,6 +144,11 @@ def _aggregate(logs: list[dict]) -> dict[str, Any]:
         return {}
 
     result: dict[str, Any] = {}
+    # Games in the window, so the app can compare counting stats per game. Two
+    # league-week windows rarely hold the same number (byes, a week whose
+    # Sunday has not been played yet), and a raw total change then ranks the
+    # schedule rather than the player.
+    result["games"] = len({log.get("game_id") or log.get("game_date") for log in logs})
     for game_key, out_key in SUM_KEYS.items():
         result[out_key] = int(round(_total(logs, game_key)))
     result["tackles"] = int(round(sum(_total(logs, k) for k in TACKLE_KEYS)))
@@ -213,6 +221,12 @@ def _aggregate(logs: list[dict]) -> dict[str, Any]:
             denom += weight
         if denom > 0:
             result[metric] = round(numer / denom, _places(metric))
+
+    for metric in SUM_NGS:
+        values = [(log.get("metrics") or {}).get(metric) for log in logs]
+        present = [float(v) for v in values if v is not None]
+        if present:
+            result[metric] = round(sum(present), _places(metric))
 
     return result
 
