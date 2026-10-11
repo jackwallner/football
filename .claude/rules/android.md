@@ -93,15 +93,18 @@ hidden). `python3 scripts/play_screenshot_compositor.py` writes the seven
   audience 18+, data safety (purchase history, app interactions, device IDs;
   collected, not shared, encrypted in transit, deletion URL), advertising ID
   (no), government, financial, health (none).
-- No release, no track, nothing sent for review. Signed AAB versionCode 1
-  built and verified, not uploaded.
-- RevenueCat Play products are created and attached to the packages and
-  entitlement (`...monthly:monthly`, `...yearly:yearly`, `...pro` one-time).
-- Blocked on Jack: grant the fleet service account
-  `revenuecat-service-account@gen-lang-client-0612253531` this app in Play
-  Console (mirror Sober's permissions) and upload its JSON
-  (`~/.config/google-play/mahj-service-account.json`) to RevenueCat app
-  `app384d77e843`. Then run
-  `PLAY_SERVICE_ACCOUNT_JSON=... ./scripts/play-upload.sh internal-draft`
-  and `PLAY_SERVICE_ACCOUNT_JSON=... python3 scripts/play-products.py`
-  (Play needs an uploaded BILLING bundle before products exist).
+- Internal testing: release "1.2.4" (versionCode 1) uploaded as a draft
+  2026-10-10, not rolled out; nothing sent for review. The next upload needs
+  versionCode 2.
+- Play products ACTIVE: monthly $1.49 and yearly $7.99 (each with
+  `trial-7d`), lifetime `com.jackwallner.football.pro` $15.99. Ethiopia is not
+  billable; Argentina, Azerbaijan and Uzbekistan are priced in USD.
+- Fleet service account `revenuecat-service-account@gen-lang-client-0612253531`
+  has Sober's 9 permissions on this app. Its JSON
+  (`~/.config/google-play/mahj-service-account.json`) drives
+  `./scripts/play-upload.sh` and `scripts/play-products.py`, and is uploaded
+  to RevenueCat app `app384d77e843`. RevenueCat reads both catalogs; its
+  purchase-validation check says "package name not found" until a release is
+  rolled out to a track. Google developer notifications are not connected.
+- RevenueCat Play products are attached to the packages and entitlement
+  (`...monthly:monthly`, `...yearly:yearly`, `...pro` one-time).
