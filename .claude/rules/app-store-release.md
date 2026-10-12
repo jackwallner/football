@@ -48,13 +48,17 @@ are handled by the `fill_deprecated_locales` lane.
   rewritten in all 50 locales, and the version resubmitted together with the
   event (submission `38c3c080`). The first `reviewSubmissionItems` POST after
   a cancel returned 500 twice and then succeeded; retry rather than recreate.
-- In-app event `6821469037` ("2026 Season Percentiles", NEW_SEASON badge,
-  Oct 12 to Nov 11, deep link `footballnext://stats`) was submitted in the
-  same review submission. Spec and media:
+- 2026-10-12: rejected under 2.3.13 (In-App Events). Apple ruled the
+  "2026 Season Percentiles" event (`6821469037`, NEW_SEASON) inappropriate
+  because it introduces no new features or content. The event item was
+  removed from submission `38c3c080` (PATCH item `removed: true`), the
+  version item marked `resolved: true`, and the submission resubmitted
+  (PATCH `submitted: true`) with 1.2.5 (build 60) alone; it is
+  `WAITING_FOR_REVIEW`. The event is back to `DRAFT`. Spec and media:
   `project-docs/marketing/in-app-events/2026-midseason/`; tooling:
-  `scripts/asc-app-event.py`. The event goes live on approval even though
-  1.2.5 releases manually, so release 1.2.5 promptly after approval: 1.2.4
-  has no URL scheme, so the event's deep link cannot open it.
+  `scripts/asc-app-event.py`. Any future event must promote something
+  genuinely new (a feature launch or a time-boxed content drop), not the
+  ongoing season. The `footballnext://` URL scheme stays in 1.2.5 for that.
 
 ## Draft version helper
 
