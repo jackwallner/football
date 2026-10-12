@@ -84,8 +84,11 @@ data class TrendMetric(val key: String, val label: String, val unit: String, val
      */
     val isCount: Boolean get() = key in COUNT_KEYS
 
-    /** A count's per-game figure: one decimal and a "/g", so 0.7 TD a game does not round to 1. */
-    fun formatPerGame(value: Double): String = String.format(Locale.US, "%.1f", value) + "/g"
+    /** Decimals for a per-game count: yardage reads whole ("247/g"), small counts keep a tenth. */
+    val perGameDecimals: Int
+        get() = if (key in setOf("pass_yards", "rush_yards", "rec_yards", "yac", "completions", "attempts", "carries")) 0 else 1
+
+    fun formatPerGame(value: Double): String = String.format(Locale.US, "%.${perGameDecimals}f", value) + "/g"
 
     /** This metric's then, now and change for one row. */
     data class Values(val then: Double?, val now: Double?, val delta: Double?)

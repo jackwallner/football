@@ -92,7 +92,7 @@ class FanCorrectnessTest {
         assertEquals(75.0, values.now!!, 1e-9)
         assertEquals(60.0, values.then!!, 1e-9)
         assertEquals(15.0, values.delta!!, 1e-9)
-        assertEquals("75.0/g", recYards.display(75.0))
+        assertEquals("75/g", recYards.display(75.0))
         assertTrue(TrendMetric.rbAdvanced.first { it.key == "rush_yoe" }.isCount)
     }
 

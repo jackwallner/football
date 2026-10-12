@@ -46,6 +46,7 @@ import com.jackwallner.football.model.Player
 import com.jackwallner.football.model.StatScoutSeason
 import com.jackwallner.football.model.TrendSide
 import com.jackwallner.football.model.displayTeamAbbr
+import com.jackwallner.football.model.prominence
 import com.jackwallner.football.model.teamFullName
 import com.jackwallner.football.ui.LocalGraph
 import com.jackwallner.football.ui.components.EmptyState
@@ -179,11 +180,22 @@ fun FollowPlayersSheet(vm: DashboardViewModel, side: TrendSide = TrendSide.QB, o
     var searchText by remember { mutableStateOf("") }
     var listSide by remember { mutableStateOf(side) }
     val all = vm.players(vm.selectedSeason)
-    val followed = favorites.playerIds.mapNotNull { id -> all.firstOrNull { it.playerId == id } }
+    // Ordered by when they were followed. A followed player with no line this
+    // season (injured, retired) falls back to his latest season, so he can
+    // still be unfollowed here.
+    val followed = favorites.playerIds.mapNotNull { id ->
+        all.firstOrNull { it.playerId == id } ?: vm.playerHistories[id]?.firstOrNull()
+    }
     val query = searchText.trim().lowercase()
+    // Most productive first, the same order as the Compare picker.
     val candidates = all.filter { (it.playerType ?: "") == listSide.playerType }
-        .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.team.lowercase().contains(query) }
-        .sortedBy { it.name.lowercase() }
+        .filter {
+            query.isEmpty() || it.name.lowercase().contains(query) || it.team.lowercase().contains(query) ||
+                teamFullName(it.team).lowercase().contains(query)
+        }
+        .map { it to it.prominence }
+        .sortedWith(compareByDescending<Pair<Player, Double>> { it.second }.thenBy { it.first.name })
+        .map { it.first }
 
     @Composable
     fun FollowRow(player: Player, index: Int) {
@@ -202,7 +214,7 @@ fun FollowPlayersSheet(vm: DashboardViewModel, side: TrendSide = TrendSide.QB, o
             PlayerHeadshot(player.team, player.initials, 34.dp)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(player.name, style = GridironType.bodyBold, color = GridironPalette.ink, maxLines = 1)
-                Text("${player.team} · ${player.position}", style = GridironType.micro, color = GridironPalette.inkTertiary)
+                Text("${displayTeamAbbr(player.team)} · ${player.displayPosition}", style = GridironType.micro, color = GridironPalette.inkTertiary)
             }
             SfIcon(if (following) "star.fill" else "star", 20.dp, if (following) CrownYellow else GridironPalette.inkTertiary)
         }
@@ -251,7 +263,7 @@ fun FollowPlayersSheet(vm: DashboardViewModel, side: TrendSide = TrendSide.QB, o
                     }
                     if (candidates.isEmpty()) {
                         Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
-                            Text("No players match “$searchText”.", style = GridironType.small, color = GridironPalette.inkSecondary)
+                            Text(if (searchText.isEmpty()) "No players in this group yet." else "No players match “$searchText”.", style = GridironType.small, color = GridironPalette.inkSecondary)
                         }
                     } else candidates.forEachIndexed { i, p -> FollowRow(p, i) }
                 }

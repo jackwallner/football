@@ -44,15 +44,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jackwallner.football.data.DashboardViewModel
 import com.jackwallner.football.data.PaywallTrigger
+import com.jackwallner.football.model.FootballMetricRegistry
 import com.jackwallner.football.model.Metric
+import com.jackwallner.football.model.MetricAggregation
 import com.jackwallner.football.model.MetricCategory
 import com.jackwallner.football.model.Player
 import com.jackwallner.football.model.SeasonLabel
 import com.jackwallner.football.model.SeasonPhase
 import com.jackwallner.football.model.StandardStatSemantics
+import com.jackwallner.football.model.StatScoutSeason
 import com.jackwallner.football.model.displayTeamAbbr
+import com.jackwallner.football.model.metricNumericValue
 import com.jackwallner.football.model.ordinal
 import com.jackwallner.football.model.prominence
+import com.jackwallner.football.model.surname
 import com.jackwallner.football.model.teamFullName
 import com.jackwallner.football.ui.LocalAppActions
 import com.jackwallner.football.ui.LocalGraph
@@ -110,7 +115,27 @@ class ComparisonCatalog(
     }
 }
 
-private fun lastName(player: Player): String = player.name.split(" ").lastOrNull() ?: "A"
+private fun lastName(player: Player): String = player.surname
+
+/**
+ * Rates are compared on the number itself: percentiles come from different
+ * pools in different seasons (everyone this year, qualified players in the
+ * past), so 68% could out-rank 70%. Totals keep the percentile, which already
+ * allows for a season still in progress.
+ */
+internal fun metricBeats(m: Metric, other: Metric): Boolean {
+    if (m.isUnranked) return false
+    if (other.isUnranked) return true
+    if (FootballMetricRegistry.aggregation(m.label, m.category) is MetricAggregation.Weighted) {
+        val a = metricNumericValue(m.value)
+        val b = metricNumericValue(other.value)
+        if (a != null && b != null) {
+            val higherIsBetter = FootballMetricRegistry.definition(m.label, m.category)?.higherIsBetter ?: true
+            return if (higherIsBetter) a > b else a < b
+        }
+    }
+    return m.percentile > other.percentile
+}
 
 /** Two players on every shared metric. Free users see it blurred behind "Find the Edge". */
 @Composable
@@ -279,7 +304,7 @@ fun PlayerComparisonView(playerA: Player, playerB: Player, catalog: ComparisonCa
             players = catalog!!.roster(side.season ?: 0, side.seasonPhase).filter {
                 (it.playerId != other.playerId || it.season != other.season || it.seasonPhase != other.seasonPhase) && it.canCompareHeadToHead(other)
             },
-            title = side.season?.let { "Select Player · $it" } ?: "Select Player",
+            title = side.season?.let { "Select Player · " + SeasonLabel.text(it) } ?: "Select Player",
             season = side.season,
             isLoading = catalog.isLoadingHistory(),
             byProminence = true,
@@ -409,7 +434,7 @@ private fun MetricValueCell(metric: Metric?, other: Metric?, modifier: Modifier)
     }
     val hasValue = metric.value.isNotEmpty()
     val comparable = other?.let { it.percentile > 0 || it.value.isNotEmpty() } ?: false
-    val isWinner = comparable && other != null && metric.percentile > other.percentile
+    val isWinner = comparable && other != null && metricBeats(metric, other)
     Column(
         modifier.clearAndSetSemantics {
             contentDescription = if (hasValue) "${metric.value}, ${metric.percentile.ordinal} percentile" else "${metric.percentile.ordinal} percentile"
@@ -458,7 +483,7 @@ fun PlayerPickerSheet(
                 if (isLoading) "Loading players…" else "No players",
                 "person.slash",
                 when {
-                    isLoading -> "Pulling the ${season ?: ""} roster."
+                    isLoading -> "Pulling the ${season?.let { if (StatScoutSeason.isAllTime(it)) "career" else it.toString() } ?: ""} roster."
                     searchText.isNotEmpty() -> "Nobody matches “$searchText”."
                     season != null -> "No player data for the ${SeasonLabel.text(season)} season."
                     else -> null
@@ -477,7 +502,7 @@ fun PlayerPickerSheet(
                         PlayerHeadshot(player.team, player.initials, 36.dp)
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(player.name, style = GridironType.bodyBold, color = GridironPalette.ink)
-                            Text("${player.team} · ${player.displayPosition}", style = GridironType.small, color = GridironPalette.inkTertiary)
+                            Text("${displayTeamAbbr(player.team)} · ${player.displayPosition}", style = GridironType.small, color = GridironPalette.inkTertiary)
                         }
                     }
                 }

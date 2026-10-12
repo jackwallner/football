@@ -185,7 +185,8 @@ fun TeamRankingsCard(
     var loading by remember { mutableStateOf(false) }
     var loadError by remember { mutableStateOf<String?>(null) }
 
-    val table = remember(leaguePlayers) {
+    // Rebuilt after a stats update or a season change, not only when the list changes.
+    val table = remember(leaguePlayers, season, freshnessRevision) {
         TeamLeagueTable(leaguePlayers, TeamSide.OFFENSE.categories) to
             TeamLeagueTable(leaguePlayers, TeamSide.DEFENSE.categories)
     }.let { if (side == TeamSide.DEFENSE) it.second else it.first }
@@ -320,7 +321,7 @@ private class FormData(
     }
 
     private fun formattedValue(v: Double, label: String): String = when {
-        label.endsWith("%") -> String.format(Locale.US, "%.1f%%", v)
+        label.contains("%") -> String.format(Locale.US, "%.1f%%", v)
         label in setOf("EPA/Play", "EPA/Rush", "EPA/Tgt", "RACR") -> String.format(Locale.US, "%.2f", v)
         abs(v) >= 100 -> String.format(Locale.US, "%.0f", v)
         else -> String.format(Locale.US, "%.1f", v)
@@ -571,12 +572,21 @@ private fun emptyStateText(form: FormData, status: DataFreshnessStatus?): String
 
 @Composable
 private fun RecentSummaryRow(form: FormData, window: RecentFormWindow) {
+    // The club's own snap count for the window, rebuilt from the box-score
+    // columns. Summing each player's plays counted every pass twice (the
+    // passer's attempt and the receiver's target) and gave a defense zero.
+    val m = window.metrics
+    val plays = Math.round((m["attempts"] ?: 0.0) + (m["sacks_suffered"] ?: 0.0) + (m["carries"] ?: 0.0)).toInt()
+    val touches = Math.round((m["carries"] ?: 0.0) + (m["receptions"] ?: 0.0)).toInt()
+    val offense = form.side == TeamSide.OFFENSE
     Row(Modifier.padding(GridironGeo.padInline), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
         SummaryStat("G", "${window.games}")
-        SummaryStat("Plays", "${window.plays}")
-        if (form.side == TeamSide.OFFENSE) SummaryStat("Touches", "${window.touches}")
+        if (offense) {
+            SummaryStat("Plays", "$plays")
+            SummaryStat("Touches", "$touches")
+        }
         Box(Modifier.weight(1f))
-        if (window.plays < form.smallSamplePlaysThreshold) {
+        if (if (offense) plays < form.smallSamplePlaysThreshold else window.games < 2) {
             Text(
                 "SMALL SAMPLE",
                 style = GridironType.micro,

@@ -222,15 +222,25 @@ private fun advancedRows(category: MetricCategory, rosterA: List<Player>, roster
         // qualification bar, so awarding a trophy would score roster shape as if
         // it were quality. Null values keep the row and suppress the marker.
         val comparable = label !in DESCRIPTIVE_ONLY_LABELS
+        val isTotal = TeamLeagueTable.isPerGame(label, category)
+        val aRanked = if (isTotal) perGame(a, rosterA) else a
+        val bRanked = if (isTotal) perGame(b, rosterB) else b
         StatRow(
             id = category.raw + "-adv-" + label,
             label = label,
             aText = a?.let { format.string(it) } ?: "-",
             bText = b?.let { format.string(it) } ?: "-",
-            aValue = if (comparable) a?.times(sign) else null,
-            bValue = if (comparable) b?.times(sign) else null,
+            aValue = if (comparable) aRanked?.times(sign) else null,
+            bValue = if (comparable) bRanked?.times(sign) else null,
         )
     }
+}
+
+/** A club total divided by the club's games, for deciding a trophy. */
+private fun perGame(total: Double?, roster: List<Player>): Double? {
+    total ?: return null
+    val games = RosterAggregate.teamGames(roster) ?: return total
+    return total / games
 }
 
 /** Pools one metric across a roster using the registry's aggregation rule. */
@@ -270,7 +280,12 @@ private fun totalRow(label: String, rosterA: List<Player>, rosterB: List<Player>
     val a = total(label, rosterA)
     val b = total(label, rosterB)
     val sign = if (higherIsBetter) 1.0 else -1.0
-    return StatRow(label, label, format(a, label), format(b, label), a?.times(sign), b?.times(sign))
+    // The trophy is decided per game: a club past its bye, or a full past
+    // season against five weeks of this one, is not ahead on volume.
+    return StatRow(
+        label, label, format(a, label), format(b, label),
+        perGame(a, rosterA)?.times(sign), perGame(b, rosterB)?.times(sign),
+    )
 }
 
 private fun pairedRow(label: String, rosterA: List<Player>, rosterB: List<Player>): StatRow =

@@ -421,7 +421,7 @@ private fun accessibilityText(game: Game, status: GameStatus, hasStats: Boolean,
             val score = "$away ${game.awayScore ?: 0}, $home ${game.homeScore ?: 0}"
             "$score, ${statusTitle(game, status)}" + if (hasStats) "" else ", stats arriving"
         }
-        GameStatus.IN_PROGRESS, GameStatus.AWAITING_SCORE -> "$away at $home, in progress"
+        GameStatus.IN_PROGRESS, GameStatus.AWAITING_SCORE -> "$away at $home, ${status.liveLabel.lowercase()}"
         GameStatus.UPCOMING -> {
             val projected = projection?.let { ", projected ${it.label(game.homeTeam, game.awayTeam)}" } ?: ""
             "$away at $home, ${game.dayLabel()} at ${game.kickoff?.let { GamesTeamsUi.shortTime(it) } ?: "time TBD"}$projected"

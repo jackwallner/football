@@ -298,7 +298,7 @@ fun CompareScreen(isActive: Boolean) {
                         else -> true
                     }
                 }
-                PlayerPickerSheet(candidates, "Select Player · $season", season, vm.isHistoricalLoading, byProminence = true, onCancel = { picker = null }) { selected ->
+                PlayerPickerSheet(candidates, "Select Player · " + SeasonLabel.text(season), season, vm.isHistoricalLoading, byProminence = true, onCancel = { picker = null }) { selected ->
                     picker = null
                     when (target) {
                         PickerTarget.PLAYER_A -> state.playerA = selected
@@ -606,7 +606,7 @@ fun YearCompareDestination(route: Route.YearCompareRoute) {
         }
     }
     StatScoutSheet(picking, { picking = false }) {
-        PlayerPickerSheet(vm.players(vm.selectedSeason, current.phase), "Select Player · ${vm.selectedSeason}", vm.selectedSeason, vm.isHistoricalLoading, byProminence = true, onCancel = { picking = false }) { p ->
+        PlayerPickerSheet(vm.players(vm.selectedSeason, current.phase), "Select Player · " + SeasonLabel.text(vm.selectedSeason), vm.selectedSeason, vm.isHistoricalLoading, byProminence = true, onCancel = { picking = false }) { p ->
             picking = false
             current = Route.YearCompareRoute(p.playerId, p.name, current.phase)
         }

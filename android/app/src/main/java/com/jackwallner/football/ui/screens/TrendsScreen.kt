@@ -324,7 +324,7 @@ private fun MoveRow(form: RecentForm, rank: Int?, index: Int, metric: TrendMetri
                     )
                 }
             }
-            Box(Modifier.width(56.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(delta, if (metric.isCount) 1 else metric.decimals, metric.lowerIsBetter) }
+            Box(Modifier.width(56.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(delta, if (metric.isCount) metric.perGameDecimals else metric.decimals, metric.lowerIsBetter) }
         }
         DropdownMenu(menu, { menu = false }, containerColor = GridironPalette.surface) {
             val following = favorites.isFavorite(form.playerId)
@@ -355,7 +355,7 @@ private fun TeaserRowView(teaser: TeaserRow, index: Int, metric: TrendMetric) {
             Text(teaser.name, style = GridironType.bodyBold, color = GridironPalette.ink, maxLines = 1)
             Text("${metric.display(teaser.then)} → ${metric.display(teaser.now)} · Weeks ${teaser.startWeek}-${teaser.endWeek}", style = GridironType.micro, color = GridironPalette.inkTertiary, maxLines = 1)
         }
-        Box(Modifier.width(56.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(teaser.now - teaser.then, if (metric.isCount) 1 else metric.decimals, metric.lowerIsBetter) }
+        Box(Modifier.width(56.dp), contentAlignment = Alignment.CenterEnd) { TrendArrow(teaser.now - teaser.then, if (metric.isCount) metric.perGameDecimals else metric.decimals, metric.lowerIsBetter) }
     }
 }
 

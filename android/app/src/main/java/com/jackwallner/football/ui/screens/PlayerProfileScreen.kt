@@ -712,7 +712,7 @@ private fun ProUpsellCard(name: String, onTap: () -> Unit) {
                 "chart.line.uptrend.xyaxis" to "Year-over-year trends across every metric",
                 "person.2.fill" to "Head-to-head comparisons vs any player",
                 "calendar.badge.clock" to "Every past season, not just this one",
-                "arrow.down.circle.fill" to "Saved offline - works on the road",
+                "arrow.down.circle.fill" to "Saved offline, works on the road",
             ).forEach { (icon, text) ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.width(16.dp), contentAlignment = Alignment.Center) { SfIcon(icon, 14.dp, GridironPalette.turf) }

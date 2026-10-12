@@ -171,7 +171,7 @@ fun SettingsScreen() {
                     SfIcon("football.fill", 26.dp, GridironPalette.turf)
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("Percentile Rankings", style = GridironType.cardTitle, color = GridironPalette.ink)
-                        Text("Mobile-first percentile rankings and leaderboards for fans and media.", style = GridironType.small, color = GridironPalette.inkSecondary)
+                        Text("Every player and club ranked against the league, from nflverse play-by-play, Next Gen Stats and Pro-Football-Reference.", style = GridironType.small, color = GridironPalette.inkSecondary)
                     }
                 }
             }
@@ -266,7 +266,7 @@ private data class GlossaryEntry(val id: String, val label: String, val category
 
 private val SUPPLEMENTAL = listOf(
     GlossaryEntry("general-games", "G", "General", "Games in which the player recorded a tracked statistic."),
-    GlossaryEntry("general-value", "Contract Value", "General", "Production percentile minus pay percentile, both ranked among this season's qualified players at the position who have an active contract. Pay is the deal's yearly average as a share of the salary cap when it was signed. +20 means producing like a player paid far more. Offense only until advanced defensive stats publish. Contracts: OverTheCap via nflverse."),
+    GlossaryEntry("general-value", "Contract Value", "General", "Production percentile minus pay percentile, both ranked among this season's qualified players at the position who have an active contract. Pay is the deal's yearly average as a share of the salary cap when it was signed. +20 means producing like a player paid far more. Quarterbacks, running backs, receivers and tight ends for now. Contracts: OverTheCap via nflverse."),
     GlossaryEntry("general-power", "Power Rating", "General", "Points per game better or worse than an average team on a neutral field, from EPA per dropback, EPA per run and points, for minus against, adjusted for schedule. Early in the season last year's rating counts as five games of evidence. Two ratings read like a point spread, with about two points for home field. Modeled on Hawk Blogger's HB Power Rankings."),
     GlossaryEntry("general-small-sample", "Small sample", "General", "Below the playing-time minimum for that stat, prorated by how much of the season the typical team has played. Defenders need a quarter of their team's defensive snaps."),
     GlossaryEntry("general-not-ranked", "Not ranked", "General", "A counting stat at zero. When most of the league has none of something, a tie at zero has no honest percentile, so the value shows and the bar does not."),
@@ -276,6 +276,11 @@ private val SUPPLEMENTAL = listOf(
     GlossaryEntry("rushing-car", "Car", "Rushing", "Rushing attempts, also called carries."),
     GlossaryEntry("receiving-rec-tgt", "Rec/Tgt", "Receiving", "Receptions and targets."),
     GlossaryEntry("receiving-tgt", "Tgt", "Receiving", "Pass attempts directed at the receiver."),
+    GlossaryEntry("passing-int", "INT", "Passing", "Interceptions thrown. Fewer is better."),
+    GlossaryEntry("defense-def-int", "Def INT", "Defense", "Interceptions made by the defender."),
+    GlossaryEntry("defense-tgt-allowed", "Tgt Allowed", "Defense", "Passes thrown at the defender in coverage, the volume behind his coverage rates. Pro-Football-Reference, 2018 onward."),
+    GlossaryEntry("receiving-y-r", "Y/R", "Receiving", "Receiving yards per reception."),
+    GlossaryEntry("general-per-game", "/G and /g", "General", "Per game. Team bars divide club totals by games played, and recent windows divide by the games in the window, so a bye or a Thursday game does not skew the comparison."),
     GlossaryEntry("percentile", "Percentile", "General", "A 1–100 rank among players in the same season, season type, and stat category. Higher is always better after lower-is-better stats are inverted."),
 )
 

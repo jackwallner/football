@@ -218,7 +218,7 @@ private fun contractLine(profile: PlayerProfile): String? {
 private fun unavailableReason(player: Player, profile: PlayerProfile): String = when {
     profile.contractLabel == null -> "No active contract on file."
     player.positionGroup !in ContractValue.positions ->
-        "Value rankings cover offense for now. Defenders join once advanced defensive stats publish for the season."
+        "Value rankings cover quarterbacks, running backs, receivers and tight ends for now."
     else -> "Ranks once ${player.name} clears the playing-time minimum at his position."
 }
 

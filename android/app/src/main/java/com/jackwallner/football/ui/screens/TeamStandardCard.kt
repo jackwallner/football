@@ -35,6 +35,7 @@ import com.jackwallner.football.model.PlayerGameLog
 import com.jackwallner.football.model.RecentWindow
 import com.jackwallner.football.model.SeasonPhase
 import com.jackwallner.football.model.StatScoutSeason
+import com.jackwallner.football.model.normalizedTeamAbbreviation
 import com.jackwallner.football.ui.LocalGraph
 import com.jackwallner.football.ui.components.BlurGateUnlock
 import com.jackwallner.football.ui.components.GridironSectionBar
@@ -163,9 +164,9 @@ private val RATE_WEIGHTS = mapOf(
 private val OFFENSE_ORDER = listOf(
     "CMP%", "Y/A", "INT%", "Y/C", "CATCH%", "Y/R",
     "PASS YDS", "PASS TD", "INT", "CAR", "RUSH YDS", "RUSH TD",
-    "REC", "REC YDS", "REC TD", "G",
+    "REC", "REC YDS", "REC TD",
 )
-private val DEFENSE_ORDER = listOf("TACKLES", "SACKS", "DEF INT", "G")
+private val DEFENSE_ORDER = listOf("TACKLES", "SACKS", "DEF INT")
 
 /** Lower is better. Only one on an offensive line: interceptions thrown, and the rate of them. */
 private val LOWER_IS_BETTER = setOf("INT", "INT%")
@@ -205,7 +206,7 @@ private class StandardLines(
 
     /** The other thirty-one, plus this one: the distribution a bar is drawn against. */
     val league: List<Map<String, Double>> by lazy {
-        leaguePlayers.groupBy { it.team }.values.map { teamLine(it) }.filter { it.isNotEmpty() }
+        leaguePlayers.groupBy { normalizedTeamAbbreviation(it.team) }.values.map { teamLine(it) }.filter { it.isNotEmpty() }
     }
 
     /**
@@ -274,14 +275,32 @@ private class StandardLines(
      * among the clubs that have a number is the honest answer at every point in
      * the season, including week one when only a few have played.
      */
-    fun percentile(label: String, value: Double): Int {
-        var values = league.mapNotNull { it[label] }
+    fun percentile(label: String, value: Double): Int = percentile(label, value, league.mapNotNull { it[label] })
+
+    private fun percentile(label: String, value: Double, leagueValues: List<Double>): Int {
+        var values = leagueValues
         if (values.isEmpty()) values = listOf(value)
         val below = values.count { it < value }
         val equal = values.count { it == value }
         val raw = (below + equal / 2.0) / values.size * 100
         val oriented = if (label in LOWER_IS_BETTER) 100 - raw else raw
         return Math.round(oriented).toInt().coerceIn(1, 100)
+    }
+
+    /**
+     * Counts are ranked per game, so a club just off its bye is not a game
+     * behind everyone else on the bar; the row still shows the total.
+     */
+    fun seasonPercentile(label: String): Int {
+        val value = seasonLine[label] ?: 0.0
+        if (label in RATE_WEIGHTS) return percentile(label, value)
+        fun perGame(entry: Map<String, Double>): Double? {
+            val total = entry[label] ?: return null
+            val games = entry["G"]?.takeIf { it > 0 } ?: return null
+            return total / games
+        }
+        val own = perGame(seasonLine) ?: return percentile(label, value)
+        return percentile(label, own, league.mapNotNull { perGame(it) })
     }
 
     // MARK: Window
@@ -409,7 +428,7 @@ private fun SeasonContent(lines: StandardLines) {
     BarGroup("RATE", lines.rateLabels, lines, startIndex = 0)
     BarGroup("VOLUME", lines.countingLabels, lines, startIndex = lines.rateLabels.size)
     Text(
-        "Totals add up the current roster's season lines, so a player traded at the deadline brings his whole year with him.",
+        "Totals add up the current roster's season lines, so a player traded at the deadline brings his whole year with him. Volume bars rank each club per game.",
         style = GridironType.micro,
         color = GridironPalette.inkTertiary,
         modifier = Modifier.fillMaxWidth().padding(horizontal = GridironGeo.padCard, vertical = 10.dp),
@@ -426,7 +445,7 @@ private fun BarGroup(title: String, labels: List<String>, lines: StandardLines, 
         val metric = Metric(
             label = label,
             value = lines.format(label, value),
-            percentile = lines.percentile(label, value),
+            percentile = lines.seasonPercentile(label),
             category = if (lines.side == TeamSide.DEFENSE) MetricCategory.DEFENSE else MetricCategory.PASSING,
             id = "team-std-$label",
         )

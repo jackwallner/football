@@ -313,8 +313,16 @@ object StandardStatSemantics {
     }
 
     fun winner(label: String, left: String?, right: String?): Winner? {
-        val l = left?.let { numericValue(label, it) } ?: return null
-        val r = right?.let { numericValue(label, it) } ?: return null
+        // Games played is context, not something to win.
+        if (label.uppercase() == "G") return null
+        // A totals column compares counts: 27 catches on 34 targets beat 1 for 1.
+        fun total(value: String): Double? {
+            val upper = label.uppercase()
+            if (upper != "CMP/ATT" && upper != "REC/TGT") return numericValue(label, value)
+            return value.split("/").firstOrNull()?.let { metricNumericValue(it) }
+        }
+        val l = left?.let { total(it) } ?: return null
+        val r = right?.let { total(it) } ?: return null
         if (l == r) return null
         val leftWins = if (higherIsBetter(label)) l > r else l < r
         return if (leftWins) Winner.LEFT else Winner.RIGHT
@@ -509,8 +517,32 @@ object RosterAggregate {
      */
     val descriptiveOnlyLabels: Set<String> = setOf("Target Share", "WOPR")
 
+    /**
+     * Counting metrics that every player's standard line also carries. Past
+     * seasons only ship a metric for players who qualified in its category, so
+     * a club's receiving yards summed from metrics left out every receiver
+     * under the target minimum; the standard line has them all.
+     */
+    private val standardCounterparts: Map<String, String> = mapOf(
+        "Passing|Pass Yds" to "Pass Yds", "Passing|Pass TD" to "Pass TD",
+        "Rushing|Rush Yds" to "Rush Yds", "Rushing|Rush TD" to "Rush TD",
+        "Receiving|Rec Yds" to "Rec Yds", "Receiving|Rec TD" to "Rec TD",
+        "Defense|Tackles" to "Tackles", "Defense|Sacks" to "Sacks", "Defense|INT" to "Def INT",
+    )
+
+    private fun standardTotal(label: String, category: MetricCategory, roster: List<Player>): Double? {
+        val stat = standardCounterparts[category.raw + "|" + label] ?: return null
+        val values = roster.mapNotNull { player ->
+            if (!player.matchesPlayerType(category)) return@mapNotNull null
+            val raw = player.standardStats?.firstOrNull { it.label == stat }?.value ?: return@mapNotNull null
+            metricNumericValue(raw)
+        }
+        return if (values.isEmpty()) null else values.sum()
+    }
+
     fun value(label: String, category: MetricCategory, roster: List<Player>): Double? {
         val rule = FootballMetricRegistry.aggregation(label, category)
+        if (rule == MetricAggregation.Sum) standardTotal(label, category, roster)?.let { return it }
         val values = roster.mapNotNull { player ->
             val metric = player.metrics.firstOrNull { it.label == label && it.category == category } ?: return@mapNotNull null
             val value = metricNumericValue(metric.value) ?: return@mapNotNull null
@@ -539,6 +571,16 @@ object RosterAggregate {
     fun teamGames(roster: List<Player>): Double? =
         roster.mapNotNull { MetricWeight.GAMES.value(it) }.maxOrNull()?.takeIf { it > 0 }
 }
+
+/**
+ * Last name for a narrow column header, without a generational suffix:
+ * Marvin Harrison Jr. vs Brian Thomas Jr. read "JR." over both columns.
+ */
+val Player.surname: String
+    get() {
+        val suffixes = setOf("JR", "JR.", "SR", "SR.", "II", "III", "IV", "V")
+        return name.split(" ").filter { it.isNotEmpty() }.lastOrNull { it.uppercase() !in suffixes } ?: name
+    }
 
 /**
  * A rough "how much has this player done" score, for ordering a list of names
