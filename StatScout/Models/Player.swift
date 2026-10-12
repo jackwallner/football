@@ -282,11 +282,18 @@ enum StandardStatSemantics {
 
     static func winner(label: String, left: String?, right: String?) -> Winner? {
         // Games played is context, not something to win.
+        // A totals column compares counts: 27 catches on 34 targets beat 1 for
+        // 1, which as a rate it never would.
+        func total(_ value: String) -> Double? {
+            let upper = label.uppercased()
+            guard upper == "CMP/ATT" || upper == "REC/TGT" else { return numericValue(label: label, value: value) }
+            return value.split(separator: "/").first.flatMap { metricNumericValue(String($0)) }
+        }
         guard label.uppercased() != "G",
               let left,
               let right,
-              let leftValue = numericValue(label: label, value: left),
-              let rightValue = numericValue(label: label, value: right),
+              let leftValue = total(left),
+              let rightValue = total(right),
               leftValue != rightValue else { return nil }
         let leftWins = higherIsBetter(label: label)
             ? leftValue > rightValue

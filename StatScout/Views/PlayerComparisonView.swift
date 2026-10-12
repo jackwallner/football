@@ -557,6 +557,8 @@ struct PlayerComparisonView: View {
                     Text(item.label)
                         .font(GridironType.smallBold)
                         .foregroundStyle(GridironPalette.ink)
+                        .lineLimit(item.label.contains(" ") ? 2 : 1)
+                        .minimumScaleFactor(0.7)
                         .frame(width: 72, alignment: .leading)
 
                     metricValueCell(metric: item.a, other: item.b)

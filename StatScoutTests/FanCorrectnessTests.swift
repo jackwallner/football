@@ -115,6 +115,20 @@ final class FanCorrectnessTests: XCTestCase {
         XCTAssertGreaterThan(starter.prominence, backup.prominence)
     }
 
+    /// The Season Totals column compares counts, and games played is context.
+    func testTotalsTrophyComparesCountsNotRates() {
+        XCTAssertEqual(StandardStatSemantics.winner(label: "Rec/Tgt", left: "27/34", right: "1/1"), .left)
+        XCTAssertNil(StandardStatSemantics.winner(label: "G", left: "5", right: "4"))
+    }
+
+    func testSurnameSkipsGenerationalSuffix() {
+        let player = Player(
+            playerId: 9, name: "Marvin Harrison Jr.", team: "ARI", position: "WR",
+            handedness: "", updatedAt: Date(), metrics: [], standardStats: nil, games: []
+        )
+        XCTAssertEqual(player.surname, "Harrison")
+    }
+
     func testTiesAreNeitherWinNorLoss() {
         XCTAssertEqual(GridironPalette.resultColor("T"), GridironPalette.inkSecondary)
         XCTAssertEqual(GridironPalette.resultColor("W"), GridironPalette.performanceHigh)
