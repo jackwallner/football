@@ -295,7 +295,8 @@ struct TeamRankingsCard: View {
     }
 
     private func formattedValue(_ v: Double, label: String) -> String {
-        if label.hasSuffix("%") { return String(format: "%.1f%%", v) }
+        // "Cmp% Allowed" and "Missed Tkl%" are percentages too.
+        if label.contains("%") { return String(format: "%.1f%%", v) }
         if ["EPA/Play", "EPA/Rush", "EPA/Tgt", "RACR"].contains(label) { return String(format: "%.2f", v) }
         if abs(v) >= 100 { return String(format: "%.0f", v) }
         return String(format: "%.1f", v)
