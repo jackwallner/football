@@ -361,7 +361,7 @@ struct GameRow: View {
             let score = "\(away) \(game.awayScore ?? 0), \(home) \(game.homeScore ?? 0)"
             return "\(score), \(statusTitle(status))" + (hasStats ? "" : ", stats arriving")
         case .inProgress, .awaitingScore:
-            return "\(away) at \(home), in progress"
+            return "\(away) at \(home), \(status.liveLabel.lowercased())"
         case .upcoming:
             let projected = projection.map { ", projected \($0.label(home: game.homeTeam, away: game.awayTeam))" } ?? ""
             return "\(away) at \(home), \(game.dayLabel) at \(game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "time TBD")\(projected)"

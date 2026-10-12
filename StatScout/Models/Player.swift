@@ -281,7 +281,9 @@ enum StandardStatSemantics {
     }
 
     static func winner(label: String, left: String?, right: String?) -> Winner? {
-        guard let left,
+        // Games played is context, not something to win.
+        guard label.uppercased() != "G",
+              let left,
               let right,
               let leftValue = numericValue(label: label, value: left),
               let rightValue = numericValue(label: label, value: right),
@@ -778,8 +780,32 @@ enum RosterAggregate {
     /// context, never something to rank or award.
     static let descriptiveOnlyLabels: Set<String> = ["Target Share", "WOPR"]
 
+    /// Counting metrics that every player's standard line also carries. Past
+    /// seasons only ship a metric for players who qualified in its category,
+    /// so a club's receiving yards summed from metrics left out every receiver
+    /// under the target minimum; the standard line has them all.
+    private static let standardCounterparts: [String: String] = [
+        "Passing|Pass Yds": "Pass Yds", "Passing|Pass TD": "Pass TD",
+        "Rushing|Rush Yds": "Rush Yds", "Rushing|Rush TD": "Rush TD",
+        "Receiving|Rec Yds": "Rec Yds", "Receiving|Rec TD": "Rec TD",
+        "Defense|Tackles": "Tackles", "Defense|Sacks": "Sacks", "Defense|INT": "Def INT",
+    ]
+
+    private static func standardTotal(label: String, category: MetricCategory, roster: [Player]) -> Double? {
+        guard let stat = standardCounterparts[category.rawValue + "|" + label] else { return nil }
+        let values = roster.compactMap { player -> Double? in
+            guard player.matchesPlayerType(for: category),
+                  let raw = player.standardStats?.first(where: { $0.label == stat })?.value else { return nil }
+            return metricNumericValue(raw)
+        }
+        return values.isEmpty ? nil : values.reduce(0, +)
+    }
+
     static func value(label: String, category: MetricCategory, roster: [Player]) -> Double? {
         let rule = FootballMetricRegistry.aggregation(for: label, category: category)
+        if rule == .sum, let total = standardTotal(label: label, category: category, roster: roster) {
+            return total
+        }
         let values = roster.compactMap { player -> (value: Double, weight: Double)? in
             guard let metric = player.metrics.first(where: {
                 $0.label == label && $0.category == category
@@ -864,6 +890,16 @@ enum MetricWeight: Hashable, Sendable {
               value > 0
         else { return nil }
         return value
+    }
+}
+
+extension Player {
+    /// Last name for a narrow column header, without a generational suffix:
+    /// Marvin Harrison Jr. vs Brian Thomas Jr. read "JR." over both columns.
+    var surname: String {
+        let suffixes: Set<String> = ["JR", "JR.", "SR", "SR.", "II", "III", "IV", "V"]
+        let parts = name.split(separator: " ").map(String.init)
+        return parts.last { !suffixes.contains($0.uppercased()) } ?? name
     }
 }
 

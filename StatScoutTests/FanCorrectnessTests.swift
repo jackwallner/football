@@ -87,7 +87,7 @@ final class FanCorrectnessTests: XCTestCase {
         XCTAssertEqual(values.now, 75)
         XCTAssertEqual(values.then, 60)
         XCTAssertEqual(values.delta, 15)
-        XCTAssertEqual(recYards.display(75), "75.0/g")
+        XCTAssertEqual(recYards.display(75), "75/g")
     }
 
     /// Rates are already per play; they pass through untouched.

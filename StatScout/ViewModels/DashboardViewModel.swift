@@ -1313,7 +1313,9 @@ final class DashboardViewModel {
                hasUnsafeSnapshotRegression(current, against: fallbackPlayers) {
                 acceptedCurrent = []
             }
-            let allPlayers = acceptedCurrent.isEmpty ? fallbackPlayers : mergePlayers(replacing: acceptedCurrent)
+            // Merge either way: ingesting the current-season cache alone
+            // replaced every loaded past season until the next launch.
+            let allPlayers = mergePlayers(replacing: acceptedCurrent.isEmpty ? fallbackPlayers : acceptedCurrent)
 
             if allPlayers.isEmpty {
                 // No current data (offseason / cold cache / offline). Fall back to

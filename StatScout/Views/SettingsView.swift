@@ -69,7 +69,7 @@ struct AboutView: View {
                     Text("Percentile Rankings")
                         .font(GridironType.cardTitle)
                         .foregroundStyle(GridironPalette.ink)
-                    Text("Mobile-first percentile rankings and leaderboards for fans and media.")
+                    Text("Every player and club ranked against the league, from nflverse play-by-play, Next Gen Stats and Pro-Football-Reference.")
                         .font(GridironType.small)
                         .foregroundStyle(GridironPalette.inkSecondary)
                 }
@@ -230,7 +230,7 @@ struct AboutView: View {
                 row(
                     icon: "star.fill",
                     title: "Rate or Send Feedback",
-                    subtitle: "Help StatScout grow - or tell us what to improve."
+                    subtitle: "Help StatScout grow, or tell us what to improve."
                 )
             }
             .buttonStyle(.plain)
@@ -355,7 +355,7 @@ struct StatGlossaryView: View {
 
     private let supplemental: [GlossaryEntry] = [
         .init(id: "general-games", label: "G", category: "General", description: "Games in which the player recorded a tracked statistic."),
-        .init(id: "general-value", label: "Contract Value", category: "General", description: "Production percentile minus pay percentile, both ranked among this season's qualified players at the position who have an active contract. Pay is the deal's yearly average as a share of the salary cap when it was signed. +20 means producing like a player paid far more. Offense only until advanced defensive stats publish. Contracts: OverTheCap via nflverse."),
+        .init(id: "general-value", label: "Contract Value", category: "General", description: "Production percentile minus pay percentile, both ranked among this season's qualified players at the position who have an active contract. Pay is the deal's yearly average as a share of the salary cap when it was signed. +20 means producing like a player paid far more. Quarterbacks, running backs, receivers and tight ends for now. Contracts: OverTheCap via nflverse."),
         .init(id: "general-power", label: "Power Rating", category: "General", description: "Points per game better or worse than an average team on a neutral field, from EPA per dropback, EPA per run and points, for minus against, adjusted for schedule. Early in the season last year's rating counts as five games of evidence. Two ratings read like a point spread, with about two points for home field. Modeled on Hawk Blogger's HB Power Rankings."),
         .init(id: "general-small-sample", label: "Small sample", category: "General", description: "Below the playing-time minimum for that stat, prorated by how much of the season the typical team has played. Defenders need a quarter of their team's defensive snaps."),
         .init(id: "general-not-ranked", label: "Not ranked", category: "General", description: "A counting stat at zero. When most of the league has none of something, a tie at zero has no honest percentile, so the value shows and the bar does not."),
@@ -365,6 +365,11 @@ struct StatGlossaryView: View {
         .init(id: "rushing-car", label: "Car", category: "Rushing", description: "Rushing attempts, also called carries."),
         .init(id: "receiving-rec-tgt", label: "Rec/Tgt", category: "Receiving", description: "Receptions and targets."),
         .init(id: "receiving-tgt", label: "Tgt", category: "Receiving", description: "Pass attempts directed at the receiver."),
+        .init(id: "passing-int", label: "INT", category: "Passing", description: "Interceptions thrown. Fewer is better."),
+        .init(id: "defense-def-int", label: "Def INT", category: "Defense", description: "Interceptions made by the defender."),
+        .init(id: "defense-tgt-allowed", label: "Tgt Allowed", category: "Defense", description: "Passes thrown at the defender in coverage, the volume behind his coverage rates. Pro-Football-Reference, 2018 onward."),
+        .init(id: "receiving-y-r", label: "Y/R", category: "Receiving", description: "Receiving yards per reception."),
+        .init(id: "general-per-game", label: "/G and /g", category: "General", description: "Per game. Team bars divide club totals by games played, and recent windows divide by the games in the window, so a bye or a Thursday game does not skew the comparison."),
         .init(id: "percentile", label: "Percentile", category: "General", description: "A 1–100 rank among players in the same season, season type, and stat category. Higher is always better after lower-is-better stats are inverted."),
     ]
 

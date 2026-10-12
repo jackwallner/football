@@ -1116,7 +1116,7 @@ struct ComparePlayerPicker: View {
                             Text(player.name)
                                 .font(GridironType.bodyBold)
                                 .foregroundStyle(GridironPalette.ink)
-                            Text("\(player.team) · \(player.displayPosition)")
+                            Text("\(displayTeamAbbr(player.team)) · \(player.displayPosition)")
                                 .font(GridironType.small)
                                 .foregroundStyle(GridironPalette.inkTertiary)
                         }
@@ -1133,7 +1133,7 @@ struct ComparePlayerPicker: View {
                         )
                     } description: {
                         if isLoading {
-                            Text("Pulling the \(season.map(String.init) ?? "") roster.")
+                            Text("Pulling the \(season.map { StatScoutSeason.isAllTime($0) ? "career" : String($0) } ?? "") roster.")
                         } else if !searchText.isEmpty {
                             Text("Nobody matches “\(searchText)”.")
                         } else if let season {
@@ -1143,7 +1143,7 @@ struct ComparePlayerPicker: View {
                 }
             }
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Name, team or position")
-            .navigationTitle(season.map { "Select Player · " + String($0) } ?? "Select Player")
+            .navigationTitle(season.map { "Select Player · " + SeasonLabel.text($0) } ?? "Select Player")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -1298,15 +1298,24 @@ struct TeamComparisonView: View {
             // values keep the row (it is genuinely interesting context) and
             // suppress the marker.
             let comparable = !Self.descriptiveOnlyLabels.contains(label)
+            let isTotal = TeamLeagueTable.isPerGame(label, category: category)
+            let aRanked = isTotal ? perGame(a, roster: rosterA) : a
+            let bRanked = isTotal ? perGame(b, roster: rosterB) : b
             return StatRow(
                 id: category.rawValue + "-adv-" + label,
                 label: label,
                 aText: a.map(format.string) ?? "-",
                 bText: b.map(format.string) ?? "-",
-                aValue: comparable ? a.map { $0 * sign } : nil,
-                bValue: comparable ? b.map { $0 * sign } : nil
+                aValue: comparable ? aRanked.map { $0 * sign } : nil,
+                bValue: comparable ? bRanked.map { $0 * sign } : nil
             )
         }
+    }
+
+    /// A club total divided by the club's games, for deciding a trophy.
+    private func perGame(_ total: Double?, roster: [Player]) -> Double? {
+        guard let total, let games = RosterAggregate.teamGames(roster: roster) else { return total }
+        return total / games
     }
 
     /// Pools one metric across a roster using the registry's aggregation rule.
@@ -1514,13 +1523,15 @@ struct TeamComparisonView: View {
         let a = total(label: label, roster: rosterA)
         let b = total(label: label, roster: rosterB)
         let sign: Double = higherIsBetter ? 1 : -1
+        // The trophy is decided per game: a club past its bye, or a full past
+        // season against five weeks of this one, is not ahead on volume.
         return StatRow(
             id: label,
             label: label,
             aText: format(a, label: label),
             bText: format(b, label: label),
-            aValue: a.map { $0 * sign },
-            bValue: b.map { $0 * sign }
+            aValue: perGame(a, roster: rosterA).map { $0 * sign },
+            bValue: perGame(b, roster: rosterB).map { $0 * sign }
         )
     }
 

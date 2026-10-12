@@ -606,7 +606,7 @@ struct HotColdView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            TrendArrow(delta: delta, decimals: metric.isCount ? 1 : metric.decimals, lowerIsBetter: metric.lowerIsBetter)
+            TrendArrow(delta: delta, decimals: metric.isCount ? metric.perGameDecimals : metric.decimals, lowerIsBetter: metric.lowerIsBetter)
                 .frame(width: 56, alignment: .trailing)
         }
         .padding(.horizontal, GridironGeo.padInline)
@@ -662,7 +662,7 @@ struct HotColdView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             TrendArrow(
                 delta: teaser.now - teaser.then,
-                decimals: metric.isCount ? 1 : metric.decimals,
+                decimals: metric.isCount ? metric.perGameDecimals : metric.decimals,
                 lowerIsBetter: metric.lowerIsBetter
             )
             .frame(width: 56, alignment: .trailing)

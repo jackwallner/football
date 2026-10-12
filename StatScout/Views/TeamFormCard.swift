@@ -118,6 +118,8 @@ struct TeamRankingsCard: View {
         }
         .onAppear { rebuildCurves() }
         .onChange(of: leaguePlayers.count) { _, _ in rebuildCurves() }
+        .onChange(of: freshnessRevision) { _, _ in rebuildCurves() }
+        .onChange(of: season) { _, _ in rebuildCurves() }
     }
 
     private var proBadge: some View {
@@ -425,15 +427,21 @@ struct TeamRankingsCard: View {
         }
     }
 
+    /// The club's own snap count for the window, rebuilt from the box-score
+    /// columns. Summing each player's `plays` counted every pass twice (the
+    /// passer's attempt and the receiver's target) and gave a defense zero.
     private func recentSummaryRow(_ w: RecentFormWindow) -> some View {
-        HStack(spacing: 12) {
+        let m = w.metrics
+        let plays = Int(((m["attempts"] ?? 0) + (m["sacks_suffered"] ?? 0) + (m["carries"] ?? 0)).rounded())
+        let touches = Int(((m["carries"] ?? 0) + (m["receptions"] ?? 0)).rounded())
+        return HStack(spacing: 12) {
             summaryStat(label: "G", value: "\(w.games)")
-            summaryStat(label: "Plays", value: "\(w.plays)")
             if side == .offense {
-                summaryStat(label: "Touches", value: "\(w.touches)")
+                summaryStat(label: "Plays", value: "\(plays)")
+                summaryStat(label: "Touches", value: "\(touches)")
             }
             Spacer(minLength: 0)
-            if w.plays < smallSamplePlaysThreshold {
+            if side == .offense ? plays < smallSamplePlaysThreshold : w.games < 2 {
                 Text("SMALL SAMPLE")
                     .font(GridironType.micro)
                     .foregroundStyle(.white)

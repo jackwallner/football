@@ -296,9 +296,9 @@ struct PlayerComparisonView: View {
             HStack(spacing: 8) {
                 Text("STAT")
                     .frame(width: 82, alignment: .leading)
-                Text(a.name.split(separator: " ").last.map(String.init) ?? "A")
+                Text(a.surname)
                     .frame(maxWidth: .infinity)
-                Text(b.name.split(separator: " ").last.map(String.init) ?? "B")
+                Text(b.surname)
                     .frame(maxWidth: .infinity)
             }
             .font(GridironType.micro)
@@ -535,11 +535,11 @@ struct PlayerComparisonView: View {
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(width: 72, alignment: .leading)
-                Text(a.name.split(separator: " ").last.map(String.init) ?? "A")
+                Text(a.surname)
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
-                Text(b.name.split(separator: " ").last.map(String.init) ?? "B")
+                Text(b.surname)
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -579,12 +579,27 @@ struct PlayerComparisonView: View {
         )
     }
 
+    /// Rates are compared on the number itself: percentiles come from
+    /// different pools in different seasons (everyone this year, qualified
+    /// players in the past), so 68% could out-rank 70%. Totals keep the
+    /// percentile, which already allows for a season still in progress.
+    static func beats(_ m: Metric, _ other: Metric) -> Bool {
+        if m.isUnranked { return false }
+        if other.isUnranked { return true }
+        if case .weighted = FootballMetricRegistry.aggregation(for: m.label, category: m.category),
+           let a = metricNumericValue(m.value), let b = metricNumericValue(other.value) {
+            let higherIsBetter = FootballMetricRegistry.definition(for: m.label, category: m.category)?.higherIsBetter ?? true
+            return higherIsBetter ? a > b : a < b
+        }
+        return m.percentile > other.percentile
+    }
+
     private func metricValueCell(metric: Metric?, other: Metric?) -> some View {
         Group {
             if let m = metric, m.percentile > 0 || !m.value.isEmpty {
                 let hasValue = !m.value.isEmpty
                 let comparable = other.map { $0.percentile > 0 || !$0.value.isEmpty } ?? false
-                let isWinner = comparable && (other.map { m.percentile > $0.percentile } ?? false)
+                let isWinner = comparable && (other.map { Self.beats(m, $0) } ?? false)
                 let pctTextColor = GridironPalette.textColor(forPercentile: m.percentile)
                 VStack(spacing: 4) {
                     HStack(spacing: 4) {

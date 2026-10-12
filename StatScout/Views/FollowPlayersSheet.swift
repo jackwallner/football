@@ -34,8 +34,10 @@ struct FollowPlayersSheet: View {
 
     private var followed: [Player] {
         // Ordered by when they were followed, matching the Trends board.
+        // A followed player with no line this season (injured, retired) falls
+        // back to his latest season, so he can still be unfollowed here.
         favorites.playerIds.compactMap { id in
-            allPlayers.first { $0.playerId == id }
+            allPlayers.first { $0.playerId == id } ?? viewModel.playerHistories[id]?.first
         }
     }
 
@@ -47,8 +49,13 @@ struct FollowPlayersSheet: View {
         }
         let matching: [Player] = query.isEmpty ? sameSide : sameSide.filter { player in
             player.name.lowercased().contains(query) || player.team.lowercased().contains(query)
+                || teamFullName(player.team).lowercased().contains(query)
         }
-        return matching.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+        // Most productive first, the same order as the Compare picker.
+        let scored: [(player: Player, score: Double)] = matching.map { ($0, $0.prominence) }
+        return scored.sorted { lhs, rhs in
+            lhs.score == rhs.score ? lhs.player.name < rhs.player.name : lhs.score > rhs.score
+        }.map(\.player)
     }
 
     var body: some View {
@@ -106,7 +113,7 @@ struct FollowPlayersSheet: View {
                         .padding(12)
 
                         if candidates.isEmpty {
-                            Text("No players match “\(searchText)”.")
+                            Text(searchText.isEmpty ? "No players in this group yet." : "No players match “\(searchText)”.")
                                 .font(GridironType.small)
                                 .foregroundStyle(GridironPalette.inkSecondary)
                                 .padding(.vertical, 24)
@@ -175,7 +182,7 @@ struct FollowPlayersSheet: View {
                         .font(GridironType.bodyBold)
                         .foregroundStyle(GridironPalette.ink)
                         .lineLimit(1)
-                    Text("\(player.team) · \(player.position)")
+                    Text("\(displayTeamAbbr(player.team)) · \(player.displayPosition)")
                         .font(GridironType.micro)
                         .tracking(0.3)
                         .foregroundStyle(GridironPalette.inkTertiary)

@@ -503,7 +503,7 @@ struct PlayerProfileView: View {
                 proPerk("chart.line.uptrend.xyaxis", "Year-over-year trends across every metric")
                 proPerk("person.2.fill", "Head-to-head comparisons vs any player")
                 proPerk("calendar.badge.clock", "Every past season, not just this one")
-                proPerk("arrow.down.circle.fill", "Saved offline - works on the road")
+                proPerk("arrow.down.circle.fill", "Saved offline, works on the road")
             }
 
             Button {

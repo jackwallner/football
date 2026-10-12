@@ -52,10 +52,10 @@ struct TeamStandardCard: View {
     private static let offenseOrder = [
         "CMP%", "Y/A", "INT%", "Y/C", "CATCH%", "Y/R",
         "PASS YDS", "PASS TD", "INT", "CAR", "RUSH YDS", "RUSH TD",
-        "REC", "REC YDS", "REC TD", "G",
+        "REC", "REC YDS", "REC TD",
     ]
     private static let defenseOrder = [
-        "TACKLES", "SACKS", "DEF INT", "G",
+        "TACKLES", "SACKS", "DEF INT",
     ]
 
     /// Lower is better. Only one on an offensive line: interceptions thrown,
@@ -153,7 +153,7 @@ struct TeamStandardCard: View {
             let league = leagueLines()
             barGroup(title: "RATE", labels: rateLabels, line: line, league: league, startIndex: 0)
             barGroup(title: "VOLUME", labels: countingLabels, line: line, league: league, startIndex: rateLabels.count)
-            Text("Totals add up the current roster's season lines, so a player traded at the deadline brings his whole year with him.")
+            Text("Totals add up the current roster's season lines, so a player traded at the deadline brings his whole year with him. Volume bars rank each club per game.")
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .padding(.horizontal, GridironGeo.padCard)
@@ -180,7 +180,7 @@ struct TeamStandardCard: View {
                             id: "team-std-\(label)",
                             label: label,
                             value: format(label, value),
-                            percentile: percentile(label: label, value: value, league: league),
+                            percentile: seasonPercentile(label: label, line: line, league: league),
                             category: side == .defense ? .defense : .passing
                         )
                     )
@@ -466,10 +466,27 @@ struct TeamStandardCard: View {
     /// The other thirty-one, plus this one: the distribution a bar is drawn
     /// against.
     private func leagueLines() -> [[String: Double]] {
-        Dictionary(grouping: leaguePlayers, by: \.team)
+        Dictionary(grouping: leaguePlayers) { normalizedTeamAbbreviation($0.team) }
             .values
             .map { teamLine(for: $0) }
             .filter { !$0.isEmpty }
+    }
+
+    /// Counts are ranked per game, so a club just off its bye is not a game
+    /// behind everyone else on the bar; the row still shows the total.
+    private func seasonPercentile(label: String, line: [String: Double], league: [[String: Double]]) -> Int {
+        let value = line[label] ?? 0
+        guard Self.rateWeights[label] == nil else {
+            return percentile(label: label, value: value, league: league)
+        }
+        func perGame(_ entry: [String: Double]) -> [String: Double]? {
+            guard let total = entry[label], let games = entry["G"], games > 0 else { return nil }
+            return [label: total / games]
+        }
+        guard let own = perGame(line)?[label] else {
+            return percentile(label: label, value: value, league: league)
+        }
+        return percentile(label: label, value: own, league: league.compactMap(perGame))
     }
 
     /// Rank against whichever clubs have the stat, however few that is.

@@ -282,7 +282,7 @@ struct ContractValueCard: View {
             return "No active contract on file."
         }
         if !ContractValue.positions.contains(player.positionGroup) {
-            return "Value rankings cover offense for now. Defenders join once advanced defensive stats publish for the season."
+            return "Value rankings cover quarterbacks, running backs, receivers and tight ends for now."
         }
         return "Ranks once \(player.name) clears the playing-time minimum at his position."
     }

@@ -31,10 +31,15 @@ struct TrendMetric: Identifiable, Hashable, Sendable {
         "tackles", "sacks", "def_ints", "passes_defended", "tfl", "qb_hits", "forced_fumbles",
     ]
 
-    /// A count's per-game figure: one decimal and a "/g", so 0.7 TD a game
-    /// does not round to 1.
+    /// Decimals for a per-game count: yardage reads whole ("247/g"), small
+    /// counts keep a tenth so 0.7 TD a game does not round to 1.
+    var perGameDecimals: Int {
+        ["pass_yards", "rush_yards", "rec_yards", "yac", "completions", "attempts", "carries"]
+            .contains(key) ? 0 : 1
+    }
+
     func formatPerGame(_ value: Double) -> String {
-        String(format: "%.1f", value) + "/g"
+        String(format: "%.\(perGameDecimals)f", value) + "/g"
     }
 
     /// This metric's then, now and change for one player's row. Counts are
