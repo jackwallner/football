@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import pandas as pd
 import pytest
 
+import refresh
 from refresh import _coverage, _validate_unique
 
 
@@ -126,3 +127,22 @@ def test_rpc_does_not_retry_real_errors():
     with pytest.raises(RuntimeError):
         _rpc(client, "mark_data_refresh_unchanged", {}, sleep=lambda _: None)
     assert client.calls == 1
+
+
+def test_a_source_that_moves_mid_run_is_not_a_failure(monkeypatch):
+    def moved(*args, **kwargs):
+        raise refresh.SourceMoved("Source changed during the build; keeping the live revision")
+
+    monkeypatch.setattr(refresh, "publish", moved)
+    monkeypatch.setattr("sys.argv", ["refresh.py", "--refresh-id", "r1"])
+    assert refresh.main() == 0
+
+
+def test_a_bad_candidate_still_fails_the_run(monkeypatch):
+    def bad(*args, **kwargs):
+        raise refresh.CandidateNotReady("no snapshot rows built")
+
+    monkeypatch.setattr(refresh, "publish", bad)
+    monkeypatch.setattr("sys.argv", ["refresh.py", "--refresh-id", "r1"])
+    with pytest.raises(refresh.CandidateNotReady):
+        refresh.main()
