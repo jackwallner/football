@@ -40,9 +40,14 @@ are handled by the `fill_deprecated_locales` lane.
 
 ## Pending release, 2026-10-10
 
-- App Store version 1.2.5 (build 57) is `WAITING_FOR_REVIEW`, release type
-  MANUAL. It adds the `footballnext://<tab>` URL scheme, which in-app events
-  need for their deep link. What's New copies 1.2.4's per-locale text.
+- App Store version 1.2.5 is `WAITING_FOR_REVIEW`, release type MANUAL. It
+  adds the `footballnext://<tab>` URL scheme, which in-app events need for
+  their deep link. First submitted with build 57; on 2026-10-11 that
+  submission was cancelled, build 60 (the football-correctness pass: team
+  per-game ranks, per-game Trends, pregame previews) attached, What's New
+  rewritten in all 50 locales, and the version resubmitted together with the
+  event (submission `38c3c080`). The first `reviewSubmissionItems` POST after
+  a cancel returned 500 twice and then succeeded; retry rather than recreate.
 - In-app event `6821469037` ("2026 Season Percentiles", NEW_SEASON badge,
   Oct 12 to Nov 11, deep link `footballnext://stats`) was submitted in the
   same review submission. Spec and media:
