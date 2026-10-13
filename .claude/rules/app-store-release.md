@@ -60,6 +60,17 @@ are handled by the `fill_deprecated_locales` lane.
   genuinely new (a feature launch or a time-boxed content drop), not the
   ongoing season. The `footballnext://` URL scheme stays in 1.2.5 for that.
 
+## Pending release, 2026-10-13
+
+- App Store version 1.2.6 (build 62) is `WAITING_FOR_REVIEW`, release type MANUAL.
+  1.2.5 (build 60) is live. Build 62 carries the system review prompt change.
+- Renames the listing: `Pro Football: EPA StatScout` in 42 locales,
+  `American Football: StatScout` in en-GB/en-AU, `Fútbol Americano: StatScout`
+  in es-ES; de-DE, es-MX, pt-BR and ja keep their native names. Rationale is in
+  `project-docs/marketing/aso-plan.md` section 2a.
+- On release day, update the marketing site, privacy and terms pages
+  (`docs/*.html`, `PRIVACY.md`) from "Football Next: StatScout" to the new name.
+
 ## Draft version helper
 
 `ASC_DRAFT_VERSION` is the version to bump from, not the target version. For
