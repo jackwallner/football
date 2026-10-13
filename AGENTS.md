@@ -4,8 +4,8 @@ Gridiron StatScout: NFL advanced-stats percentiles / player-comparison app (iOS)
 XcodeGen project/scheme: `StatScout` (names kept to minimize churn), sim lease
 owner `football`. Bundle id `com.jackwallner.football`, product name "Gridiron StatScout".
 
-**App Store name:** **"Football Next: StatScout"** (ASC app `6792930447`), chosen
-for ASO. In-app it is still `PRODUCT_NAME: "Gridiron StatScout"`, home-screen
+**App Store name:** **"Pro Football: EPA StatScout"** (ASC app `6792930447`, renamed
+from "Football Next: StatScout" in 1.2.6), chosen for ASO. In-app it is still `PRODUCT_NAME: "Gridiron StatScout"`, home-screen
 `StatScout`, paid tier `StatScout+`.
 ASO plan: `project-docs/marketing/aso-plan.md` · `docs/astro-aso-setup.md` · `docs/localization-aso.md`.
 

@@ -1,1 +1,1 @@
-nfl,statistikk,spillere,epa,cpoe,yac,sammenlign,pasninger,løp,mottak,forsvar,tabell
+next,gen,statistikk,spillere,cpoe,yac,sammenlign,pasninger,løp,mottak,forsvar,tabell

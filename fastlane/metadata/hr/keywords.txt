@@ -1,1 +1,1 @@
-nfl,statistike,igrači,epa,cpoe,yac,usporedba,dodavanja,trčanje,ulovi,obrana,poredak
+next,gen,statistike,igrači,cpoe,yac,usporedba,dodavanja,trčanje,ulovi,obrana,poredak

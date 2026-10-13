@@ -1,1 +1,1 @@
-nfl,statistik,spieler,epa,cpoe,yac,vergleich,passen,laufen,empfang,defense,rangliste
+next,gen,statistik,spieler,epa,cpoe,yac,vergleich,passen,laufen,empfang,defense,rangliste

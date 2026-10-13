@@ -1,1 +1,1 @@
-Behind-the-scenes improvements and fixes to keep Football Next running smoothly. Thank you for being here.
+Bug fixes and improvements.

@@ -1,1 +1,1 @@
-nfl,tilastot,pelaajat,epa,cpoe,yac,vertailu,heitot,juoksu,vastaanotto,puolustus,ranking
+next,gen,tilastot,pelaajat,cpoe,yac,vertailu,heitot,juoksu,vastaanotto,puolustus,ranking

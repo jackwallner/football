@@ -1,1 +1,1 @@
-nfl,estatísticas,jogadores,epa,cpoe,yac,comparar,passe,corrida,receção,defesa,ranking
+next,gen,estatísticas,jogadores,cpoe,yac,comparar,passe,corrida,receção,defesa,ranking

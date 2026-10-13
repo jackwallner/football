@@ -85,6 +85,27 @@ title. Revisit if `football stats` rank stalls past 200.
 
 ---
 
+## 2a. Rename to Pro Football: EPA StatScout (1.2.6, 2026-10-13)
+
+| Field | Value | Count |
+|---|---|---:|
+| **Name** | `Pro Football: EPA StatScout` (45 locales; de-DE, es-ES, es-MX, pt-BR, ja keep their native names) | 27/30 |
+| **Subtitle** | `Advanced NFL Stats & Analytics` (unchanged) | 30/30 |
+| **Keywords (en-US, en-CA)** | `next,gen,ngs,cpoe,yac,compare,player,passing,rushing,receiving,defense,qb,fantasy,teams,rankings` | 96/100 |
+| **Keywords (en-GB, en-AU)** | `nfl,` + the above (their subtitle has no NFL) | 100/100 |
+
+Why: "Next" was dead weight. `football next` is pop 5, standalone `next` (pop 56) is generic
+intent where the app sat at #50, and `next gen stats` had fallen to #131 once `gen` left the
+field. "Pro Football" plus NFL in the subtitle separates the app from college football, and EPA
+in the name signals the analytics audience in search results. Every EPA phrase is pop 5, so the
+win is conversion and owning the long tail (`nfl epa` #2, `nfl epa stats` #3, `epa per play`
+#13, `epa football` #15, `epa stats` #21 before the rename), not new volume.
+
+`epa` left every keyword field whose name now carries it, and the duplicate `nfl` left the
+Tier-3 fields whose English subtitle already has NFL; `next,gen` took that room everywhere
+(ta-IN also dropped its ranking term to fit). Tier-2 fields swapped their duplicate `nfl` for
+`next,gen` and keep `epa`.
+
 ## 3. Astro state (2026-07-29)
 
 **US:** 98 keywords tracked on app id `119`.

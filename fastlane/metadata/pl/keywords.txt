@@ -1,1 +1,1 @@
-nfl,statystyki,gracze,epa,cpoe,yac,porównanie,podania,biegi,odbiór,obrona,ranking
+next,gen,statystyki,gracze,cpoe,yac,porównanie,podania,biegi,odbiór,obrona,ranking

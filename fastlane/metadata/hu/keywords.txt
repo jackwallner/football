@@ -1,1 +1,1 @@
-nfl,statisztika,játékosok,epa,cpoe,yac,összehasonlítás,passz,futás,elkapás,védelem,rangsor
+next,gen,statisztika,játékosok,cpoe,yac,összehasonlítás,passz,futás,elkapás,védelem,rangsor

@@ -1,1 +1,1 @@
-nfl,statistiky,hráči,epa,cpoe,yac,srovnání,přihrávky,běhy,příjem,obrana,žebříčky
+next,gen,statistiky,hráči,cpoe,yac,srovnání,přihrávky,běhy,příjem,obrana,žebříčky
