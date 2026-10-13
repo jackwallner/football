@@ -106,6 +106,24 @@ Tier-3 fields whose English subtitle already has NFL; `next,gen` took that room 
 (ta-IN also dropped its ranking term to fit). Tier-2 fields swapped their duplicate `nfl` for
 `next,gen` and keep `epa`.
 
+### Storefront names that diverge from Pro Football (1.2.6, measured 2026-10-13)
+
+"Pro Football" sits at the pop-5 floor in every store measured (us, gb, au, ca, de, mx, br, fr,
+es, it, jp). `nfl` is the real head term everywhere (46-62). "American football" only registers
+where the local word for football means soccer, so the name follows the local phrase there:
+
+| Store | Measured | Listing |
+|---|---|---|
+| GB, AU (also IE, NZ via en-GB/en-AU) | `american football` 9 (GB rank 48, AU 83 from the subtitle alone), `gridiron` 22 (diff 5 GB, 17 AU; SERP is football apps), `statistics` 19 | Name `American Football: StatScout`, subtitle `Advanced NFL Statistics & EPA`, keywords add `gridiron`, `stats`; drop `fantasy` (Fantasy Premier League / SuperCoach intent) and `ngs` |
+| ES | `futbol americano` **37**, diff 21, SERP Madden/Retro Bowl/football games; the app was unranked despite the subtitle | Name `Fútbol Americano: StatScout`, subtitle `Estadísticas NFL y EPA` |
+| JP | `アメフト` 36, but the SERP is Madden/EA/Retro Bowl and the name already holds it; `アメフト統計` #1 | unchanged |
+| DE | `nfl statistiken` #1, `american football statistiken` #1, `american football` 5 | unchanged |
+| MX, BR | `futbol americano` 5, `futebol americano` 5; `nfl estadisticas` #3, `nfl estatisticas` #4 | unchanged |
+| CA, FR, IT | every football phrase at the floor | unchanged (Pro Football name) |
+
+GB, AU, IE and NZ also index en-US, so `Pro Football: EPA StatScout` and the en-US field still
+count there as a second set of tokens.
+
 ## 3. Astro state (2026-07-29)
 
 **US:** 98 keywords tracked on app id `119`.
