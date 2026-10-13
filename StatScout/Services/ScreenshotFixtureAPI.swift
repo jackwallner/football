@@ -316,9 +316,26 @@ extension ScreenshotFixtureAPI {
                 opponent: ["LV", "LAC", "DEN", "CIN", "BUF"][index],
                 plays: plays(for: player.playerType ?? "qb"),
                 touches: touches(for: player.playerType ?? "qb"),
-                metrics: gameMetrics(for: player.playerType ?? "qb", factor: factor)
+                metrics: gameLogMetrics(for: player.playerType ?? "qb", factor: factor)
             )
         }
+    }
+
+    /// Game logs use the raw ingest keys (passing_yards), while recent form
+    /// uses the rolled-up ids (pass_yards). Without the aliases, box score
+    /// lines read "28/39, 0 yds".
+    static func gameLogMetrics(for type: String, factor: Double) -> [String: Double?] {
+        let aliases = [
+            "pass_yards": "passing_yards", "pass_tds": "passing_tds",
+            "rush_yards": "rushing_yards", "rush_tds": "rushing_tds",
+            "rec_yards": "receiving_yards", "rec_tds": "receiving_tds",
+            "sacks": "def_sacks", "def_ints": "def_interceptions",
+        ]
+        var metrics = gameMetrics(for: type, factor: factor)
+        for (rollup, raw) in aliases {
+            if let value = metrics[rollup] { metrics[raw] = value }
+        }
+        return metrics
     }
 
     static func plays(for type: String) -> Int {
