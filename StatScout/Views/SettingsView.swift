@@ -5,7 +5,6 @@ struct AboutView: View {
     let lastUpdated: Date?
     var dataCoverage: DataCoverage?
     var freshness: DataFreshness?
-    var onRequestReview: (() -> Void)?
     @State private var paywallTrigger: PaywallTrigger?
 
     private var version: String {
@@ -220,30 +219,16 @@ struct AboutView: View {
     private var linkCard: some View {
         VStack(spacing: 0) {
             GridironSectionBar(title: "SUPPORT & PRIVACY")
+            // Two separate rows with no rating question in front of either
+            // (App Review 5.6.1). The rate row deep-links to the review page;
+            // requestReview() from a button may show nothing.
             Button {
-                if let onRequestReview {
-                    onRequestReview()
-                } else {
-                    ReviewPromptCoordinator.shared.requestEnjoymentPrompt()
-                }
+                ReviewPromptTracker.markOpenedWriteReview()
+                UIApplication.shared.open(AppStoreReviewLinks.writeReviewURL)
             } label: {
                 row(
                     icon: "star.fill",
-                    title: "Rate or Send Feedback",
-                    subtitle: "Help StatScout grow, or tell us what to improve."
-                )
-            }
-            .buttonStyle(.plain)
-
-            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
-
-            // Always-works fallback: the native rating sheet is rate-limited and
-            // may show nothing, so keep a direct write-review link for users who
-            // explicitly want to leave a review.
-            Link(destination: AppStoreReviewLinks.writeReviewURL) {
-                row(
-                    icon: "square.and.pencil",
-                    title: "Rate on the App Store",
+                    title: "Rate StatScout",
                     subtitle: "Opens the App Store to write a review."
                 )
             }
@@ -251,19 +236,20 @@ struct AboutView: View {
 
             Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
 
-            if let supportURL = URL(string: "https://jackwallner.github.io/football/support.html") {
-                Link(destination: supportURL) {
-                    row(
-                        icon: "envelope.fill",
-                        title: "Contact Support",
-                        subtitle: "jackwallner+bb@gmail.com"
-                    )
-                }
-                .buttonStyle(.plain)
+            Button {
+                ReviewPromptTracker.markFeedbackSent()
+                UIApplication.shared.open(AppStoreReviewLinks.feedbackMailURL)
+            } label: {
+                row(
+                    icon: "envelope.fill",
+                    title: "Send Feedback",
+                    subtitle: AppStoreReviewLinks.feedbackEmail
+                )
             }
-            
+            .buttonStyle(.plain)
+
             Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
-            
+
             if let privacyURL = URL(string: "https://jackwallner.github.io/football/privacy-policy.html") {
                 Link(destination: privacyURL) {
                     row(
