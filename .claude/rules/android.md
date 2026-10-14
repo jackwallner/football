@@ -12,7 +12,9 @@ paths:
 
 - Native Android code is in `android/`, a screen-for-screen port of the iOS app
   (same copy, tokens, flows, product IDs). When iOS changes, port the change.
-- Package `com.jackwallner.football`, Play name "Football Next: StatScout",
+- Package `com.jackwallner.football`, Play name "Pro Football: EPA StatScout"
+  (renamed with iOS 1.2.6; en-GB and en-AU listings use "American Football:
+  StatScout", es-ES "Fútbol Americano: StatScout", matching the App Store),
   launcher label "StatScout", paid tier "StatScout+". Play Console app ID
   `4973822987801656046` on the E3 Apps developer account.
 - Products (same IDs as iOS): subscriptions `com.jackwallner.football.pro.monthly`
@@ -34,9 +36,11 @@ paths:
 
 ## Deliberate differences from iOS
 
-- Review prompt: Google forbids an enjoyment question before the Play card, so
-  positive moments call `launchReviewFlow` directly (same tracker cooldowns),
-  and Settings has separate "Rate on Google Play" and "Send Feedback" rows.
+- Review prompt: same gates as iOS 1.2.6 (second launch on, onboarding done,
+  30-day cooldown, the Settings "Rate StatScout" row ends the asks, "Send
+  Feedback" never does). A positive moment calls `launchReviewFlow` about 3 s
+  later only if no sheet, paywall or dialog is up (`activity.hasWindowFocus()`).
+  "Send Feedback" opens a mail draft directly, falling back to the support page.
 - Android has a Games tab in the bottom bar.
 - Live and history loads merge at ingest time on the main thread
   (`DashboardViewModel.ingestPlayers(mergePlayers(...))`), so whichever lands
@@ -80,26 +84,26 @@ Raw captures are 1080x2400 from the debug build with `--ez screenshotData true
 --ez forcePro true --ei tab <n>` and System UI demo mode (clock 0941, mobile
 hidden). `python3 scripts/play_screenshot_compositor.py` writes the seven
 1080x1920 frames (App Store headlines) and the 1024x500 feature graphic into
-`android/play-assets/`. Listing text is in
-`android/play-assets/metadata/android/en-US/`. Privacy and terms pages are
+`android/play-assets/`. Listing text and changelogs are in
+`android/play-assets/metadata/android/<locale>/` (en-US default, en-GB, en-AU,
+es-ES; the app UI is English only). Privacy and terms pages are
 `docs/android-privacy.html` and `docs/android-terms.html`.
 
-## Play state (verified 2026-10-10)
+## Play state (verified 2026-10-14)
 
-- App record created. Store listing (text, icon, feature graphic, 7 phone
-  screenshots), store settings (Sports, contact email and website), and every
-  App content declaration are saved, unsent: privacy policy, ads (none),
-  sign-in details (reviewer code instructions), content rating (IARC), target
-  audience 18+, data safety (purchase history, app interactions, device IDs;
-  collected, not shared, encrypted in transit, deletion URL), advertising ID
-  (no), government, financial, health (none).
-- Internal testing: release "1.2.4" (versionCode 1) uploaded as a draft
-  2026-10-10, not rolled out. The next upload needs versionCode 2.
-- Production: 178 countries targeted; draft release "1 (1.2.4)" with
-  versionCode 1 and en-US notes saved, not previewed or sent. What is left
-  is Jack's: Production > edit release > Next > Save, then Publishing
-  overview > Send app for review. The service account lacks production
-  release permission, so the API cannot stage production.
+- App record, store listing (en-US default plus en-GB, en-AU, es-ES text;
+  graphics are en-US only), store settings and every App content declaration
+  done (privacy policy, ads none, reviewer-code sign-in details, IARC, target
+  audience 18+, data safety, advertising ID no).
+- 1.2.6 (versionCode 2): internal track rolled out (completed) via API;
+  production full rollout to 178 countries sent for review 2026-10-14 with
+  the listing and App content changes (14 changes). Managed publishing is
+  off, so approval publishes. The next upload needs versionCode 3.
+- Production releases are staged in Console (Production > Releases > edit
+  release > Next > Save, then Publishing overview > Send for review). The
+  service account lacks production release permission. Listing text uploads
+  with `fastlane supply --skip_upload_aab true` from
+  `android/play-assets/metadata/android`.
 - Play products ACTIVE: monthly $1.49 and yearly $7.99 (each with
   `trial-7d`), lifetime `com.jackwallner.football.pro` $15.99. Ethiopia is not
   billable; Argentina, Azerbaijan and Uzbekistan are priced in USD.
