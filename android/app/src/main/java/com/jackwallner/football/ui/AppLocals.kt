@@ -24,8 +24,6 @@ interface AppActions {
 
     /** A satisfaction moment: count it and maybe show Play's review card. */
     fun positiveMoment()
-
-    fun openFeedback()
 }
 
 val LocalAppActions = staticCompositionLocalOf<AppActions> { error("No app actions") }

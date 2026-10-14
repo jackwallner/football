@@ -2,7 +2,6 @@ package com.jackwallner.football.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,9 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
@@ -34,14 +31,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jackwallner.football.BuildConfig
@@ -54,12 +47,10 @@ import com.jackwallner.football.ui.LocalGraph
 import com.jackwallner.football.ui.components.CrownYellow
 import com.jackwallner.football.ui.components.EmptyState
 import com.jackwallner.football.ui.components.GridironSectionBar
-import com.jackwallner.football.ui.components.GridironTopBar
 import com.jackwallner.football.ui.components.Hairline
 import com.jackwallner.football.ui.components.PushedScreen
 import com.jackwallner.football.ui.components.SearchField
 import com.jackwallner.football.ui.components.SfIcon
-import com.jackwallner.football.ui.components.TextAction
 import com.jackwallner.football.ui.components.bottomBarPadding
 import com.jackwallner.football.ui.components.bottomHairline
 import com.jackwallner.football.ui.components.gridironCard
@@ -80,7 +71,8 @@ private val LONG_DATE = DateTimeFormatter.ofPattern("MMMM d, yyyy 'at' h:mm a", 
 
 /**
  * Settings, a place in the app rather than a modal. Rate and Send Feedback are
- * separate rows: Google forbids gating the Play review behind a question.
+ * separate rows with no question in front of either: Google forbids gating the
+ * Play review behind one.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -147,11 +139,13 @@ fun SettingsScreen() {
                 Row(Modifier.clickable {
                     graph.review.markOpenedWriteReview()
                     context.openPlayListing()
-                }) { InfoRow("star.fill", "Rate on Google Play", "Help StatScout grow with an honest review.") }
+                }.testTag("rateRow")) { InfoRow("star.fill", "Rate StatScout", "Opens Google Play to write a review.") }
                 Hairline()
-                Row(Modifier.clickable { actions.openFeedback() }) { InfoRow("square.and.pencil", "Send Feedback", "Tell us what to improve.") }
-                Hairline()
-                Row(Modifier.clickable { context.openUrl(StoreLinks.SUPPORT_URL) }) { InfoRow("envelope.fill", "Contact Support", StoreLinks.FEEDBACK_EMAIL) }
+                Row(Modifier.clickable {
+                    graph.review.markFeedbackSent()
+                    // No mail app: the support page carries the same address.
+                    if (!context.openMail(StoreLinks.feedbackMail("StatScout feedback"))) context.openUrl(StoreLinks.SUPPORT_URL)
+                }.testTag("feedbackRow")) { InfoRow("envelope.fill", "Send Feedback", StoreLinks.FEEDBACK_EMAIL) }
                 Hairline()
                 Row(Modifier.clickable { context.openUrl(StoreLinks.PRIVACY_URL) }) { InfoRow("shield.lefthalf.filled", "Privacy Policy", "No ads or tracking.") }
             }
@@ -339,44 +333,6 @@ fun StatGlossaryScreen() {
                     }
                 }
             }
-        }
-    }
-}
-
-/** "Help us improve": the feedback half of the iOS review sheet, as its own row. */
-@Composable
-fun FeedbackSheet(onDismiss: () -> Unit) {
-    val graph = LocalGraph.current
-    val context = LocalContext.current
-    var text by remember { mutableStateOf("") }
-    val trimmed = text.trim()
-    Column(Modifier.fillMaxSize().background(GridironPalette.canvas)) {
-        GridironTopBar(title = "Help us improve", leading = { TextAction("Not now", GridironType.body, Color.White, onDismiss) })
-        Column(Modifier.padding(horizontal = 24.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text("What would make StatScout work better for you?", style = GridironType.body, color = GridironPalette.inkSecondary)
-            Box(
-                Modifier.fillMaxWidth().heightIn(min = 160.dp).clip(RoundedCornerShape(GridironGeo.radiusCard)).background(GridironPalette.surface)
-                    .border(0.5.dp, GridironPalette.hairline, RoundedCornerShape(GridironGeo.radiusCard)).padding(10.dp),
-            ) {
-                BasicTextField(
-                    text,
-                    { text = it },
-                    textStyle = GridironType.body.copy(color = GridironPalette.ink),
-                    cursorBrush = SolidColor(GridironPalette.turf),
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp).testTag("feedbackText"),
-                )
-            }
-            Text("Opens your mail app with a draft to the developer. No analytics, just your words.", style = GridironType.small, color = GridironPalette.inkTertiary)
-            Box(
-                Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(CircleShape).background(GridironPalette.turf).alpha(if (trimmed.isEmpty()) 0.5f else 1f)
-                    .clickable(enabled = trimmed.isNotEmpty()) {
-                        if (context.openMail(StoreLinks.feedbackMail("StatScout feedback", trimmed))) {
-                            graph.review.markFeedbackSubmitted()
-                            onDismiss()
-                        }
-                    },
-                contentAlignment = Alignment.Center,
-            ) { Text("Send feedback", style = GridironType.bodyBold, color = Color.White) }
         }
     }
 }

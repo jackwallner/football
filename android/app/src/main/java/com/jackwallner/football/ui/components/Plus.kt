@@ -132,14 +132,17 @@ fun PlusDirectCTA(
     }
 }
 
-/** The unlock affordance over a blurred teaser: fades the preview into the card, then the CTA. */
+/**
+ * The unlock affordance over a blurred teaser: fades the preview into the card, then the CTA.
+ * [compact] trims the fade band and bottom margin for a card on a short screen.
+ */
 @Composable
-fun BlurGateUnlock(headline: String, trigger: PaywallTrigger, modifier: Modifier = Modifier) {
+fun BlurGateUnlock(headline: String, trigger: PaywallTrigger, modifier: Modifier = Modifier, compact: Boolean = false) {
     Column(
         modifier
             .fillMaxWidth()
             .background(Brush.verticalGradient(listOf(Color.Transparent, GridironPalette.surface.copy(alpha = 0.95f), GridironPalette.surface)))
-            .padding(start = 20.dp, end = 20.dp, top = 52.dp, bottom = 16.dp),
+            .padding(start = 20.dp, end = 20.dp, top = if (compact) 12.dp else 52.dp, bottom = if (compact) 2.dp else 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.CircularProgressIndicator
@@ -226,8 +228,9 @@ fun TrendsScreen(isActive: Boolean) {
         } else {
             DataFreshnessView(vm, Modifier.padding(horizontal = 12.dp).padding(top = 6.dp), season = selectedSeason, phase = selectedPhase)
             header()
-            // The locked board does not scroll: there is nothing below the fold to scroll to.
-            Column(Modifier.weight(1f).padding(horizontal = 12.dp).padding(top = 12.dp).padding(bottom = bottomBarPadding(64.dp).calculateBottomPadding()).fillMaxWidth().gridironCard()) {
+            // The locked board does not scroll: there is nothing below the fold to scroll to. It ends
+            // above the floating tab bar (78 dp with its margin), or "See all plans" sits under it on 16:9 phones.
+            Column(Modifier.weight(1f).padding(horizontal = 12.dp).padding(top = 12.dp).padding(bottom = bottomBarPadding(88.dp).calculateBottomPadding()).fillMaxWidth().gridironCard()) {
                 GridironSectionBar(if (isEarlySeason) earlyTitle else boardTitle)
                 when {
                     isEarlySeason && earlyRanked.isNotEmpty() -> earlyRanked.first().let { EarlyRow(it, 1, 0, metric, roster[it.playerId]) }
@@ -241,7 +244,7 @@ fun TrendsScreen(isActive: Boolean) {
                         Text(if (vm.isRecentFormLoading) "Loading the board…" else "No movement to rank yet", style = GridironType.small, color = GridironPalette.inkTertiary)
                     }
                 }
-                Box(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
+                BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
                     // Everything under row one is invented: blur is not a security boundary.
                     Column(Modifier.gateBlur()) {
                         teaserRows(vm, metric, showingCold, selectedSeason, selectedPhase, side).drop(1).forEachIndexed { index, teaser ->
@@ -252,7 +255,10 @@ fun TrendsScreen(isActive: Boolean) {
                         if (isEarlySeason) "See the full board: every player's last ${vm.recentWindow.value} weeks at every position, with movement from Week $movementStartWeek"
                         else "See the full board: every position ranked by how far they've moved",
                         PaywallTrigger.RecentForm,
-                        Modifier.align(Alignment.BottomCenter),
+                        // Natural height, pinned to the bottom: on a short screen the fade clips at the
+                        // top, never the CTA, disclosure or "See all plans" at the bottom.
+                        Modifier.align(Alignment.BottomCenter).wrapContentHeight(Alignment.Bottom, unbounded = true),
+                        compact = maxHeight < 260.dp,
                     )
                 }
             }

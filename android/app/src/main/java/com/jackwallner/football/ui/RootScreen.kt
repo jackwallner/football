@@ -68,7 +68,6 @@ import com.jackwallner.football.ui.nav.Navigator
 import com.jackwallner.football.ui.nav.Route
 import com.jackwallner.football.ui.screens.ConfigMissingScreen
 import com.jackwallner.football.ui.screens.Destination
-import com.jackwallner.football.ui.screens.FeedbackSheet
 import com.jackwallner.football.ui.screens.OnboardingScreen
 import com.jackwallner.football.ui.screens.PaywallScreen
 import com.jackwallner.football.ui.screens.SEEN_KEY
@@ -107,7 +106,6 @@ fun RootScreen(graph: AppGraph) {
     }
     var paywall by remember { mutableStateOf<PaywallTrigger?>(null) }
     var pitch by remember { mutableStateOf<PaywallTrigger?>(null) }
-    var showFeedback by remember { mutableStateOf(false) }
     var reviewShownThisSession by remember { mutableStateOf(false) }
 
     val actions = remember {
@@ -121,19 +119,22 @@ fun RootScreen(graph: AppGraph) {
                 pitch = trigger
             }
 
-            override fun openFeedback() {
-                showFeedback = true
-            }
-
-            /** Google forbids a question before the Play card: the gates decide, then the card shows itself. */
+            /**
+             * Google forbids a question before the Play card: the gates decide, then the card shows
+             * itself after about three seconds. If anything is on screen then (onboarding, the
+             * paywall, a pitch or any other sheet) the moment stays pending and the next one asks.
+             */
             override fun positiveMoment() {
                 graph.review.recordPositiveMoment()
                 val completed = graph.defaults.getBoolean(SEEN_KEY)
-                if (reviewShownThisSession || !graph.review.shouldShowAfterPositiveMoment(completed)) return
+                if (reviewShownThisSession || !graph.review.shouldRequestAfterPositiveMoment(completed)) return
                 scope.launch {
-                    delay(3_500)
-                    if (!graph.review.shouldShowAfterPositiveMoment(graph.defaults.getBoolean(SEEN_KEY))) return@launch
+                    delay(3_000)
                     val activity = context.findActivity() ?: return@launch
+                    // Every sheet and alert is its own window, so the activity only has focus when none is up.
+                    val screenClear = hasCompletedOnboarding && paywall == null && pitch == null && activity.hasWindowFocus()
+                    if (!screenClear || reviewShownThisSession) return@launch
+                    if (!graph.review.shouldRequestAfterPositiveMoment(graph.defaults.getBoolean(SEEN_KEY))) return@launch
                     reviewShownThisSession = true
                     graph.review.markShown()
                     val manager = ReviewManagerFactory.create(activity)
@@ -194,9 +195,6 @@ fun RootScreen(graph: AppGraph) {
         }
         StatScoutSheet(visible = paywall != null, onDismiss = { paywall = null }) {
             paywall?.let { PaywallScreen(it) { paywall = null } }
-        }
-        StatScoutSheet(visible = showFeedback, onDismiss = { showFeedback = false }) {
-            FeedbackSheet { showFeedback = false }
         }
     }
 }

@@ -32,7 +32,8 @@ object DebugLaunchOptions {
         }
         extras.getString("statsBoard")?.let { graph.defaults.putString("stats.board", it) }
         if (extras.getBoolean("onboarded")) graph.defaults.putBoolean("hasCompletedOnboarding", true)
-        if (extras.getBoolean("forcePro")) graph.subscriptions.forceProForDebug()
+        // The graph outlives an activity, so a reset also clears a Pro unlock left by an earlier launch.
+        if (extras.getBoolean("resetAll") || extras.containsKey("forcePro")) graph.subscriptions.forceProForDebug(extras.getBoolean("forcePro"))
         if (extras.getBoolean("previewStore")) graph.subscriptions.loadPreviewPlans(previewPlans(), history = extras.getBoolean("previewTrialUsed"))
         if (extras.containsKey("tab")) launchTab = extras.getInt("tab")
         if (extras.containsKey("onboardingPage")) onboardingPage = extras.getInt("onboardingPage")

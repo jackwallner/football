@@ -33,15 +33,13 @@ object StoreLinks {
         else "https://play.google.com/store/account/subscriptions?sku=$productId&package=$PACKAGE"
 
     /** Same address and subject as the iOS feedback draft. */
-    fun feedbackMail(subject: String, body: String): Uri = Uri.parse(
-        "mailto:$FEEDBACK_EMAIL?subject=${Uri.encode(subject)}&body=${Uri.encode(body)}",
-    )
+    fun feedbackMail(subject: String): Uri = Uri.parse("mailto:$FEEDBACK_EMAIL?subject=${Uri.encode(subject)}")
 }
 
 /**
- * The review funnel's memory, with the iOS keys and gates. Google forbids an
- * enjoyment question before the Play card, so a positive moment that clears
- * these gates goes straight to `launchReviewFlow`; feedback is its own row.
+ * Gates on the Play in-app review card, with the iOS keys and gates. Google
+ * forbids a question before the card, so a positive moment that clears these
+ * gates goes straight to `launchReviewFlow`; feedback is its own row.
  */
 class ReviewPromptTracker(private val defaults: KeyValueStore, private val clock: AppClock) {
     /** Tests and screenshot runs never trigger the store card. */
@@ -49,20 +47,10 @@ class ReviewPromptTracker(private val defaults: KeyValueStore, private val clock
 
     val appLaunchCount: Int get() = maxOf(defaults.getInt(LAUNCH_COUNT), 0)
     val positiveMomentCount: Int get() = maxOf(defaults.getInt(POSITIVE_MOMENTS), 0)
-    val distinctUseDays: Int get() = maxOf(defaults.getInt(DISTINCT_DAYS), 0)
     val outcome: String? get() = defaults.getString(OUTCOME)
     private val hasPendingPositiveMoment: Boolean get() = defaults.getBoolean(PENDING)
 
-    /** Once per calendar day: three days of use is a habit, three taps is not. */
-    private fun recordUseDay() {
-        val key = clock.today().toString()
-        if (defaults.getString(LAST_USE_DAY) == key) return
-        defaults.putString(LAST_USE_DAY, key)
-        defaults.putInt(DISTINCT_DAYS, distinctUseDays + 1)
-    }
-
     fun recordAppLaunch() {
-        recordUseDay()
         if (!defaults.contains(FIRST_OPEN)) defaults.putLong(FIRST_OPEN, clock.now().toEpochMilli())
         defaults.putInt(LAUNCH_COUNT, appLaunchCount + 1)
     }
@@ -74,22 +62,21 @@ class ReviewPromptTracker(private val defaults: KeyValueStore, private val clock
 
     fun consumePendingPositiveMoment() = defaults.putBoolean(PENDING, false)
 
+    /** Only opening the review page ends the asks: someone who sent feedback can still rate. */
     private fun passivePromptAllowed(): Boolean {
-        if (outcome != null) return false
+        if (outcome == OPENED_WRITE_REVIEW) return false
         if (!defaults.contains(LAST_SHOWN)) return true
         return clock.now().toEpochMilli() - defaults.getLong(LAST_SHOWN) >= COOLDOWN_DAYS * DAY_MS
     }
 
-    fun canPresent(hasCompletedOnboarding: Boolean): Boolean {
+    /** The only tenure gate is "not the first session": a second cold start. */
+    fun canRequestReview(hasCompletedOnboarding: Boolean): Boolean {
         if (isAutomationRun || !hasCompletedOnboarding || !passivePromptAllowed()) return false
-        if (appLaunchCount < MINIMUM_LAUNCH_COUNT || positiveMomentCount < MINIMUM_POSITIVE_MOMENTS) return false
-        if (distinctUseDays < MINIMUM_DISTINCT_USE_DAYS) return false
-        if (!defaults.contains(FIRST_OPEN)) return false
-        return clock.now().toEpochMilli() - defaults.getLong(FIRST_OPEN) >= MINIMUM_DAYS_SINCE_FIRST_OPEN * DAY_MS
+        return appLaunchCount >= MINIMUM_LAUNCH_COUNT
     }
 
-    fun shouldShowAfterPositiveMoment(hasCompletedOnboarding: Boolean): Boolean =
-        hasPendingPositiveMoment && canPresent(hasCompletedOnboarding)
+    fun shouldRequestAfterPositiveMoment(hasCompletedOnboarding: Boolean): Boolean =
+        hasPendingPositiveMoment && canRequestReview(hasCompletedOnboarding)
 
     /** Spent when requested, not when answered: Play may show nothing at all. */
     fun markShown() {
@@ -97,22 +84,27 @@ class ReviewPromptTracker(private val defaults: KeyValueStore, private val clock
         consumePendingPositiveMoment()
     }
 
+    /** The Settings "Rate" row. Ends the passive asks for good. */
     fun markOpenedWriteReview() {
-        defaults.putString(OUTCOME, "openedWriteReview")
+        defaults.putString(OUTCOME, OPENED_WRITE_REVIEW)
         markShown()
     }
 
-    fun markFeedbackSubmitted() {
-        defaults.putString(OUTCOME, "submittedFeedback")
-        markShown()
+    /** Sending feedback never stops the rating asks, and never overwrites a write-review stop. */
+    fun markFeedbackSent() {
+        if (outcome == OPENED_WRITE_REVIEW) return
+        defaults.putString(OUTCOME, SUBMITTED_FEEDBACK)
     }
 
     companion object {
-        const val MINIMUM_LAUNCH_COUNT = 5
-        const val MINIMUM_DAYS_SINCE_FIRST_OPEN = 7L
-        const val MINIMUM_POSITIVE_MOMENTS = 3
-        const val MINIMUM_DISTINCT_USE_DAYS = 3
-        const val COOLDOWN_DAYS = 120L
+        /** Ask early: most installs are gone within a week. */
+        const val MINIMUM_LAUNCH_COUNT = 2
+        /** Days between our calls. Play applies its own quota on top. */
+        const val COOLDOWN_DAYS = 30L
+
+        const val OPENED_WRITE_REVIEW = "openedWriteReview"
+        /** Written by the old feedback funnel; it no longer stops anything. */
+        const val SUBMITTED_FEEDBACK = "submittedFeedback"
 
         private const val LAUNCH_COUNT = "reviewPrompt.appLaunchCount"
         private const val FIRST_OPEN = "reviewPrompt.firstAppOpenDate"
@@ -120,8 +112,6 @@ class ReviewPromptTracker(private val defaults: KeyValueStore, private val clock
         private const val OUTCOME = "reviewPrompt.outcome"
         private const val POSITIVE_MOMENTS = "reviewPrompt.positiveMomentCount"
         private const val PENDING = "reviewPrompt.pendingPositiveMoment"
-        private const val DISTINCT_DAYS = "reviewPrompt.distinctUseDays"
-        private const val LAST_USE_DAY = "reviewPrompt.lastUseDay"
     }
 }
 

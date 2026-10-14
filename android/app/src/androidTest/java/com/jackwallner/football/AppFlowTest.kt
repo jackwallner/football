@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -106,6 +107,22 @@ class AppFlowTest {
             compose.waitForIdle()
         }
         waitForText("League leaders")
+    }
+
+    /** Rate and Send Feedback are separate rows with no question in front; support lives in feedback. */
+    @Test
+    fun settingsSeparatesRatingFromFeedback() {
+        launch()
+        waitForText("League leaders")
+        compose.onNodeWithTag("settingsButton").performClick()
+        compose.onNodeWithTag("rateRow").performScrollTo()
+        waitForText("Rate StatScout")
+        waitForText("Opens Google Play to write a review.")
+        compose.onNodeWithTag("feedbackRow").performScrollTo()
+        waitForText("Send Feedback")
+        waitForText("jackwallner+bb@gmail.com")
+        assertTrue(compose.onAllNodes(hasText("Contact Support")).fetchSemanticsNodes().isEmpty())
+        assertTrue(compose.onAllNodes(hasText("Rate on Google Play")).fetchSemanticsNodes().isEmpty())
     }
 
     @Test

@@ -44,8 +44,8 @@ android {
         applicationId = "com.jackwallner.football"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.2.4"
+        versionCode = 2
+        versionName = "1.2.6"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
         buildConfigField("String", "REVENUECAT_API_KEY", "\"$testKey\"")

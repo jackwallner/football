@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.jackwallner.football.data.DashboardViewModel
 import com.jackwallner.football.data.PaywallTrigger
@@ -418,7 +419,12 @@ private fun CategoryCard(a: Player, b: Player, category: MetricCategory, items: 
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                FitText(label, GridironType.smallBold, GridironPalette.ink, Modifier.width(72.dp), minScale = 0.75f)
+                // Multi-word labels wrap at a space instead of shrinking; one word shrinks to fit.
+                if (label.contains(" ")) {
+                    Text(label, style = GridironType.smallBold, color = GridironPalette.ink, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(72.dp))
+                } else {
+                    FitText(label, GridironType.smallBold, GridironPalette.ink, Modifier.width(72.dp), minScale = 0.7f)
+                }
                 MetricValueCell(pair.first, pair.second, Modifier.weight(1f))
                 MetricValueCell(pair.second, pair.first, Modifier.weight(1f))
             }
