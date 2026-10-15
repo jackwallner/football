@@ -71,6 +71,17 @@ are handled by the `fill_deprecated_locales` lane.
 - On release day, update the marketing site, privacy and terms pages
   (`docs/*.html`, `PRIVACY.md`) from "Football Next: StatScout" to the new name.
 
+## Held release, 2026-10-15
+
+- Build 63 (version 1.2.7) is on TestFlight with the baseball-style
+  paywall: the billed amount on a `priceLead` line above every purchase
+  button, trial-led button labels. Basketball 1.0 (5) was rejected under
+  3.1.2(c) and resubmitted with the same pattern as 1.0 (6).
+- Hold: do not submit 1.2.7 until Basketball 1.0 (6) clears review. If
+  basketball is approved, create the 1.2.7 draft
+  (`ASC_DRAFT_VERSION=1.2.6 scripts/asc-ensure-draft-version.sh`), attach
+  build 63 and submit. If it is rejected again, rework the pattern first.
+
 ## Draft version helper
 
 `ASC_DRAFT_VERSION` is the version to bump from, not the target version. For
