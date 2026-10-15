@@ -374,6 +374,17 @@ struct PaywallView: View {
 
     private var purchaseSection: some View {
         VStack(spacing: 10) {
+            // Billed amount for the selected plan, directly above the purchase
+            // point. Apple 3.1.2(c): nothing else in this flow, the trial copy
+            // on the button included, may be more conspicuous than this.
+            //
+            // Reserved height so switching plans, or waiting on the products to
+            // load, never walks the purchase button up and down the screen.
+            Text(selectedPackage?.priceLabel ?? " ")
+                .font(GridironType.priceLead)
+                .foregroundStyle(GridironPalette.ink)
+                .frame(height: 22)
+
             Button(action: startPurchase) {
                 ZStack {
                     Text(ctaTitle)
@@ -458,7 +469,7 @@ struct PaywallView: View {
     /// one-tap CTA in the app, so the plan picker and the pop-ups state the same
     /// terms for the same plan.
     private var disclosureText: String? {
-        selectedPackage.map { store.disclosureText(for: $0, emphasis: .billedAmountFirst) }
+        selectedPackage.map { store.disclosureText(for: $0) }
     }
 
     // MARK: - Actions
@@ -584,10 +595,16 @@ private struct PaywallPlanCard: View {
                                 .background(GridironPalette.turf, in: Capsule())
                         }
                     }
-                    if isMostPopular {
+                    if showsTrialBadge, let trial = package.introOfferLabel {
+                        Text(trial.capitalized)
+                            .font(GridironType.micro)
+                            .tracking(0.3)
+                            .foregroundStyle(GridironPalette.turf)
+                    } else if isMostPopular {
                         Text("Best value")
                             .font(GridironType.micro)
-                            .foregroundStyle(GridironPalette.inkTertiary)
+                            .tracking(0.3)
+                            .foregroundStyle(GridironPalette.turf)
                     }
                 }
 
@@ -595,8 +612,8 @@ private struct PaywallPlanCard: View {
 
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(package.priceLabel)
-                        .font(GridironType.cardTitle)
-                        .foregroundStyle(GridironPalette.ink)
+                        .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.inkSecondary)
                     if let perMonthLabel {
                         HStack(spacing: 5) {
                             if let monthlyAnchorLabel, savingsPercent != nil {
@@ -607,13 +624,8 @@ private struct PaywallPlanCard: View {
                             }
                             Text("\(perMonthLabel)/mo")
                                 .font(GridironType.micro)
-                                .foregroundStyle(GridironPalette.inkTertiary)
+                                .foregroundStyle(GridironPalette.ink)
                         }
-                    }
-                    if showsTrialBadge, let trial = package.introOfferLabel {
-                        Text(trial.capitalized)
-                            .font(GridironType.micro)
-                            .foregroundStyle(GridironPalette.inkTertiary)
                     }
                 }
             }
