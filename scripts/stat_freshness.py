@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -92,7 +93,9 @@ def _day(value: str | None) -> date | None:
 def _timestamp(value: str | None) -> datetime | None:
     if not value:
         return None
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    # The Pro's Python 3.9 only parses 3- or 6-digit fractions; Postgres trims trailing zeros.
+    value = re.sub(r"\.(\d{1,6})", lambda m: "." + m.group(1).ljust(6, "0"), value.replace("Z", "+00:00"), count=1)
+    return datetime.fromisoformat(value)
 
 
 def _mlb_season(now: datetime) -> int:
