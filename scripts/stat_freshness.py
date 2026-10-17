@@ -14,7 +14,7 @@ by comparing what each app serves against what the league has finished.
 Used twice, so a dead runner can't silence both:
 
 * `.github/workflows/stat-watchdog.yml` runs it with `--github-issues`, keeping
-  one issue per stale app that @mentions the owner.
+  one issue per stale app (no @mention unless --mention is given).
 * `~/ios/fleet-probe` imports `check_app` and reports to Discord #crashes
   (its `deploy.sh` copies this file in; edit it here).
 
@@ -224,7 +224,7 @@ def sync_issues(results: dict[str, tuple[str, str]], apps: dict[str, dict], ment
             _github("POST", "/issues", {
                 "title": title,
                 "body": (
-                    f"@{mention} {apps[key]['name']} is behind: {detail}.\n\n"
+                    (f"@{mention} " if mention else "") + f"{apps[key]['name']} is behind: {detail}.\n\n"
                     f"Found by the stat watchdog in {os.environ['GITHUB_REPOSITORY']}. "
                     "This closes itself once the app catches up."
                 ),
@@ -240,7 +240,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--github-issues", action="store_true",
                         help="open or close one issue per app in $GITHUB_REPOSITORY")
-    parser.add_argument("--mention", default="jackwallner")
+    parser.add_argument("--mention", default="", help="GitHub user to @mention (none by default: "
+                        "stale data reaches Jack through the ops digest via fleet-probe)")
     parser.add_argument("--simulate-stale", default="", metavar="KEY",
                         help="report this app as stale regardless, to test the alert path")
     args = parser.parse_args()

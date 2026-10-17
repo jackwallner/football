@@ -1,7 +1,8 @@
 name: Stat Data Watchdog
 
 # Checks all four StatScout apps from the outside and keeps one issue per stale
-# app, @mentioning the owner, closed again once the app catches up. Lives here
+# app, closed again once the app catches up. No @mention: Jack hears about stale
+# data in the ops digest (fleet-probe runs the same check), not through GitHub. Lives here
 # rather than in each app's repo so a repo whose own Actions stop running is
 # still watched. The MacBook Pro's fleet-probe runs the same check
 # (scripts/stat_freshness.py) and reports to Discord, so one dead runner can't
@@ -43,4 +44,4 @@ jobs:
           BASKETBALL_SUPABASE_URL: ${{ secrets.BASKETBALL_SUPABASE_URL }}
           BASKETBALL_SUPABASE_ANON_KEY: ${{ secrets.BASKETBALL_SUPABASE_ANON_KEY }}
           SIMULATE_STALE: ${{ inputs.simulate_stale }}
-        run: python3 scripts/stat_freshness.py --github-issues --mention jackwallner --simulate-stale "$SIMULATE_STALE"
+        run: python3 scripts/stat_freshness.py --github-issues --simulate-stale "$SIMULATE_STALE"
