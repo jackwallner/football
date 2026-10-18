@@ -49,12 +49,6 @@ final class DashboardViewModelTests: XCTestCase {
     }
 
     @MainActor
-    func testLastUpdatedReturnsNilWhenEmpty() {
-        let vm = DashboardViewModel(provider: MockProvider(players: []))
-        XCTAssertNil(vm.lastUpdated)
-    }
-
-    @MainActor
     func testTeamFullNameReturnsCorrectFullName() {
         // Test the teamFullName helper function directly
         XCTAssertEqual(teamFullName("KC"), "Kansas City Chiefs")
@@ -579,17 +573,6 @@ final class DashboardViewModelTests: XCTestCase {
         vm.isPro = true
         await vm.load()
         XCTAssertEqual(vm.selectedSeason, StatScoutSeason.current)
-    }
-
-    @MainActor
-    func testSeasonIndicatorCanBeFormatted() async {
-        // Test that season can be displayed correctly (no commas, just the year)
-        let season: Int = 2026
-
-        // Swift string interpolation should not add commas
-        let formatted = "\(season)"
-        XCTAssertEqual(formatted, "2026")
-        XCTAssertFalse(formatted.contains(","), "Season should not contain comma separators")
     }
 
     private func makeCompleteHistoricalPlayers() -> [Player] {

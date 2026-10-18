@@ -129,18 +129,6 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         }
     }
 
-    func testPlayerProfileYearCompareTabDisabledForNoHistory() throws {
-        guard openFirstPlayerProfile() else {
-            return XCTFail("A player profile should open from the leaderboard")
-        }
-
-        // Check Year Compare tab state
-        let yearCompareTab = app.buttons["Year Compare"]
-        if yearCompareTab.exists {
-            XCTAssertTrue(yearCompareTab.exists, "Year Compare tab should exist")
-        }
-    }
-
     func testPlayerProfileShareFunctionality() throws {
         guard app.cells.firstMatch.waitForExistence(timeout: 5) else {
             return // No data - skip
@@ -276,28 +264,6 @@ final class StatScoutComprehensiveUITests: XCTestCase {
 
     // MARK: - MetricRankingView Tests
 
-    func testMetricRankingViewSorting() throws {
-        guard app.cells.firstMatch.waitForExistence(timeout: 5) else {
-            return // No data - skip
-        }
-        app.cells.firstMatch.tap()
-
-        // Navigate to a metric ranking
-        let metricCell = app.cells.firstMatch
-        guard metricCell.waitForExistence(timeout: 2) else {
-            return
-        }
-        metricCell.tap()
-
-        // Find sort button and test sorting
-        let sortButton = app.buttons["Sort"]
-        if sortButton.waitForExistence(timeout: 2) {
-            sortButton.tap()
-            // Verify sort changed
-            XCTAssertTrue(sortButton.exists, "Sort button should still exist after tap")
-        }
-    }
-
     func testMetricRankingViewShowsSeasonIndicator() throws {
         // Navigate to Metric Leaders tab
         let metricsTab = app.buttons["Metrics"]
@@ -396,19 +362,6 @@ final class StatScoutComprehensiveUITests: XCTestCase {
                 XCTAssertFalse(tab.label.isEmpty, "\(category) tab should have accessibility label")
             }
         }
-    }
-
-    func testDynamicTypeSupport() throws {
-        // Test that UI adapts to larger text sizes
-        // Note: This tests basic layout, actual dynamic type requires device settings
-        guard app.cells.firstMatch.waitForExistence(timeout: 5) else {
-            return
-        }
-        app.cells.firstMatch.tap()
-
-        // Verify content is still visible
-        let content = app.staticTexts.firstMatch
-        XCTAssertTrue(content.exists, "Content should adapt to text size changes")
     }
 
     // MARK: - TeamsView Tests
@@ -609,17 +562,6 @@ final class StatScoutComprehensiveUITests: XCTestCase {
         // Verify standard stats view loads
         let header = app.staticTexts["Standard Stats"]
         XCTAssertTrue(header.exists || app.staticTexts["AVG Leaders"].exists, "Standard stats header should exist")
-    }
-
-    func testStandardStatsTabDisabledWhenNoData() throws {
-        // Test that Standard Stats tab handles empty data gracefully
-        let standardStatsTab = app.buttons["Standard Stats"]
-        guard standardStatsTab.waitForExistence(timeout: 5) else {
-            return
-        }
-
-        // Tab should exist even if disabled
-        XCTAssertTrue(standardStatsTab.exists, "Standard Stats tab should exist")
     }
 }
 

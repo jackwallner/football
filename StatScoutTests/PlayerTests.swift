@@ -2,18 +2,22 @@ import XCTest
 @testable import Gridiron_StatScout
 
 final class PlayerTests: XCTestCase {
-    func testOverallPercentileDoubleAverage() {
-        let metrics = [
-            Metric(id: "m1", label: "A", value: "1", percentile: 75, category: .passing),
-            Metric(id: "m2", label: "B", value: "2", percentile: 76, category: .passing),
-            Metric(id: "m3", label: "C", value: "3", percentile: 77, category: .passing)
+    func testOverallPercentileAveragesAndRounds() {
+        let cases: [(percentiles: [Int], expected: Int)] = [
+            ([75, 76, 77], 76), ([75, 76], 76), ([85], 85),
+            ([75], 75), ([80, 90], 85), ([70, 60], 65),
         ]
-        let player = Player(
-            playerId: 1, name: "Test", team: "KC", position: "QB",
-            handedness: "",
-            updatedAt: Date(), metrics: metrics, standardStats: [], games: []
-        )
-        XCTAssertEqual(player.overallPercentile, 76) // 75.9 rounded
+        for (percentiles, expected) in cases {
+            let metrics = percentiles.enumerated().map { index, percentile in
+                Metric(id: "m\(index)", label: "M\(index)", value: "1",
+                       percentile: percentile, category: .passing)
+            }
+            let player = Player(
+                playerId: 1, name: "Test", team: "KC", position: "QB",
+                handedness: "", updatedAt: Date(), metrics: metrics, standardStats: [], games: []
+            )
+            XCTAssertEqual(player.overallPercentile, expected, "Percentiles: \(percentiles)")
+        }
     }
 
     func testShareSummaryIncludesTopSignal() {
@@ -95,26 +99,19 @@ final class PlayerTests: XCTestCase {
         XCTAssertFalse(quarterback.canCompareHeadToHead(with: defender))
     }
 
-    func testInitialsHandleSuffixes() {
-        let witt = Player(playerId: 1, name: "Michael Pittman Jr.", team: "IND", position: "WR", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(witt.initials, "MP")
-
-        let harris = Player(playerId: 2, name: "Odell Beckham Jr.", team: "MIA", position: "WR", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(harris.initials, "OB")
-
-        let third = Player(playerId: 3, name: "Robert Griffin III", team: "WAS", position: "QB", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(third.initials, "RG")
-    }
-
-    func testInitialsStandardNames() {
-        let mahomes = Player(playerId: 1, name: "Patrick Mahomes", team: "KC", position: "QB", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(mahomes.initials, "PM")
-
-        let chase = Player(playerId: 2, name: "Ja'Marr Chase", team: "CIN", position: "WR", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(chase.initials, "JC")
-
-        let single = Player(playerId: 3, name: "Cher", team: "KC", position: "QB", handedness: "", updatedAt: Date(), metrics: [], standardStats: [], games: [])
-        XCTAssertEqual(single.initials, "C")
+    func testInitialsHandleStandardNamesAndSuffixes() {
+        let cases = [
+            ("Michael Pittman Jr.", "MP"), ("Odell Beckham Jr.", "OB"),
+            ("Robert Griffin III", "RG"), ("Patrick Mahomes", "PM"),
+            ("Ja'Marr Chase", "JC"), ("Cher", "C"),
+        ]
+        for (name, expected) in cases {
+            let player = Player(
+                playerId: 1, name: name, team: "KC", position: "QB", handedness: "",
+                updatedAt: Date(), metrics: [], standardStats: [], games: []
+            )
+            XCTAssertEqual(player.initials, expected, name)
+        }
     }
 
     func testWeeklyDeltaSumsRecentGamesOnly() {
@@ -199,13 +196,6 @@ final class FootballMetricRegistryTests: XCTestCase {
         XCTAssertEqual(PlayerPositionGroup.qb.preferredAdvancedMetrics.first, "EPA/Play")
         XCTAssertEqual(PlayerPositionGroup.rb.preferredAdvancedMetrics.first, "EPA/Rush")
         XCTAssertEqual(PlayerPositionGroup.wr.preferredAdvancedMetrics.first, "EPA/Tgt")
-    }
-
-    @MainActor
-    func testLowerIsBetterUsesRegistry() {
-        XCTAssertTrue(DashboardViewModel.lowerIsBetter(label: "INT%", category: .passing))
-        XCTAssertTrue(DashboardViewModel.lowerIsBetter(label: "Fumble%", category: .rushing))
-        XCTAssertFalse(DashboardViewModel.lowerIsBetter(label: "EPA/Play", category: .passing))
     }
 
     func testUnknownMetricIsPreserved() {

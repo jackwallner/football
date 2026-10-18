@@ -2,20 +2,16 @@ import XCTest
 @testable import Gridiron_StatScout
 
 final class OpeningWeekCacheTests: XCTestCase {
-    func testCompleteOpeningGameIsCacheableBeforeFullSlate() {
-        XCTAssertTrue(PlayerSnapshotValidator.isCompleteCurrent(players()))
-    }
-
-    func testOnlyOneTeamIsNotACompleteOpeningGame() {
-        XCTAssertFalse(PlayerSnapshotValidator.isCompleteCurrent(players(oneTeam: true)))
-    }
-
-    func testOpeningGameStillRequiresEveryPositionGroup() {
-        XCTAssertFalse(PlayerSnapshotValidator.isCompleteCurrent(players().filter { $0.playerType != "def" }))
-    }
-
-    func testLastYearsOpeningGameIsNotCurrentData() {
-        XCTAssertFalse(PlayerSnapshotValidator.isCompleteCurrent(players(season: StatScoutSeason.current - 1)))
+    func testOpeningGameCompletenessRequiresBothTeamsAllPositionsAndCurrentSeason() {
+        let cases: [(name: String, players: [Player], complete: Bool)] = [
+            ("complete opener", players(), true),
+            ("only one team", players(oneTeam: true), false),
+            ("missing defense", players().filter { $0.playerType != "def" }, false),
+            ("past season", players(season: StatScoutSeason.current - 1), false),
+        ]
+        for testCase in cases {
+            XCTAssertEqual(PlayerSnapshotValidator.isCompleteCurrent(testCase.players), testCase.complete, testCase.name)
+        }
     }
 
     func testExpiredSavedSnapshotIsKeptAndNotRestamped() throws {
