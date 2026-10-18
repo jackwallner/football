@@ -119,11 +119,6 @@ struct MetricRankingView: View {
         .navigationTitle("\(metricLabel) · \(metricCategory.rawValue)")
         .navigationBarTitleDisplayMode(.inline)
     }
-
-    private func metricPercentile(for player: Player) -> Int {
-        player.metrics.first { $0.label == metricLabel && $0.category == metricCategory }?.percentile ?? 0
-    }
-
 }
 
 #if DEBUG

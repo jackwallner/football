@@ -13,11 +13,8 @@ enum GridironPalette {
     static let inkOnDark    = Color(red: 0.99, green: 0.98, blue: 0.94)
     static let midnight     = Color(red: 0.035, green: 0.08, blue: 0.07)
     static let turf         = Color(red: 0.08, green: 0.36, blue: 0.20)
-    static let leather      = Color(red: 0.48, green: 0.23, blue: 0.10)
-    static let gold         = Color(red: 0.84, green: 0.63, blue: 0.19)
     static let linkBlue     = Color(red: 0.05, green: 0.32, blue: 0.45)
     static let performanceHigh = Color(red: 0.02, green: 0.46, blue: 0.20)
-    static let performanceMid  = Color(red: 0.40, green: 0.38, blue: 0.31)
     static let performanceLow  = Color(red: 0.70, green: 0.20, blue: 0.08)
 
     /// W green, L red, and a tie neither: it used to fall through to green.
@@ -28,9 +25,6 @@ enum GridironPalette {
         default: return inkSecondary
         }
     }
-    static let up           = performanceHigh
-    static let down         = performanceLow
-    static let flat         = inkTertiary
 
     static func color(forPercentile p: Int) -> Color {
         let t = max(0.0, min(1.0, Double(p) / 100.0))
@@ -112,12 +106,9 @@ enum GridironGeo {
     static let radiusCard: CGFloat = 4
     static let radiusBadge: CGFloat = 2
     static let hairline: CGFloat = 0.5
-    static let barTrack: CGFloat = 4
-    static let barMarker: CGFloat = 12
     static let padInline: CGFloat = 12
     static let padCard: CGFloat = 16
     static let padPage: CGFloat = 16
-    static let padSection: CGFloat = 24
     static let rowHeight: CGFloat = 44
     static let rowHeightHeader: CGFloat = 28
     /// Breathing room between the underlined position tabs and the first row of
@@ -252,20 +243,4 @@ func teamFullName(_ abbr: String) -> String {
     if let name = relocated[key] { return name }
     let normalized = normalizedTeamAbbreviation(abbr)
     return map[normalized] ?? abbr
-}
-
-struct StatScoutTheme {
-    static let background = LinearGradient(colors: [GridironPalette.canvas, GridironPalette.canvas], startPoint: .top, endPoint: .bottom)
-    static let card       = GridironPalette.surface
-    static let stroke     = GridironPalette.hairline
-    static let accent     = GridironPalette.turf
-    static let hot        = GridironPalette.performanceHigh
-    static let performanceLow = GridironPalette.performanceLow
-    static let turf       = GridironPalette.turf
-    static let leather    = GridironPalette.leather
-    static let sky        = Color(red: 0.30, green: 0.55, blue: 0.85)
-
-    static func percentileColor(_ percentile: Int) -> Color {
-        GridironPalette.color(forPercentile: percentile)
-    }
 }

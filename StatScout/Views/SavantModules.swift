@@ -109,47 +109,6 @@ struct InjuryBadge: View {
     }
 }
 
-struct TeamIdentityStrip: View {
-    let team: String
-    var season: Int? = nil
-
-    private var normalizedTeam: String {
-        normalizedTeamAbbreviation(team)
-    }
-
-    private var seasonLabel: String {
-        let year = season ?? Calendar(identifier: .gregorian).component(.year, from: Date())
-        return String(year) + " Season"
-    }
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(NFLTeamColor.color(normalizedTeam))
-                    .frame(width: 56, height: 56)
-                Text(normalizedTeam)
-                    .font(GridironType.pageTitle)
-                    .foregroundStyle(.white)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(teamFullName(normalizedTeam))
-                    .font(GridironType.playerName)
-                    .foregroundStyle(GridironPalette.inkOnDark)
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                Text(seasonLabel)
-                    .font(GridironType.small)
-                    .foregroundStyle(.white.opacity(0.65))
-            }
-            Spacer(minLength: 8)
-        }
-        .padding(.horizontal, GridironGeo.padPage)
-        .padding(.vertical, GridironGeo.padPage)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(GridironPalette.midnight)
-    }
-}
-
 // MARK: - Module 3: Section Bar
 
 struct GridironSectionBar: View {

@@ -16,9 +16,6 @@ struct DataFreshnessView: View {
     /// coverage label from another set of numbers.
     var season: Int? = nil
     var phase: SeasonPhase? = nil
-    /// Kept for call-site compatibility. The caption itself is the refresh
-    /// control now, so there is no separate button to hide.
-    var showRefreshButton = true
 
     private var freshness: DataFreshness? { viewModel.freshnessForDisplay }
 

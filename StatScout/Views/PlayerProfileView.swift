@@ -449,39 +449,6 @@ struct PlayerProfileView: View {
         .padding(.top, 12)
     }
 
-    private var yearCompareSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("YEAR-OVER-YEAR")
-                        .font(GridironType.micro)
-                        .foregroundStyle(GridironPalette.inkTertiary)
-                    Text("Compare how this profile changed by season.")
-                        .font(GridironType.small)
-                        .foregroundStyle(GridironPalette.inkSecondary)
-                }
-                Spacer()
-                Button("Compare") {
-                    selectedTab = .yearCompare
-                    if store.isPro, !hasLoadedHistorical, !isHistoricalLoading {
-                        Task { await loadHistorical?() }
-                    }
-                    if !store.isPro { trialPitchTrigger = .yearCompare }
-                }
-                .font(GridironType.smallBold)
-                .buttonStyle(.bordered)
-                .tint(GridironPalette.midnight)
-            }
-            if selectedTab == .yearCompare, store.isPro {
-                yearCompareContent
-            }
-        }
-        .padding(16)
-        .background(GridironPalette.surface)
-        .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))
-        .overlay(RoundedRectangle(cornerRadius: GridironGeo.radiusCard).stroke(GridironPalette.hairline, lineWidth: 0.5))
-    }
-
     private var proUpsellCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
