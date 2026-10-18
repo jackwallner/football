@@ -39,7 +39,7 @@
         "url": "https://jackwallner.com/"
       },
       "datePublished": "2026-10-12",
-      "dateModified": "2026-10-15",
+      "dateModified": "2026-10-18",
       "mainEntityOfPage": "https://jackwallner.com/ios/football/what-is-epa-per-play.html",
       "image": "https://jackwallner.github.io/football/appstore-screenshot-01.png",
       "about": {
@@ -178,23 +178,23 @@ footer a { color: #6e6e73; text-decoration: none; margin: 0 10px; }
 <article>
 <div class="container">
 <h1>What is EPA per play in football? (And what CPOE adds)</h1>
-<p class="meta">By Jack Wallner. Last updated <time datetime="2026-10-15" data-updated>October 15, 2026</time>.</p>
+<p class="meta">By Jack Wallner. Last updated <time datetime="2026-10-18" data-updated>October 18, 2026</time>.</p>
 <p class="answer">EPA per play is the average number of points a play adds to its team's expected score on the drive. A positive number means the play left the offense better off than before the snap, and a negative number means worse. CPOE, completion percentage over expected, is the companion stat that judges a passer's accuracy against how hard each throw was.</p>
 
-<h2>How EPA works</h2>
-<p>Before every snap, a model estimates how many points the offense will score on average from that situation, using down, distance, field position, time and similar inputs. That number is the play's expected points, or EP. After the play, the model scores the new situation. EPA is the difference: expected points after, minus expected points before. The nflverse data dictionary describes it as the expected points added by the team with the ball for the given play.</p>
+<h2>How does EPA work?</h2>
+<p>EPA is the change in the offense's expected points from before a play to after it. Before every snap, a model estimates how many points the offense will score on average from that situation, using down, distance, field position, time and similar inputs. That number is the play's expected points, or EP. After the play, the model scores the new situation. EPA is the difference: expected points after, minus expected points before. The nflverse data dictionary describes it as the expected points added by the team with the ball for the given play.</p>
 <p>Two real plays from Week 1 of the 2025 season show the range. On 3rd and 12 from the Saints' 45, Arizona was worth 1.60 expected points. Kyler Murray completed a 25-yard pass to Trey McBride to the Saints' 20 and the play was worth +2.79 EPA. On the other end, Carolina's Bryce Young threw an interception on 2nd and 1 with 1.22 expected points on the board, and the play was worth -4.89 EPA.</p>
 <p>Because a first down, a touchdown or a turnover is priced in points, EPA counts what yards alone miss. A 5-yard gain on 3rd and 3 can be worth more than a 12-yard gain on 3rd and 15.</p>
 
-<h2>EPA per play, per dropback, per rush</h2>
-<p>Total EPA mostly rewards volume, so analysts divide it by opportunities. The common versions are EPA per play for a team, EPA per dropback for a quarterback, and EPA per rush or per target for runners and receivers. StatScout computes a quarterback's EPA per play as passing EPA divided by pass attempts plus sacks, so a sack that loses points counts against him.</p>
+<h2>What is the difference between EPA per play, per dropback and per rush?</h2>
+<p>Each divides total EPA by a different kind of opportunity, because total EPA mostly rewards volume. The common versions are EPA per play for a team, EPA per dropback for a quarterback, and EPA per rush or per target for runners and receivers. StatScout computes a quarterback's EPA per play as passing EPA divided by pass attempts plus sacks, so a sack that loses points counts against him.</p>
 <p>By construction the league average play is close to zero. Across all regular-season pass plays in 2025, the nflverse play-by-play data averages +0.02 EPA per play. Rushing plays average -0.01.</p>
 
-<h2>CPOE: accuracy against throw difficulty</h2>
-<p>Every pass gets a completion probability, called cp in the data, based on factors such as how far downfield the throw went. For a single pass, CPOE is 1 minus cp if the pass was completed, or 0 minus cp if it was not. Averaged over a season, it shows how far above or below expectation a passer's completion percentage was. Murray's 45-yard completion to Marvin Harrison Jr. in that same game had a 30 percent completion probability, so it scored +70 percentage points on that one throw. StatScout shows CPOE in percentage points.</p>
+<h2>What is CPOE?</h2>
+<p>CPOE, completion percentage over expected, is a stat that measures a passer's accuracy against how hard each throw was. Every pass gets a completion probability, called cp in the data, based on factors such as how far downfield the throw went. For a single pass, CPOE is 1 minus cp if the pass was completed, or 0 minus cp if it was not. Averaged over a season, it shows how far above or below expectation a passer's completion percentage was. Murray's 45-yard completion to Marvin Harrison Jr. in that same game had a 30 percent completion probability, so it scored +70 percentage points on that one throw. StatScout shows CPOE in percentage points.</p>
 
-<h2>What good looks like for quarterbacks</h2>
-<p>I calculated the 2025 regular-season spread from the nflverse player stats file for the 36 quarterbacks with at least 200 pass attempts.</p>
+<h2>What is a good EPA per play for a quarterback?</h2>
+<p>About +0.05 per dropback was the 2025 median, and about +0.20 was the 90th percentile. I calculated the 2025 regular-season spread from the nflverse player stats file for the 36 quarterbacks with at least 200 pass attempts.</p>
 <div class="tablewrap"><table>
 <thead><tr><th>Metric (2025)</th><th>Weak (10th pct.)</th><th>Typical (median)</th><th>Strong (90th pct.)</th><th>Best</th></tr></thead>
 <tbody>
@@ -204,10 +204,10 @@ footer a { color: #6e6e73; text-decoration: none; margin: 0 10px; }
 <p class="note">EPA per play is passing EPA divided by attempts plus sacks. Percentiles are interpolated from the downloaded rows.</p>
 <p>The gap between a weak and a strong starter is roughly 0.3 points per play. Over 600 plays, that is a difference of about 190 expected points across a season.</p>
 
-<h2>What EPA does not tell you</h2>
-<p>EPA credits the quarterback for everything on a pass play, including the line, the receivers and the play call. It is a noisy measure over a few games. Treat it as a strong starting point, and pair it with CPOE and the game film or team context before drawing conclusions about one player.</p>
+<h2>What doesn't EPA tell you?</h2>
+<p>It does not separate the quarterback from the line, receivers and play call. EPA credits the quarterback for everything on a pass play, including the line, the receivers and the play call. It is a noisy measure over a few games. Treat it as a strong starting point, and pair it with CPOE and the game film or team context before drawing conclusions about one player.</p>
 
-<h2>How StatScout helps</h2>
+<h2>How does StatScout show EPA?</h2>
 <p><a href="./">Pro Football: EPA StatScout</a> is an independent iPhone app, not affiliated with the NFL, that ranks every player on advanced percentiles including EPA per play and CPOE, next to the familiar totals. The data comes from the open nflverse archive and updates through game day, so you can see where a quarterback stands among his peers without looking up the numbers.</p>
 <h2>Frequently asked questions</h2>
 <div class="faq">
