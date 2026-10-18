@@ -198,6 +198,13 @@ final class FootballMetricRegistryTests: XCTestCase {
         XCTAssertEqual(PlayerPositionGroup.wr.preferredAdvancedMetrics.first, "EPA/Tgt")
     }
 
+    @MainActor
+    func testLowerIsBetterUsesRegistry() {
+        XCTAssertTrue(DashboardViewModel.lowerIsBetter(label: "INT%", category: .passing))
+        XCTAssertTrue(DashboardViewModel.lowerIsBetter(label: "Fumble%", category: .rushing))
+        XCTAssertFalse(DashboardViewModel.lowerIsBetter(label: "EPA/Play", category: .passing))
+    }
+
     func testUnknownMetricIsPreserved() {
         let unknown = Metric(id: "unknown", label: "New Metric", value: "1.0", percentile: 50, category: .passing)
         XCTAssertEqual(FootballMetricRegistry.kind(for: unknown), .advanced)
