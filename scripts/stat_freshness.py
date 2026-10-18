@@ -11,12 +11,11 @@ by comparing what each app serves against what the league has finished.
   newest finished game in the app's `games` table, plus whether the refresh
   chain has probed at all lately (`last_checked_at`).
 
-Used twice, so a dead runner can't silence both:
-
-* `.github/workflows/stat-watchdog.yml` runs it with `--github-issues`, keeping
-  one issue per stale app (no @mention unless --mention is given).
-* `~/ios/fleet-probe` imports `check_app` and reports to Discord #crashes
-  (its `deploy.sh` copies this file in; edit it here).
+`~/ios/fleet-probe` (on the iMac, every 4 hours) imports `check_app`, and the ops
+monitor turns a stale app into a digest item in Discord #ops. fleet-probe's
+`deploy.sh` copies this file in, so edit it here. `--github-issues` is a manual
+fallback; the GitHub Actions watchdog that ran it was removed 2026-10-18 so stale
+stats alert once.
 
 Stdlib only. Reads only what the apps themselves read, with the public anon key.
 """
