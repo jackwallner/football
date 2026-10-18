@@ -58,11 +58,4 @@ final class FavoritesStore {
             defaults.removeObject(forKey: Self.teamKey)
         }
     }
-
-    /// Anything followed at all. Used as a review-funnel eligibility signal:
-    /// someone who has curated a list has told us they're invested, which is a
-    /// different (and better) thing than having opened a few pages.
-    var hasAnyFavorite: Bool {
-        !playerIds.isEmpty || team != nil
-    }
 }

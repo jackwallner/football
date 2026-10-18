@@ -248,17 +248,9 @@ final class DashboardViewModel {
 
     var isReady: Bool { !players.isEmpty }
 
-    private var _teamScores: [String: Double] = [:]
     private var _teamsWithData: [String] = []
     private var _teamCacheSeason: Int?
     private var _teamCachePhase: SeasonPhase?
-
-    var teamScores: [String: Double] {
-        if _teamCacheSeason != selectedSeason || _teamCachePhase != selectedPhase {
-            recomputeTeamCache()
-        }
-        return _teamScores
-    }
 
     var teamsWithData: [String] {
         if _teamCacheSeason != selectedSeason || _teamCachePhase != selectedPhase {
@@ -279,14 +271,6 @@ final class DashboardViewModel {
     /// The last game the data actually covers, as opposed to when the rows were
     /// written. See `DataCoverage`.
     var dataCoverage: DataCoverage?
-
-    var freshnessText: String? {
-        guard let lastUpdated else { return nil }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return "Updated \(formatter.string(from: lastUpdated))"
-    }
 
     /// Fetch per-game logs for a single player. Powers the Recent Form card.
     /// The VM is a passthrough so the card stays UI-only and we do not
@@ -1107,10 +1091,6 @@ final class DashboardViewModel {
             .sorted { $0.overallPercentile > $1.overallPercentile }
     }
 
-    func teamScore(_ abbr: String) -> Double {
-        _teamScores[normalizedTeamAbbreviation(abbr)] ?? 0
-    }
-
     /// Players who meet the active qualifier for at least one category they appear in.
     /// Used to filter the StatScout leaders and Box Score so unqualified samples don't pollute results.
     var qualifiedSeasonPlayers: [Player] {
@@ -1566,22 +1546,13 @@ final class DashboardViewModel {
         let uniquePlayers = allSeasonPlayers.filter { seenIds.insert($0.playerId).inserted }
 
         var teams = Set<String>()
-        var teamScoresAccum: [String: (sum: Int, count: Int)] = [:]
 
         for player in uniquePlayers {
             let abbr = normalizedTeamAbbreviation(player.team)
             teams.insert(abbr)
-            let score = player.overallPercentile
-            if score > 0 {
-                var entry = teamScoresAccum[abbr] ?? (0, 0)
-                entry.sum += score
-                entry.count += 1
-                teamScoresAccum[abbr] = entry
-            }
         }
 
         _teamsWithData = teams.sorted()
-        _teamScores = teamScoresAccum.mapValues { Double($0.sum) / Double($0.count) }
         _teamCacheSeason = selectedSeason
         _teamCachePhase = selectedPhase
     }

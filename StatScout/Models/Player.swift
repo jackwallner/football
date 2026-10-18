@@ -136,14 +136,6 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
         rankedMetrics.sorted { $0.percentile > $1.percentile }.first
     }
 
-    var latestGame: GameTrend? {
-        games.sorted { $0.date > $1.date }.first
-    }
-
-    var latestPercentileDelta: Int {
-        latestGame?.percentileDelta ?? 0
-    }
-
     var weeklyDelta: Int {
         let cutoff = Date().addingTimeInterval(-7 * 24 * 3600)
         return games.filter { $0.date >= cutoff }
@@ -391,12 +383,6 @@ struct MetricValueFormat: Hashable, Sendable {
     }
 }
 
-enum MetricDirection: String, Codable, Hashable, Sendable {
-    case up
-    case flat
-    case down
-}
-
 enum MetricCategory: String, Codable, CaseIterable, Hashable, Sendable {
     case passing = "Passing"
     case rushing = "Rushing"
@@ -438,11 +424,6 @@ enum MetricCategory: String, Codable, CaseIterable, Hashable, Sendable {
         let ib = order.firstIndex(of: b) ?? order.count
         return ia < ib
     }
-}
-
-struct TeamRoute: Hashable {
-    let abbr: String
-    let players: [Player]
 }
 
 extension Player {
@@ -540,13 +521,6 @@ enum PlayerPositionGroup: String, CaseIterable, Identifiable, Hashable, Sendable
     case defense = "DEF"
 
     var id: String { rawValue }
-
-    var cohortDescription: String {
-        switch self {
-        case .defense: return "Among defensive players"
-        default: return "Among \(rawValue)s"
-        }
-    }
 
     var primaryCategory: MetricCategory {
         switch self {
@@ -973,16 +947,5 @@ extension Player {
 
     func metrics(kind: MetricKind) -> [Metric] {
         FootballMetricRegistry.sorted(metrics.filter { FootballMetricRegistry.kind(for: $0) == kind })
-    }
-
-    func preferredHeadlineMetric(kind: MetricKind) -> Metric? {
-        let candidates = metrics(kind: kind)
-        let preferred = kind == .advanced
-            ? positionGroup.preferredAdvancedMetrics
-            : positionGroup.preferredTraditionalMetrics
-        for label in preferred {
-            if let metric = candidates.first(where: { $0.label == label }) { return metric }
-        }
-        return candidates.first
     }
 }

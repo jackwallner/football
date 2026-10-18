@@ -33,30 +33,13 @@ struct GameBoxScore: Sendable {
         var carries = 0.0
         var offenseEPA = 0.0
         var hasEPA = false
-        var passingEPA = 0.0
-        var rushingEPA = 0.0
-        var hasPassingEPA = false
-        var hasRushingEPA = false
-        var airYards = 0.0
-        var yardsAfterCatch = 0.0
 
         /// Net passing (sacks subtracted) plus rushing, the box-score convention.
         var totalYards: Double { passingYards - sackYardsLost + rushingYards }
-        var netPassingYards: Double { passingYards - sackYardsLost }
         var turnovers: Double { interceptionsThrown + fumblesLost }
         var dropbacks: Double { passAttempts + sacksTaken }
         var plays: Double { dropbacks + carries }
         var epaPerPlay: Double? { hasEPA && plays > 0 ? offenseEPA / plays : nil }
-        var epaPerDropback: Double? { hasPassingEPA && dropbacks > 0 ? passingEPA / dropbacks : nil }
-        var epaPerCarry: Double? { hasRushingEPA && carries > 0 ? rushingEPA / carries : nil }
-        var yardsPerPlay: Double? { plays > 0 ? totalYards / plays : nil }
-        var netYardsPerDropback: Double? { dropbacks > 0 ? netPassingYards / dropbacks : nil }
-        var yardsPerCarry: Double? { carries > 0 ? rushingYards / carries : nil }
-        var airYardsPerAttempt: Double? { passAttempts > 0 ? airYards / passAttempts : nil }
-        /// Share of completed passing yards gained after the catch.
-        var yacShare: Double? { passingYards > 0 ? yardsAfterCatch / passingYards * 100 : nil }
-        var sackRate: Double? { dropbacks > 0 ? sacksTaken / dropbacks * 100 : nil }
-        var firstDownRate: Double? { plays > 0 ? firstDowns / plays * 100 : nil }
     }
 
     let lines: [PlayerLine]
@@ -91,18 +74,12 @@ struct GameBoxScore: Sendable {
             totals.sacksTaken += line.value("sacks_suffered")
             totals.passAttempts += line.value("attempts")
             totals.carries += line.value("carries")
-            totals.airYards += line.value("passing_air_yards")
-            totals.yardsAfterCatch += line.value("receiving_yac")
             if let epa = line.metrics["passing_epa"] {
-                totals.passingEPA += epa
                 totals.offenseEPA += epa
-                totals.hasPassingEPA = true
                 totals.hasEPA = true
             }
             if let epa = line.metrics["rushing_epa"] {
-                totals.rushingEPA += epa
                 totals.offenseEPA += epa
-                totals.hasRushingEPA = true
                 totals.hasEPA = true
             }
         }
@@ -133,22 +110,6 @@ struct GameBoxScore: Sendable {
                 ($0.tackles, $0.value("def_sacks"), $0.value("def_interceptions"))
                     > ($1.tackles, $1.value("def_sacks"), $1.value("def_interceptions"))
             }
-    }
-
-    /// A player's EPA across everything he did: passing, rushing and receiving.
-    /// Per player this is not double counting; a completion's value is credited
-    /// to both passer and receiver by design, so these are never summed to a team.
-    static func totalEPA(_ line: PlayerLine) -> Double? {
-        let parts = ["passing_epa", "rushing_epa", "receiving_epa"].compactMap { line.metrics[$0] }
-        return parts.isEmpty ? nil : parts.reduce(0, +)
-    }
-
-    /// The most valuable players of the game by total EPA, both teams.
-    func epaLeaders(limit: Int = 5) -> [PlayerLine] {
-        lines.compactMap { line in Self.totalEPA(line).map { (line, $0) } }
-            .sorted { $0.1 > $1.1 }
-            .prefix(limit)
-            .map(\.0)
     }
 
     /// Game leaders across both teams: passing, rushing and receiving yards,

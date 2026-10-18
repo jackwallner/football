@@ -165,25 +165,6 @@ struct TrendMetric: Identifiable, Hashable, Sendable {
         case .def: return defStandard
         }
     }
-
-    static func list(for side: TrendSide, mode: TrendStatMode) -> [TrendMetric] {
-        let picked = mode == .advanced ? advanced(for: side) : standard(for: side)
-        // Defence has no advanced list; fall through rather than showing an
-        // empty picker.
-        return picked.isEmpty ? standard(for: side) : picked
-    }
-}
-
-/// Which vocabulary the Trends board is ranking in: the advanced line or the
-/// traditional one. The same split the Stats tab, the player page and the team
-/// page all use, so a user who has picked "Standard" once knows what it means
-/// everywhere.
-enum TrendStatMode: String, CaseIterable, Identifiable, Sendable {
-    case advanced
-    case standard
-
-    var id: String { rawValue }
-    var label: String { self == .advanced ? "Advanced" : "Standard" }
 }
 
 /// Which position group the Trends board is ranking.
@@ -222,7 +203,4 @@ enum TrendSide: String, CaseIterable, Identifiable, Sendable {
 
     /// Matches `player_recent_form.player_type`.
     var playerType: String { rawValue }
-
-    /// Whether this side has a meaningful advanced/standard split at all.
-    var hasAdvancedMetrics: Bool { !TrendMetric.advanced(for: self).isEmpty }
 }

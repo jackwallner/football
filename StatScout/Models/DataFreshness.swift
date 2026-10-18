@@ -32,30 +32,6 @@ enum DataFreshnessStatus: String, Codable, CaseIterable, Sendable {
             self = .ready
         }
     }
-
-    var iconName: String {
-        switch self {
-        case .ready: "checkmark.circle.fill"
-        case .checking: "arrow.triangle.2.circlepath"
-        case .pending: "clock.badge.exclamationmark"
-        case .partial: "circle.lefthalf.filled"
-        case .stale: "clock.arrow.circlepath"
-        case .offline: "wifi.slash"
-        case .failed: "exclamationmark.triangle.fill"
-        }
-    }
-
-    var accessibilityName: String {
-        switch self {
-        case .ready: "Ready"
-        case .checking: "Checking"
-        case .pending: "Waiting for source data"
-        case .partial: "Partial data"
-        case .stale: "Stale data"
-        case .offline: "Offline"
-        case .failed: "Refresh failed"
-        }
-    }
 }
 
 /// Coverage describes the football included in a dataset. It is intentionally

@@ -130,15 +130,6 @@ struct PlayerProfile: Decodable, Hashable, Sendable {
             ? String(format: "$%.1fM/yr", contractAPY)
             : String(format: "$%.2fM/yr", contractAPY)
     }
-
-    /// Snap share for the side of the ball the player is ranked on.
-    func snapShare(defense: Bool) -> Double? {
-        defense ? defenseSnapShare : offenseSnapShare
-    }
-
-    func snaps(defense: Bool) -> Int? {
-        defense ? defenseSnaps : offenseSnaps
-    }
 }
 
 /// An entry on the weekly injury report, when it still describes a game that

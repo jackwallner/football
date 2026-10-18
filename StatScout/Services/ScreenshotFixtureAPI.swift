@@ -496,20 +496,4 @@ private extension RecentForm {
     }
 }
 
-/// In-memory cache used by the screenshot app hook. The production model loads
-/// historical rows lazily from its bundled plist; this cache lets the same
-/// lazy path exercise the fixture's prior season without touching disk.
-struct ScreenshotFixtureCache: PlayerCaching {
-    func loadPlayers() throws -> [Player] {
-        ScreenshotFixtureAPI.fixturePlayers
-    }
-
-    func savePlayers(_ players: [Player]) throws {}
-}
-
-extension ScreenshotFixtureAPI {
-    fileprivate static var fixturePlayers: [Player] {
-        playersBySeason.values.flatMap { $0 }
-    }
-}
 #endif

@@ -204,14 +204,4 @@ enum ConversionDiagnostics {
         }
         return attributes
     }
-
-    #if DEBUG
-    /// Test seam. The counters outlive a launch.
-    static func reset() {
-        let d = defaults
-        for key in d.dictionaryRepresentation().keys where key.hasPrefix("conv.") {
-            d.removeObject(forKey: key)
-        }
-    }
-    #endif
 }
