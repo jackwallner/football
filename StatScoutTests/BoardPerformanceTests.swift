@@ -52,4 +52,22 @@ final class BoardPerformanceTests: XCTestCase {
         XCTAssertFalse(vm.leaderboard.isEmpty)
         XCTAssertLessThan(elapsed, 1.0, "18 board passes should take well under a second")
     }
+
+    /// The Best/Worst and standard boards re-render on every loading tick too.
+    @MainActor
+    func testLeaderBoardsStayCheapWithFullHistory() async throws {
+        let vm = try await loadedViewModel()
+        vm.isPro = true
+        vm.selectSeason(StatScoutSeason.current - 1)
+
+        let start = Date()
+        for _ in 0..<10 {
+            _ = vm.allMetrics
+            _ = vm.qualifiedSeasonPlayers
+        }
+        let elapsed = Date().timeIntervalSince(start)
+        print("PERF 10 leader board passes: \(Int(elapsed * 1000)) ms")
+        XCTAssertFalse(vm.allMetrics.isEmpty)
+        XCTAssertLessThan(elapsed, 0.5, "10 leader board passes should take well under half a second")
+    }
 }

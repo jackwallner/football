@@ -1200,7 +1200,23 @@ final class DashboardViewModel {
 
     /// Players who meet the active qualifier for at least one category they appear in.
     /// Used to filter the StatScout leaders and Box Score so unqualified samples don't pollute results.
+    private struct QualifierKey: Equatable {
+        let slice: BoardSliceKey
+        let qualifierLevel: QualifierLevel
+        let profilesGeneration: Int
+    }
+
+    @ObservationIgnored private var qualifiedCache: (key: QualifierKey, players: [Player])?
+
     var qualifiedSeasonPlayers: [Player] {
+        let key = QualifierKey(slice: currentSliceKey, qualifierLevel: qualifierLevel, profilesGeneration: profilesGeneration)
+        if let cached = qualifiedCache, cached.key == key { return cached.players }
+        let players = buildQualifiedSeasonPlayers()
+        qualifiedCache = (key, players)
+        return players
+    }
+
+    private func buildQualifiedSeasonPlayers() -> [Player] {
         seasonPlayers.filter { player in
             let categories = Set(player.metrics.map(\.category))
             if categories.isEmpty { return isQualified(player, for: nil) }
@@ -1208,7 +1224,27 @@ final class DashboardViewModel {
         }
     }
 
-    var allMetrics: [(label: String, category: MetricCategory, best: (player: Player, percentile: Int, actualValue: String)?, worst: (player: Player, percentile: Int, actualValue: String)?)] {
+    private struct MetricLeadersKey: Equatable {
+        let qualifier: QualifierKey
+        let conference: NFLConference
+    }
+
+    @ObservationIgnored private var metricLeadersCache: (key: MetricLeadersKey, entries: [MetricLeaderEntry])?
+
+    /// Best and worst on every metric. Walks every metric of every player in
+    /// the season, so it is built once per change rather than per render.
+    var allMetrics: [MetricLeaderEntry] {
+        let key = MetricLeadersKey(
+            qualifier: QualifierKey(slice: currentSliceKey, qualifierLevel: qualifierLevel, profilesGeneration: profilesGeneration),
+            conference: selectedConference
+        )
+        if let cached = metricLeadersCache, cached.key == key { return cached.entries }
+        let entries = buildAllMetrics()
+        metricLeadersCache = (key, entries)
+        return entries
+    }
+
+    private func buildAllMetrics() -> [MetricLeaderEntry] {
         var metricMap: [String: (category: MetricCategory, values: [(player: Player, percentile: Int, actualValue: String)])] = [:]
         for player in seasonPlayers where matchesSelectedConference(player) {
             for metric in player.metrics {
