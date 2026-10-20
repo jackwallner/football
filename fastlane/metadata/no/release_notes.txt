@@ -1,1 +1,3 @@
-Feilrettinger og forbedringer.
+Del percentiltavlen til enhver spiller som et bilde, rett fra profilen.
+Rangeringer, søk og bytte av sesong går mye raskere, særlig for tidligere sesonger.
+Tydeligere priser på oppgraderingsskjermen.

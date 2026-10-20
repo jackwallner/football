@@ -1,1 +1,3 @@
-Hata düzeltmeleri ve iyileştirmeler.
+Herhangi bir oyuncunun yüzdelik tablosunu doğrudan profilinden görsel olarak paylaşın.
+Sıralamalar, arama ve sezon değiştirme çok daha hızlı, özellikle geçmiş sezonlarda.
+Yükseltme ekranında daha net fiyatlar.

@@ -1,1 +1,3 @@
-Fehlerbehebungen und Verbesserungen.
+Teile die Perzentil-Übersicht jedes Spielers als Bild, direkt aus seinem Profil.
+Bestenlisten, Suche und Saisonwechsel sind deutlich schneller, vor allem bei früheren Saisons.
+Klarere Preise auf dem Upgrade-Bildschirm.

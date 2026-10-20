@@ -1,1 +1,3 @@
-Opravy chyb a vylepšení.
+Sdílejte percentilovou tabulku libovolného hráče jako obrázek přímo z jeho profilu.
+Žebříčky, vyhledávání a přepínání sezón jsou mnohem rychlejší, hlavně u minulých sezón.
+Přehlednější ceny na obrazovce upgradu.

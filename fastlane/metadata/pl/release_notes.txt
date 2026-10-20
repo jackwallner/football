@@ -1,1 +1,3 @@
-Poprawki błędów i ulepszenia.
+Udostępnij tablicę percentyli dowolnego zawodnika jako obraz, prosto z jego profilu.
+Rankingi, wyszukiwanie i zmiana sezonu działają dużo szybciej, zwłaszcza dla minionych sezonów.
+Czytelniejsze ceny na ekranie ulepszenia.

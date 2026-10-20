@@ -1,1 +1,3 @@
-Corrección de errores y mejoras.
+Comparte el tablero de percentiles de cualquier jugador como imagen, desde su perfil.
+Las tablas de líderes, la búsqueda y el cambio de temporada son mucho más rápidos, sobre todo en temporadas pasadas.
+Precios más claros en la pantalla de mejora.
