@@ -8,7 +8,41 @@ final class DashboardViewModel {
     private let cache: PlayerCaching?
 
     var players: [Player] = []
-    var playerHistories: [Int: [Player]] = [:]
+    var playerHistories: [Int: [Player]] = [:] {
+        didSet { rebuildSeasonIndex() }
+    }
+
+    /// One season's unique players, keyed by season and phase.
+    ///
+    /// Every board reads one season, and with history loaded the histories
+    /// hold every row since 2000 (about 37,000). Scanning all of them on each
+    /// read, several times per render, cost about a second of main thread per
+    /// keystroke in search. Built once whenever the histories change.
+    private struct SeasonSlice: Hashable {
+        let season: Int
+        let phase: SeasonPhase
+    }
+
+    private var seasonIndex: [SeasonSlice: [Player]] = [:]
+    /// Bumped with every rebuild of `seasonIndex`, so memoized board reads
+    /// know when the rows under them changed without comparing them.
+    private var historyGeneration = 0
+
+    private func rebuildSeasonIndex() {
+        var index: [SeasonSlice: [Player]] = [:]
+        var seen: [SeasonSlice: Set<Int>] = [:]
+        for history in playerHistories.values {
+            for player in history {
+                guard let season = player.season else { continue }
+                let slice = SeasonSlice(season: season, phase: player.seasonPhase)
+                guard seen[slice, default: []].insert(player.playerId).inserted else { continue }
+                index[slice, default: []].append(player)
+            }
+        }
+        seasonIndex = index
+        historyGeneration += 1
+    }
+
     var searchText = ""
     var selectedConference: NFLConference = .all
     var selectedPosition: PlayerPositionGroup = .qb {
@@ -46,24 +80,9 @@ final class DashboardViewModel {
         return determineSortMetricLabel()
     }
 
-    var availableSortMetrics: [String] {
-        var seen = Set<String>()
-        return FootballMetricRegistry.sorted(eligibleMetrics)
-            .filter { seen.insert($0.label).inserted }
-            .map(\.label)
-    }
+    var availableSortMetrics: [String] { metricMenu.all }
 
-    var availableAdvancedSortMetrics: [String] {
-        availableSortMetrics.filter { label in
-            eligibleMetrics.contains { metric in
-                metric.label == label
-                    && FootballMetricRegistry.definition(
-                        for: metric.label,
-                        category: metric.category
-                    )?.kind == .advanced
-            }
-        }
-    }
+    var availableAdvancedSortMetrics: [String] { metricMenu.advanced }
 
     func setUserSortMetric(_ label: String?) {
         userSortMetric = label
@@ -248,22 +267,30 @@ final class DashboardViewModel {
 
     var isReady: Bool { !players.isEmpty }
 
-    private var _teamScores: [String: Double] = [:]
-    private var _teamsWithData: [String] = []
-    private var _teamCacheSeason: Int?
-    private var _teamCachePhase: SeasonPhase?
+    // Filled lazily from inside view reads, so ignored by observation: writing
+    // an observed property mid-render schedules another render. Readers still
+    // track the season, phase and generation the key is built from.
+    @ObservationIgnored private var _teamScores: [String: Double] = [:]
+    @ObservationIgnored private var _teamsWithData: [String] = []
+    @ObservationIgnored private var _teamCacheKey: BoardSliceKey?
+
+    private struct BoardSliceKey: Equatable {
+        let generation: Int
+        let season: Int
+        let phase: SeasonPhase
+    }
+
+    private var currentSliceKey: BoardSliceKey {
+        BoardSliceKey(generation: historyGeneration, season: selectedSeason, phase: selectedPhase)
+    }
 
     var teamScores: [String: Double] {
-        if _teamCacheSeason != selectedSeason || _teamCachePhase != selectedPhase {
-            recomputeTeamCache()
-        }
+        if _teamCacheKey != currentSliceKey { recomputeTeamCache() }
         return _teamScores
     }
 
     var teamsWithData: [String] {
-        if _teamCacheSeason != selectedSeason || _teamCachePhase != selectedPhase {
-            recomputeTeamCache()
-        }
+        if _teamCacheKey != currentSliceKey { recomputeTeamCache() }
         return _teamsWithData
     }
 
@@ -349,7 +376,7 @@ final class DashboardViewModel {
         // Runs through the live season, which is always offered (and is the
         // default) from the day the calendar names it.
         var seasons = Set(StatScoutSeason.earliest...max(freeSeason, StatScoutSeason.earliest))
-        seasons.formUnion(playerHistories.values.flatMap { $0 }.compactMap(\.season))
+        seasons.formUnion(seasonIndex.keys.map(\.season))
         // The career rollup sits under season 0, so a plain descending sort would
         // bury "All Time" underneath 2000. It belongs at the top of the menu, as
         // the widest possible frame rather than the narrowest.
@@ -383,11 +410,7 @@ final class DashboardViewModel {
     // Returns empty when the selected season has no data so callers render an empty state
     // instead of falling back to a stale "latest snapshot" set.
     var seasonPlayers: [Player] {
-        let allSeasonPlayers = playerHistories.values.flatMap { $0 }.filter {
-            $0.season == selectedSeason && $0.seasonPhase == selectedPhase
-        }
-        var seenIds = Set<Int>()
-        return allSeasonPlayers.filter { seenIds.insert($0.playerId).inserted }
+        seasonIndex[SeasonSlice(season: selectedSeason, phase: selectedPhase)] ?? []
     }
 
     // MARK: - Games
@@ -410,8 +433,14 @@ final class DashboardViewModel {
     /// Optional context: empty until `player_profiles` answers, and every
     /// screen that reads it leaves the line out rather than waiting.
     private(set) var profiles: [Int: PlayerProfile] = [:] {
-        didSet { contractValueCache = nil }
+        didSet {
+            contractValueCache = nil
+            profilesGeneration += 1
+        }
     }
+    /// Snap shares gate defenders on the board, so the memoized board keys on
+    /// this rather than comparing every profile.
+    private var profilesGeneration = 0
     /// Power ratings for the live season, keyed by normalized team.
     private(set) var teamRatings: [String: TeamRating] = [:]
     /// Projected margins for unplayed games, keyed by game id.
@@ -824,12 +853,7 @@ final class DashboardViewModel {
     /// Drill-down leaderboards opened from a player profile need the season
     /// that profile is showing, which can differ from `selectedSeason`.
     func players(forSeason season: Int, phase: SeasonPhase? = nil) -> [Player] {
-        let targetPhase = phase ?? selectedPhase
-        let all = playerHistories.values.flatMap { $0 }.filter {
-            $0.season == season && $0.seasonPhase == targetPhase
-        }
-        var seen = Set<Int>()
-        return all.filter { seen.insert($0.playerId).inserted }
+        seasonIndex[SeasonSlice(season: season, phase: phase ?? selectedPhase)] ?? []
     }
 
     /// Clubs whose name or abbreviation matches the current search.
@@ -852,32 +876,62 @@ final class DashboardViewModel {
             .sorted { teamFullName($0) < teamFullName($1) }
     }
 
-    private var eligibleMetrics: [Metric] {
-        seasonPlayers
+    private var eligibleMetrics: [Metric] { metricMenu.metrics }
+
+    /// The position's metrics for the season, and the sort menus built from
+    /// them. Every board read goes through here (the sort label alone reads
+    /// it twice), so it is built once per season, phase and position.
+    private struct MetricMenu {
+        let metrics: [Metric]
+        let all: [String]
+        let advanced: [String]
+    }
+
+    private struct MetricMenuKey: Equatable {
+        let slice: BoardSliceKey
+        let position: PlayerPositionGroup
+    }
+
+    @ObservationIgnored private var metricMenuCache: (key: MetricMenuKey, menu: MetricMenu)?
+
+    private var metricMenu: MetricMenu {
+        let key = MetricMenuKey(slice: currentSliceKey, position: selectedPosition)
+        if let cached = metricMenuCache, cached.key == key { return cached.menu }
+
+        let metrics = seasonPlayers
             .filter { $0.positionGroup == selectedPosition }
             .flatMap(\.metrics)
             .filter { FootballMetricRegistry.isSupported($0, by: selectedPosition) }
+        var seen = Set<String>()
+        let all = FootballMetricRegistry.sorted(metrics)
+            .filter { seen.insert($0.label).inserted }
+            .map(\.label)
+        let advancedLabels = Set(metrics.filter {
+            FootballMetricRegistry.definition(for: $0.label, category: $0.category)?.kind == .advanced
+        }.map(\.label))
+        let menu = MetricMenu(metrics: metrics, all: all, advanced: all.filter(advancedLabels.contains))
+        metricMenuCache = (key, menu)
+        return menu
     }
 
     var filteredPlayers: [Player] {
         // Resolved once: it walks every metric in the season.
         let gateLabel = qualifierLevel == .qualified ? currentSortMetricLabelForGate : nil
+        // Cheapest test first: position alone rules out most of the season.
         return seasonPlayers.filter { player in
-            let matchesSearch = searchText.isEmpty
-                || player.name.localizedCaseInsensitiveContains(searchText)
-                || player.team.localizedCaseInsensitiveContains(searchText)
-                || teamFullName(player.team).localizedCaseInsensitiveContains(searchText)
-            let matchesPosition = player.positionGroup == selectedPosition
-            let matchesConference = matchesSelectedConference(player)
+            guard player.positionGroup == selectedPosition,
+                  matchesSelectedConference(player) else { return false }
+            if !searchText.isEmpty,
+               !player.name.localizedCaseInsensitiveContains(searchText),
+               !player.team.localizedCaseInsensitiveContains(searchText),
+               !teamFullName(player.team).localizedCaseInsensitiveContains(searchText) {
+                return false
+            }
             let matchingMetrics = player.metrics.filter {
                 FootballMetricRegistry.isSupported($0, by: selectedPosition)
             }
-            let qualifies = isQualifiedForBoard(player, metrics: matchingMetrics, sortLabel: gateLabel)
-            return matchesSearch
-                && matchesPosition
-                && matchesConference
-                && !matchingMetrics.isEmpty
-                && qualifies
+            return !matchingMetrics.isEmpty
+                && isQualifiedForBoard(player, metrics: matchingMetrics, sortLabel: gateLabel)
         }
     }
 
@@ -975,7 +1029,40 @@ final class DashboardViewModel {
         }
     }
 
+    private struct LeaderboardKey: Equatable {
+        let slice: BoardSliceKey
+        let position: PlayerPositionGroup
+        let searchText: String
+        let conference: NFLConference
+        let qualifierLevel: QualifierLevel
+        let userSortMetric: String?
+        let sortDescending: Bool
+        let profilesGeneration: Int
+    }
+
+    @ObservationIgnored private var leaderboardCache: (key: LeaderboardKey, board: [Player])?
+
+    /// The ranked board. The view reads it several times per render, and
+    /// every loading-progress tick re-renders, so it is built once per change
+    /// of anything it depends on.
     var leaderboard: [Player] {
+        let key = LeaderboardKey(
+            slice: currentSliceKey,
+            position: selectedPosition,
+            searchText: searchText,
+            conference: selectedConference,
+            qualifierLevel: qualifierLevel,
+            userSortMetric: userSortMetric,
+            sortDescending: sortDescending,
+            profilesGeneration: profilesGeneration
+        )
+        if let cached = leaderboardCache, cached.key == key { return cached.board }
+        let board = buildLeaderboard()
+        leaderboardCache = (key, board)
+        return board
+    }
+
+    private func buildLeaderboard() -> [Player] {
         guard let label = currentSortMetric,
               let referenceMetric = eligibleMetrics.first(where: { $0.label == label }) else {
             return filteredPlayers.sorted { $0.name < $1.name }
@@ -1108,7 +1195,7 @@ final class DashboardViewModel {
     }
 
     func teamScore(_ abbr: String) -> Double {
-        _teamScores[normalizedTeamAbbreviation(abbr)] ?? 0
+        teamScores[normalizedTeamAbbreviation(abbr)] ?? 0
     }
 
     /// Players who meet the active qualifier for at least one category they appear in.
@@ -1559,11 +1646,7 @@ final class DashboardViewModel {
     }
 
     private func recomputeTeamCache() {
-        let allSeasonPlayers = playerHistories.values.flatMap { $0 }.filter {
-            $0.season == selectedSeason && $0.seasonPhase == selectedPhase
-        }
-        var seenIds = Set<Int>()
-        let uniquePlayers = allSeasonPlayers.filter { seenIds.insert($0.playerId).inserted }
+        let uniquePlayers = seasonPlayers
 
         var teams = Set<String>()
         var teamScoresAccum: [String: (sum: Int, count: Int)] = [:]
@@ -1582,8 +1665,7 @@ final class DashboardViewModel {
 
         _teamsWithData = teams.sorted()
         _teamScores = teamScoresAccum.mapValues { Double($0.sum) / Double($0.count) }
-        _teamCacheSeason = selectedSeason
-        _teamCachePhase = selectedPhase
+        _teamCacheKey = currentSliceKey
     }
 
     private func mergePlayers(replacing replacements: [Player]) -> [Player] {
