@@ -82,6 +82,19 @@ are handled by the `fill_deprecated_locales` lane.
   (`ASC_DRAFT_VERSION=1.2.6 scripts/asc-ensure-draft-version.sh`), attach
   build 63 and submit. If it is rejected again, rework the pattern first.
 
+## Pending release, 2026-10-20
+
+- App Store version 1.2.7 (build 67) is `WAITING_FOR_REVIEW`, release type
+  MANUAL. Jack lifted the basketball hold above and submitted it while
+  Basketball 1.0 (6) was still in review. 1.2.6 (build 62) is live.
+- Carries the baseball-style paywall pricing, the percentile board share
+  card, and the board performance fix (season row index and memoized board
+  reads). What's New is translated in all 50 locales; promotional text was
+  copied forward from 1.2.6.
+- `POST /v1/reviewSubmissionItems` returned 500 four times in a row before
+  succeeding on the fifth try a minute later. Rerun `release.py submit`;
+  it reuses the open submission.
+
 ## Draft version helper
 
 `ASC_DRAFT_VERSION` is the version to bump from, not the target version. For
