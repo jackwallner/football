@@ -89,16 +89,16 @@ hidden). `python3 scripts/play_screenshot_compositor.py` writes the seven
 es-ES; the app UI is English only). Privacy and terms pages are
 `docs/android-privacy.html` and `docs/android-terms.html`.
 
-## Play state (verified 2026-10-14)
+## Play state (live in production per the fleet rollout tracker, 2026-10-20)
 
 - App record, store listing (en-US default plus en-GB, en-AU, es-ES text;
   graphics are en-US only), store settings and every App content declaration
   done (privacy policy, ads none, reviewer-code sign-in details, IARC, target
   audience 18+, data safety, advertising ID no).
 - 1.2.6 (versionCode 2): internal track rolled out (completed) via API;
-  production full rollout to 178 countries sent for review 2026-10-14 with
-  the listing and App content changes (14 changes). Managed publishing is
-  off, so approval publishes. The next upload needs versionCode 3.
+  production full rollout to 178 countries sent for review 2026-10-14 and
+  since approved (live in production). Managed publishing is off, so approval
+  publishes. The next upload needs versionCode 3.
 - Production releases are staged in Console (Production > Releases > edit
   release > Next > Save, then Publishing overview > Send for review). The
   service account lacks production release permission. Listing text uploads
