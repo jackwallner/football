@@ -14,7 +14,7 @@ struct StandingsView: View {
                 VStack(spacing: 0) {
                     header(division.name)
                     ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
-                        NavigationLink(value: TeamDestination(abbr: row.team)) {
+                        DetailPaneLink(value: TeamDestination(abbr: row.team)) {
                             line(row)
                                 .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
                         }
@@ -126,7 +126,7 @@ struct PowerRankingsView: View {
                 VStack(spacing: 0) {
                     header
                     ForEach(Array(ratings.enumerated()), id: \.element.id) { index, rating in
-                        NavigationLink(value: TeamDestination(abbr: rating.team)) {
+                        DetailPaneLink(value: TeamDestination(abbr: rating.team)) {
                             line(rating)
                                 .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
                         }

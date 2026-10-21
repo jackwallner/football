@@ -195,7 +195,7 @@ struct GamesView: View {
         VStack(spacing: 0) {
             GridironSectionBar(title: title)
             ForEach(Array(games.enumerated()), id: \.element.id) { index, game in
-                NavigationLink(value: GameRoute(gameId: game.id)) {
+                DetailPaneLink(value: GameRoute(gameId: game.id), marksSelection: true) {
                     GameRow(
                         game: game,
                         hasStats: viewModel.hasStats(game),

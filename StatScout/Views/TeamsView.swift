@@ -370,7 +370,7 @@ struct TeamsView: View {
     /// there isn't room, and the helmet colours plus abbreviation are how people
     /// recognise a club anyway.
     private func teamDot(_ abbr: String) -> some View {
-        NavigationLink(value: TeamDestination(abbr: abbr)) {
+        DetailPaneLink(value: TeamDestination(abbr: abbr)) {
             // The disk already carries the abbreviation, so no caption beneath,
             // it printed the same letters twice and ate the vertical room the
             // eight division rows need.
@@ -492,7 +492,7 @@ struct FavoriteTeamCard: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            NavigationLink(value: destination) {
+            DetailPaneLink(value: destination) {
                 HStack(spacing: 14) {
                     ZStack {
                         Circle()

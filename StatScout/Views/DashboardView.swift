@@ -284,7 +284,7 @@ struct DashboardView: View {
                             .fill(GridironPalette.divider)
                             .frame(height: GridironGeo.hairline)
                     }
-                    NavigationLink(value: TeamDestination(abbr: team)) {
+                    DetailPaneLink(value: TeamDestination(abbr: team)) {
                         HStack(spacing: 10) {
                             ZStack {
                                 Circle()
@@ -423,7 +423,7 @@ struct DashboardView: View {
                 })
                 LazyVStack(spacing: 0) {
                     ForEach(Array(board.enumerated()), id: \.element.id) { index, player in
-                        NavigationLink(value: player) {
+                        DetailPaneLink(value: player, marksSelection: true) {
                             LeaderboardTableRow(
                                 rank: ranks[index],
                                 player: player,

@@ -143,7 +143,7 @@ struct ContractValueBoard: View {
 
     private func row(rank: Int, entry: (player: Player, value: ContractValue)) -> some View {
         let contract = viewModel.profile(for: entry.player)?.contractLabel
-        return NavigationLink(value: entry.player) {
+        return DetailPaneLink(value: entry.player) {
             HStack(spacing: 0) {
                 Text("\(rank)")
                     .font(GridironType.statSmall)

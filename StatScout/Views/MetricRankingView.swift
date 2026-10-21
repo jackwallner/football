@@ -88,7 +88,7 @@ struct MetricRankingView: View {
                         metricValue($0, label: metricLabel, category: metricCategory)
                     })
                     ForEach(Array(rankedPlayers.enumerated()), id: \.element.id) { index, player in
-                        NavigationLink(value: player) {
+                        DetailPaneLink(value: player, marksSelection: true) {
                             LeaderboardTableRow(
                                 rank: ranks[index],
                                 player: player,

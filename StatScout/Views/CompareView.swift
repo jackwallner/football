@@ -323,6 +323,14 @@ struct CompareView: View {
         .sheet(isPresented: $showingTrial) {
             TrialPitchSheet(trigger: .playerComparison)
         }
+        #if DEBUG
+        .onReceive(NotificationCenter.default.publisher(for: .duoCompare)) { note in
+            guard let pair = note.object as? [Player], pair.count == 2 else { return }
+            playerA = pair[0]
+            playerB = pair[1]
+            comparisonRoute = ComparisonRoute(playerA: pair[0], playerB: pair[1])
+        }
+        #endif
         .navigationDestination(item: $comparisonRoute) { route in
             PlayerComparisonView(
                 playerA: route.playerA,
@@ -463,7 +471,7 @@ struct CompareView: View {
                 // curated yourself with no way through to any of the pages it
                 // names. The chevron is its own target and does the obvious
                 // thing.
-                NavigationLink(value: player) {
+                DetailPaneLink(value: player) {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(GridironPalette.inkTertiary)
@@ -473,7 +481,7 @@ struct CompareView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Open \(player.name)'s page")
             } else {
-                NavigationLink(value: player) {
+                DetailPaneLink(value: player) {
                     followedRowLabel(player: player, inSlot: inSlot)
                 }
                 .buttonStyle(.plain)
@@ -487,7 +495,7 @@ struct CompareView: View {
             alignment: .bottom
         )
         .contextMenu {
-            NavigationLink(value: player) {
+            DetailPaneLink(value: player) {
                 Label("Open player page", systemImage: "person.text.rectangle")
             }
             Button(role: .destructive) {
@@ -996,7 +1004,7 @@ private struct YearCompareDestination: View {
     private var playerBar: some View {
         HStack(spacing: 10) {
             if let latest {
-                NavigationLink(value: latest) {
+                DetailPaneLink(value: latest) {
                     HStack(spacing: 10) {
                         PlayerHeadshot(team: latest.team, initials: latest.initials, size: 34)
                         VStack(alignment: .leading, spacing: 2) {

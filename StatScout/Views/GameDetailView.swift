@@ -139,7 +139,7 @@ struct GameDetailView: View {
     }
 
     private func teamColumn(_ team: String, game: Game, label: String) -> some View {
-        NavigationLink(value: TeamDestination(abbr: normalizedTeamAbbreviation(team))) {
+        DetailPaneLink(value: TeamDestination(abbr: normalizedTeamAbbreviation(team))) {
             VStack(spacing: 6) {
                 ZStack {
                     Circle().fill(NFLTeamColor.color(team))
@@ -688,7 +688,7 @@ struct GameDetailView: View {
         .contentShape(Rectangle())
         return Group {
             if let player {
-                NavigationLink(value: player) { row }
+                DetailPaneLink(value: player) { row }
                     .buttonStyle(.plain)
             } else {
                 row
@@ -917,7 +917,7 @@ struct GameDetailView: View {
     private func leaderCell(_ entry: (player: Player, value: String)?, alignment: HorizontalAlignment) -> some View {
         let frameAlignment: Alignment = alignment == .leading ? .leading : .trailing
         if let entry {
-            NavigationLink(value: entry.player) {
+            DetailPaneLink(value: entry.player) {
                 VStack(alignment: alignment, spacing: 1) {
                     Text(entry.player.name)
                         .font(GridironType.bodyBold)
@@ -1003,7 +1003,7 @@ struct GameDetailView: View {
             .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
             .contentShape(Rectangle())
         if let player = player(for: line) {
-            NavigationLink(value: player) { row }
+            DetailPaneLink(value: player) { row }
                 .buttonStyle(.plain)
         } else {
             row
