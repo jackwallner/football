@@ -22,6 +22,9 @@ paths:
 - Folding only moves frames: the tabs and the detail pane stay mounted. Never
   swap layouts with an `if` on size class.
 - Onboarding uses `UnfoldedPrimaryPane` so its column sits left of the fold.
+- While split, the left pane's toolbar stays horizontal (`FoldSideToolbar`, in
+  `GridironNavBar` and `GridironNavBarPublic`): iOS 27.1 otherwise gave that
+  pane a vertical bar against the fold and narrowed every board by ~95 pt.
 - White toolbar glyphs carry `toolbarGlyphDisc()`: the Duo vertical bar moves
   them off the midnight nav bar onto the light canvas.
 - Capture (gh-sim relaunches the app after unfolding): `-ScreenshotData
