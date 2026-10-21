@@ -90,3 +90,20 @@ struct DetailPaneLink<Label: View>: View {
         }
     }
 }
+
+/// Keeps the leading pane's toolbar horizontal while the Duo is split. Left to
+/// itself, iOS 27.1 gives that phone-width pane a vertical bar against the
+/// fold, which pushed the back button and gear to the crease and narrowed every
+/// board by the bar's width. Elsewhere (the phone, the folded Duo, the detail
+/// pane at the display edge) the system keeps choosing.
+struct FoldSideToolbar: ViewModifier {
+    @Environment(\.openInDetailPane) private var openInDetailPane
+
+    func body(content: Content) -> some View {
+        if #available(iOS 27.1, *) {
+            content.toolbarVerticalBehavior(openInDetailPane == nil ? .automatic : .disabled)
+        } else {
+            content
+        }
+    }
+}

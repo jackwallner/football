@@ -1603,6 +1603,7 @@ struct GridironNavBarPublic: ViewModifier {
             .toolbarBackground(GridironPalette.midnight, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .modifier(FoldSideToolbar())
     }
 }
 

@@ -166,47 +166,50 @@ extension ScreenshotFixtureAPI {
         scale: Double,
         percentile: Int
     ) -> [Metric] {
+        // Spread the supporting metrics by the player's standing, so team
+        // pages built from them rank clubs apart instead of tying at 50.
+        let f = 0.8 + Double(seed.percentile) / 250
         switch seed.type {
         case "qb":
             return [
                 metric("epa-play", "EPA/Play", seed.headline * scale, percentile, .passing),
-                metric("cpoe", "CPOE", 6.4 * scale, max(50, percentile - 3), .passing),
-                metric("int-rate", "INT%", 1.3 / scale, max(50, percentile - 7), .passing),
-                metric("sack-rate", "Sack%", 4.8 / scale, max(50, percentile - 4), .passing),
-                metric("time-to-throw", "Time to Throw", 2.63 / scale, max(50, percentile - 5), .passing),
-                metric("aggressiveness", "Aggressiveness", 18.2 * scale, max(50, percentile - 8), .passing),
-                metric("air-yards", "Intended Air Yds", 8.7 * scale, max(50, percentile - 2), .passing),
-                metric("rush-epa", "EPA/Rush", 0.12 * scale, max(50, percentile - 8), .rushing),
-                metric("rush-yoe", "RYOE", 34 * scale, max(50, percentile - 12), .rushing),
+                metric("cpoe", "CPOE", 6.4 * scale * f, max(50, percentile - 3), .passing),
+                metric("int-rate", "INT%", 1.3 / (scale * f), max(50, percentile - 7), .passing),
+                metric("sack-rate", "Sack%", 4.8 / (scale * f), max(50, percentile - 4), .passing),
+                metric("time-to-throw", "Time to Throw", 2.63 / (scale * f), max(50, percentile - 5), .passing),
+                metric("aggressiveness", "Aggressiveness", 18.2 * scale * f, max(50, percentile - 8), .passing),
+                metric("air-yards", "Intended Air Yds", 8.7 * scale * f, max(50, percentile - 2), .passing),
+                metric("rush-epa", "EPA/Rush", 0.12 * scale * f, max(50, percentile - 8), .rushing),
+                metric("rush-yoe", "RYOE", 34 * scale * f, max(50, percentile - 12), .rushing),
             ]
         case "rb":
             return [
                 metric("epa-rush", "EPA/Rush", seed.headline * scale, percentile, .rushing),
-                metric("ryoe", "RYOE", 49 * scale, max(50, percentile - 3), .rushing),
-                metric("explosive", "Explosive%", 14.2 * scale, max(50, percentile - 7), .rushing),
-                metric("rush-epa", "Rush EPA", 11.4 * scale, max(50, percentile - 4), .rushing),
-                metric("fumble-rate", "Fumble%", 1.1 / scale, max(50, percentile - 6), .rushing),
-                metric("epa-target", "EPA/Tgt", 0.16 * scale, max(50, percentile - 7), .receiving),
+                metric("ryoe", "RYOE", 49 * scale * f, max(50, percentile - 3), .rushing),
+                metric("explosive", "Explosive%", 14.2 * scale * f, max(50, percentile - 7), .rushing),
+                metric("rush-epa", "Rush EPA", 11.4 * scale * f, max(50, percentile - 4), .rushing),
+                metric("fumble-rate", "Fumble%", 1.1 / (scale * f), max(50, percentile - 6), .rushing),
+                metric("epa-target", "EPA/Tgt", 0.16 * scale * f, max(50, percentile - 7), .receiving),
             ]
         case "wr", "te":
             return [
                 metric("epa-target", "EPA/Tgt", seed.headline * scale, percentile, .receiving),
-                metric("wopr", "WOPR", 0.51 * scale, max(50, percentile - 3), .receiving),
-                metric("target-share", "Target Share", 24.8 * scale, max(50, percentile - 5), .receiving),
-                metric("racr", "RACR", 1.34 * scale, max(50, percentile - 2), .receiving),
-                metric("separation", "Separation", 3.1 * scale, max(50, percentile - 8), .receiving),
-                metric("yac-plus", "YAC+", 2.4 * scale, max(50, percentile - 5), .receiving),
-                metric("rec-epa", "Rec EPA", 17.7 * scale, max(50, percentile - 3), .receiving),
+                metric("wopr", "WOPR", 0.51 * scale * f, max(50, percentile - 3), .receiving),
+                metric("target-share", "Target Share", 24.8 * scale * f, max(50, percentile - 5), .receiving),
+                metric("racr", "RACR", 1.34 * scale * f, max(50, percentile - 2), .receiving),
+                metric("separation", "Separation", 3.1 * scale * f, max(50, percentile - 8), .receiving),
+                metric("yac-plus", "YAC+", 2.4 * scale * f, max(50, percentile - 5), .receiving),
+                metric("rec-epa", "Rec EPA", 17.7 * scale * f, max(50, percentile - 3), .receiving),
             ]
         default:
             return [
                 metric("pressures", "Pressures", 29 * scale, percentile, .defense),
-                metric("hurries", "Hurries", 21 * scale, max(50, percentile - 4), .defense),
-                metric("qb-kd", "QB KD", 8 * scale, max(50, percentile - 6), .defense),
-                metric("cmp-allowed", "Cmp% Allowed", 48.2 / scale, max(50, percentile - 6), .defense),
-                metric("yards-target", "Yds/Tgt Allowed", 6.1 / scale, max(50, percentile - 4), .defense),
-                metric("rating-allowed", "Rating Allowed", 71.4 / scale, max(50, percentile - 5), .defense),
-                metric("missed-tackle", "Missed Tkl%", 7.8 / scale, max(50, percentile - 4), .defense),
+                metric("hurries", "Hurries", 21 * scale * f, max(50, percentile - 4), .defense),
+                metric("qb-kd", "QB KD", 8 * scale * f, max(50, percentile - 6), .defense),
+                metric("cmp-allowed", "Cmp% Allowed", 48.2 / (scale * f), max(50, percentile - 6), .defense),
+                metric("yards-target", "Yds/Tgt Allowed", 6.1 / (scale * f), max(50, percentile - 4), .defense),
+                metric("rating-allowed", "Rating Allowed", 71.4 / (scale * f), max(50, percentile - 5), .defense),
+                metric("missed-tackle", "Missed Tkl%", 7.8 / (scale * f), max(50, percentile - 4), .defense),
             ]
         }
     }

@@ -161,6 +161,7 @@ struct RootTabView: View {
         let width: CGFloat = split?.primaryWidth ?? .infinity
         let selected: PaneDetail? = split == nil ? nil : shownDetail
         return tabs
+            .modifier(FoldSideToolbar())
             .environment(\.horizontalSizeClass, paneSizeClass)
             .environment(\.openInDetailPane, detailOpener)
             .environment(\.detailPaneSelection, selected)
@@ -498,6 +499,7 @@ private struct GridironNavBar: ViewModifier {
             .toolbarBackground(GridironPalette.midnight, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .modifier(FoldSideToolbar())
     }
 }
 
