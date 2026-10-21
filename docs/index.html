@@ -34,11 +34,11 @@
       "alternateName": "StatScout",
       "description": "Pro Football: EPA StatScout is an NFL stats app for iPhone that ranks every player on advanced percentiles, including EPA per play, CPOE and YAC over expected. Full player profiles, leaderboards and a Following list are free, with no account and no ads. An optional StatScout+ upgrade adds trends, recent form, player comparisons, team scouting and history back to 2000.",
       "applicationCategory": "SportsApplication",
-      "operatingSystem": "iOS 17+",
+      "operatingSystem": "iOS 17+, Android",
       "url": "https://jackwallner.com/ios/football/",
-      "downloadUrl": "https://apps.apple.com/us/app/id6792930447",
+      "downloadUrl": ["https://apps.apple.com/us/app/id6792930447", "https://play.google.com/store/apps/details?id=com.jackwallner.football"],
       "installUrl": "https://apps.apple.com/us/app/id6792930447",
-      "sameAs": "https://apps.apple.com/us/app/id6792930447",
+      "sameAs": ["https://apps.apple.com/us/app/id6792930447", "https://play.google.com/store/apps/details?id=com.jackwallner.football"],
       "screenshot": [
         "https://jackwallner.github.io/football/appstore-screenshot-01.png",
         "https://jackwallner.github.io/football/appstore-screenshot-02.png",
@@ -272,6 +272,25 @@
         }
 
         .download-btn:hover { opacity: 0.85; }
+
+        .download-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Google's generic badge PNG has 41/250 transparent padding on every side.
+           Visible height = 0.672 x image height; negative margins cancel the padding. */
+        .play-badge { display: inline-flex; border-radius: 8px; transition: opacity 0.15s; }
+        .play-badge:hover { opacity: 0.85; }
+        .play-badge:focus-visible { outline: 2px solid #0071e3; outline-offset: 2px; }
+        .play-badge img { display: block; width: auto; }
+        .play-badge.lg img { height: 70px; margin: -11.5px; }
+        .play-badge.sm img { height: 50px; margin: -8px; }
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
+        @media (max-width: 420px) { .nav-brand span { display: none; } }
 
         /* Screenshot showcase */
         .showcase {
@@ -610,15 +629,21 @@
                 <img src="icon_256.png" alt="StatScout">
                 <span>StatScout</span>
             </a>
+            <div class="nav-actions">
             <a class="nav-link" href="https://apps.apple.com/us/app/football-next-statscout/id6792930447?pt=128748779&amp;ct=jw-football-home&amp;mt=8">Download</a>
+            <a class="play-badge sm" href="https://play.google.com/store/apps/details?id=com.jackwallner.football"><img src="google-play-badge.png" alt="Get it on Google Play" width="646" height="250"></a>
+            </div>
         </div>
     </nav>
 
     <section class="hero">
         <h1>See who leads <span>beyond the box score</span></h1>
         <p class="tagline">EPA StatScout is an NFL stats app for iPhone: every player ranked on advanced percentiles, with the full profile one tap away and the whole league sorted by who's heating up.</p>
-        <p class="platforms">iPhone &middot; Fresh after every game &middot; No account</p>
-        <a class="download-btn" href="https://apps.apple.com/us/app/football-next-statscout/id6792930447?pt=128748779&amp;ct=jw-football-home&amp;mt=8">Download on the App Store</a>
+        <p class="platforms">iPhone and Android &middot; Fresh after every game &middot; No account</p>
+        <div class="download-row">
+            <a class="download-btn" href="https://apps.apple.com/us/app/football-next-statscout/id6792930447?pt=128748779&amp;ct=jw-football-home&amp;mt=8">Download on the App Store</a>
+            <a class="play-badge lg" href="https://play.google.com/store/apps/details?id=com.jackwallner.football"><img src="google-play-badge.png" alt="Get it on Google Play" width="646" height="250"></a>
+        </div>
     </section>
 
     <section class="showcase">
@@ -799,8 +824,11 @@
 
     <section class="cta">
         <h2>Know who's actually good</h2>
-        <p>Free on the App Store. No account required. StatScout+ optional.</p>
-        <a class="download-btn" href="https://apps.apple.com/us/app/football-next-statscout/id6792930447?pt=128748779&amp;ct=jw-football-home&amp;mt=8">Download on the App Store</a>
+        <p>Free on the App Store and Google Play. No account required. StatScout+ optional.</p>
+        <div class="download-row">
+            <a class="download-btn" href="https://apps.apple.com/us/app/football-next-statscout/id6792930447?pt=128748779&amp;ct=jw-football-home&amp;mt=8">Download on the App Store</a>
+            <a class="play-badge lg" href="https://play.google.com/store/apps/details?id=com.jackwallner.football"><img src="google-play-badge.png" alt="Get it on Google Play" width="646" height="250"></a>
+        </div>
     </section>
 
     <footer>
