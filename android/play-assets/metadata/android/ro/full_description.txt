@@ -1,0 +1,42 @@
+Cine conduce cu adevărat liga, dincolo de cifrele de bază?
+Clasează jucătorii NFL după statistici avansate, deschide un profil complet de percentile cu o atingere și vezi cine e în formă și cine scade.
+
+StatScout adună EPA pe fază, CPOE, YAC peste așteptări, eficiența alergărilor, recepțiile, impactul apărării și statisticile clasice într-o aplicație rapidă de fotbal american pentru Android.
+
+PERCENTILE DINTR-O PRIVIRE
+Fiecare metrică apare ca o bară de percentilă cu un marcaj colorat, de la ruginiu (percentila 0) prin nisipiu (50) până la verde de gazon (100). Vezi imediat cei mai buni jucători.
+
+PROFILURI COMPLETE
+Atinge un jucător ca să vezi percentilele la pase, alergare, recepție și apărare, să comuți între statistici avansate și standard și să urmărești forma meci cu meci.
+
+LA ZI ÎN ZIUA MECIULUI
+În sezon, StatScout verifică toată ziua statisticile NFL nou publicate și le actualizează imediat ce apar. Fiecare ecran arată ce săptămână și ce meciuri includ cifrele.
+
+REZULTATE, BOX SCORE ȘI CLASAMENTE
+Urmărește fiecare meci al săptămânii cu rezultate finale, box score, fazele decisive, clasamente și power rankings pentru toate cele 32 de echipe.
+
+CLASAMENTE ȘI FAVORIȚI
+Pornește de la liste cunoscute, cum ar fi yarzii din pase, sau treci la clasamentele avansate. Filtrează după QB, RB, WR, TE sau apărare și caută orice jucător activ. Echipa ta și jucătorii preferați stau gratuit împreună în Following.
+
+STATSCOUT+
+Deblochează restul aplicației cu StatScout+:
+- Tendințe: toată liga ordonată după cine urcă și cine coboară
+- Forma recentă: ultimele 3 / 5 / 8 meciuri pentru jucători, echipe și clasamente
+- Comparații: doi jucători unul lângă altul sau un jucător an de an
+- Scouting echipe: statistici avansate și standard pentru toate cele 32 de echipe
+- Sezoane trecute: fiecare an până în 2000, plus percentile de carieră
+
+Alege lunar, anual sau Lifetime. O singură achiziție deblochează tot.
+
+CONFIDENȚIALITATE ÎNAINTE DE TOATE
+Fără cont, fără înregistrare, fără reclame, fără urmărire de la terți. Aplicația face doar cererile de rețea necesare pentru statisticile NFL și verificarea achizițiilor.
+
+Detalii despre abonament
+StatScout+ este disponibil ca abonament cu reînnoire automată (lunar sau anual, cu perioadă de probă gratuită pentru abonații noi eligibili) sau ca achiziție unică Lifetime. Prețurile apar în aplicație înainte de cumpărare și diferă în funcție de regiune. Google Play debitează contul tău când confirmi. Abonamentele se reînnoiesc automat până la anulare. Le poți gestiona sau anula oricând în Google Play, la Plăți și abonamente.
+
+Aplicația în sine este în limba engleză.
+
+Politica de confidențialitate: https://jackwallner.github.io/football/android-privacy.html
+Termeni de utilizare: https://jackwallner.github.io/football/android-terms.html
+
+StatScout nu este afiliat, autorizat, susținut sau sponsorizat de National Football League (NFL), de vreo echipă NFL sau de NFLPA. Numele jucătorilor și ale echipelor și statisticile sunt folosite doar pentru identificare și informare.

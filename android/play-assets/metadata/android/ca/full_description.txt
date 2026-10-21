@@ -1,0 +1,42 @@
+Qui domina de veritat, més enllà del box score?
+Ordena els jugadors de l'NFL per estadístiques avançades, obre un perfil complet de percentils amb un toc i segueix qui està en ratxa o de baixada ara mateix.
+
+StatScout reuneix l'EPA per jugada, el CPOE, el YAC per sobre de l'esperat, l'eficiència en la cursa, la producció en recepció, l'impacte defensiu i les estadístiques tradicionals en una app de futbol americà ràpida per a Android.
+
+PERCENTILS VISUALS
+Cada mètrica es mostra com una barra de percentil amb un marcador de color, del rovell (percentil 0) a la sorra (50) i al verd gespa (100), per detectar l'elit a l'instant.
+
+PERFILS COMPLETS
+Toca qualsevol jugador per veure'n els percentils en Passada, Cursa, Recepció i Defensa, canviar entre estadístiques avançades i estàndard, i repassar-ne la forma recent partit a partit.
+
+AL DIA CADA JORNADA
+Durant la temporada, StatScout busca al llarg del dia les estadístiques de l'NFL acabades de publicar i les actualitza tan bon punt arriben. Cada pantalla indica quina setmana i quins partits s'hi inclouen.
+
+RESULTATS, BOX SCORES I CLASSIFICACIONS
+Segueix cada partit de la setmana amb resultats finals, box scores, les jugades decisives, classificacions i power rankings dels 32 equips.
+
+LÍDERS I SEGUIMENT
+Comença pels líders coneguts com les iardes de passada o canvia als rànquings avançats. Filtra per QB, RB, WR, TE o Defensa i cerca qualsevol jugador actiu sense perdre'n la posició a la lliga. Desa el teu equip i els teus jugadors preferits a Following, de franc.
+
+STATSCOUT+
+Desbloqueja la resta de l'app amb StatScout+:
+- Tendències: tota la lliga ordenada per qui puja i qui baixa
+- Forma recent: últims 3 / 5 / 8 partits de qualsevol jugador, equip o classificació
+- Comparacions: dos jugadors cara a cara, o un jugador any rere any
+- Scouting d'equips: estadístiques avançades i estàndard dels 32 equips
+- Temporades anteriors: cada any des del 2000, més percentils de carrera
+
+Tria Mensual, Anual o Lifetime. Una sola compra ho inclou tot.
+
+PRIVADESA PRIMER
+Sense comptes. Sense registre. Sense anuncis. Sense seguiment de tercers. L'app només fa les peticions de xarxa necessàries per a les estadístiques de l'NFL i la verificació de compres.
+
+Detalls de la subscripció
+StatScout+ està disponible com a subscripció de renovació automàtica (Mensual o Anual, totes dues amb prova gratuïta per a nous subscriptors que compleixin els requisits) o com a compra única Lifetime. Els preus es mostren a l'app abans de comprar i varien segons la regió. Google Play cobra al teu compte quan confirmes. Les subscripcions es renoven automàticament fins que les cancel·lis. Gestiona-les o cancel·la-les quan vulguis a Google Play, a Pagaments i subscripcions.
+
+L'app està en anglès.
+
+Política de privadesa: https://jackwallner.github.io/football/android-privacy.html
+Condicions d'ús: https://jackwallner.github.io/football/android-terms.html
+
+StatScout no està afiliat, autoritzat, avalat ni patrocinat per la National Football League (NFL), cap equip de l'NFL ni la NFLPA. Els noms de jugadors i equips i les estadístiques s'utilitzen només amb finalitats d'identificació i informació.

@@ -1,0 +1,42 @@
+Kuka on oikeasti paras, pelkkiä perustilastoja syvemmältä?
+Järjestä NFL-pelaajat edistyneiden mittareiden mukaan, avaa täysi persentiiliprofiili yhdellä napautuksella ja katso, kuka on nyt kuumana ja kuka hiipuu.
+
+StatScout kokoaa EPA per peli, CPOE:n, YAC yli odotuksen, juoksutehon, kiinniottojen tuotannon, puolustuksen vaikutuksen ja tutut perustilastot yhteen nopeaan amerikkalaisen jalkapallon sovellukseen Androidille.
+
+PERSENTIILIT YHDELLÄ SILMÄYKSELLÄ
+Jokainen mittari näkyy persentiilipalkkina, jossa on värillinen merkki: ruosteesta (0. persentiili) hiekan (50.) kautta nurmenvihreään (100.). Huippupelaajat erottuvat heti.
+
+TÄYDET PELAAJAPROFIILIT
+Napauta pelaajaa ja näe persentiilit heitoissa, juoksussa, vastaanotossa ja puolustuksessa, vaihda edistyneiden mittarien ja tavallisten kausitilastojen välillä ja seuraa viimeaikaista vireä ottelu kerrallaan.
+
+AJAN TASALLA PELIPÄIVÄNÄ
+Kauden aikana StatScout tarkistaa päivän mittaan uudet julkaistut NFL-tilastot ja päivittää ne heti. Jokainen näkymä kertoo, mikä viikko ja mitkä ottelut lukuihin sisältyvät.
+
+TULOKSET, BOXSCORET JA SARJATAULUKOT
+Seuraa viikon jokaista ottelua lopputulosten, boxscorejen, ratkaisevien pelien, sarjataulukoiden ja kaikkien 32 joukkueen power rankingien avulla.
+
+TILASTOJOHTAJAT JA SUOSIKIT
+Aloita tutuista listoista, kuten heittojaardeista, tai vaihda edistyneisiin rankingeihin. Suodata QB, RB, WR, TE tai puolustus ja hae kaikista aktiivisista pelaajista. Oma joukkue ja suosikkipelaajat löytyvät maksutta Following-näkymästä.
+
+STATSCOUT+
+Avaa loput sovelluksesta StatScout+:lla:
+- Trendit: koko liiga järjestettynä sen mukaan, kuka nousee ja kuka laskee
+- Viimeaikainen vire: viimeiset 3 / 5 / 8 ottelua pelaajille, joukkueille ja listoille
+- Pelaajavertailu: kaksi pelaajaa rinnakkain tai yksi pelaaja vuosi vuodelta
+- Joukkueiden scouting: edistyneet ja tavalliset tilastot kaikille 32 joukkueelle
+- Aiemmat kaudet: jokainen vuosi vuoteen 2000 asti sekä uran persentiilit
+
+Valitse kuukausi, vuosi tai Lifetime. Yksi osto avaa kaiken.
+
+YKSITYISYYS ENSIN
+Ei tiliä, ei rekisteröitymistä, ei mainoksia, ei kolmansien osapuolten seurantaa. Sovellus tekee vain NFL-tilastoihin ja ostojen vahvistamiseen tarvittavat verkkopyynnöt.
+
+Tilauksen tiedot
+StatScout+ on saatavilla automaattisesti uusiutuvana tilauksena (kuukausi tai vuosi, molemmissa ilmainen kokeilujakso kelpoisille uusille tilaajille) tai kertaostona Lifetime. Hinnat näytetään sovelluksessa ennen ostoa, ja ne vaihtelevat alueittain. Google Play veloittaa tiliäsi, kun vahvistat oston. Tilaukset uusiutuvat automaattisesti, kunnes ne perutaan. Hallinnoi tai peru milloin tahansa Google Playssa kohdassa Maksut ja tilaukset.
+
+Itse sovellus on englanninkielinen.
+
+Tietosuojakäytäntö: https://jackwallner.github.io/football/android-privacy.html
+Käyttöehdot: https://jackwallner.github.io/football/android-terms.html
+
+StatScout ei ole sidoksissa National Football Leagueen (NFL), yhteenkään NFL-joukkueeseen tai NFLPA:han, eivätkä ne ole valtuuttaneet, hyväksyneet tai sponsoroineet sitä. Pelaajien ja joukkueiden nimiä sekä tilastoja käytetään vain tunnistamiseen ja tiedottamiseen.

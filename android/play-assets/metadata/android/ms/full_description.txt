@@ -1,0 +1,42 @@
+Siapa yang benar-benar menonjol dalam liga, di sebalik angka biasa?
+Susun pemain NFL mengikut statistik lanjutan, buka profil persentil penuh dengan satu ketikan dan lihat siapa yang sedang hangat atau semakin perlahan.
+
+StatScout menghimpunkan EPA setiap permainan, CPOE, YAC melebihi jangkaan, kecekapan larian, penerimaan, kesan pertahanan dan statistik klasik dalam satu aplikasi bola sepak Amerika yang pantas untuk Android.
+
+PERSENTIL SEKALI PANDANG
+Setiap metrik dipaparkan sebagai bar persentil dengan penanda berwarna, daripada warna karat (persentil 0) melalui pasir (50) hingga hijau rumput (100), jadi pemain terbaik kelihatan serta-merta.
+
+PROFIL PEMAIN LENGKAP
+Ketik mana-mana pemain untuk melihat persentilnya dalam hantaran, larian, penerimaan dan pertahanan, bertukar antara statistik lanjutan dan statistik musim biasa, serta melihat prestasi terkini perlawanan demi perlawanan.
+
+TERKINI PADA HARI PERLAWANAN
+Sepanjang musim, StatScout menyemak statistik NFL yang baru diterbitkan sepanjang hari dan mengemas kininya sebaik sahaja tersedia. Setiap skrin menunjukkan minggu dan perlawanan yang diambil kira.
+
+KEPUTUSAN, BOX SCORE DAN KEDUDUKAN
+Ikuti setiap perlawanan minggu ini dengan keputusan akhir, box score, permainan penentu, kedudukan liga dan power ranking bagi kesemua 32 pasukan.
+
+CARTA PENDAHULU DAN KEGEMARAN
+Mulakan dengan senarai biasa seperti ela hantaran, atau tukar kepada kedudukan lanjutan. Tapis mengikut QB, RB, WR, TE atau pertahanan dan cari mana-mana pemain aktif. Pasukan dan pemain kegemaran anda disimpan bersama secara percuma dalam Following.
+
+STATSCOUT+
+Buka selebihnya aplikasi dengan StatScout+:
+- Trend: seluruh liga disusun mengikut siapa yang meningkat dan siapa yang menurun
+- Prestasi terkini: 3 / 5 / 8 perlawanan terakhir untuk pemain, pasukan dan carta
+- Bandingan pemain: dua pemain bersebelahan, atau seorang pemain dari tahun ke tahun
+- Scouting pasukan: statistik lanjutan dan standard untuk kesemua 32 pasukan
+- Musim lalu: setiap tahun hingga 2000, serta persentil kerjaya
+
+Pilih Bulanan, Tahunan atau Lifetime. Satu pembelian membuka semuanya.
+
+PRIVASI DIUTAMAKAN
+Tiada akaun, tiada pendaftaran, tiada iklan, tiada penjejakan pihak ketiga. Aplikasi hanya membuat permintaan rangkaian yang diperlukan untuk statistik NFL dan pengesahan pembelian.
+
+Butiran langganan
+StatScout+ tersedia sebagai langganan yang diperbaharui secara automatik (Bulanan atau Tahunan, dengan percubaan percuma untuk pelanggan baharu yang layak) atau sebagai pembelian sekali sahaja Lifetime. Harga dipaparkan dalam aplikasi sebelum anda membeli dan berbeza mengikut rantau. Google Play mengenakan caj pada akaun anda apabila anda mengesahkan. Langganan diperbaharui secara automatik sehingga dibatalkan. Urus atau batalkan pada bila-bila masa dalam Google Play di bawah Pembayaran & langganan.
+
+Aplikasi ini sendiri dalam bahasa Inggeris.
+
+Dasar Privasi: https://jackwallner.github.io/football/android-privacy.html
+Terma Penggunaan: https://jackwallner.github.io/football/android-terms.html
+
+StatScout tidak bergabung dengan, dibenarkan, disokong atau ditaja oleh National Football League (NFL), mana-mana pasukan NFL atau NFLPA. Nama pemain, nama pasukan dan statistik digunakan untuk tujuan pengenalan dan maklumat sahaja.

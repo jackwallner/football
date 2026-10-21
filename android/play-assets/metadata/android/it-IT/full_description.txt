@@ -1,0 +1,42 @@
+Chi domina davvero, oltre il tabellino?
+Classifica i giocatori NFL per statistiche avanzate, apri un profilo completo in percentili con un tocco e scopri chi è in forma e chi sta calando in questo momento.
+
+StatScout riunisce EPA per azione, CPOE, YAC oltre le attese, efficienza su corsa, produzione in ricezione, impatto difensivo e le classiche statistiche da tabellino in un'app di football americano veloce per Android.
+
+PERCENTILI VISIVI
+Ogni metrica appare come una barra di percentile con un indicatore colorato. Il colore passa dalla ruggine (0° percentile) alla sabbia (50°) fino al verde prato (100°), così riconosci subito i migliori.
+
+PROFILI COMPLETI DEI GIOCATORI
+Tocca un giocatore per vedere i percentili in Passaggi, Corse, Ricezioni e Difesa, passare dalle metriche avanzate alle statistiche stagionali classiche e seguire la forma recente partita per partita.
+
+AGGIORNATO NEI GIORNI DI PARTITA
+Durante la stagione StatScout controlla per tutto il giorno le nuove statistiche NFL pubblicate e le aggiorna appena arrivano. Ogni schermata indica quale settimana e quali partite sono incluse.
+
+RISULTATI, TABELLINI E CLASSIFICHE
+Segui ogni partita della settimana con risultati finali, tabellini, le azioni decisive, classifiche e power ranking di tutte le 32 squadre.
+
+CLASSIFICHE E PREFERITI
+Parti dai leader più noti come le yard su passaggio o passa alle classifiche avanzate. Filtra per QB, RB, WR, TE o Difesa e cerca qualsiasi giocatore attivo senza perdere la sua posizione nella lega. Tieni la tua squadra e i tuoi giocatori preferiti in Following, gratis.
+
+STATSCOUT+
+Sblocca il resto dell'app con StatScout+:
+- Tendenze: tutta la lega ordinata per chi sale e chi scende
+- Forma recente: ultime 3 / 5 / 8 partite di qualsiasi giocatore, squadra o classifica
+- Confronti: due giocatori fianco a fianco, o un giocatore anno su anno
+- Scouting delle squadre: statistiche avanzate e classiche di tutte le 32 squadre
+- Stagioni passate: ogni anno fino al 2000, più i percentili di carriera
+
+Scegli Mensile, Annuale o Lifetime. Un solo acquisto sblocca tutto.
+
+PRIVACY PRIMA DI TUTTO
+Nessun account. Nessuna registrazione. Nessuna pubblicità. Nessun tracciamento di terze parti. L'app effettua solo le richieste di rete necessarie per le statistiche NFL e la verifica degli acquisti.
+
+Dettagli dell'abbonamento
+StatScout+ è disponibile come abbonamento a rinnovo automatico (Mensile o Annuale, entrambi con prova gratuita per i nuovi abbonati idonei) o come acquisto unico Lifetime. I prezzi sono mostrati nell'app prima dell'acquisto e variano in base alla regione. Google Play addebita l'importo sul tuo account quando confermi. Gli abbonamenti si rinnovano automaticamente fino alla disdetta. Gestisci o annulla quando vuoi in Google Play, in Pagamenti e abbonamenti.
+
+L'app è in inglese.
+
+Informativa sulla privacy: https://jackwallner.github.io/football/android-privacy.html
+Termini di utilizzo: https://jackwallner.github.io/football/android-terms.html
+
+StatScout non è affiliato, autorizzato, approvato né sponsorizzato dalla National Football League (NFL), da alcuna squadra NFL o dalla NFLPA. Nomi di giocatori e squadre e statistiche sono usati solo a scopo identificativo e informativo.

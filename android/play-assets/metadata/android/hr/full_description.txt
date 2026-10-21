@@ -1,0 +1,42 @@
+Tko u ligi stvarno vodi kad pogledate ispod površine?
+Rangirajte NFL igrače po naprednim statistikama, jednim dodirom otvorite cijeli percentilni profil i pratite tko je u formi, a tko pada.
+
+StatScout spaja EPA po akciji, CPOE, YAC iznad očekivanog, učinkovitost trčanja, ulove, utjecaj obrane i klasične statistike u jednoj brzoj aplikaciji za američki nogomet na Androidu.
+
+PERCENTILI NA PRVI POGLED
+Svaka metrika prikazana je kao percentilna traka s obojenom oznakom, od hrđave (0. percentil) preko pješčane (50.) do travnato zelene (100.). Najbolje odmah uočite.
+
+POTPUNI PROFILI IGRAČA
+Dodirnite igrača i vidite percentile u dodavanjima, trčanju, ulovima i obrani, prebacite između naprednih i standardnih statistika te pratite formu utakmicu po utakmicu.
+
+AŽURNO NA DAN UTAKMICE
+Tijekom sezone StatScout cijeli dan provjerava novo objavljene NFL statistike i ažurira ih čim stignu. Svaki zaslon pokazuje koji tjedan i koje su utakmice uključene.
+
+REZULTATI, BOX SCORE I TABLICE
+Pratite svaku utakmicu tjedna uz konačne rezultate, box score, odlučujuće akcije, tablice i power rankinge svih 32 momčadi.
+
+PORETCI I FAVORITI
+Počnite s poznatim poretcima poput jardi dodavanjem ili prijeđite na napredne rang liste. Filtrirajte po QB, RB, WR, TE ili obrani i pretražite svakog aktivnog igrača. Svoju momčad i omiljene igrače besplatno držite u odjeljku Following.
+
+STATSCOUT+
+Otključajte ostatak aplikacije uz StatScout+:
+- Trendovi: cijela liga rangirana po tome tko je u usponu, a tko u padu
+- Nedavna forma: zadnje 3 / 5 / 8 utakmica za igrače, momčadi i poretke
+- Usporedbe igrača: dva igrača jedan uz drugog ili jedan igrač iz godine u godinu
+- Scouting momčadi: napredne i standardne statistike svih 32 momčadi
+- Prošle sezone: svaka godina unatrag do 2000. te percentili karijere
+
+Odaberite mjesečno, godišnje ili Lifetime. Jedna kupnja otključava sve.
+
+PRIVATNOST NA PRVOM MJESTU
+Bez računa, bez registracije, bez oglasa, bez praćenja trećih strana. Aplikacija šalje samo zahtjeve potrebne za NFL statistike i provjeru kupnje.
+
+Detalji pretplate
+StatScout+ dostupan je kao pretplata koja se automatski obnavlja (mjesečna ili godišnja, s besplatnim probnim razdobljem za ispunjavajuće nove pretplatnike) ili kao jednokratna kupnja Lifetime. Cijene se prikazuju u aplikaciji prije kupnje i razlikuju se ovisno o regiji. Google Play tereti vaš račun kada potvrdite. Pretplate se automatski obnavljaju dok ih ne otkažete. Upravljajte njima ili ih otkažite bilo kada u Google Playu pod Plaćanja i pretplate.
+
+Sama aplikacija je na engleskom jeziku.
+
+Pravila o privatnosti: https://jackwallner.github.io/football/android-privacy.html
+Uvjeti korištenja: https://jackwallner.github.io/football/android-terms.html
+
+StatScout nije povezan s National Football League (NFL), nijednom NFL momčadi ni NFLPA te ga oni ne odobravaju, ne podupiru niti sponzoriraju. Imena igrača i momčadi te statistike koriste se samo za identifikaciju i informiranje.

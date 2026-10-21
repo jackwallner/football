@@ -1,0 +1,42 @@
+Ligde gerçekten kim öne çıkıyor, temel sayıların ötesinde?
+NFL oyuncularını gelişmiş istatistiklere göre sırala, tek dokunuşla tam yüzdelik profili aç ve şu anda kimin yükselişte, kimin düşüşte olduğunu gör.
+
+StatScout; oyun başına EPA, CPOE, beklenen üstü YAC, koşu verimliliği, yakalama üretimi, savunma etkisi ve klasik istatistikleri Android için hızlı bir Amerikan futbolu uygulamasında bir araya getirir.
+
+TEK BAKIŞTA YÜZDELİKLER
+Her ölçüm, renkli bir işaretçiyle yüzdelik çubuğu olarak görünür: pas renginden (0. yüzdelik) kum rengine (50.) ve çim yeşiline (100.). En iyileri anında fark edersin.
+
+EKSİKSİZ OYUNCU PROFİLLERİ
+Bir oyuncuya dokun; pas, koşu, yakalama ve savunmadaki yüzdeliklerini gör, gelişmiş ve standart sezon istatistikleri arasında geçiş yap, formunu maç maç izle.
+
+MAÇ GÜNÜ GÜNCEL
+Sezon boyunca StatScout gün içinde yeni yayımlanan NFL istatistiklerini kontrol eder ve geldiği anda günceller. Her ekran, sayıların hangi haftayı ve maçları kapsadığını gösterir.
+
+SKORLAR, BOX SCORE VE PUAN DURUMU
+Haftanın her maçını final skorları, box score'lar, maçı belirleyen oyunlar, puan durumu ve 32 takımın power ranking sıralamasıyla takip et.
+
+SIRALAMALAR VE FAVORİLER
+Pas yardı gibi bilinen listelerle başla ya da gelişmiş sıralamalara geç. QB, RB, WR, TE veya savunmaya göre filtrele ve tüm aktif oyuncularda ara. Takımın ve favori oyuncuların Following bölümünde ücretsiz olarak bir arada.
+
+STATSCOUT+
+Uygulamanın geri kalanını StatScout+ ile aç:
+- Trendler: tüm lig, kimin yükselip kimin düştüğüne göre sıralı
+- Son form: oyuncular, takımlar ve listeler için son 3 / 5 / 8 maç
+- Oyuncu kıyaslama: iki oyuncu yan yana ya da bir oyuncu yıldan yıla
+- Takım scouting: 32 takımın gelişmiş ve standart istatistikleri
+- Geçmiş sezonlar: 2000'e kadar her yıl, ayrıca kariyer yüzdelikleri
+
+Aylık, yıllık veya Lifetime seç. Tek satın alma her şeyi açar.
+
+ÖNCE GİZLİLİK
+Hesap yok, kayıt yok, reklam yok, üçüncü taraf takibi yok. Uygulama yalnızca NFL istatistikleri ve satın alma doğrulaması için gereken ağ isteklerini yapar.
+
+Abonelik ayrıntıları
+StatScout+, otomatik yenilenen bir abonelik (aylık veya yıllık, uygun yeni aboneler için ücretsiz deneme süresiyle) ya da tek seferlik Lifetime satın alma olarak sunulur. Fiyatlar satın almadan önce uygulamada gösterilir ve bölgeye göre değişir. Google Play, onayladığında hesabından ücreti alır. Abonelikler iptal edilene kadar otomatik olarak yenilenir. İstediğin zaman Google Play'de Ödemeler ve abonelikler bölümünden yönet veya iptal et.
+
+Uygulamanın kendisi İngilizcedir.
+
+Gizlilik Politikası: https://jackwallner.github.io/football/android-privacy.html
+Kullanım Koşulları: https://jackwallner.github.io/football/android-terms.html
+
+StatScout; National Football League (NFL), herhangi bir NFL takımı veya NFLPA ile bağlantılı değildir ve bunlar tarafından yetkilendirilmemiş, onaylanmamış ya da desteklenmemiştir. Oyuncu ve takım adları ile istatistikler yalnızca tanımlama ve bilgilendirme amacıyla kullanılır.

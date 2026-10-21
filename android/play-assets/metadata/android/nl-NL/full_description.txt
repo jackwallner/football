@@ -1,0 +1,42 @@
+Wie is er echt goed, voorbij de boxscore?
+Rangschik NFL-spelers op geavanceerde statistieken, open met één tik een volledig percentielprofiel en zie wie op dit moment in vorm is of afkoelt.
+
+StatScout brengt EPA per play, CPOE, YAC boven verwachting, loopefficiëntie, ontvangstproductie, verdedigende impact en de bekende boxscore-cijfers samen in één snelle American football-app voor Android.
+
+PERCENTIELEN IN ÉÉN OOGOPSLAG
+Elke statistiek verschijnt als horizontale percentielbalk met een gekleurde markering. De kleur loopt van roest (0e percentiel) via zand (50e) naar grasgroen (100e), zodat je toppers meteen ziet.
+
+VOLLEDIGE SPELERSPROFIELEN
+Tik op een speler voor zijn percentielen in Passing, Rushing, Receiving en Defense, wissel tussen geavanceerde cijfers en standaard seizoensstatistieken en volg de recente vorm wedstrijd voor wedstrijd.
+
+ACTUEEL OP SPEELDAG
+Tijdens het seizoen controleert StatScout de hele dag op nieuw gepubliceerde NFL-statistieken en werkt ze bij zodra ze binnen zijn. Elk scherm laat zien welke week en welke wedstrijden zijn meegenomen.
+
+UITSLAGEN, BOXSCORES EN STANDEN
+Volg elke wedstrijd van de week met einduitslagen, boxscores, de beslissende plays, standen en power rankings van alle 32 teams.
+
+RANGLIJSTEN EN FAVORIETEN
+Begin bij bekende leiders zoals passing yards of schakel over naar geavanceerde ranglijsten. Filter op QB, RB, WR, TE of Defense en zoek elke actieve speler zonder zijn plek in de competitie kwijt te raken. Bewaar je team en favoriete spelers gratis bij elkaar in Following.
+
+STATSCOUT+
+Ontgrendel de rest van de app met StatScout+:
+- Trends: de hele competitie gerangschikt op wie stijgt en wie daalt
+- Recente vorm: laatste 3 / 5 / 8 wedstrijden van elke speler, elk team of elke ranglijst
+- Spelers vergelijken: twee spelers naast elkaar, of één speler per seizoen
+- Teamscouting: geavanceerde en standaard statistieken van alle 32 teams
+- Vorige seizoenen: elk jaar terug tot 2000, plus carrièrepercentielen
+
+Kies Maandelijks, Jaarlijks of Lifetime. Eén aankoop ontgrendelt alles.
+
+PRIVACY VOOROP
+Geen account. Geen registratie. Geen advertenties. Geen tracking door derden. De app doet alleen de netwerkverzoeken die nodig zijn voor NFL-statistieken en aankoopverificatie.
+
+Abonnementsdetails
+StatScout+ is beschikbaar als automatisch verlengend abonnement (Maandelijks of Jaarlijks, elk met een gratis proefperiode voor nieuwe abonnees die in aanmerking komen) of als eenmalige Lifetime-aankoop. Prijzen worden vóór aankoop in de app getoond en verschillen per regio. Google Play brengt het bedrag in rekening wanneer je bevestigt. Abonnementen worden automatisch verlengd tot je opzegt. Beheer of annuleer altijd in Google Play onder Betalingen en abonnementen.
+
+De app zelf is in het Engels.
+
+Privacybeleid: https://jackwallner.github.io/football/android-privacy.html
+Gebruiksvoorwaarden: https://jackwallner.github.io/football/android-terms.html
+
+StatScout is niet gelieerd aan, geautoriseerd, goedgekeurd of gesponsord door de National Football League (NFL), een NFL-team of de NFLPA. Namen van spelers en teams en statistieken worden alleen gebruikt ter identificatie en informatie.

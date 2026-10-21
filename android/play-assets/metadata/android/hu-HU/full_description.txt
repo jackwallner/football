@@ -1,0 +1,42 @@
+Ki a legjobb valójában, ha a puszta számok mögé nézel?
+Rangsorold az NFL-játékosokat haladó statisztikák szerint, nyisd meg egy koppintással a teljes percentilisprofilt, és nézd meg, ki van formában és ki hanyatlik.
+
+A StatScout egy gyors amerikaifutball-alkalmazásban gyűjti össze Androidon az EPA per játék, a CPOE, a várt feletti YAC, a futás hatékonysága, az elkapások, a védekezés hatása és a klasszikus statisztikák adatait.
+
+PERCENTILISEK EGY PILLANTÁSRA
+Minden mutató egy percentilissávként jelenik meg színes jelölővel, a rozsdavöröstől (0. percentilis) a homokszínen (50.) át a gyepzöldig (100.). A legjobbak azonnal kitűnnek.
+
+TELJES JÁTÉKOSPROFILOK
+Koppints egy játékosra, és lásd a percentiliseit passzban, futásban, elkapásban és védekezésben, válts a haladó és a hagyományos szezonstatisztikák között, és kövesd a formáját meccsről meccsre.
+
+FRISS A MECCSNAPON
+A szezonban a StatScout egész nap figyeli az újonnan közzétett NFL-statisztikákat, és azonnal frissít. Minden képernyő jelzi, melyik hét és mely meccsek szerepelnek a számokban.
+
+EREDMÉNYEK, BOX SCORE-OK ÉS TABELLÁK
+Kövesd a hét minden meccsét végeredményekkel, box score-okkal, a döntő játékokkal, tabellákkal és mind a 32 csapat power rankingjével.
+
+RANGLISTÁK ÉS KEDVENCEK
+Kezdd ismert listákkal, például a passzolt yardokkal, vagy válts haladó rangsorokra. Szűrj QB, RB, WR, TE vagy védekezés szerint, és keress bármelyik aktív játékosra. A csapatod és a kedvenc játékosaid ingyen egy helyen vannak a Following részben.
+
+STATSCOUT+
+A StatScout+ feloldja az alkalmazás többi részét:
+- Trendek: az egész liga aszerint rangsorolva, ki emelkedik és ki hanyatlik
+- Aktuális forma: az utolsó 3 / 5 / 8 meccs játékosokra, csapatokra és listákra
+- Játékos-összehasonlítás: két játékos egymás mellett vagy egy játékos évről évre
+- Csapat-scouting: haladó és hagyományos statisztikák mind a 32 csapatról
+- Korábbi szezonok: minden év 2000-ig visszamenőleg, plusz karrier-percentilisek
+
+Válassz havi, éves vagy Lifetime csomagot. Egy vásárlás mindent felold.
+
+ADATVÉDELEM ELŐSZÖR
+Nincs fiók, nincs regisztráció, nincsenek hirdetések, nincs külső követés. Az alkalmazás csak az NFL-statisztikákhoz és a vásárlás ellenőrzéséhez szükséges hálózati kéréseket küldi.
+
+Az előfizetés részletei
+A StatScout+ automatikusan megújuló előfizetésként (havi vagy éves, a jogosult új előfizetőknek ingyenes próbaidővel) vagy egyszeri Lifetime vásárlásként érhető el. Az árak vásárlás előtt megjelennek az alkalmazásban, és régiónként eltérnek. A Google Play a megerősítéskor terheli a fiókodat. Az előfizetések lemondásig automatikusan megújulnak. Bármikor kezelheted vagy lemondhatod őket a Google Play Fizetések és előfizetések menüjében.
+
+Maga az alkalmazás angol nyelvű.
+
+Adatvédelmi irányelvek: https://jackwallner.github.io/football/android-privacy.html
+Felhasználási feltételek: https://jackwallner.github.io/football/android-terms.html
+
+A StatScout nem áll kapcsolatban a National Football League-gel (NFL), egyetlen NFL-csapattal vagy az NFLPA-val, és azok nem engedélyezték, nem támogatják és nem szponzorálják. A játékosok és csapatok nevei, valamint a statisztikák kizárólag azonosítási és tájékoztatási célt szolgálnak.
