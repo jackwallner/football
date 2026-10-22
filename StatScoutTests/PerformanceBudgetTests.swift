@@ -61,7 +61,7 @@ final class PerformanceBudgetTests: XCTestCase {
                     let slots = phase == .regular ? count : count / playoffShare
                     for slot in 0..<slots {
                         // Spread careers: the same id recurs across seasons.
-                        let id = base * 10 + (slot + season * 3) % (count + 40)
+                        let id = base * 100_000 + (slot + season * 3) % (count + 40)
                         players.append(Player(
                             playerId: id,
                             name: "\(firstNames[id % firstNames.count]) \(lastNames[(id / 7) % lastNames.count])",
@@ -135,8 +135,8 @@ final class PerformanceBudgetTests: XCTestCase {
         // Budgets below are about 5x the simulator time measured, floored at 0.5 s.
         print("PERF ingest full history: \(Int(elapsed * 1000)) ms")
         XCTAssertTrue(vm.hasLoadedHistorical)
-        XCTAssertGreaterThan(vm.playerHistories.count, 500)
-        XCTAssertLessThan(elapsed, 1.0)  // ingest, measured 87 to 164 ms
+        XCTAssertGreaterThan(vm.playerHistories.count, 1_300)
+        XCTAssertLessThan(elapsed, 1.5)  // ingest, measured 293 ms
     }
 
     /// Flipping through every season on every position tab, reading what one
@@ -159,7 +159,7 @@ final class PerformanceBudgetTests: XCTestCase {
             }
         }
         XCTAssertFalse(vm.leaderboard.isEmpty)
-        XCTAssertLessThan(elapsed, 14.0)  // 28 seasons x 5 positions, measured 2.8 to 4.7 s
+        XCTAssertLessThan(elapsed, 40.0)  // 28 seasons x 5 positions, measured 8.6 s
     }
 
     /// Typing in search on the busiest board, then Best/Worst and the
@@ -176,7 +176,7 @@ final class PerformanceBudgetTests: XCTestCase {
                 _ = vm.searchedTeams
             }
         }
-        XCTAssertLessThan(typing, 1.0)  // typing, measured 163 to 280 ms
+        XCTAssertLessThan(typing, 1.5)  // typing, measured 287 ms
 
         vm.searchText = ""
         let boards = measure("best/worst + qualified, career") {
@@ -186,7 +186,7 @@ final class PerformanceBudgetTests: XCTestCase {
             }
         }
         XCTAssertFalse(vm.allMetrics.isEmpty)
-        XCTAssertLessThan(boards, 0.5)  // best/worst, measured 47 to 82 ms
+        XCTAssertLessThan(boards, 0.75)  // best/worst, measured 152 ms
     }
 
     /// Team pages and profiles resolve players by team and by id for every
@@ -205,6 +205,6 @@ final class PerformanceBudgetTests: XCTestCase {
                 _ = vm.player(id: id, season: StatScoutSeason.current - 1, phase: .regular)
             }
         }
-        XCTAssertLessThan(elapsed, 1.0)  // lookups, measured 209 to 345 ms
+        XCTAssertLessThan(elapsed, 5.0)  // lookups, measured 941 ms
     }
 }
