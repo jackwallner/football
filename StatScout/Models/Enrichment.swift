@@ -102,9 +102,23 @@ struct PlayerProfile: Decodable, Hashable, Sendable {
         return calendar.date(from: DateComponents(year: bits[0], month: bits[1], day: bits[2]))
     }
 
-    func age(on date: Date = .now) -> Int? {
+    /// Whole years on `date`, counted on the calendar day in `calendar`'s zone.
+    ///
+    /// `birthDate` is UTC midnight of the birth day, so differencing it
+    /// against `date` directly in a western zone started the birthday the
+    /// previous evening: it read as the birth day's date minus seven or eight
+    /// hours. The birth day's own year, month and day are read in UTC and
+    /// compared with `date`'s day in the viewer's zone.
+    func age(on date: Date = .now, calendar: Calendar = .current) -> Int? {
         guard let birthDate else { return nil }
-        return Calendar(identifier: .gregorian).dateComponents([.year], from: birthDate, to: date).year
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC") ?? .current
+        let born = utc.dateComponents([.year, .month, .day], from: birthDate)
+        let today = calendar.dateComponents([.year, .month, .day], from: date)
+        guard let bornYear = born.year, let bornMonth = born.month, let bornDay = born.day,
+              let year = today.year, let month = today.month, let day = today.day else { return nil }
+        let hadBirthday = (month, day) >= (bornMonth, bornDay)
+        return year - bornYear - (hadBirthday ? 0 : 1)
     }
 
     /// "6-1, 196".

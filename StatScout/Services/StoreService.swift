@@ -52,11 +52,15 @@ enum StatScoutSeason {
     ///
     /// Floored at 2025 so this can never resolve to a season older than the
     /// one the app shipped with, whatever the device clock says.
-    static let current: Int = {
-        let now = Calendar.current.dateComponents([.year, .month], from: .now)
-        guard let year = now.year, let month = now.month else { return 2025 }
+    static let current: Int = season(on: .now)
+
+    /// The season `date` falls in under `current`'s rule, read in `calendar`'s
+    /// zone. Split out so the September flip can be tested at a fixed clock.
+    static func season(on date: Date, calendar: Calendar = .current) -> Int {
+        let parts = calendar.dateComponents([.year, .month], from: date)
+        guard let year = parts.year, let month = parts.month else { return 2025 }
         return max(2025, month >= 9 ? year : year - 1)
-    }()
+    }
 
     /// The only season available without Pro, and the one every screen opens on.
     ///
@@ -115,8 +119,12 @@ enum StatScoutSeason {
     /// the database when the season actually finished. `days` stays the payload
     /// budget it always was - about a season's worth of weeks, enough to slice
     /// the longest window from.
-    static func gameLogWindowStart(season: Int, days: Int = 120, now: Date = .now) -> Date {
-        let calendar = Calendar.current
+    static func gameLogWindowStart(
+        season: Int,
+        days: Int = 120,
+        now: Date = .now,
+        calendar: Calendar = .current
+    ) -> Date {
         let seasonEnd = calendar.date(from: DateComponents(year: season + 1, month: 3, day: 1)) ?? now
         let anchor = min(now, seasonEnd)
         return calendar.date(byAdding: .day, value: -days, to: anchor) ?? anchor
