@@ -151,10 +151,29 @@ struct RootTabView: View {
                     .allowsHitTesting(selection == tab.rawValue)
                     .accessibilityHidden(selection != tab.rawValue)
             }
+            // Unfolded, the tabs end where the docked bar begins.
+            .padding(.bottom, UnfoldedSplit.tabContentBottomInset(isSplit: split != nil))
 
+            tabBarDock
             floatingTabBar
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// The strip the bar docks in while the Duo is split: the leading pane is
+    /// half a landscape display, and a pill floating over its last rows read as
+    /// covering them. Kept in the tree and faded, so folding only moves frames.
+    private var tabBarDock: some View {
+        Rectangle()
+            .fill(GridironPalette.surface)
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .fill(GridironPalette.hairline)
+                    .frame(height: GridironGeo.hairline)
+            }
+            .frame(height: UnfoldedSplit.dockedTabBarHeight)
+            .opacity(split == nil ? 0 : 1)
+            .accessibilityHidden(true)
     }
 
     private var primaryPane: some View {
@@ -239,7 +258,8 @@ struct RootTabView: View {
     }
 
     private var floatingTabBar: some View {
-        HStack(spacing: 0) {
+        let floats = split == nil
+        return HStack(spacing: 0) {
             ForEach(Tab.allCases) { tab in
                 TabBarButton(
                     icon: tab.icon,
@@ -253,17 +273,18 @@ struct RootTabView: View {
             }
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 7)
+        .padding(.vertical, UnfoldedSplit.tabBarVerticalPadding)
         // Near-opaque: the old 0.8 ultra-thin material let the two rows
         // under it read through and collide with the tab labels on every
         // board. It still floats; it just no longer shares its pixels.
+        // Docked in the split, the strip behind it is the chrome instead.
         .background {
-            Capsule().fill(.regularMaterial)
-            Capsule().fill(GridironPalette.surface.opacity(0.9))
+            Capsule().fill(.regularMaterial).opacity(floats ? 1 : 0)
+            Capsule().fill(GridironPalette.surface.opacity(floats ? 0.9 : 0))
         }
-        .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
-        .shadow(color: .black.opacity(0.10), radius: 12, y: 4)
-        .padding(.bottom, 12)
+        .overlay(Capsule().stroke(GridironPalette.hairline.opacity(floats ? 1 : 0), lineWidth: 0.5))
+        .shadow(color: .black.opacity(floats ? 0.10 : 0), radius: 12, y: 4)
+        .padding(.bottom, UnfoldedSplit.tabBarBottomPadding)
     }
 
     private var gamesTab: some View {
@@ -373,6 +394,7 @@ struct RootTabView: View {
                 switch shownDetail {
                 case .player(let player)?:
                     PlayerProfileScreen(viewModel: viewModel, player: player)
+                        .modifier(PaneTitleFromHeader())
                 case .team(let team)?:
                     TeamScreen(viewModel: viewModel, abbr: team.abbr)
                 case .game(let game)?:
@@ -394,16 +416,19 @@ struct RootTabView: View {
     /// its offset in seconds from launch, so the timing doesn't depend on how
     /// long the data took to load. Unfolded runs read `-DuoRoutes a,b` and
     /// `-DuoAt 0,20`; folded runs read `-DuoOuterRoutes` and `-DuoOuterAt`.
+    /// `-DuoScreen <route>` opens one route at launch, folded and unfolded,
+    /// for gh-sim's `--screen`, which relaunches the app once per surface.
     private func runDuoTour() async {
         let args = ProcessInfo.processInfo.arguments
-        guard args.contains("-DuoTour") else { return }
         func list(_ key: String) -> [String] {
-            guard let i = args.firstIndex(of: key), i + 1 < args.count else { return [] }
+            guard let i = args.lastIndex(of: key), i + 1 < args.count else { return [] }
             return args[i + 1].split(separator: ",").map(String.init)
         }
+        let screen = list("-DuoScreen")
+        guard args.contains("-DuoTour") || !screen.isEmpty else { return }
         let unfolded = horizontalSizeClass == .regular
-        let routes = list(unfolded ? "-DuoRoutes" : "-DuoOuterRoutes")
-        let offsets = list(unfolded ? "-DuoAt" : "-DuoOuterAt").compactMap(Double.init)
+        let routes = screen.isEmpty ? list(unfolded ? "-DuoRoutes" : "-DuoOuterRoutes") : screen
+        let offsets = screen.isEmpty ? list(unfolded ? "-DuoAt" : "-DuoOuterAt").compactMap(Double.init) : [0]
         for _ in 0..<60 where viewModel.players.isEmpty {
             try? await Task.sleep(for: .milliseconds(500))
         }
@@ -460,6 +485,29 @@ struct RootTabView: View {
 
 }
 
+/// The detail pane's player page shows no inline title. Its header names the
+/// player in large type right below, and beside share, follow, compare and the
+/// status bar the title only fit as "Caleb Mer...". A principal item replaces
+/// the title, while a page pushed from here still gets it as its back label.
+private struct PaneTitleFromHeader: ViewModifier {
+    func body(content: Content) -> some View {
+        content.toolbar {
+            if #available(iOS 26.0, *) {
+                ToolbarItem(placement: .principal) { spacer }
+                    .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .principal) { spacer }
+            }
+        }
+    }
+
+    private var spacer: some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .accessibilityHidden(true)
+    }
+}
+
 /// One item in the hand-rolled floating tab bar. The selected pill uses the
 /// turf green at low opacity rather than a filled capsule so the bar stays
 /// light over whatever content scrolls beneath it.
@@ -480,7 +528,7 @@ private struct TabBarButton: View {
                     .minimumScaleFactor(0.8)
             }
             .foregroundStyle(isSelected ? GridironPalette.turf : GridironPalette.inkSecondary)
-            .frame(width: 68, height: 52)
+            .frame(width: 68, height: UnfoldedSplit.tabBarButtonHeight)
             .background(
                 isSelected ? GridironPalette.turf.opacity(0.12) : .clear,
                 in: Capsule()

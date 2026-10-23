@@ -15,6 +15,23 @@ struct UnfoldedSplit: Equatable, Sendable {
     /// bar and the player profile.
     static let minimumPaneWidth: CGFloat = 360
 
+    /// The tab bar's footprint above the bottom edge: 52 pt buttons, 7 pt of
+    /// padding above and below them, 12 pt off the edge.
+    static let tabBarButtonHeight: CGFloat = 52
+    static let tabBarVerticalPadding: CGFloat = 7
+    static let tabBarBottomPadding: CGFloat = 12
+    static let tabBarFootprint = tabBarButtonHeight + tabBarVerticalPadding * 2 + tabBarBottomPadding
+
+    /// While split, the tab bar docks in a strip this tall at the foot of the
+    /// leading pane and the tabs end where it starts, so no row ever sits
+    /// under the bar. On a phone the bar floats and lists scroll beneath it.
+    static let dockedTabBarHeight = tabBarFootprint + 8
+
+    /// How far above the bottom edge the tabs' content stops.
+    static func tabContentBottomInset(isSplit: Bool) -> CGFloat {
+        isSplit ? dockedTabBarHeight : 0
+    }
+
     /// - Parameters:
     ///   - width: the container's width.
     ///   - fold: the vertical fold's leading and trailing edge in the same

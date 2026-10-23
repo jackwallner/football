@@ -55,6 +55,21 @@ final class UnfoldedSplitTests: XCTestCase {
         }
     }
 
+    func testSplitTabsEndAboveTheDockedTabBar() {
+        // The bar's top edge sits at its footprint; the tabs must stop at or
+        // above it so no row, footnote or grid cell is drawn under the bar.
+        let inset = UnfoldedSplit.tabContentBottomInset(isSplit: true)
+        XCTAssertGreaterThanOrEqual(inset, UnfoldedSplit.tabBarFootprint)
+        XCTAssertEqual(UnfoldedSplit.tabBarFootprint, 78)
+        // The leading pane on the unfolded Duo (669 pt tall) keeps most of its
+        // height for content.
+        XCTAssertLessThan(inset, 669 * 0.15)
+    }
+
+    func testPhoneTabsStillScrollUnderTheFloatingBar() {
+        XCTAssertEqual(UnfoldedSplit.tabContentBottomInset(isSplit: false), 0)
+    }
+
     func testDetailMatchesTheSamePageWhateverTheSeason() {
         func qb(season: Int, phase: SeasonPhase) -> Player {
             Player(

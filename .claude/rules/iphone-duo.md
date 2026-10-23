@@ -6,7 +6,7 @@ paths:
   - "StatScout/Utilities/PaywallScreenshotMode.swift"
 ---
 
-# Gridiron StatScout: iPhone Duo (2026-10-21)
+# Gridiron StatScout: iPhone Duo (2026-10-21, revised 2026-10-23)
 
 - Unfolded (regular width, at least 720 pt), `RootTabView` puts the five tabs
   and the tab bar left of the fold and the player, team or game they open in a
@@ -27,9 +27,18 @@ paths:
   pane a vertical bar against the fold and narrowed every board by ~95 pt.
 - White toolbar glyphs carry `toolbarGlyphDisc()`: the Duo vertical bar moves
   them off the midnight nav bar onto the light canvas.
-- Capture (gh-sim relaunches the app after unfolding): `-ScreenshotData
-  -DuoTour -DuoRoutes stats,trends,teams,team,compare -DuoAt 0,32,54,76,98
-  -DuoOuterRoutes stats -DuoOuterAt 0` with `--env FORCE_PRO=1 --env
-  SCREENSHOT_MODE=1` and nine `--url noop://N` to get a shot every ~11 s.
-  Routes are in `RootTabView.openDuoRoute`. The fixture has no games, so the
-  Games pane is not in the capture set.
+- While split, the tab bar docks in a surface strip at the foot of the left
+  pane (`UnfoldedSplit.dockedTabBarHeight`, unit tested) and the tabs end above
+  it, so no row sits under the bar. On a phone it floats over the 88 pt
+  scroll-under spacers as before. The 2026-10-23 review rejected the floating
+  pill over the left pane's last rows.
+- The detail pane's player page hides its inline title (`PaneTitleFromHeader`):
+  beside share, follow, compare and the status bar it truncated, and the
+  header names the player right below.
+- Capture with `--screen`, never `--url` (iOS 27.1 alerts over every openurl):
+  `gh-sim all --device 'iPhone Duo' --env FORCE_PRO=1 --env SCREENSHOT_MODE=1
+  --args "-ScreenshotData -ResetUITestState -hasCompletedOnboarding YES
+  -stats.board advanced"` plus one `--screen "-DuoScreen <route>"` per route
+  (stats, receivers, trends, teams, team, compare; `RootTabView.openDuoRoute`).
+  `-DuoTour -DuoRoutes ... -DuoAt ...` still walks routes on a clock for video.
+  The fixture has no games, so the Games pane is not in the capture set.
