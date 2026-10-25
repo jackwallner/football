@@ -24,6 +24,7 @@ struct TeamsView: View {
     @State private var favorites = FavoritesStore.shared
     @State private var searchText = ""
     @State private var showingTrial = false
+    @State private var pendingUnlock = PendingUnlockAction()
     // Auto-enter the favorite team once per launch; popping back must not
     // re-push it, or the user can never reach the list.
     @State private var didAutoEnterFavorite = false
@@ -148,6 +149,7 @@ struct TeamsView: View {
                 isSeasonLocked: { viewModel.isSeasonLocked($0) },
                 onSelectSeason: { season in
                     if viewModel.isSeasonLocked(season) {
+                        pendingUnlock.prepare { viewModel.selectSeason(season) }
                         showingTrial = true
                     } else {
                         viewModel.selectSeason(season)
@@ -160,7 +162,7 @@ struct TeamsView: View {
             await viewModel.load()
         }
         .onAppear(perform: autoEnterFavoriteIfNeeded)
-        .sheet(isPresented: $showingTrial) {
+        .sheet(isPresented: $showingTrial, onDismiss: { pendingUnlock.finish(isPro: store.isPro) }) {
             TrialPitchSheet(trigger: .teamView)
         }
     }

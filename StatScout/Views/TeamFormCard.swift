@@ -38,7 +38,7 @@ struct TeamRankingsCard: View {
     /// logs, and those are only kept for the live season now, so Recent/Both
     /// are hidden rather than offered and left to come back empty.
     var supportsRecent: Bool = true
-    let onUpgradeTap: () -> Void
+    let onUpgradeTap: (@escaping () -> Void) -> Void
 
     @State private var side: Side = .offense
     @State private var mode: Mode = .season
@@ -158,7 +158,7 @@ struct TeamRankingsCard: View {
                     )
                 },
                 selection: $mode,
-                onLockedTap: { _ in onUpgradeTap() }
+                onLockedTap: { selected in onUpgradeTap { mode = selected } }
             )
         }
     }

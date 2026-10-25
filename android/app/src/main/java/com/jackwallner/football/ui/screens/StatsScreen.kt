@@ -170,7 +170,7 @@ fun StatsScreen() {
 
     Column(Modifier.fillMaxSize().background(GridironPalette.canvas)) {
         HomeTopBar(leading = {
-            SeasonPhaseNavPill(vm.availableSeasons) { actions.openTrialPitch(PaywallTrigger.LockedSeason(it)) }
+            SeasonPhaseNavPill(vm.availableSeasons) { actions.openTrialPitch(PaywallTrigger.LockedSeason(it)) { vm.selectSeason(it) } }
         })
         if (vm.selectedSeason == vm.freeSeason && vm.selectedPhase == SeasonPhase.REGULAR) {
             DataFreshnessView(vm, Modifier.padding(horizontal = 12.dp).padding(top = 4.dp))

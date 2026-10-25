@@ -57,6 +57,7 @@ struct CompareView: View {
     @State private var comparisonRoute: ComparisonRoute?
     @State private var yearRoute: YearCompareRoute?
     @State private var showingTrial = false
+    @State private var pendingUnlock = PendingUnlockAction()
     @State private var showingFollowSheet = false
     @State private var favorites = FavoritesStore.shared
     @State private var seasonA: Int?
@@ -320,7 +321,7 @@ struct CompareView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingTrial) {
+        .sheet(isPresented: $showingTrial, onDismiss: { pendingUnlock.finish(isPro: store.isPro) }) {
             TrialPitchSheet(trigger: .playerComparison)
         }
         .navigationDestination(item: $comparisonRoute) { route in
@@ -773,6 +774,7 @@ struct CompareView: View {
                 isSeasonLocked: viewModel.isSeasonLocked,
                 onSelectSeason: { picked in
                     if viewModel.isSeasonLocked(picked) {
+                        pendingUnlock.prepare { onPickSeason(picked) }
                         showingTrial = true
                     } else {
                         onPickSeason(picked)
@@ -851,6 +853,7 @@ struct CompareView: View {
                 isSeasonLocked: { viewModel.isSeasonLocked($0) },
                 onSelectSeason: { picked in
                     if viewModel.isSeasonLocked(picked) {
+                        pendingUnlock.prepare { onPickSeason(picked) }
                         showingTrial = true
                     } else {
                         onPickSeason(picked)

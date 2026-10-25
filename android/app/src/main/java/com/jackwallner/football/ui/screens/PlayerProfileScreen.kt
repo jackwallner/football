@@ -229,7 +229,7 @@ fun PlayerProfileScreen(player: Player, history: List<Player>, vm: DashboardView
                 ) { SfIcon(if (isFavorite) "star.fill" else "star", 22.dp, if (isFavorite) CrownYellow else Color.White) }
                 Box(
                     Modifier.size(44.dp).clip(CircleShape).clickable {
-                        if (store.isPro) showingPlayerPicker = true else actions.openTrialPitch(PaywallTrigger.PlayerComparison)
+                        if (store.isPro) showingPlayerPicker = true else actions.openTrialPitch(PaywallTrigger.PlayerComparison) { showingPlayerPicker = true }
                     }.semantics { contentDescription = "Compare with another player" }.testTag("compareButton"),
                     contentAlignment = Alignment.Center,
                 ) { SfIcon("person.2.fill", 22.dp, Color.White) }
@@ -272,7 +272,7 @@ fun PlayerProfileScreen(player: Player, history: List<Player>, vm: DashboardView
                         GridironMenu(listOf(MenuSection(null, seasons.map { s ->
                             val locked = s != vm.freeSeason && !store.isPro
                             MenuItem(SeasonLabel.text(s), checked = !locked && s == activeSeason, locked = locked) {
-                                if (locked) actions.openTrialPitch(PaywallTrigger.PastSeason) else state.selectedSeason = s
+                                if (locked) actions.openTrialPitch(PaywallTrigger.PastSeason) { state.selectedSeason = s } else state.selectedSeason = s
                             }
                         }))) { open ->
                             Row(
@@ -328,7 +328,7 @@ fun PlayerProfileScreen(player: Player, history: List<Player>, vm: DashboardView
                             isPro = isPro,
                             state = state,
                             effectiveMode = effectiveStandard,
-                            onLockedTap = { actions.openTrialPitch(PaywallTrigger.RecentForm) },
+                            onLockedTap = { mode -> actions.openTrialPitch(PaywallTrigger.RecentForm) { state.standardMode = mode } },
                             onStat = { label, cat -> navigator.push(Route.StandardStat(label, cat.raw, activeSeason, activePhase)) },
                         )
                         if (season != null && season in recentFormSeasons) {
@@ -588,7 +588,7 @@ private fun StandardStatsCard(
     isPro: Boolean,
     state: ProfileState,
     effectiveMode: FormDisplayMode,
-    onLockedTap: () -> Unit,
+    onLockedTap: (FormDisplayMode) -> Unit,
     onStat: (String, StandardStatCategory) -> Unit,
 ) {
     val fallback = when (displayed.playerType?.lowercase()) {
@@ -653,7 +653,7 @@ private fun StandardStatsCard(
                     FormDisplayMode.entries.map { Segment(it, it.label, isLocked = !isPro && it != FormDisplayMode.SEASON) },
                     state.standardMode,
                     { state.standardMode = it },
-                    onLockedTap = { onLockedTap() },
+                    onLockedTap = onLockedTap,
                 )
             }
             if (effectiveMode != FormDisplayMode.SEASON) {

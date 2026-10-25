@@ -142,7 +142,7 @@ fun TeamsScreen(isActive: Boolean) {
         // player's last team, so a franchise's "all time" list would credit it
         // with yards earned elsewhere.
         HomeTopBar(leading = {
-            SeasonPhaseNavPill(vm.seasonsExcludingAllTime, onLockedSeason = { actions.openTrialPitch(PaywallTrigger.TeamView) })
+            SeasonPhaseNavPill(vm.seasonsExcludingAllTime, onLockedSeason = { season -> actions.openTrialPitch(PaywallTrigger.TeamView) { vm.selectSeason(season) } })
         })
         GamesTeamsUi.RefreshBox(onRefresh = { vm.load() }) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 12.dp)) {

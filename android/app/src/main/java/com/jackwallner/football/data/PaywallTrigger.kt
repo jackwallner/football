@@ -1,5 +1,20 @@
 package com.jackwallner.football.data
 
+/** Resumes an explicit locked action once, only when its offer closes with access. */
+class PendingUnlockAction {
+    private var action: (() -> Unit)? = null
+
+    fun prepare(action: (() -> Unit)?) {
+        this.action = action
+    }
+
+    fun finish(isPro: Boolean) {
+        val resume = action
+        action = null
+        if (isPro) resume?.invoke()
+    }
+}
+
 /** Where a pitch came from: the paywall's icon, headline and impression id. */
 sealed class PaywallTrigger(
     val icon: String,

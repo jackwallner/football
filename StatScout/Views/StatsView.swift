@@ -14,6 +14,7 @@ struct StatsView: View {
     @State private var standardStat = "Pass Yds"
     @State private var standardSortDescending = true
     @State private var paywallTrigger: PaywallTrigger?
+    @State private var pendingUnlock = PendingUnlockAction()
 
     private var position: PlayerPositionGroup { viewModel.selectedPosition }
 
@@ -78,7 +79,7 @@ struct StatsView: View {
                 fellBackFromAdvanced = false
             }
         }
-        .sheet(item: $paywallTrigger) { trigger in
+        .sheet(item: $paywallTrigger, onDismiss: { pendingUnlock.finish(isPro: store.isPro) }) { trigger in
             TrialPitchSheet(trigger: trigger)
         }
     }
@@ -120,6 +121,7 @@ struct StatsView: View {
 
     private func selectSeason(_ season: Int) {
         if viewModel.isSeasonLocked(season) {
+            pendingUnlock.prepare { viewModel.selectSeason(season) }
             paywallTrigger = .lockedSeason(season)
         } else {
             viewModel.selectSeason(season)

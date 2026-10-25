@@ -136,7 +136,7 @@ fun TrendsScreen(isActive: Boolean) {
                 selectedPhase = selectedPhase,
                 onSelectSeason = { season ->
                     if (vm.supportsRecentForm(season)) {
-                        if (vm.isSeasonLocked(season)) actions.openTrialPitch(PaywallTrigger.LockedSeason(season)) else selectedSeason = season
+                        if (vm.isSeasonLocked(season)) actions.openTrialPitch(PaywallTrigger.LockedSeason(season)) { selectedSeason = season } else selectedSeason = season
                     }
                 },
                 onSelectPhase = { selectedPhase = it },

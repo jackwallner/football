@@ -25,7 +25,7 @@ struct TeamStandardCard: View {
     /// from are only kept for the live season, so the control is hidden rather
     /// than offered and left to come back empty.
     var supportsRecent: Bool = true
-    let onUpgradeTap: () -> Void
+    let onUpgradeTap: (@escaping () -> Void) -> Void
 
     @State private var side: TeamRankingsCard.Side = .offense
     @State private var showingRecent = false
@@ -103,7 +103,7 @@ struct TeamStandardCard: View {
                             .init(value: true, label: "Recent", isLocked: !store.isPro),
                         ],
                         selection: $showingRecent,
-                        onLockedTap: { _ in onUpgradeTap() }
+                        onLockedTap: { selected in onUpgradeTap { showingRecent = selected } }
                     )
                     .segmentCount(2)
                 }

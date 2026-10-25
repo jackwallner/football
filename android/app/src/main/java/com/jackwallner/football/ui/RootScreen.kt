@@ -54,6 +54,7 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.jackwallner.football.AppGraph
 import com.jackwallner.football.DebugLaunchOptions
 import com.jackwallner.football.data.PaywallTrigger
+import com.jackwallner.football.data.PendingUnlockAction
 import com.jackwallner.football.model.SeasonLabel
 import com.jackwallner.football.ui.components.FitText
 import com.jackwallner.football.ui.components.GridironNavPill
@@ -106,16 +107,25 @@ fun RootScreen(graph: AppGraph) {
     }
     var paywall by remember { mutableStateOf<PaywallTrigger?>(null) }
     var pitch by remember { mutableStateOf<PaywallTrigger?>(null) }
+    val pendingUnlock = remember { PendingUnlockAction() }
     var reviewShownThisSession by remember { mutableStateOf(false) }
+
+    fun dismissUpgrade() {
+        pitch = null
+        paywall = null
+        pendingUnlock.finish(store.isPro)
+    }
 
     val actions = remember {
         object : AppActions {
             override fun openPaywall(trigger: PaywallTrigger) {
+                if (pitch == null) pendingUnlock.prepare(null)
                 pitch = null
                 paywall = trigger
             }
 
-            override fun openTrialPitch(trigger: PaywallTrigger) {
+            override fun openTrialPitch(trigger: PaywallTrigger, onUnlock: (() -> Unit)?) {
+                pendingUnlock.prepare(onUnlock)
                 pitch = trigger
             }
 
@@ -190,11 +200,11 @@ fun RootScreen(graph: AppGraph) {
                 )
             }
         }
-        StatScoutSheet(visible = pitch != null, onDismiss = { pitch = null }, fullHeight = false) {
-            pitch?.let { TrialPitchSheet(it) { pitch = null } }
+        StatScoutSheet(visible = pitch != null, onDismiss = { dismissUpgrade() }, fullHeight = false) {
+            pitch?.let { TrialPitchSheet(it) { dismissUpgrade() } }
         }
-        StatScoutSheet(visible = paywall != null, onDismiss = { paywall = null }) {
-            paywall?.let { PaywallScreen(it) { paywall = null } }
+        StatScoutSheet(visible = paywall != null, onDismiss = { dismissUpgrade() }) {
+            paywall?.let { PaywallScreen(it) { dismissUpgrade() } }
         }
     }
 }

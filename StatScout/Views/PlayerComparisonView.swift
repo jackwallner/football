@@ -78,6 +78,7 @@ struct PlayerComparisonView: View {
     }
 
     @State private var showingTrial = false
+    @State private var pendingUnlock = PendingUnlockAction()
     @State private var overrideA: Player?
     @State private var overrideB: Player?
     @State private var picker: PickerTarget?
@@ -201,15 +202,15 @@ struct PlayerComparisonView: View {
                     .offset(y: -8)
                 }
                 .background(GridironPalette.canvas.ignoresSafeArea())
-                .sheet(isPresented: $showingTrial) {
-                    TrialPitchSheet(trigger: .playerComparison)
-                }
             }
         }
         .onAppear {
             if store.isPro {
                 ReviewPromptTracker.recordPositiveMoment()
             }
+        }
+        .sheet(isPresented: $showingTrial, onDismiss: { pendingUnlock.finish(isPro: store.isPro) }) {
+            TrialPitchSheet(trigger: .playerComparison)
         }
         .sheet(item: $picker) { target in
             if let catalog {
@@ -445,6 +446,7 @@ struct PlayerComparisonView: View {
                     isSeasonLocked: { catalog.isSeasonLocked($0) },
                     onSelectSeason: { season in
                         if catalog.isSeasonLocked(season) {
+                            pendingUnlock.prepare { move(target, to: season, phase: player.seasonPhase, catalog: catalog) }
                             showingTrial = true
                         } else {
                             move(

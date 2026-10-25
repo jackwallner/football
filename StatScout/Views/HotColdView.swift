@@ -28,6 +28,7 @@ struct HotColdView: View {
     @State private var selectedSeason: Int
     @State private var selectedPhase: SeasonPhase
     @State private var paywallTrigger: PaywallTrigger?
+    @State private var pendingUnlock = PendingUnlockAction()
 
     init(viewModel: DashboardViewModel, isActive: Bool = true) {
         self.viewModel = viewModel
@@ -195,7 +196,7 @@ struct HotColdView: View {
         .onChange(of: viewModel.recentFormSeason) { _, season in
             selectedSeason = season
         }
-        .sheet(item: $paywallTrigger) { trigger in
+        .sheet(item: $paywallTrigger, onDismiss: { pendingUnlock.finish(isPro: store.isPro) }) { trigger in
             TrialPitchSheet(trigger: trigger)
         }
     }
@@ -279,6 +280,7 @@ struct HotColdView: View {
     private func selectSeason(_ season: Int) {
         guard viewModel.supportsRecentForm(season) else { return }
         if viewModel.isSeasonLocked(season) {
+            pendingUnlock.prepare { selectedSeason = season }
             paywallTrigger = .lockedSeason(season)
         } else {
             selectedSeason = season

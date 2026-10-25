@@ -20,7 +20,7 @@ interface AppActions {
     fun openPaywall(trigger: PaywallTrigger)
 
     /** The soft half-sheet trial pitch. */
-    fun openTrialPitch(trigger: PaywallTrigger)
+    fun openTrialPitch(trigger: PaywallTrigger, onUnlock: (() -> Unit)? = null)
 
     /** A satisfaction moment: count it and maybe show Play's review card. */
     fun positiveMoment()

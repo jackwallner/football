@@ -41,6 +41,7 @@ struct PlayerProfileView: View {
     // all route through the low-friction TrialPitchSheet - its CTA starts the
     // yearly trial directly. PaywallView stays for the deliberate upsell card.
     @State private var trialPitchTrigger: PaywallTrigger?
+    @State private var pendingUnlock = PendingUnlockAction()
     @State private var formDisplayMode: FormDisplayMode = .season
     @State private var recentWindowGames: Int = 5
     @State private var recentLogs: [PlayerGameLog] = []
@@ -260,7 +261,7 @@ struct PlayerProfileView: View {
                 comparisonRoute = ComparisonRoute(playerA: displayedPlayer, playerB: selected)
             }
         }
-        .sheet(item: $trialPitchTrigger) { trigger in
+        .sheet(item: $trialPitchTrigger, onDismiss: { pendingUnlock.finish(isPro: store.isPro) }) { trigger in
             TrialPitchSheet(trigger: trigger)
         }
         .navigationDestination(item: $comparisonRoute) { route in
@@ -339,6 +340,7 @@ struct PlayerProfileView: View {
             if store.isPro {
                 showingPlayerPicker = true
             } else {
+                pendingUnlock.prepare { showingPlayerPicker = true }
                 trialPitchTrigger = .playerComparison
             }
         } label: {
@@ -721,6 +723,7 @@ struct PlayerProfileView: View {
                             if isLocked {
                                 // Explicit tap on a locked season - always answer it.
                                 // PaywallGate only caps automatic pop-ups.
+                                pendingUnlock.prepare { selectedPercentileSeason = season }
                                 trialPitchTrigger = .pastSeason
                             } else {
                                 selectedPercentileSeason = season
@@ -1480,7 +1483,10 @@ struct PlayerProfileView: View {
                 .init(value: $0, label: $0.rawValue, isLocked: !store.isPro && $0 != .season)
             },
             selection: $standardMode,
-            onLockedTap: { _ in trialPitchTrigger = .recentForm }
+            onLockedTap: { mode in
+                pendingUnlock.prepare { standardMode = mode }
+                trialPitchTrigger = .recentForm
+            }
         )
         .padding(.horizontal, GridironGeo.padInline)
         .padding(.vertical, 10)

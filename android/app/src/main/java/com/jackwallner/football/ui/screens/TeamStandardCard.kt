@@ -79,7 +79,7 @@ fun TeamStandardCard(
     players: List<Player>,
     leaguePlayers: List<Player>,
     fetchTeamGameLogs: TeamGameLogFetcher?,
-    onUpgradeTap: () -> Unit,
+    onUpgradeTap: (() -> Unit) -> Unit,
     seasonPhase: SeasonPhase = SeasonPhase.REGULAR,
     supportsRecent: Boolean = true,
 ) {
@@ -133,7 +133,7 @@ fun TeamStandardCard(
                     GridironSegmented(
                         listOf(Segment(false, "Season"), Segment(true, "Recent", isLocked = !isPro)),
                         showingRecent, { showingRecent = it },
-                        onLockedTap = { onUpgradeTap() },
+                        onLockedTap = { selected -> onUpgradeTap { showingRecent = selected } },
                     )
                 } else null,
             ),

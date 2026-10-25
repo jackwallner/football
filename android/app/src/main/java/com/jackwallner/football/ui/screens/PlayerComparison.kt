@@ -202,7 +202,7 @@ fun PlayerComparisonView(playerA: Player, playerB: Player, catalog: ComparisonCa
                     selectedPhase = player.seasonPhase,
                     isSeasonLocked = catalog.isSeasonLocked,
                     onSelectSeason = { season ->
-                        if (catalog.isSeasonLocked(season)) actions.openTrialPitch(PaywallTrigger.PlayerComparison)
+                        if (catalog.isSeasonLocked(season)) actions.openTrialPitch(PaywallTrigger.PlayerComparison) { move(target, season, player.seasonPhase) }
                         else move(target, season, player.seasonPhase)
                     },
                     onSelectPhase = { phase -> move(target, player.season ?: 0, phase) },

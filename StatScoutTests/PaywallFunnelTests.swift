@@ -1,6 +1,69 @@
 import XCTest
 import Foundation
 @testable import Gridiron_StatScout
+
+final class PendingUnlockActionTests: XCTestCase {
+    func testPurchaseResumesTheChosenSeasonOnce() {
+        var pending = PendingUnlockAction()
+        var seasons: [Int] = []
+        pending.prepare { seasons.append(2023) }
+        XCTAssertTrue(seasons.isEmpty)
+
+        pending.finish(isPro: true)
+        pending.finish(isPro: true)
+
+        XCTAssertEqual(seasons, [2023])
+    }
+
+    func testRestoreResumesTheChosenMode() {
+        for mode in [PlayerProfileView.FormDisplayMode.recent, .both] {
+            var pending = PendingUnlockAction()
+            var selection = PlayerProfileView.FormDisplayMode.season
+            pending.prepare { selection = mode }
+            pending.finish(isPro: true)
+            XCTAssertEqual(selection, mode)
+        }
+    }
+
+    func testDeferredApprovalResumesComparisonWhenOfferClosesWithAccess() {
+        var pending = PendingUnlockAction()
+        var showingPicker = false
+        pending.prepare { showingPicker = true }
+        // A pending purchase leaves the offer open and the action untouched.
+        XCTAssertFalse(showingPicker)
+        pending.finish(isPro: true)
+        XCTAssertTrue(showingPicker)
+    }
+
+    func testDismissalWithoutAccessClearsTheActionEvenIfApprovalArrivesLater() {
+        var pending = PendingUnlockAction()
+        var showingPicker = false
+        pending.prepare { showingPicker = true }
+        pending.finish(isPro: false)
+        pending.finish(isPro: true)
+        XCTAssertFalse(showingPicker)
+    }
+
+    func testCancelledPurchaseCanRetryWithANewDestination() {
+        var pending = PendingUnlockAction()
+        var seasons: [Int] = []
+        pending.prepare { seasons.append(2023) }
+        pending.finish(isPro: false)
+        pending.prepare { seasons.append(2024) }
+        pending.finish(isPro: true)
+        XCTAssertEqual(seasons, [2024])
+    }
+
+    func testLatestActionReplacesThePreviousDestination() {
+        var pending = PendingUnlockAction()
+        var seasons: [Int] = []
+        pending.prepare { seasons.append(2023) }
+        pending.prepare { seasons.append(2024) }
+        pending.finish(isPro: true)
+        XCTAssertEqual(seasons, [2024])
+    }
+}
+
 /// The fleet paywall record, checked in this app's own build.
 ///
 /// The `rc-funnel-probe` run proves an impression reaches RevenueCat. These

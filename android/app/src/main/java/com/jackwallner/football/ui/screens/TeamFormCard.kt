@@ -170,7 +170,7 @@ fun TeamRankingsCard(
     players: List<Player>,
     leaguePlayers: List<Player>,
     fetchTeamGameLogs: TeamGameLogFetcher?,
-    onUpgradeTap: () -> Unit,
+    onUpgradeTap: (() -> Unit) -> Unit,
     seasonPhase: SeasonPhase = SeasonPhase.REGULAR,
     freshnessRevision: String? = null,
     freshnessStatus: DataFreshnessStatus? = null,
@@ -234,7 +234,7 @@ fun TeamRankingsCard(
                     GridironSegmented(
                         FormMode.entries.map { Segment(it, it.raw, isLocked = !isPro && it != FormMode.SEASON) },
                         mode, { mode = it },
-                        onLockedTap = { onUpgradeTap() },
+                        onLockedTap = { selected -> onUpgradeTap { mode = selected } },
                     )
                 } else null,
             ),

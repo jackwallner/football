@@ -200,7 +200,7 @@ fun CompareScreen(isActive: Boolean) {
                         Modifier.then(if (store.isPro) Modifier else Modifier.gateBlur()),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        val locked = { actions.openTrialPitch(PaywallTrigger.PlayerComparison) }
+                        val locked: (() -> Unit) -> Unit = { action -> actions.openTrialPitch(PaywallTrigger.PlayerComparison, action) }
                         Column(Modifier.fillMaxWidth().gridironCard()) {
                             GridironSectionBar("PLAYER VS PLAYER")
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -440,14 +440,18 @@ private fun SeasonPill(
     enabled: Boolean,
     onSeason: (Int) -> Unit,
     onPhase: (SeasonPhase) -> Unit,
-    onLocked: () -> Unit,
+    onLocked: (() -> Unit) -> Unit,
 ) {
     SeasonPhasePicker(
         seasons = seasons,
         selectedSeason = season,
         selectedPhase = phase,
         isSeasonLocked = vm::isSeasonLocked,
-        onSelectSeason = { if (vm.isSeasonLocked(it)) onLocked() else onSeason(it) },
+        onSelectSeason = { season ->
+            if (vm.isSeasonLocked(season)) {
+                onLocked { onSeason(season) }
+            } else onSeason(season)
+        },
         onSelectPhase = onPhase,
     ) { open ->
         ChipButton(if (enabled) open else ({}), Modifier.fillMaxWidth(), description = "Season and season type for $label") {
@@ -476,7 +480,7 @@ private fun SlotColumn(
     onPickPlayer: () -> Unit,
     onPickSeason: (Int) -> Unit,
     onPickPhase: (SeasonPhase) -> Unit,
-    onLocked: () -> Unit,
+    onLocked: (() -> Unit) -> Unit,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Column(
@@ -511,7 +515,7 @@ private fun TeamSlotColumn(
     onPickTeam: () -> Unit,
     onPickSeason: (Int) -> Unit,
     onPickPhase: (SeasonPhase) -> Unit,
-    onLocked: () -> Unit,
+    onLocked: (() -> Unit) -> Unit,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Column(

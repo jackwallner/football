@@ -213,7 +213,7 @@ fun TeamScreen(abbr: String) {
     }
 
     val fetchTeamGameLogs: TeamGameLogFetcher = { team, season, phase, since -> vm.fetchTeamGameLogs(team, season, phase, since) }
-    val openTeamPitch = { actions.openTrialPitch(PaywallTrigger.TeamView) }
+    val openTeamPitch: (() -> Unit) -> Unit = { action -> actions.openTrialPitch(PaywallTrigger.TeamView, action) }
 
     Column(Modifier.fillMaxSize().background(GridironPalette.canvas)) {
         GridironTopBar(
@@ -227,7 +227,7 @@ fun TeamScreen(abbr: String) {
                     selectedPhase = vm.selectedPhase,
                     isSeasonLocked = vm::isSeasonLocked,
                     onSelectSeason = { season ->
-                        if (vm.isSeasonLocked(season)) actions.openTrialPitch(PaywallTrigger.LockedSeason(season)) else vm.selectSeason(season)
+                        if (vm.isSeasonLocked(season)) actions.openTrialPitch(PaywallTrigger.LockedSeason(season)) { vm.selectSeason(season) } else vm.selectSeason(season)
                     },
                     onSelectPhase = { vm.selectedPhase = it },
                 ) { open ->
@@ -296,7 +296,7 @@ fun TeamScreen(abbr: String) {
                                         RosterMode.entries.map { Segment(it, it.raw, isLocked = !isPro && it == RosterMode.RECENT) },
                                         rosterMode,
                                         { rosterMode = it },
-                                        onLockedTap = { actions.openTrialPitch(PaywallTrigger.RecentForm) },
+                                        onLockedTap = { mode -> actions.openTrialPitch(PaywallTrigger.RecentForm) { rosterMode = mode } },
                                     )
                                 } else null,
                             ),

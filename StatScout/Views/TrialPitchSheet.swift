@@ -1,5 +1,21 @@
 import SwiftUI
 
+/// Keeps an explicit locked action until its offer closes. An entitlement grant
+/// from purchase, restore or approval resumes it once, after dismissal.
+struct PendingUnlockAction {
+    private var action: (() -> Void)?
+
+    mutating func prepare(_ action: @escaping () -> Void) {
+        self.action = action
+    }
+
+    mutating func finish(isPro: Bool) {
+        let resume = action
+        action = nil
+        if isPro { resume?() }
+    }
+}
+
 /// The app's one contextual offer: a compact, native half-sheet that names what
 /// the user just reached for, makes three promises, and buys the yearly plan in
 /// place.
