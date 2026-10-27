@@ -23,6 +23,7 @@ paths:
   `com.jackwallner.football.pro`. Android US ladder $1.49 / $7.99 / $15.99,
   about 20% under iOS; local prices are Play's conversion. Never put prices in
   listing copy or app literals.
+- Moving into the iOS project (2026-10-27): Play app `app5e54197473` in `proj9c303632` has the Play products on entitlement `Football Pro` and a non-current `android` offering. The next release swaps `REVENUECAT_PLAY_KEY` to that app's `goog_` key, and the code syncs existing Play purchases once (`SYNCED_TO_SHARED_PROJECT`) so old-project trials keep access. Upload the service-account JSON to that app first. Until then the release ships the old key below.
 - RevenueCat project `proja0cce872`: Test Store app `app354fdcd06c` (Debug key),
   Play app `app384d77e843` (`goog_` key, release only), entitlement lookup key
   `Football Pro` (`entl4d2856d9eb`, app falls back to `pro`), current offering
