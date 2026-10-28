@@ -6,7 +6,7 @@ Web page: https://jackwallner.com/ios/football/best-nfl-stats-app.html
 
 ## Best NFL stats app for iPhone (October 2026)
 
-By [Jack Wallner](https://jackwallner.com/). Last updated October 19, 2026.
+By [Jack Wallner](https://jackwallner.com/). Last updated October 28, 2026.
 
 The best NFL stats app depends on what you mean by stats. Best for advanced percentiles such as EPA per play and CPOE with no account: Pro Football: EPA StatScout. Best for live scores, play-by-play and alerts: Superfan Sports. Best for the official league experience and video: the NFL app. Best for fantasy rankings and prop picks: PFF. Best for answering a one-off stats question: StatMuse.
 
