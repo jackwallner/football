@@ -6,7 +6,7 @@ Web page: https://jackwallner.com/ios/football/what-is-epa-per-play.html
 
 ## What is EPA per play in football? (And what CPOE adds)
 
-By Jack Wallner. Last updated October 19, 2026.
+By Jack Wallner. Last updated October 28, 2026.
 
 EPA per play is the average number of points a play adds to its team's expected score on the drive. A positive number means the play left the offense better off than before the snap, and a negative number means worse. CPOE, completion percentage over expected, is the companion stat that judges a passer's accuracy against how hard each throw was.
 
@@ -41,6 +41,26 @@ EPA per play is passing EPA divided by attempts plus sacks. Percentiles are inte
 
 The gap between a weak and a strong starter is roughly 0.3 points per play. Over 600 plays, that is a difference of about 190 expected points across a season.
 
+## What is EPA + CPOE?
+
+EPA + CPOE is a combined quarterback rating that blends EPA per play with CPOE, because the pair predicts next season's play better than either alone. Ben Baldwin of rbsdm.com built it, and nflfastR later shipped it as DAKOTA. It is a fitted model trained to predict next year's adjusted EPA per play, not a fixed 50/50 sum, so it reads on the EPA per play scale. The nflverse data no longer includes the column, so the practical way to read it today is to put both numbers side by side.
+
+| 2025 regular season | EPA per dropback | CPOE |
+| --- | --- | --- |
+| Drake Maye (NE) | +0.308 | +10.8 |
+| Matthew Stafford (LA) | +0.243 | +1.5 |
+| Jordan Love (GB) | +0.240 | +5.5 |
+| Brock Purdy (SF) | +0.214 | +7.2 |
+| Dak Prescott (DAL) | +0.181 | +2.2 |
+| League (all dropbacks) | +0.043 | +0.5 |
+| Cam Ward (TEN) | -0.183 | -2.9 |
+| J.J. McCarthy (MIN) | -0.200 | -5.7 |
+| Shedeur Sanders (CLE) | -0.252 | -5.0 |
+
+Top five and bottom three of the 36 quarterbacks with at least 200 attempts, from the nflverse 2025 player stats and play-by-play files. EPA per dropback is passing EPA divided by attempts plus sacks.
+
+The two numbers disagree more often than you would think. Stafford ranked second in EPA with a CPOE near average, which points to big plays and good protection more than pinpoint accuracy. Purdy and Love were strong on both, the profile the composite rewards most. Through week 7 of 2026, the EPA leaders are Jared Goff (+0.317), Caleb Williams (+0.307, with a +9.0 CPOE), Brock Purdy and Josh Allen (both +0.290), and the league average is up to +0.063 per dropback.
+
 ## What doesn't EPA tell you?
 
 It does not separate the quarterback from the line, receivers and play call. EPA credits the quarterback for everything on a pass play, including the line, the receivers and the play call. It is a noisy measure over a few games. Treat it as a strong starting point, and pair it with CPOE and the game film or team context before drawing conclusions about one player.
@@ -63,6 +83,10 @@ In 2025, the median quarterback with at least 200 attempts was about +0.05 EPA p
 
 CPOE is completion percentage over expected. It compares a passer's completions to the completion probability of each throw, so a hard throw that is caught counts for more than an easy one. It is measured in percentage points.
 
+### What is EPA + CPOE?
+
+It is a combined quarterback rating from Ben Baldwin (rbsdm.com), later called DAKOTA in nflfastR, that blends EPA per play and CPOE to predict next season's EPA per play. In 2025, Drake Maye led both parts at +0.31 EPA per dropback and +10.8 CPOE.
+
 ### Is EPA better than passer rating?
 
 EPA accounts for down, distance, field position and turnovers, which passer rating ignores, so most analysts prefer it for efficiency. It is still noisy over small samples.
@@ -79,3 +103,4 @@ Related: [What are expected goals (xG) in hockey? (And GSAx for goalies)](https:
 2. [nflreadr data dictionary: player stats](https://nflreadr.nflverse.com/articles/dictionary_player_stats.html)
 3. [nflverse-data releases (play-by-play and player stats files)](https://github.com/nflverse/nflverse-data)
 4. [nflfastR on GitHub](https://github.com/nflverse/nflfastR)
+5. [nflfastR release notes (dakota, the EPA + CPOE composite)](https://github.com/nflverse/nflfastR/blob/master/NEWS.md)

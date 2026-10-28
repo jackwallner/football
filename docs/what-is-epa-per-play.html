@@ -40,7 +40,7 @@
         "url": "https://jackwallner.com/"
       },
       "datePublished": "2026-10-12",
-      "dateModified": "2026-10-19",
+      "dateModified": "2026-10-28",
       "mainEntityOfPage": "https://jackwallner.com/ios/football/what-is-epa-per-play.html",
       "image": "https://jackwallner.github.io/football/appstore-screenshot-01.png",
       "about": {
@@ -58,6 +58,7 @@
       "@type": "FAQPage",
       "@id": "https://jackwallner.com/ios/football/what-is-epa-per-play.html#faq",
       "mainEntity": [
+        {"@type": "Question", "name": "What is EPA + CPOE?", "acceptedAnswer": {"@type": "Answer", "text": "It is a combined quarterback rating from Ben Baldwin (rbsdm.com), later called DAKOTA in nflfastR, that blends EPA per play and CPOE to predict next season's EPA per play. In 2025, Drake Maye led both parts at +0.31 EPA per dropback and +10.8 CPOE."}},
         {
           "@type": "Question",
           "name": "What is EPA per play in football?",
@@ -171,14 +172,14 @@ th { font-weight: 600; background: #f5f5f7; }
 .sources li { font-size: 15px; margin-bottom: 6px; }
 .sources a { word-break: break-word; }
 footer { text-align: center; padding: 20px 24px; font-size: 12px; color: #6e6e73; border-top: 1px solid rgba(0,0,0,0.08); }
-footer a { color: #6e6e73; text-decoration: none; margin: 0 10px; }
+footer a { display: inline-block; padding: 6px 0; color: #6e6e73; text-decoration: none; margin: 0 10px; }
 @media (max-width: 768px) { article h1 { font-size: 28px; } article { padding: 36px 0 56px; } .answer { font-size: 18px; } }
 </style>
 </head>
 <body>
 <nav>
 <div class="container">
-<a class="nav-brand" href="./"><img src="icon_256.png" alt="StatScout"><span>StatScout</span></a>
+<a class="nav-brand" href="./"><img src="icon_64.webp" alt="" width="32" height="32"><span>StatScout</span></a>
 <div class="nav-actions">
 <a class="nav-link" href="https://apps.apple.com/us/app/football-next-statscout/id6792930447?pt=128748779&amp;ct=jw-football-what-is-epa-per-play&amp;mt=8">Download</a>
 <a class="play-badge sm" href="https://play.google.com/store/apps/details?id=com.jackwallner.football"><img src="google-play-badge.png" alt="Get it on Google Play" width="646" height="250"></a>
@@ -188,7 +189,7 @@ footer a { color: #6e6e73; text-decoration: none; margin: 0 10px; }
 <article>
 <div class="container">
 <h1>What is EPA per play in football? (And what CPOE adds)</h1>
-<p class="meta">By Jack Wallner. Last updated <time datetime="2026-10-19" data-updated>October 19, 2026</time>.</p>
+<p class="meta">By Jack Wallner. Last updated <time datetime="2026-10-28" data-updated>October 28, 2026</time>.</p>
 <p class="answer">EPA per play is the average number of points a play adds to its team's expected score on the drive. A positive number means the play left the offense better off than before the snap, and a negative number means worse. CPOE, completion percentage over expected, is the companion stat that judges a passer's accuracy against how hard each throw was.</p>
 
 <h2>How does EPA work?</h2>
@@ -214,6 +215,24 @@ footer a { color: #6e6e73; text-decoration: none; margin: 0 10px; }
 <p class="note">EPA per play is passing EPA divided by attempts plus sacks. Percentiles are interpolated from the downloaded rows.</p>
 <p>The gap between a weak and a strong starter is roughly 0.3 points per play. Over 600 plays, that is a difference of about 190 expected points across a season.</p>
 
+<h2>What is EPA + CPOE?</h2>
+<p>EPA + CPOE is a combined quarterback rating that blends EPA per play with CPOE, because the pair predicts next season's play better than either alone. Ben Baldwin of rbsdm.com built it, and nflfastR later shipped it as DAKOTA. It is a fitted model trained to predict next year's adjusted EPA per play, not a fixed 50/50 sum, so it reads on the EPA per play scale. The nflverse data no longer includes the column, so the practical way to read it today is to put both numbers side by side.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>2025 regular season</th><th>EPA per dropback</th><th>CPOE</th></tr></thead>
+<tbody>
+<tr><td>Drake Maye (NE)</td><td>+0.308</td><td>+10.8</td></tr>
+<tr><td>Matthew Stafford (LA)</td><td>+0.243</td><td>+1.5</td></tr>
+<tr><td>Jordan Love (GB)</td><td>+0.240</td><td>+5.5</td></tr>
+<tr><td>Brock Purdy (SF)</td><td>+0.214</td><td>+7.2</td></tr>
+<tr><td>Dak Prescott (DAL)</td><td>+0.181</td><td>+2.2</td></tr>
+<tr><td>League (all dropbacks)</td><td>+0.043</td><td>+0.5</td></tr>
+<tr><td>Cam Ward (TEN)</td><td>-0.183</td><td>-2.9</td></tr>
+<tr><td>J.J. McCarthy (MIN)</td><td>-0.200</td><td>-5.7</td></tr>
+<tr><td>Shedeur Sanders (CLE)</td><td>-0.252</td><td>-5.0</td></tr>
+</tbody></table></div>
+<p class="note">Top five and bottom three of the 36 quarterbacks with at least 200 attempts, from the nflverse 2025 player stats and play-by-play files. EPA per dropback is passing EPA divided by attempts plus sacks.</p>
+<p>The two numbers disagree more often than you would think. Stafford ranked second in EPA with a CPOE near average, which points to big plays and good protection more than pinpoint accuracy. Purdy and Love were strong on both, the profile the composite rewards most. Through week 7 of 2026, the EPA leaders are Jared Goff (+0.317), Caleb Williams (+0.307, with a +9.0 CPOE), Brock Purdy and Josh Allen (both +0.290), and the league average is up to +0.063 per dropback.</p>
+
 <h2>What doesn't EPA tell you?</h2>
 <p>It does not separate the quarterback from the line, receivers and play call. EPA credits the quarterback for everything on a pass play, including the line, the receivers and the play call. It is a noisy measure over a few games. Treat it as a strong starting point, and pair it with CPOE and the game film or team context before drawing conclusions about one player.</p>
 
@@ -224,6 +243,7 @@ footer a { color: #6e6e73; text-decoration: none; margin: 0 10px; }
 <details><summary>What is EPA per play in football?</summary><p>EPA per play is the average expected points added on each play. Each play is scored by the change in the offense&#x27;s expected points from before the snap to after it, then averaged. Positive is good for the offense.</p></details>
 <details><summary>What is a good EPA per play for a quarterback?</summary><p>In 2025, the median quarterback with at least 200 attempts was about +0.05 EPA per dropback. The 90th percentile was about +0.20, and the best was Drake Maye at +0.31.</p></details>
 <details><summary>What is CPOE?</summary><p>CPOE is completion percentage over expected. It compares a passer&#x27;s completions to the completion probability of each throw, so a hard throw that is caught counts for more than an easy one. It is measured in percentage points.</p></details>
+<details><summary>What is EPA + CPOE?</summary><p>It is a combined quarterback rating from Ben Baldwin (rbsdm.com), later called DAKOTA in nflfastR, that blends EPA per play and CPOE to predict next season&#x27;s EPA per play. In 2025, Drake Maye led both parts at +0.31 EPA per dropback and +10.8 CPOE.</p></details>
 <details><summary>Is EPA better than passer rating?</summary><p>EPA accounts for down, distance, field position and turnovers, which passer rating ignores, so most analysts prefer it for efficiency. It is still noisy over small samples.</p></details>
 <details><summary>Where does EPA data come from?</summary><p>The free nflverse project publishes play-by-play data with an EPA value on every play, built from the nflfastR models. StatScout uses that data.</p></details>
 </div>
@@ -234,6 +254,7 @@ footer a { color: #6e6e73; text-decoration: none; margin: 0 10px; }
 <li><a href="https://nflreadr.nflverse.com/articles/dictionary_player_stats.html" rel="noopener">nflreadr data dictionary: player stats</a></li>
 <li><a href="https://github.com/nflverse/nflverse-data" rel="noopener">nflverse-data releases (play-by-play and player stats files)</a></li>
 <li><a href="https://github.com/nflverse/nflfastR" rel="noopener">nflfastR on GitHub</a></li>
+<li><a href="https://github.com/nflverse/nflfastR/blob/master/NEWS.md" rel="noopener">nflfastR release notes (dakota, the EPA + CPOE composite)</a></li>
 </ol>
 </div>
 </article>
