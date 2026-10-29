@@ -72,7 +72,7 @@ struct GridironSegmented<Value: Hashable>: View {
                             Image(systemName: icon)
                                 .font(.system(size: 11, weight: .semibold))
                         }
-                        Text(segment.label)
+                        Text(String(localized: String.LocalizationValue(segment.label)))
                             .font(GridironType.smallBold)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
@@ -92,7 +92,7 @@ struct GridironSegmented<Value: Hashable>: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(segment.isLocked ? "\(segment.label), requires StatScout+" : segment.label)
+                .accessibilityLabel(segment.isLocked ? String(localized: "\(segment.label), requires StatScout+") : String(localized: String.LocalizationValue(segment.label)))
                 .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : [.isButton])
             }
         }
@@ -149,7 +149,7 @@ struct GridironChip: View {
                     .foregroundStyle(glyphColor)
             }
             if let title {
-                Text(title)
+                Text(String(localized: String.LocalizationValue(title)))
                     .font(GridironType.smallBold)
                     .foregroundStyle(isActive ? .white : GridironPalette.ink)
                     .lineLimit(1)

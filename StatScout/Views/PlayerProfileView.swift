@@ -16,7 +16,7 @@ struct PlayerProfileView: View {
     var recentFormSeasons: [Int]?
     var isHistoricalLoading = false
     var hasLoadedHistorical = true
-    var historicalLoadingMessage = "Loading past seasons…"
+    var historicalLoadingMessage = String(localized: "Loading past seasons…")
     var historicalLoadingProgress = 0.12
     var loadHistorical: (() async -> Void)?
     /// This player's own per-game rows. Both recent-form cards on this page read
@@ -63,12 +63,28 @@ struct PlayerProfileView: View {
         case season = "Season"
         case recent = "Recent"
         case both = "Both"
+
+        var title: String {
+            switch self {
+            case .season: String(localized: "Season")
+            case .recent: String(localized: "Recent")
+            case .both: String(localized: "Both")
+            }
+        }
     }
 
     enum PlayerStatTab: String, CaseIterable {
         case advanced = "Advanced"
         case standard = "Standard"
         case yearCompare = "Year Compare"
+
+        var title: String {
+            switch self {
+            case .advanced: String(localized: "Advanced")
+            case .standard: String(localized: "Standard")
+            case .yearCompare: String(localized: "Year Compare")
+            }
+        }
     }
 
     private var availablePercentileSeasons: [Int] {
@@ -324,7 +340,7 @@ struct PlayerProfileView: View {
     private func renderShareImage() -> PlayerShareImage? {
         let groups = groupedMetrics.compactMap { group -> (title: String, metrics: [Metric])? in
             let ranked = group.metrics.filter { !$0.isUnranked }
-            return ranked.isEmpty ? nil : (title: group.family.rawValue, metrics: ranked)
+            return ranked.isEmpty ? nil : (title: group.family.localizedTitle, metrics: ranked)
         }
         guard !groups.isEmpty else { return nil }
         return PlayerShareImage.render(PlayerShareCard(
@@ -367,7 +383,7 @@ struct PlayerProfileView: View {
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
         }) {
-            Text(PlayerStatTab.advanced.rawValue)
+            Text(PlayerStatTab.advanced.title)
                 .font(GridironType.bodyBold)
                 .foregroundStyle(isSelected ? .white : GridironPalette.ink)
                 .frame(maxWidth: .infinity)
@@ -387,7 +403,7 @@ struct PlayerProfileView: View {
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
         }) {
-            Text(PlayerStatTab.standard.rawValue)
+            Text(PlayerStatTab.standard.title)
                 .font(GridironType.bodyBold)
                 .foregroundStyle(isSelected ? .white : GridironPalette.ink)
                 .frame(maxWidth: .infinity)
@@ -410,7 +426,7 @@ struct PlayerProfileView: View {
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
         }) {
-            Text(PlayerStatTab.yearCompare.rawValue)
+            Text(PlayerStatTab.yearCompare.title)
                 .font(GridironType.bodyBold)
                 .foregroundStyle(isSelected ? .white : GridironPalette.ink)
                 .frame(maxWidth: .infinity)
@@ -625,7 +641,7 @@ struct PlayerProfileView: View {
                 ContentUnavailableView {
                     Label("Not enough history", systemImage: "calendar.badge.clock")
                 } description: {
-                    Text("\(player.name) doesn't have multiple seasons of data to compare.")
+                    Text(String(localized: "\(player.name) doesn't have multiple seasons of data to compare."))
                 }
                 .padding(.vertical, 48)
             } else {
@@ -695,9 +711,9 @@ struct PlayerProfileView: View {
     private func emptyStateCard(icon: String, title: String, description: String) -> some View {
         VStack(spacing: 12) {
             ContentUnavailableView {
-                Label(title, systemImage: icon)
+            Label(String(localized: String.LocalizationValue(title)), systemImage: icon)
             } description: {
-                Text(description)
+                Text(String(localized: String.LocalizationValue(description)))
             }
         }
         .padding(.vertical, 48)
@@ -769,7 +785,7 @@ struct PlayerProfileView: View {
                     formDisplayMode = mode
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
-                    Text(mode.rawValue)
+                    Text(mode.title)
                         .font(GridironType.smallBold)
                         .foregroundStyle(formDisplayMode == mode ? .white : GridironPalette.inkSecondary)
                         .frame(maxWidth: .infinity)
@@ -841,14 +857,14 @@ struct PlayerProfileView: View {
                 emptyStateCard(
                     icon: "chart.bar",
                     title: "No metrics available",
-                    description: "Percentile rankings are not available for this player in the \(seasonLabel) season."
+                    description: String(localized: "Percentile rankings are not available for this player in the \(seasonLabel) season.")
                 )
                 .padding(.vertical, 24)
             } else {
                 ForEach(groupedMetrics, id: \.family) { group in
                     if !group.metrics.isEmpty {
                         GridironSubSectionBar(
-                            title: group.family.rawValue.uppercased()
+                            title: group.family.localizedTitle.localizedUppercase
                         )
 
                         ForEach(Array(group.metrics.enumerated()), id: \.element.id) { index, metric in
@@ -858,7 +874,7 @@ struct PlayerProfileView: View {
                 }
                 let extras = recentOnlyRows
                 if !extras.isEmpty {
-                    GridironSubSectionBar(title: "BOX SCORE · LAST \(recentWindowGames)")
+                    GridironSubSectionBar(title: String(localized: "BOX SCORE · LAST \(recentWindowGames) GAMES"))
                     ForEach(Array(extras.enumerated()), id: \.element.id) { index, metric in
                         percentileMetricRow(metric: metric, index: index)
                     }
@@ -906,11 +922,11 @@ struct PlayerProfileView: View {
     private var recentEmptyStateText: String {
         switch freshnessViewModel?.freshnessStatus {
         case .pending, .partial, .checking:
-            return "Recent game data is still arriving"
+            return String(localized: "Recent game data is still arriving")
         case .offline, .failed:
-            return "Recent game data is unavailable right now"
+            return String(localized: "Recent game data is unavailable right now")
         default:
-            return "No games played yet this season"
+            return String(localized: "No games played yet this season")
         }
     }
 
@@ -924,7 +940,7 @@ struct PlayerProfileView: View {
     private var recentWindow: RecentFormWindow? {
         let windowLogs = Array(recentLogs.sorted { $0.gameDate > $1.gameDate }.prefix(recentWindowGames))
         guard !windowLogs.isEmpty else { return nil }
-        return RecentFormWindow.build(label: "Last \(recentWindowGames)", span: recentWindowGames, logs: windowLogs)
+        return RecentFormWindow.build(label: String(localized: "Last \(recentWindowGames) games"), span: recentWindowGames, logs: windowLogs)
     }
 
     private var recentWindowPicker: some View {
@@ -1130,8 +1146,8 @@ struct PlayerProfileView: View {
                 id: "recent-\(spec.label)",
                 label: seasonMetric.label,
                 value: (perGame < 10 && perGame != perGame.rounded()
-                    ? String(format: "%.1f", perGame)
-                    : String(format: "%.0f", perGame)) + "/g",
+                    ? LocalizedNumber.fixed(perGame, fractionDigits: 1)
+                    : String(localized: "\(LocalizedNumber.fixed(perGame, fractionDigits: 0))/g")),
                 percentile: pct,
                 category: seasonMetric.category
             )
@@ -1140,7 +1156,7 @@ struct PlayerProfileView: View {
         return Metric(
             id: "recent-\(spec.label)",
             label: seasonMetric.label,
-            value: String(format: spec.format, v),
+            value: LocalizedNumber.fixed(v, format: spec.format),
             percentile: pct,
             category: seasonMetric.category
         )
@@ -1204,7 +1220,7 @@ struct PlayerProfileView: View {
             if !isTaskCancellation(error), recentLogs.isEmpty || recentLogsKey != key {
                 recentLogs = []
                 recentLogsKey = nil
-                recentLoadError = "Couldn't load recent games. Check your connection and try again."
+                recentLoadError = String(localized: "Couldn't load recent games. Check your connection and try again.")
             }
         }
         recentLoadingKey = nil
@@ -1362,7 +1378,7 @@ struct PlayerProfileView: View {
             recentLogs.sorted { $0.gameDate > $1.gameDate }.prefix(span)
         )
         guard !windowLogs.isEmpty else { return nil }
-        return RecentFormWindow.build(label: "Last \(span)", span: span, logs: windowLogs)
+        return RecentFormWindow.build(label: String(localized: "Last \(span) games"), span: span, logs: windowLogs)
     }
 
     /// What the recent column is actually made of. See
@@ -1385,8 +1401,8 @@ struct PlayerProfileView: View {
               let value = window.metrics[key] else { return nil }
         let perGame = value / Double(window.games)
         let text = (perGame < 10 && perGame != perGame.rounded()
-            ? String(format: "%.1f", perGame)
-            : String(format: "%.0f", perGame)) + "/g"
+            ? LocalizedNumber.fixed(perGame, fractionDigits: 1)
+            : String(localized: "\(LocalizedNumber.fixed(perGame, fractionDigits: 0))/g"))
         let peers = peerPerGameValues(forStat: seasonMetric.label)
         return Metric(
             id: "std-recent-\(seasonMetric.label)",
@@ -1436,7 +1452,7 @@ struct PlayerProfileView: View {
                 emptyStateCard(
                     icon: "chart.bar",
                     title: "Standard stats unavailable",
-                    description: "Traditional stats are not available for this player."
+                    description: String(localized: "Traditional stats are not available for this player.")
                 )
                 .padding(.vertical, 24)
             } else {
@@ -1480,7 +1496,7 @@ struct PlayerProfileView: View {
     private var standardModePicker: some View {
         GridironSegmented(
             segments: FormDisplayMode.allCases.map {
-                .init(value: $0, label: $0.rawValue, isLocked: !store.isPro && $0 != .season)
+                .init(value: $0, label: $0.title, isLocked: !store.isPro && $0 != .season)
             },
             selection: $standardMode,
             onLockedTap: { mode in

@@ -153,7 +153,7 @@ struct TeamStandardCard: View {
             let league = leagueLines()
             barGroup(title: "RATE", labels: rateLabels, line: line, league: league, startIndex: 0)
             barGroup(title: "VOLUME", labels: countingLabels, line: line, league: league, startIndex: rateLabels.count)
-            Text("Totals add up the current roster's season lines, so a player traded at the deadline brings his whole year with him. Volume bars rank each club per game.")
+            Text(String(localized: "Totals add up the current roster's season lines, so a player traded at the deadline brings his whole year with him. Volume bars rank each club per game."))
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .padding(.horizontal, GridironGeo.padCard)
@@ -224,7 +224,7 @@ struct TeamStandardCard: View {
         } else {
             let totals = windowTotals()
             if totals.isEmpty {
-                emptyState("No \(side.label.lowercased()) games in the last \(windowGames)")
+                emptyState(String(localized: "No \(side.label) games in the last \(windowGames) games."))
             } else {
                 let rates = windowRates(totals)
                 let seasonLine = teamLine(for: players)
@@ -241,7 +241,7 @@ struct TeamStandardCard: View {
                         let now = rates[label] ?? 0
                         let then = seasonLine[label]
                         HStack(spacing: 10) {
-                            Text(label)
+                            Text(MetricName.localized(label))
                                 .font(GridironType.bodyBold)
                                 .foregroundStyle(GridironPalette.ink)
                                 .frame(width: 68, alignment: .leading)
@@ -273,11 +273,9 @@ struct TeamStandardCard: View {
                             alignment: .bottom
                         )
                     }
-                    Text(
-                        windowIsWholeSeason
-                            ? "Every game this club has played so far."
-                            : "Compared with the same club's season line."
-                    )
+                    Text(windowIsWholeSeason
+                         ? String(localized: "Every game this club has played so far.")
+                         : String(localized: "Compared with the same club's season line."))
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .padding(.horizontal, GridironGeo.padCard)
@@ -292,11 +290,11 @@ struct TeamStandardCard: View {
                 let counts = countingWindowKeys.filter { totals[$0.label] != nil }
                 ForEach(Array(counts.enumerated()), id: \.element.label) { index, entry in
                     HStack {
-                        Text(entry.label)
+                        Text(MetricName.localized(entry.label))
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.ink)
                         Spacer()
-                        Text(String(format: "%.0f", totals[entry.label] ?? 0))
+                        Text((totals[entry.label] ?? 0).formatted(.number.precision(.fractionLength(0))))
                             .font(GridironType.statSmall)
                             .monospacedDigit()
                             .foregroundStyle(GridironPalette.ink)
@@ -322,7 +320,7 @@ struct TeamStandardCard: View {
             GridironSubSectionBar(title: "RATE · LAST \(windowGames) GAMES")
             ForEach(Array(rows.enumerated()), id: \.element.0) { index, row in
                 HStack(spacing: 10) {
-                    Text(row.0)
+                    Text(MetricName.localized(row.0))
                         .font(GridironType.bodyBold)
                         .foregroundStyle(GridironPalette.ink)
                         .frame(width: 68, alignment: .leading)
@@ -340,11 +338,11 @@ struct TeamStandardCard: View {
             GridironSubSectionBar(title: "TOTALS · LAST \(windowGames) GAMES")
             ForEach(Array(teaserTotals.enumerated()), id: \.element.0) { index, row in
                 HStack {
-                    Text(row.0)
+                    Text(MetricName.localized(row.0))
                         .font(GridironType.bodyBold)
                         .foregroundStyle(GridironPalette.ink)
                     Spacer()
-                    Text("\(row.1)")
+                    Text(LocalizedNumber.text(String(row.1)))
                         .font(GridironType.statSmall)
                         .monospacedDigit()
                         .foregroundStyle(GridironPalette.ink)
@@ -613,7 +611,7 @@ struct TeamStandardCard: View {
             let since = StatScoutSeason.gameLogWindowStart(season: season)
             logs = try await fetch(team, season, seasonPhase, since)
         } catch {
-            loadError = "Couldn't load team form. Pull to refresh."
+            loadError = String(localized: "Couldn't load team form. Pull to refresh.")
         }
         loading = false
     }
@@ -623,9 +621,9 @@ struct TeamStandardCard: View {
     private func format(_ label: String, _ value: Double) -> String {
         switch label {
         case "CMP%", "INT%", "CATCH%":
-            return String(format: "%.1f%%", value)
+            return LocalizedNumber.fixed(value, fractionDigits: 1, percent: true)
         case "Y/A", "Y/C", "Y/R", "SACKS":
-            return String(format: "%.1f", value)
+            return LocalizedNumber.fixed(value, fractionDigits: 1)
         default:
             return Int(value.rounded()).formatted(.number.grouping(.automatic))
         }
@@ -636,7 +634,7 @@ struct TeamStandardCard: View {
             Image(systemName: "list.bullet.rectangle")
                 .font(.system(size: 22))
                 .foregroundStyle(GridironPalette.inkTertiary)
-            Text(message)
+            Text(String(localized: String.LocalizationValue(message)))
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)

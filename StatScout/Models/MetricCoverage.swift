@@ -42,33 +42,33 @@ enum MetricCoverage {
         // The career rollup spans every era, so it is bounded by all of them at
         // once; saying so once is more honest than listing four start years.
         if StatScoutSeason.isAllTime(season) {
-            return "Career totals span 2000 onward. Advanced metrics cover only the seasons their source tracked, so rate metrics are averaged over those years."
+            return String(localized: "Career totals span 2000 onward. Advanced metrics cover only the seasons their source tracked, so rate metrics are averaged over those years.")
         }
 
         if let category, category == .defense {
             return season < advancedDefenseFirstSeason
-                ? "Advanced defensive stats (pressures, coverage allowed, missed tackles) start in \(advancedDefenseFirstSeason)."
+                ? String(localized: "Advanced defensive stats (pressures, coverage allowed, missed tackles) start in \(advancedDefenseFirstSeason.formatted(.number.grouping(.never))).")
                 : nil
         }
 
         if let category, category == .receiving, missingTargetSeasons.contains(season) {
-            return "The play-by-play record has no target data for \(missingTargetSeasons.lowerBound)-\(missingTargetSeasons.upperBound), so target-based metrics are unavailable and receivers are ranked by receptions."
+            return String(localized: "The play-by-play record has no target data for \(missingTargetSeasons.lowerBound.formatted(.number.grouping(.never)))-\(missingTargetSeasons.upperBound.formatted(.number.grouping(.never))), so target-based metrics are unavailable and receivers are ranked by receptions.")
         }
 
         if missingTargetSeasons.contains(season) {
-            return "Next Gen Stats start in \(nextGenFirstSeason). Target data is also missing league-wide for \(missingTargetSeasons.lowerBound)-\(missingTargetSeasons.upperBound)."
+            return String(localized: "Next Gen Stats start in \(nextGenFirstSeason.formatted(.number.grouping(.never))). Target data is also missing league-wide for \(missingTargetSeasons.lowerBound.formatted(.number.grouping(.never)))-\(missingTargetSeasons.upperBound.formatted(.number.grouping(.never))).")
         }
 
         if season < cpoeFirstSeason {
-            return "Only EPA and traditional stats reach \(season). CPOE starts in \(cpoeFirstSeason) and Next Gen Stats in \(nextGenFirstSeason)."
+            return String(localized: "Only EPA and traditional stats reach \(season.formatted(.number.grouping(.never))). CPOE starts in \(cpoeFirstSeason.formatted(.number.grouping(.never))) and Next Gen Stats in \(nextGenFirstSeason.formatted(.number.grouping(.never))).")
         }
 
         if season < nextGenFirstSeason {
-            return "Next Gen Stats (Time to Throw, Separation, YAC+) start in \(nextGenFirstSeason)."
+            return String(localized: "Next Gen Stats (Time to Throw, Separation, YAC+) start in \(nextGenFirstSeason.formatted(.number.grouping(.never))).")
         }
 
         if season < rushingOverExpectedFirstSeason {
-            return "Rushing Yards Over Expected starts in \(rushingOverExpectedFirstSeason)."
+            return String(localized: "Rushing Yards Over Expected starts in \(rushingOverExpectedFirstSeason.formatted(.number.grouping(.never))).")
         }
 
         return nil
@@ -89,10 +89,10 @@ enum MetricCoverage {
             return status != "ready" && status != "not_applicable" && status != "unavailable"
         }
         if category == .defense, pending(advancedDefenseStatus) {
-            return "Advanced defensive stats (pressures, coverage allowed, missed tackles) publish once Pro-Football-Reference posts them for this season, usually within the first month. Until then defenders are ranked on production."
+            return String(localized: "Advanced defensive stats (pressures, coverage allowed, missed tackles) publish once Pro-Football-Reference posts them for this season, usually within the first month. Until then defenders are ranked on production.")
         }
         if category != .defense, pending(nextGenStatus) {
-            return "Next Gen Stats (CPOE, separation, RYOE) for the latest games are still arriving."
+            return String(localized: "Next Gen Stats (CPOE, separation, RYOE) for the latest games are still arriving.")
         }
         return nil
     }

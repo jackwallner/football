@@ -111,7 +111,7 @@ struct CompareView: View {
     /// explanation - the fix (change one side's season) isn't guessable.
     private var teamWarning: String? {
         guard isSameTeamContext, let teamA else { return nil }
-        return "Both sides are \(teamFullName(teamA)) in \(SeasonLabel.text(activeTeamSeasonA)) \(teamPhaseA.label.lowercased()). Change one side's season or season type to compare."
+        return String(localized: "Both sides are \(teamFullName(teamA)) in \(SeasonLabel.text(activeTeamSeasonA)) \(teamPhaseA.label). Change one side's season or season type to compare.")
     }
 
     private func players(forSeason season: Int, phase: SeasonPhase) -> [Player] {
@@ -146,16 +146,16 @@ struct CompareView: View {
 
     private var slotWarning: String? {
         if viewModel.isHistoricalLoading, resolvedA == nil || resolvedB == nil {
-            return "Loading past seasons…"
+            return String(localized: "Loading past seasons…")
         }
         if let playerA, resolvedA == nil {
-            return "No \(SeasonLabel.text(activeSeasonA)) \(phaseA.label.lowercased()) data for \(playerA.name)."
+            return String(localized: "No \(SeasonLabel.text(activeSeasonA)) \(phaseA.label) data for \(playerA.name).")
         }
         if let playerB, resolvedB == nil {
-            return "No \(SeasonLabel.text(activeSeasonB)) \(phaseB.label.lowercased()) data for \(playerB.name)."
+            return String(localized: "No \(SeasonLabel.text(activeSeasonB)) \(phaseB.label) data for \(playerB.name).")
         }
         if let a = resolvedA, let b = resolvedB, !a.canCompareHeadToHead(with: b) {
-            return "Choose two offensive players or two defensive players."
+            return String(localized: "Choose two offensive players or two defensive players.")
         }
         return nil
     }
@@ -420,8 +420,8 @@ struct CompareView: View {
                     followedRow(player: player, index: index)
                 }
                 Text(store.isPro
-                     ? "Tap a player to load them into a slot below."
-                     : "Tap a player to see their stats. Head-to-head needs StatScout+.")
+                     ? String(localized: "Tap a player to load them into a slot below.")
+                     : String(localized: "Tap a player to see their stats. Head-to-head needs StatScout+."))
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1056,8 +1056,8 @@ private struct YearCompareDestination: View {
                         Label("Not enough history", systemImage: "calendar.badge.clock")
                     } description: {
                         Text(viewModel.isHistoricalLoading
-                             ? "Loading past seasons for \(route.playerName)…"
-                             : "\(route.playerName) doesn't have multiple seasons of data to compare.")
+                             ? String(localized: "Loading past seasons for \(route.playerName)…")
+                             : String(localized: "\(route.playerName) doesn't have multiple seasons of data to compare."))
                     }
                     .padding(.vertical, 64)
                 } else {
@@ -1136,17 +1136,17 @@ struct ComparePlayerPicker: View {
                         )
                     } description: {
                         if isLoading {
-                            Text("Pulling the \(season.map { StatScoutSeason.isAllTime($0) ? "career" : String($0) } ?? "") roster.")
+                            Text(String(localized: "Pulling the \(season.map { StatScoutSeason.isAllTime($0) ? String(localized: "career") : $0.formatted(.number.grouping(.never)) } ?? "") roster."))
                         } else if !searchText.isEmpty {
-                            Text("Nobody matches “\(searchText)”.")
+                            Text(String(localized: "Nobody matches “\(searchText)”."))
                         } else if let season {
-                            Text("No player data for the " + SeasonLabel.text(season) + " season.")
+                            Text(String(localized: "No player data for the \(SeasonLabel.text(season)) season."))
                         }
                     }
                 }
             }
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Name, team or position")
-            .navigationTitle(season.map { "Select Player · " + SeasonLabel.text($0) } ?? "Select Player")
+            .navigationTitle(season.map { String(localized: "Select Player · \(SeasonLabel.text($0))") } ?? String(localized: "Select Player"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -1261,8 +1261,8 @@ struct TeamComparisonView: View {
     private var statGroups: [(title: String, rows: [StatRow])] {
         MetricCategory.allCases.flatMap { category -> [(title: String, rows: [StatRow])] in
             [
-                (category.rawValue.uppercased() + " · ADVANCED", advancedRows(for: category)),
-                (category.rawValue.uppercased() + " · STANDARD", standardRows(for: category)),
+                (String(localized: "\(category.title) · Advanced").localizedUppercase, advancedRows(for: category)),
+                (String(localized: "\(category.title) · Standard").localizedUppercase, standardRows(for: category)),
             ]
         }
         .map { group in
@@ -1390,7 +1390,7 @@ struct TeamComparisonView: View {
                     ContentUnavailableView {
                         Label("No aggregate stats", systemImage: "sum")
                     } description: {
-                        Text("Neither selected roster has standard stats for this context.")
+                        Text(String(localized: "Neither selected roster has standard stats for this context."))
                     }
                     .padding(.vertical, 32)
                     .frame(maxWidth: .infinity)
@@ -1447,11 +1447,7 @@ struct TeamComparisonView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(
-                String(rosterCount)
-                    + " tracked · "
-                    + SeasonLabel.text(season)
-                    + " "
-                    + phase.label
+                String(localized: "\(rosterCount.formatted(.number.grouping(.never))) tracked · \(SeasonLabel.text(season)) \(phase.label)")
             )
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
@@ -1473,7 +1469,7 @@ struct TeamComparisonView: View {
                 value: row.aValue,
                 other: row.bValue
             )
-            Text(row.label)
+            Text(MetricName.localized(row.label))
                 .font(GridironType.smallBold)
                 .foregroundStyle(GridironPalette.ink)
                 .frame(width: 88)
@@ -1584,7 +1580,7 @@ struct TeamComparisonView: View {
     private func format(_ value: Double?, label: String) -> String {
         guard let value else { return "-" }
         if label == "Sacks", value.rounded() != value {
-            return String(format: "%.1f", value)
+            return value.formatted(.number.precision(.fractionLength(1)))
         }
         return Int(value.rounded()).formatted(.number.grouping(.automatic))
     }

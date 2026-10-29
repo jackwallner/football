@@ -40,14 +40,12 @@ struct GamesView: View {
         guard let selectedWeek else { return nil }
         let days = slate.compactMap(\.kickoff)
         guard let first = days.min(), let last = days.max() else { return nil }
-        let style = Date.FormatStyle().month(.abbreviated).day()
-        let calendar = Calendar.current
-        let range = calendar.isDate(first, inSameDayAs: last)
-            ? first.formatted(style)
-            : calendar.isDate(first, equalTo: last, toGranularity: .month)
-                ? "\(first.formatted(style)) - \(last.formatted(.dateTime.day()))"
-                : "\(first.formatted(style)) - \(last.formatted(style))"
-        return "\(selectedWeek.label) · \(range)"
+        let formatter = DateIntervalFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        let range = formatter.string(from: first, to: last)
+        return String(localized: "\(selectedWeek.label) · \(range)")
     }
 
     private var favoriteGame: Game? {
@@ -172,7 +170,7 @@ struct GamesView: View {
         }
 
         if !byeTeams.isEmpty {
-            Text("Bye: " + byeTeams.map(displayTeamAbbr).joined(separator: ", "))
+            Text(String(localized: "Bye: \(byeTeams.map(displayTeamAbbr).joined(separator: ", "))"))
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -181,8 +179,8 @@ struct GamesView: View {
         }
 
         Text(favorites.team == nil
-             ? "Scores post when each game goes final, stats usually within a few hours. Follow a team from its page to pin its game here."
-             : "Scores post when each game goes final. Player stats usually follow within a few hours.")
+             ? String(localized: "Scores post when each game goes final, stats usually within a few hours. Follow a team from its page to pin its game here.")
+             : String(localized: "Scores post when each game goes final. Player stats usually follow within a few hours."))
             .font(GridironType.micro)
             .foregroundStyle(GridironPalette.inkTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -232,7 +230,7 @@ struct GamesView: View {
                     systemImage: viewModel.gamesError == nil ? "calendar" : "wifi.slash"
                 )
             } description: {
-                Text(viewModel.gamesError ?? "The \(String(viewModel.freeSeason)) schedule isn't published yet.")
+                Text(viewModel.gamesError ?? String(localized: "The \(viewModel.freeSeason.formatted(.number.grouping(.never))) schedule isn't published yet."))
             } actions: {
                 Button("Try Again") {
                     Task { await viewModel.loadGames(force: true) }
@@ -334,17 +332,17 @@ struct GameRow: View {
 
     private func statusTitle(_ status: GameStatus) -> String {
         switch status {
-        case .final: return game.overtime ? "Final/OT" : "Final"
-        case .inProgress: return "In progress"
-        case .awaitingScore: return "Final soon"
+        case .final: return game.overtime ? String(localized: "Final/OT") : String(localized: "Final")
+        case .inProgress: return String(localized: "In progress")
+        case .awaitingScore: return String(localized: "Final soon")
         case .upcoming: return game.kickoffLabel
         }
     }
 
     private func statusDetail(_ status: GameStatus) -> String? {
         switch status {
-        case .final: return hasStats ? game.dayLabel : "Stats arriving"
-        case .inProgress, .awaitingScore: return "Score at final"
+        case .final: return hasStats ? game.dayLabel : String(localized: "Stats arriving")
+        case .inProgress, .awaitingScore: return String(localized: "Score at final")
         case .upcoming:
             if let projection {
                 return projection.label(home: game.homeTeam, away: game.awayTeam)
@@ -358,13 +356,18 @@ struct GameRow: View {
         let home = teamFullName(game.homeTeam)
         switch status {
         case .final:
-            let score = "\(away) \(game.awayScore ?? 0), \(home) \(game.homeScore ?? 0)"
-            return "\(score), \(statusTitle(status))" + (hasStats ? "" : ", stats arriving")
+            let score = String(localized: "\(away) \(game.awayScore?.formatted(.number.grouping(.never)) ?? "0"), \(home) \(game.homeScore?.formatted(.number.grouping(.never)) ?? "0")")
+            return hasStats
+                ? String(localized: "\(score), \(statusTitle(status))")
+                : String(localized: "\(score), \(statusTitle(status)), stats arriving")
         case .inProgress, .awaitingScore:
-            return "\(away) at \(home), \(status.liveLabel.lowercased())"
+            return String(localized: "\(away) at \(home), \(status.liveLabel)")
         case .upcoming:
-            let projected = projection.map { ", projected \($0.label(home: game.homeTeam, away: game.awayTeam))" } ?? ""
-            return "\(away) at \(home), \(game.dayLabel) at \(game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "time TBD")\(projected)"
+            let kickoff = game.kickoff?.formatted(date: .omitted, time: .shortened) ?? String(localized: "time TBD")
+            if let projection {
+                return String(localized: "\(away) at \(home), \(game.dayLabel) at \(kickoff), projected \(projection.label(home: game.homeTeam, away: game.awayTeam))")
+            }
+            return String(localized: "\(away) at \(home), \(game.dayLabel) at \(kickoff)")
         }
     }
 }

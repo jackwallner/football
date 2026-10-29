@@ -124,25 +124,31 @@ struct PlayerProfile: Decodable, Hashable, Sendable {
     /// "6-1, 196".
     var sizeLabel: String? {
         guard let heightInches, heightInches > 0 else { return nil }
-        let height = "\(heightInches / 12)-\(heightInches % 12)"
+        let height = String(localized: "\(heightInches / 12)-\(heightInches % 12)")
         guard let weightPounds, weightPounds > 0 else { return height }
-        return "\(height), \(weightPounds)"
+        return String(localized: "\(height), \(weightPounds.formatted(.number.grouping(.never)))")
     }
 
     /// "2023 R1 #20", or "Undrafted" for a player who came in without a pick.
     var draftLabel: String? {
         if let draftYear, let draftRound, let draftPick {
-            return "\(draftYear) R\(draftRound) #\(draftPick)"
+            return String(localized: "\(draftYear.formatted(.number.grouping(.never))) R\(draftRound.formatted(.number.grouping(.never))) #\(draftPick.formatted(.number.grouping(.never)))")
         }
-        return yearsExperience != nil ? "Undrafted" : nil
+        return yearsExperience != nil ? String(localized: "Undrafted") : nil
     }
 
     /// "$42.2M/yr".
     var contractLabel: String? {
         guard let contractAPY, contractAPY > 0 else { return nil }
-        return contractAPY >= 10
-            ? String(format: "$%.1fM/yr", contractAPY)
-            : String(format: "$%.2fM/yr", contractAPY)
+        let formatter = NumberFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.minimumFractionDigits = contractAPY >= 10 ? 1 : 2
+        formatter.maximumFractionDigits = contractAPY >= 10 ? 1 : 2
+        let exactValue = NSDecimalNumber(string: String(format: "%.17g", contractAPY))
+        let price = formatter.string(from: exactValue) ?? contractAPY.formatted(.number)
+        return String(localized: "\(price)M/yr")
     }
 
     /// Snap share for the side of the ball the player is ranked on.
@@ -181,6 +187,8 @@ struct InjuryReport: Hashable, Sendable {
         switch status.lowercased() {
         case "questionable": return "Q"
         case "doubtful": return "D"
+        case "out": return String(localized: "Out")
+        case "probable": return String(localized: "Probable")
         default: return status
         }
     }
@@ -217,7 +225,8 @@ struct TeamRating: Decodable, Hashable, Sendable, Identifiable {
     static func signed(_ value: Double) -> String {
         let rounded = (value * 10).rounded() / 10
         if rounded == 0 { return "0.0" }
-        return String(format: "%+.1f", rounded)
+        let formatted = rounded.formatted(.number.precision(.fractionLength(1)))
+        return rounded > 0 ? "+\(formatted)" : formatted
     }
 }
 
@@ -237,9 +246,10 @@ struct GameProjection: Decodable, Hashable, Sendable {
     /// "SEA by 4.5", "Toss-up" under a point.
     func label(home: String, away: String) -> String {
         let margin = abs(homeMargin)
-        guard margin >= 1 else { return "Toss-up" }
+        guard margin >= 1 else { return String(localized: "Toss-up") }
         let favourite = homeMargin > 0 ? home : away
-        return "\(displayTeamAbbr(favourite)) by \(String(format: "%.1f", (margin * 2).rounded() / 2))"
+        let formattedMargin = ((margin * 2).rounded() / 2).formatted(.number.precision(.fractionLength(1)))
+        return String(localized: "\(displayTeamAbbr(favourite)) by \(formattedMargin)")
     }
 
     func winProbability(for team: String, home: String) -> Double {
@@ -337,6 +347,16 @@ struct ContractValue: Hashable, Sendable {
         case fair = "Paid about right"
         case under = "Below his deal"
         case overpaid = "Overpaid so far"
+
+        var displayName: String {
+            switch self {
+            case .bargain: String(localized: "Bargain")
+            case .outplaying: String(localized: "Outplaying his deal")
+            case .fair: String(localized: "Paid about right")
+            case .under: String(localized: "Below his deal")
+            case .overpaid: String(localized: "Overpaid so far")
+            }
+        }
     }
 
     var verdict: Verdict {

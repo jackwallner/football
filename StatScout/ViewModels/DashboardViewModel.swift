@@ -71,7 +71,7 @@ final class DashboardViewModel {
     var selectedSeason: Int = StatScoutSeason.free
     var selectedPhase: SeasonPhase = .regular
 
-    var sortLabel: String { currentSortMetric ?? "Top Metric" }
+    var sortLabel: String { currentSortMetric.map(MetricName.localized) ?? String(localized: "Top Metric") }
 
     var currentSortMetric: String? {
         if let userSortMetric, availableSortMetrics.contains(userSortMetric) {
@@ -191,7 +191,7 @@ final class DashboardViewModel {
     var isLoading = true
     var isHistoricalLoading = false
     var hasLoadedHistorical = false
-    var loadingMessage = "Starting up…"
+    var loadingMessage = String(localized: "Starting up…")
     var loadingProgress = 0.05
     var errorMessage: String?
     var lastFetchFailed = false
@@ -226,7 +226,7 @@ final class DashboardViewModel {
         if lastFetchFailed {
             return dataFreshness.replacing(
                 status: .failed,
-                message: .some(errorMessage ?? "Showing saved data while the latest refresh is retried."),
+                message: .some(errorMessage ?? String(localized: "Showing saved data while the latest refresh is retried.")),
                 isCached: .some(true)
             )
         }
@@ -310,9 +310,10 @@ final class DashboardViewModel {
     var freshnessText: String? {
         guard let lastUpdated else { return nil }
         let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return "Updated \(formatter.string(from: lastUpdated))"
+        return String(localized: "Updated \(formatter.string(from: lastUpdated))")
     }
 
     /// Fetch per-game logs for a single player. Powers the Recent Form card.
@@ -583,7 +584,7 @@ final class DashboardViewModel {
             }
         } catch {
             if !isTaskCancellation(error) {
-                gamesError = "Couldn't load games. Check your connection and try again."
+                gamesError = String(localized: "Couldn't load games. Check your connection and try again.")
             }
         }
         isGamesLoading = false
@@ -828,7 +829,7 @@ final class DashboardViewModel {
                 self.recentFormRowsByWindow[target.rawValue] = rows
             } catch {
                 if !isTaskCancellation(error) {
-                    self.recentFormError = "Couldn't load recent form."
+                    self.recentFormError = String(localized: "Couldn't load recent form.")
                 }
             }
         }
@@ -947,8 +948,15 @@ final class DashboardViewModel {
 
         var description: String {
             switch self {
-            case .all: return "Small samples dimmed"
-            case .qualified: return "Playing-time minimum"
+            case .all: return String(localized: "Small samples dimmed")
+            case .qualified: return String(localized: "Playing-time minimum")
+            }
+        }
+
+        var title: String {
+            switch self {
+            case .all: return String(localized: "All Players")
+            case .qualified: return String(localized: "Qualified")
             }
         }
     }
@@ -1091,7 +1099,7 @@ final class DashboardViewModel {
         let category = category ?? player.primaryCategory
         if category == .defense,
            let snaps = profile(for: player)?.defenseSnaps, snaps > 0 {
-            return "\(snaps) snaps"
+            return String(localized: "\(snaps) snaps")
         }
         return player.volumeCaption(for: category)
     }
@@ -1378,7 +1386,7 @@ final class DashboardViewModel {
                 dataFreshness = existing.replacing(
                     status: .offline,
                     checkedAt: .some(now),
-                    message: .some("We couldn't check for new game data."),
+                    message: .some(String(localized: "We couldn't check for new game data.")),
                     isCached: .some(true)
                 )
                 persistFreshness()
@@ -1391,7 +1399,9 @@ final class DashboardViewModel {
         defer { loadTask = nil }
         hasStartedLoading = true
         isLoading = players.isEmpty
-        loadingMessage = players.isEmpty ? "Loading saved players…" : "Refreshing player data…"
+        loadingMessage = players.isEmpty
+            ? String(localized: "Loading saved players…")
+            : String(localized: "Refreshing player data…")
         loadingProgress = players.isEmpty ? 0.12 : 0.2
 
         let cached: [Player] = await Task.detached { [cache] in
@@ -1405,7 +1415,7 @@ final class DashboardViewModel {
             ingestPlayers(cached)
         }
 
-        loadingMessage = "Checking for updates…"
+        loadingMessage = String(localized: "Checking for updates…")
         loadingProgress = 0.45
         isLoading = players.isEmpty
         errorMessage = nil
@@ -1453,30 +1463,34 @@ final class DashboardViewModel {
                 if !historicalFallback.isEmpty {
                     ingestPlayers(historicalFallback)
                 } else {
-                    errorMessage = "No players found."
+                    errorMessage = String(localized: "No players found.")
                     lastFetchFailed = true
                 }
             } else {
-                loadingMessage = "Preparing leaderboard…"
+                loadingMessage = String(localized: "Preparing leaderboard…")
                 loadingProgress = 0.85
                 playersToIngest = allPlayers
                 if !acceptedCurrent.isEmpty {
                     loadedCurrentData = true
                 } else if !current.isEmpty {
-                    errorMessage = "Showing complete saved data while the live feed finishes updating."
+                    errorMessage = String(localized: "Showing complete saved data while the live feed finishes updating.")
                     lastFetchFailed = true
                 }
             }
 
         } catch is DecodingError {
-            errorMessage = "Data format changed - app may need an update."
+            errorMessage = String(localized: "Data format changed - app may need an update.")
             lastFetchFailed = true
         } catch _ as URLError {
-            errorMessage = players.isEmpty ? "Can't reach data feed. Check your connection." : "Showing saved data. Pull to refresh when your connection improves."
+            errorMessage = players.isEmpty
+                ? String(localized: "Can't reach data feed. Check your connection.")
+                : String(localized: "Showing saved data. Pull to refresh when your connection improves.")
             lastFetchFailed = true
             lastFailureWasConnectivity = true
         } catch {
-            errorMessage = players.isEmpty ? "Something went wrong loading player data." : "Showing saved data. Pull to refresh to try again."
+            errorMessage = players.isEmpty
+                ? String(localized: "Something went wrong loading player data.")
+                : String(localized: "Showing saved data. Pull to refresh to try again.")
             lastFetchFailed = true
         }
         isLoading = false
@@ -1524,7 +1538,7 @@ final class DashboardViewModel {
         } else if lastFetchFailed, let current = dataFreshness {
             dataFreshness = current.replacing(
                 status: .failed,
-                message: .some(errorMessage ?? "Showing saved data while the latest refresh is retried."),
+                message: .some(errorMessage ?? String(localized: "Showing saved data while the latest refresh is retried.")),
                 isCached: .some(true)
             )
         }
@@ -1622,7 +1636,7 @@ final class DashboardViewModel {
     func loadHistoricalIfNeeded() async {
         guard !hasLoadedHistorical, !isHistoricalLoading else { return }
         isHistoricalLoading = true
-        loadingMessage = "Loading past seasons…"
+        loadingMessage = String(localized: "Loading past seasons…")
         loadingProgress = 0.12
 
         var historical: [Player] = await Task.detached { [cache] in
@@ -1639,7 +1653,7 @@ final class DashboardViewModel {
             historical = (try? await provider.fetchHistoricalPlayers()) ?? []
         }
 
-        loadingMessage = "Preparing season history…"
+        loadingMessage = String(localized: "Preparing season history…")
         loadingProgress = 0.78
 
         if !historical.isEmpty {

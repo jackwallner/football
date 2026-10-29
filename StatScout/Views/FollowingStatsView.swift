@@ -67,7 +67,7 @@ struct FollowingStatsView: View {
                 }
 
                 if missingCount > 0 {
-                    Text("\(missingCount) followed \(missingCount == 1 ? "player has" : "players have") no published stats for this season and phase yet. They stay on your list.")
+                    Text(String(localized: "\(missingCount) followed players have no published stats for this season and phase yet. They stay on your list."))
                         .font(GridironType.small)
                         .foregroundStyle(GridironPalette.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -103,9 +103,9 @@ struct FollowingStatsView: View {
                 HStack(alignment: .top, spacing: 8) {
                     ForEach(stats) { stat in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(stat.value).font(GridironType.statMed).monospacedDigit()
+                            Text(stat.displayValue).font(GridironType.statMed).monospacedDigit()
                                 .foregroundStyle(GridironPalette.turf)
-                            Text(stat.label).font(GridironType.small)
+                            Text(MetricName.localized(stat.label)).font(GridironType.small)
                                 .foregroundStyle(GridironPalette.inkSecondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)

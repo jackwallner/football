@@ -93,7 +93,7 @@ struct AboutView: View {
                         .font(.title2)
                         .foregroundStyle(store.isPro ? Color.yellow : GridironPalette.inkTertiary)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(store.isPro ? "StatScout+ Unlocked" : "Free Version")
+                        Text(store.isPro ? String(localized: "StatScout+ Unlocked") : String(localized: "Free Version"))
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.ink)
                         // Named to match `PaywallView.proFeatures`. This used to
@@ -167,8 +167,8 @@ struct AboutView: View {
         guard let coverage = freshness?.coverage ?? dataCoverage else { return "-" }
         let stamp = coverage.asOf.formatted(DataCoverage.gameDayStyle)
         guard let week = coverage.week else { return stamp }
-        let phase = coverage.phase == .playoffs ? " (playoffs)" : ""
-        return "Week \(week)\(phase) · \(stamp)"
+        let phase = coverage.phase == .playoffs ? String(localized: "Playoffs") : ""
+        return String(localized: "Week \(week.formatted(.number.grouping(.never)))\(phase.isEmpty ? "" : " (\(phase))") · \(stamp)")
     }
 
     private var checkedText: String {
@@ -316,10 +316,10 @@ struct AboutView: View {
                 .foregroundStyle(GridironPalette.turf)
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 4) {
-                Text(title)
+                Text(String(localized: String.LocalizationValue(title)))
                     .font(GridironType.bodyBold)
                     .foregroundStyle(GridironPalette.ink)
-                Text(subtitle)
+                Text(String(localized: String.LocalizationValue(subtitle)))
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
             }
@@ -438,15 +438,15 @@ struct StatGlossaryView: View {
 
     private func categoryCard(_ category: String) -> some View {
         VStack(spacing: 0) {
-            GridironSectionBar(title: category.uppercased())
+            GridironSectionBar(title: category.localizedUppercase)
 
             let rows = entries.filter { $0.category == category }
             ForEach(Array(rows.enumerated()), id: \.element.id) { index, entry in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.label)
+                    Text(MetricName.localized(entry.label))
                         .font(GridironType.bodyBold)
                         .foregroundStyle(GridironPalette.ink)
-                    Text(entry.description)
+                    Text(String(localized: String.LocalizationValue(entry.description)))
                         .font(GridironType.small)
                         .foregroundStyle(GridironPalette.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -492,7 +492,7 @@ struct StatGlossaryView: View {
     private func sourceRow(_ title: String, url: URL, isLast: Bool = false) -> some View {
         Link(destination: url) {
             HStack(spacing: 8) {
-                Text(title)
+                Text(String(localized: String.LocalizationValue(title)))
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.turf)
                 Spacer(minLength: 0)

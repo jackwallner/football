@@ -32,6 +32,14 @@ struct TeamView: View {
         case advanced = "Advanced"
         case standard = "Standard"
         case roster = "Roster"
+
+        var title: String {
+            switch self {
+            case .advanced: String(localized: "Advanced")
+            case .standard: String(localized: "Standard")
+            case .roster: String(localized: "Roster")
+            }
+        }
     }
 
     enum RosterMode: String, CaseIterable, Identifiable {
@@ -39,6 +47,12 @@ struct TeamView: View {
         case recent = "Recent"
 
         var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .season: String(localized: "Season")
+            case .recent: String(localized: "Recent")
+            }
+        }
     }
 
     enum RosterSide: String, CaseIterable, Identifiable {
@@ -46,6 +60,12 @@ struct TeamView: View {
         case defense = "Defense"
 
         var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .offense: String(localized: "Offense")
+            case .defense: String(localized: "Defense")
+            }
+        }
 
         var categories: [MetricCategory] {
             switch self {
@@ -116,8 +136,8 @@ struct TeamView: View {
     }
 
     private var sortLabel: String {
-        if selectedCategory == nil { return "Overall" }
-        return sortMetric?.label ?? "Top Category"
+        if selectedCategory == nil { return String(localized: "Overall") }
+        return sortMetric.map { MetricName.localized($0.label) } ?? String(localized: "Top Category")
     }
 
     private var rowDisplayMetric: (label: String?, category: MetricCategory?) {
@@ -327,7 +347,7 @@ struct TeamView: View {
                     withAnimation(.easeInOut(duration: 0.2)) { selectedTab = tab }
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
-                    Text(tab.rawValue)
+                    Text(tab.title)
                         .font(GridironType.smallBold)
                         .minimumScaleFactor(0.85)
                         .lineLimit(1)
@@ -397,7 +417,7 @@ struct TeamView: View {
                     segments: RecentWindow.allCases.map {
                         // The roster reads the league-week rollup, so its
                         // windows are weeks, not this club's last N games.
-                        .init(value: $0, label: "\($0.rawValue) weeks")
+                    .init(value: $0, label: $0.label)
                     },
                     selection: $rosterWindow
                 )
@@ -407,12 +427,12 @@ struct TeamView: View {
 
             if rosterSide.categories.count > 1 {
                 GridironTabs(
-                    tabs: rosterSide.categories.map(\.rawValue),
+                    tabs: rosterSide.categories.map(\.title),
                     selected: Binding(
                         get: { (selectedCategory ?? rosterSide.categories[0]).rawValue },
                         set: { rawValue in
                             selectedCategory = MetricCategory.allCases.first {
-                                $0.rawValue == rawValue
+                                $0.title == rawValue
                             }
                         }
                     )
@@ -496,7 +516,7 @@ struct TeamView: View {
 
     private var sidePicker: some View {
         GridironSegmented(
-            segments: RosterSide.allCases.map { .init(value: $0, label: $0.rawValue) },
+            segments: RosterSide.allCases.map { .init(value: $0, label: $0.title) },
             selection: $rosterSide
         )
         .onChange(of: rosterSide) { _, side in
@@ -510,7 +530,7 @@ struct TeamView: View {
         if supportsRecent {
             GridironSegmented(
                 segments: RosterMode.allCases.map {
-                    .init(value: $0, label: $0.rawValue, isLocked: !store.isPro && $0 == .recent)
+                    .init(value: $0, label: $0.title, isLocked: !store.isPro && $0 == .recent)
                 },
                 selection: $rosterMode,
                 onLockedTap: { mode in
@@ -534,7 +554,7 @@ struct TeamView: View {
                             if label == sortMetric?.label {
                                 Label(label, systemImage: "checkmark")
                             } else {
-                                Text(label)
+                                Text(MetricName.localized(label))
                             }
                         }
                     }
@@ -605,7 +625,7 @@ struct TeamView: View {
     private var rosterSection: some View {
         VStack(spacing: 0) {
             if players.isEmpty, viewModel?.isHistoricalLoading == true {
-                ProgressView("Loading \(String(displaySeason))")
+                ProgressView(String(localized: "Loading \(displaySeason.formatted(.number.grouping(.never)))"))
                     .font(GridironType.small)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 40)
@@ -680,9 +700,9 @@ struct TeamView: View {
 
     private func emptyStateView(icon: String, title: String, description: String) -> some View {
         ContentUnavailableView {
-            Label(title, systemImage: icon)
+            Label(String(localized: String.LocalizationValue(title)), systemImage: icon)
         } description: {
-            Text(description)
+            Text(String(localized: String.LocalizationValue(description)))
         }
         .padding(.vertical, 48)
     }

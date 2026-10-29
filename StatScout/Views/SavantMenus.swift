@@ -148,7 +148,7 @@ struct SeasonPhasePicker<Trigger: View>: View {
         .menuOrder(.fixed)
         .gridironMenuAppearance()
         .accessibilityLabel("Season and season type")
-        .accessibilityValue(SeasonLabel.text(selectedSeason) + ", " + selectedPhase.label)
+        .accessibilityValue(String(localized: "\(SeasonLabel.text(selectedSeason)), \(selectedPhase.label)"))
     }
 }
 
@@ -248,7 +248,7 @@ struct SeasonPhaseNavBar: ViewModifier {
             // word "Season" is already unmistakably a date, so the icon was
             // decoration sitting in front of the label it decorated.
             GridironNavPill(
-                title: SeasonLabel.text(selectedSeason) + " · " + selectedPhase.label
+                title: String(localized: "\(SeasonLabel.text(selectedSeason)) · \(selectedPhase.label)")
             )
         }
     }

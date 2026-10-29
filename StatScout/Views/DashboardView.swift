@@ -73,7 +73,7 @@ struct DashboardView: View {
     /// the full set, so it never becomes furniture the eye learns to skip.
     /// Why a season, or the live season so far, shows fewer advanced metrics,
     /// plus what the dimmed rows and the bars mean.
-    private var coverageNoteText: String? {
+    private var coverageNoteLines: [String] {
         let category = viewModel.selectedPosition.primaryCategory
         let isLive = viewModel.selectedSeason == viewModel.freeSeason && viewModel.selectedPhase == .regular
         let pending = isLive ? MetricCoverage.pendingNote(
@@ -81,25 +81,32 @@ struct DashboardView: View {
             advancedDefenseStatus: viewModel.dataFreshness?.advancedDefenseStatus,
             nextGenStatus: viewModel.dataFreshness?.nextGenStatus
         ) : nil
-        let noun = viewModel.selectedPosition == .defense ? "defender" : viewModel.selectedPosition.rawValue
-        let cohort = isLive ? "every \(noun) with a line this season" : "every qualified \(noun)"
+        let noun = viewModel.selectedPosition.localizedName
+        let cohort = isLive
+            ? String(localized: "every \(noun) with a line this season")
+            : String(localized: "every qualified \(noun)")
         let minimum = viewModel.qualifierLevel == .all
-            ? "Dimmed rows are under the playing-time minimum."
-            : "Players under the playing-time minimum are hidden; View shows them."
-        let legend = isLive ? "Bars show the percentile among \(cohort). \(minimum)" : "Bars show the percentile among \(cohort)."
+            ? String(localized: "Dimmed rows are under the playing-time minimum.")
+            : String(localized: "Players under the playing-time minimum are hidden; View shows them.")
+        let legend = isLive
+            ? String(localized: "Bars show the percentile among \(cohort). \(minimum)")
+            : String(localized: "Bars show the percentile among \(cohort).")
         return [MetricCoverage.note(for: viewModel.selectedSeason, category: category), pending, legend]
             .compactMap { $0 }
-            .joined(separator: " ")
     }
 
     @ViewBuilder
     private var coverageNote: some View {
-        if let note = coverageNoteText {
+        if !coverageNoteLines.isEmpty {
             HStack(alignment: .top, spacing: 6) {
                 Image(systemName: "info.circle")
                     .font(.system(size: 10, weight: .semibold))
-                Text(note)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(Array(coverageNoteLines.enumerated()), id: \.offset) { _, line in
+                        Text(line)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
             .font(GridironType.micro)
             .foregroundStyle(GridironPalette.inkTertiary)
@@ -390,8 +397,8 @@ struct DashboardView: View {
                 ContentUnavailableView {
                     Label(
                         needsFirstConnection
-                            ? "Connect to load \(SeasonLabel.text(viewModel.selectedSeason))"
-                            : (hasSeasonData ? "No matching metrics" : "No players yet"),
+                            ? String(localized: "Connect to load \(SeasonLabel.text(viewModel.selectedSeason))")
+                            : (hasSeasonData ? String(localized: "No matching metrics") : String(localized: "No players yet")),
                         systemImage: needsFirstConnection ? "wifi.exclamationmark" : "football"
                     )
                 } description: {
@@ -399,8 +406,8 @@ struct DashboardView: View {
                         Text("The current season needs a connection for its first update. Once it has loaded, your saved stats are here offline.")
                     } else {
                         Text(hasSeasonData
-                             ? "No metrics are available for \(viewModel.selectedPosition.rawValue) in \(SeasonLabel.text(viewModel.selectedSeason))."
-                             : "No player data is available for the \(SeasonLabel.text(viewModel.selectedSeason)) season.")
+                             ? String(localized: "No metrics are available for \(viewModel.selectedPosition.localizedName) in \(SeasonLabel.text(viewModel.selectedSeason)).")
+                             : String(localized: "No player data is available for the \(SeasonLabel.text(viewModel.selectedSeason)) season."))
                     }
                 } actions: {
                     if needsFirstConnection {

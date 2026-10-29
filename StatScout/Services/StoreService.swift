@@ -144,15 +144,16 @@ enum SeasonLabel {
     /// useful: it tells you what you are about to compare against.
     static func text(_ season: Int) -> String {
         StatScoutSeason.isAllTime(season)
-            ? "All since \(StatScoutSeason.earliest)"
-            : String(season)
+            ? String(localized: "All since \(StatScoutSeason.earliest.formatted(.number.grouping(.never)))")
+            : season.formatted(.number.grouping(.never))
     }
 
     /// Longer form for prose and subtitles ("2024 Regular Season").
     static func text(_ season: Int, phase: SeasonPhase) -> String {
-        StatScoutSeason.isAllTime(season)
-            ? text(season) + " · " + phase.label
-            : String(season) + " " + phase.label
+        let formattedSeason = season.formatted(.number.grouping(.never))
+        return StatScoutSeason.isAllTime(season)
+            ? String(localized: "\(text(season)) · \(phase.label)")
+            : String(localized: "\(formattedSeason) \(phase.label)")
     }
 }
 
@@ -206,7 +207,7 @@ enum StoreServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .purchasesUnavailableInSimulator:
-            return "Purchases are unavailable in simulator builds."
+            return String(localized: "Purchases are unavailable in simulator builds.")
         }
     }
 }
@@ -249,27 +250,34 @@ extension Package {
 
     var displayName: String {
         switch productKind {
-        case .lifetime: return "Lifetime"
-        case .yearly: return "Yearly"
-        case .monthly: return "Monthly"
+        case .lifetime: return String(localized: "Lifetime")
+        case .yearly: return String(localized: "Yearly")
+        case .monthly: return String(localized: "Monthly")
         case .other: return storeProduct.localizedTitle
         }
     }
 
     var priceLabel: String {
         guard let period = storeProduct.subscriptionPeriod else { return storeProduct.localizedPriceString }
-        let unit: String
         switch period.unit {
-        case .day: unit = period.value == 1 ? "day" : "days"
-        case .week: unit = period.value == 1 ? "week" : "weeks"
-        case .month: unit = period.value == 1 ? "month" : "months"
-        case .year: unit = period.value == 1 ? "year" : "years"
-        @unknown default: unit = ""
-        }
-        if period.value == 1 {
-            return "\(storeProduct.localizedPriceString) / \(unit)"
-        } else {
-            return "\(storeProduct.localizedPriceString) / \(period.value) \(unit)"
+        case .day:
+            return period.value == 1
+                ? String(localized: "\(storeProduct.localizedPriceString) / day")
+                : String(localized: "\(storeProduct.localizedPriceString) / \(period.value) days")
+        case .week:
+            return period.value == 1
+                ? String(localized: "\(storeProduct.localizedPriceString) / week")
+                : String(localized: "\(storeProduct.localizedPriceString) / \(period.value) weeks")
+        case .month:
+            return period.value == 1
+                ? String(localized: "\(storeProduct.localizedPriceString) / month")
+                : String(localized: "\(storeProduct.localizedPriceString) / \(period.value) months")
+        case .year:
+            return period.value == 1
+                ? String(localized: "\(storeProduct.localizedPriceString) / year")
+                : String(localized: "\(storeProduct.localizedPriceString) / \(period.value) years")
+        @unknown default:
+            return storeProduct.localizedPriceString
         }
     }
 
@@ -301,10 +309,10 @@ extension Package {
     var monthlyEquivalentAnchorLabel: String? {
         switch productKind {
         case .monthly:
-            return "\(storeProduct.localizedPriceString)/mo"
+            return String(localized: "\(storeProduct.localizedPriceString)/mo")
         case .yearly, .lifetime, .other:
             guard let perMonth = monthlyEquivalentLabel else { return nil }
-            return "\(perMonth)/mo"
+            return String(localized: "\(perMonth)/mo")
         }
     }
 
@@ -320,18 +328,17 @@ extension Package {
             return nil
         }
         let period = intro.subscriptionPeriod
-        let unit: String
         switch period.unit {
-        case .day: unit = period.value == 1 ? "day" : "days"
-        case .week: unit = period.value == 1 ? "week" : "weeks"
-        case .month: unit = period.value == 1 ? "month" : "months"
-        case .year: unit = period.value == 1 ? "year" : "years"
-        @unknown default: unit = ""
-        }
-        if period.unit == .week {
-            return "\(period.value * 7)-day free trial"
-        } else {
-            return "\(period.value)-\(unit.dropLast(period.value == 1 ? 0 : 1)) free trial"
+        case .day:
+            return String(localized: "\(period.value)-day free trial")
+        case .week:
+            return String(localized: "\(period.value * 7)-day free trial")
+        case .month:
+            return String(localized: "\(period.value)-month free trial")
+        case .year:
+            return String(localized: "\(period.value)-year free trial")
+        @unknown default:
+            return nil
         }
     }
 }
@@ -423,7 +430,7 @@ final class StoreService: NSObject, ObservableObject {
     /// them. The pure helper keeps the trial branch testable without
     /// configuring RevenueCat in Simulator.
     nonisolated static func upgradeCTALabel(trialAvailable: Bool) -> String {
-        trialAvailable ? "Try Free" : "Upgrade"
+        trialAvailable ? String(localized: "Try Free") : String(localized: "Upgrade")
     }
 
     var isYearlyTrialAvailable: Bool {
@@ -449,10 +456,13 @@ final class StoreService: NSObject, ObservableObject {
             )
         }
         if let price = proPrice {
-            let verb = trigger == .winback ? "Restart" : "Unlock"
-            return "\(verb) StatScout+ for \(price)"
+            return trigger == .winback
+                ? String(localized: "Restart StatScout+ for \(price)")
+                : String(localized: "Unlock StatScout+ for \(price)")
         }
-        return trigger == .winback ? "Restart StatScout+" : "Unlock StatScout+"
+        return trigger == .winback
+            ? String(localized: "Restart StatScout+")
+            : String(localized: "Unlock StatScout+")
     }
 
     /// The label on a button that transacts, as a pure function of the offer.
@@ -470,9 +480,11 @@ final class StoreService: NSObject, ObservableObject {
         isWinback: Bool
     ) -> String {
         if !isWinback, let trial {
-            return "Start \(trial)"
+            return String(localized: "Start \(trial)")
         }
-        return "\(isWinback ? "Restart" : "Try") StatScout+ for \(price)"
+        return isWinback
+            ? String(localized: "Restart StatScout+ for \(price)")
+            : String(localized: "Try StatScout+ for \(price)")
     }
 
     /// The plan picker's own button label, which names no price at all.
@@ -481,8 +493,8 @@ final class StoreService: NSObject, ObservableObject {
     /// directly above this button, so repeating it inside the button buys
     /// nothing. Matches the approved Baseball Savvy StatScout ladder verbatim.
     nonisolated static func planPickerCTALabel(isLifetime: Bool, trialEligible: Bool) -> String {
-        if isLifetime { return "Unlock Lifetime" }
-        return trialEligible ? "Start Free Trial" : "Subscribe"
+        if isLifetime { return String(localized: "Unlock Lifetime") }
+        return trialEligible ? String(localized: "Start Free Trial") : String(localized: "Subscribe")
     }
 
     func planPickerCTALabel(for package: Package) -> String {
@@ -498,7 +510,7 @@ final class StoreService: NSObject, ObservableObject {
         guard let yearly = products.first(where: { $0.productKind == .yearly }),
               isEligibleForIntroOffer(yearly),
               yearly.introOfferLabel != nil else { return nil }
-        return "Then \(yearly.priceLabel). Cancel anytime."
+        return String(localized: "Then \(yearly.priceLabel). Cancel anytime.")
     }
 
     /// The yearly package - the one-tap conversion target for every trial /
@@ -538,11 +550,24 @@ final class StoreService: NSObject, ObservableObject {
         trial: String?
     ) -> String {
         guard isSubscription else {
-            return "\(price). One-time purchase. Lifetime access, no subscription."
+            return String(localized: "\(price). One-time purchase. Lifetime access, no subscription.")
         }
-        let renew = "Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions."
-        guard let trial else { return "\(price). \(renew)" }
-        return "\(trial.capitalized), then \(price). \(renew)"
+        guard let trial else {
+            return String(localized: "\(price). Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions.")
+        }
+        let trialTitle: String
+        let parts = trial.components(separatedBy: "-")
+        if parts.count == 2, let count = Int(parts[0]) {
+            switch parts[1] {
+            case "day free trial": trialTitle = String(localized: "\(count)-Day Free Trial")
+            case "month free trial": trialTitle = String(localized: "\(count)-Month Free Trial")
+            case "year free trial": trialTitle = String(localized: "\(count)-Year Free Trial")
+            default: trialTitle = trial
+            }
+        } else {
+            trialTitle = trial
+        }
+        return String(localized: "\(trialTitle), then \(price). Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions.")
     }
 
     /// Onboarding pitches the monthly plan, not the yearly one. The trial is
@@ -550,7 +575,7 @@ final class StoreService: NSObject, ObservableObject {
     /// agree to before the user has seen the app work; the yearly plan is what
     /// `PaywallView` sells, where the savings are visible next to it.
     var onboardingMonthlyCTALabel: String {
-        guard let monthly = monthlyPackage else { return "Upgrade to StatScout+" }
+        guard let monthly = monthlyPackage else { return String(localized: "Upgrade to StatScout+") }
         return Self.directCTALabel(
             price: monthly.priceLabel,
             trial: isEligibleForIntroOffer(monthly) ? monthly.introOfferLabel : nil,
@@ -783,7 +808,7 @@ final class StoreService: NSObject, ObservableObject {
                 return .cancelled
             }
         } catch {
-            return .failed(lastError ?? "Couldn't complete the purchase. Please try again.")
+            return .failed(lastError ?? String(localized: "Couldn't complete the purchase. Please try again."))
         }
     }
 
@@ -795,7 +820,7 @@ final class StoreService: NSObject, ObservableObject {
             lastError = nil
         } catch {
             logger.error("Customer info refresh failed: \(String(describing: error), privacy: .public)")
-            lastError = "Couldn't refresh your subscription status. Check your connection and try again."
+            lastError = String(localized: "Couldn't refresh your subscription status. Check your connection and try again.")
         }
     }
 
@@ -808,10 +833,10 @@ final class StoreService: NSObject, ObservableObject {
         do {
             let info = try await Purchases.shared.restorePurchases()
             apply(customerInfo: info)
-            lastError = isPro ? nil : "No active StatScout+ purchase was found for this Apple ID."
+            lastError = isPro ? nil : String(localized: "No active StatScout+ purchase was found for this Apple ID.")
         } catch {
             logger.error("Restore failed: \(String(describing: error), privacy: .public)")
-            lastError = "Couldn't restore purchases. Try again."
+            lastError = String(localized: "Couldn't restore purchases. Try again.")
         }
     }
 

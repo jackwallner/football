@@ -129,8 +129,7 @@ struct RecentFormWindow {
     /// five when there are five.
     static func caption(games: Int, span: Int) -> String {
         let count = min(games, span)
-        guard count < span else { return "\(span) games" }
-        return count == 1 ? "1 game" : "\(count) games"
+        return String(localized: "\(count) games")
     }
 
     /// Build a window by summing each metric across the supplied game logs.

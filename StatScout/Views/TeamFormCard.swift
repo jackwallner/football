@@ -52,7 +52,7 @@ struct TeamRankingsCard: View {
     enum Side: String, CaseIterable, Identifiable {
         case offense, defense
         var id: String { rawValue }
-        var label: String { self == .offense ? "Offense" : "Defense" }
+        var label: String { self == .offense ? String(localized: "Offense") : String(localized: "Defense") }
         /// Metric categories this side aggregates.
         var categories: [MetricCategory] {
             self == .offense ? [.passing, .rushing, .receiving] : [.defense]
@@ -66,6 +66,13 @@ struct TeamRankingsCard: View {
     enum Mode: String, CaseIterable, Identifiable {
         case season = "Season", recent = "Recent", both = "Both"
         var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .season: String(localized: "Season")
+            case .recent: String(localized: "Recent")
+            case .both: String(localized: "Both")
+            }
+        }
         var usesRecent: Bool { self != .season }
     }
 
@@ -153,7 +160,7 @@ struct TeamRankingsCard: View {
                 segments: Mode.allCases.map {
                     .init(
                         value: $0,
-                        label: $0.rawValue,
+                        label: $0.label,
                         isLocked: !store.isPro && $0 != .season
                     )
                 },
@@ -233,7 +240,7 @@ struct TeamRankingsCard: View {
         if rows.isEmpty {
             emptyAggregate
         } else {
-            GridironSubSectionBar(title: side.label.uppercased())
+            GridironSubSectionBar(title: side.label.localizedUppercase)
 
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
@@ -296,10 +303,10 @@ struct TeamRankingsCard: View {
 
     private func formattedValue(_ v: Double, label: String) -> String {
         // "Cmp% Allowed" and "Missed Tkl%" are percentages too.
-        if label.contains("%") { return String(format: "%.1f%%", v) }
-        if ["EPA/Play", "EPA/Rush", "EPA/Tgt", "RACR"].contains(label) { return String(format: "%.2f", v) }
-        if abs(v) >= 100 { return String(format: "%.0f", v) }
-        return String(format: "%.1f", v)
+        if label.contains("%") { return LocalizedNumber.fixed(v, fractionDigits: 1, percent: true) }
+        if ["EPA/Play", "EPA/Rush", "EPA/Tgt", "RACR"].contains(label) { return LocalizedNumber.fixed(v, fractionDigits: 2) }
+        if abs(v) >= 100 { return LocalizedNumber.fixed(v, fractionDigits: 0) }
+        return LocalizedNumber.fixed(v, fractionDigits: 1)
     }
 
     // MARK: - Recent
@@ -315,7 +322,7 @@ struct TeamRankingsCard: View {
 
     private var recentWindow: RecentFormWindow? {
         guard !sideLogs.isEmpty else { return nil }
-        return RecentFormWindow.build(label: "Last \(windowGames)", span: windowGames, logs: sideLogs)
+        return RecentFormWindow.build(label: String(localized: "Last \(windowGames) games"), span: windowGames, logs: sideLogs)
     }
 
     @ViewBuilder
@@ -363,7 +370,7 @@ struct TeamRankingsCard: View {
             }
             .padding(GridironGeo.padInline)
 
-            GridironSubSectionBar(title: side.label.uppercased())
+            GridironSubSectionBar(title: side.label.localizedUppercase)
             VStack(spacing: 0) {
                 ForEach(Array(sample.enumerated()), id: \.element.id) { index, metric in
                     MetricBar(metric: metric)
@@ -389,7 +396,7 @@ struct TeamRankingsCard: View {
             recentSummaryRow(w)
             let rows = recentDisplayRows(window: w)
             if !rows.isEmpty {
-                GridironSubSectionBar(title: side.label.uppercased())
+                GridironSubSectionBar(title: side.label.localizedUppercase)
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.element.id) { index, metric in
                         MetricBar(metric: metric)
@@ -420,11 +427,11 @@ struct TeamRankingsCard: View {
     private var emptyStateText: String {
         switch freshnessStatus {
         case .pending, .partial, .checking:
-            return "Recent team data is still arriving"
+            return String(localized: "Recent team data is still arriving")
         case .offline, .failed:
-            return "Recent team data is unavailable right now"
+            return String(localized: "Recent team data is unavailable right now")
         default:
-            return "No \(side.label.lowercased()) data in the last \(windowGames) games"
+            return String(localized: "No \(side.label) data in the last \(windowGames) games")
         }
     }
 
@@ -457,7 +464,7 @@ struct TeamRankingsCard: View {
 
     private func summaryStat(label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(label)
+            Text(MetricName.localized(label))
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
             Text(value)
@@ -548,7 +555,7 @@ struct TeamRankingsCard: View {
             logs = try await fetch(team, season, seasonPhase, since)
         } catch {
             if !isTaskCancellation(error) {
-                loadError = "Couldn't load team form. Check your connection and try again."
+                loadError = String(localized: "Couldn't load team form. Check your connection and try again.")
             }
         }
         loading = false
@@ -562,8 +569,8 @@ struct TeamRankingsCard: View {
                 .font(.system(size: 22))
                 .foregroundStyle(GridironPalette.inkTertiary)
             Text(players.isEmpty
-                 ? "No games played yet this season"
-                 : "Not enough \(side.label.lowercased()) data to aggregate")
+                 ? String(localized: "No games played yet this season")
+                 : String(localized: "Not enough \(side.label) data to aggregate"))
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
         }

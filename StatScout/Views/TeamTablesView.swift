@@ -40,7 +40,7 @@ struct StandingsView: View {
 
     private func header(_ title: String) -> some View {
         HStack(spacing: 0) {
-            Text(title.uppercased())
+            Text(String(localized: String.LocalizationValue(title)).localizedUppercase)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text("W-L").frame(width: 44, alignment: .trailing)
             Text("DIFF").frame(width: 44, alignment: .trailing)
@@ -151,8 +151,10 @@ struct PowerRankingsView: View {
     }
 
     private var footnote: String {
-        let through = ratings.first.map { $0.throughWeek > 0 ? "Through Week \($0.throughWeek). " : "Preseason: last season's ratings, regressed. " } ?? ""
-        return through + "Points per game better or worse than an average team on a neutral field: EPA per dropback and per run plus points, for minus against, adjusted for schedule. Early in the season last year counts as five games of evidence. Read two ratings like a spread, with about two points for home field. Modeled on Hawk Blogger's HB Power Rankings."
+        if let week = ratings.first?.throughWeek, week > 0 {
+            return String(localized: "Through Week \(week). Points per game better or worse than an average team on a neutral field: EPA per dropback and per run plus points for minus against, adjusted for schedule. Early in the season, last year counts as five games of evidence. Read two ratings like a spread, with about two points for home field. Modeled on Hawk Blogger's HB Power Rankings.")
+        }
+        return String(localized: "Preseason: last season's ratings, regressed. Points per game better or worse than an average team on a neutral field: EPA per dropback and per run plus points for minus against, adjusted for schedule. Early in the season, last year counts as five games of evidence. Read two ratings like a spread, with about two points for home field. Modeled on Hawk Blogger's HB Power Rankings.")
     }
 
     private var header: some View {

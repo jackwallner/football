@@ -94,16 +94,26 @@ struct DataFreshnessView: View {
     private func text(now: Date) -> String {
         switch status {
         case .offline:
-            return "Offline · Showing saved stats"
+            return String(localized: "Offline · Showing saved stats")
         case .failed:
-            return "Couldn't update · Showing saved stats"
+            return String(localized: "Couldn't update · Showing saved stats")
         case .stale:
-            return "Newer stats available · Tap to load"
+            return String(localized: "Newer stats available · Tap to load")
         case .checking where coverageText == nil:
-            return "Checking for new stats"
+            return String(localized: "Checking for new stats")
         case .ready, .checking, .pending, .partial:
-            let parts = [coverageText, updatedText(now: now)].compactMap { $0 }
-            return parts.isEmpty ? "Checking for new stats" : parts.joined(separator: " · ")
+            let coverage = coverageText
+            let updated = updatedText(now: now)
+            switch (coverage, updated) {
+            case let (.some(coverage), .some(updated)):
+                return String(localized: "\(coverage) · \(updated)")
+            case let (.some(coverage), .none):
+                return coverage
+            case let (.none, .some(updated)):
+                return updated
+            case (.none, .none):
+                return String(localized: "Checking for new stats")
+            }
         }
     }
 
@@ -111,27 +121,27 @@ struct DataFreshnessView: View {
     /// still arriving.
     private var coverageText: String? {
         guard let coverage = freshness?.coverage ?? viewModel.dataCoverage else { return nil }
-        var parts: [String] = []
         if let week = coverage.week, let slate = partialSlate(week: week, phase: coverage.phase) {
-            // Thursday's game is in and Sunday's are not. "Through Week 5"
-            // read as a finished week; say how much of it is here.
-            return "Week \(week) · \(slate.done) of \(slate.total) games in"
+            return String(localized: "Week \(week) · \(slate.done) of \(slate.total) games")
         }
         if let week = coverage.week {
-            // "Through": the game count after it is cumulative, and "Week 3 ·
-            // 33 games" read as thirty-three games in Week 3.
-            parts.append(coverage.phase == .playoffs ? "Through playoffs week \(week)" : "Through Week \(week)")
-        } else {
-            parts.append("Through \(coverage.asOf.formatted(DataCoverage.gameDayStyle))")
-        }
-        if let included = coverage.gamesIncluded {
-            if let expected = coverage.expectedGames, included < expected {
-                parts.append("\(included) of \(expected) games in")
-            } else {
-                parts.append(included == 1 ? "1 game" : "\(included) games")
+            if let included = coverage.gamesIncluded,
+               let expected = coverage.expectedGames,
+               included < expected {
+                return coverage.phase == .playoffs
+                    ? String(localized: "Through playoff week \(week), \(included) of \(expected) games")
+                    : String(localized: "Through Week \(week), \(included) of \(expected) games")
             }
+            if let included = coverage.gamesIncluded {
+                return coverage.phase == .playoffs
+                    ? String(localized: "Through playoff week \(week), \(included) games")
+                    : String(localized: "Through Week \(week), \(included) games")
+            }
+            return coverage.phase == .playoffs
+                ? String(localized: "Through playoff week \(week)")
+                : String(localized: "Through Week \(week)")
         }
-        return parts.joined(separator: " · ")
+        return String(localized: "Through \(coverage.asOf.formatted(DataCoverage.gameDayStyle))")
     }
 
     /// The latest week's games with stats out of all its games, when that week
@@ -152,24 +162,23 @@ struct DataFreshnessView: View {
     /// Falls back to the last check before the first published revision.
     private func updatedText(now: Date) -> String? {
         guard let date = freshness?.publishedAt ?? viewModel.lastCheckedAt else { return nil }
-        return "Updated \(Self.shortAge(of: date, now: now))"
+        return String(localized: "Updated \(Self.shortAge(of: date, now: now))")
     }
 
     static func shortAge(of date: Date, now: Date = .now) -> String {
         let seconds = max(0, now.timeIntervalSince(date))
-        switch seconds {
-        case ..<60: return "just now"
-        case ..<3_600: return "\(Int(seconds / 60))m ago"
-        case ..<86_400: return "\(Int(seconds / 3_600))h ago"
-        default: return date.formatted(.dateTime.month(.abbreviated).day())
+        guard seconds >= 86_400 else {
+            if seconds < 60 { return String(localized: "just now") }
+            let formatter = RelativeDateTimeFormatter()
+            formatter.locale = .autoupdatingCurrent
+            formatter.unitsStyle = .abbreviated
+            return formatter.localizedString(for: date, relativeTo: now)
         }
+        return date.formatted(.dateTime.month(.abbreviated).day())
     }
 
     private func accessibilityText(now: Date) -> String {
         text(now: now)
-            .replacingOccurrences(of: " · ", with: ", ")
-            .replacingOccurrences(of: "m ago", with: " minutes ago")
-            .replacingOccurrences(of: "h ago", with: " hours ago")
     }
 }
 

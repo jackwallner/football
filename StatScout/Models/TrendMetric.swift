@@ -17,6 +17,7 @@ struct TrendMetric: Identifiable, Hashable, Sendable {
     let lowerIsBetter: Bool
 
     var id: String { key }
+    var displayLabel: String { MetricName.localized(label) }
 
     /// Window totals rather than rates. Two windows rarely hold the same number
     /// of games (byes, a week still in progress), so the board compares these
@@ -39,7 +40,7 @@ struct TrendMetric: Identifiable, Hashable, Sendable {
     }
 
     func formatPerGame(_ value: Double) -> String {
-        String(format: "%.\(perGameDecimals)f", value) + "/g"
+        String(localized: "\(value.formatted(.number.precision(.fractionLength(perGameDecimals))))/g")
     }
 
     /// This metric's then, now and change for one player's row. Counts are
@@ -66,10 +67,15 @@ struct TrendMetric: Identifiable, Hashable, Sendable {
     }
 
     func format(_ value: Double) -> String {
-        if decimals == 0 {
-            return Int(value.rounded()).formatted(.number.grouping(.automatic)) + unit
-        }
-        return String(format: "%.\(decimals)f", value) + unit
+        let formatter = NumberFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.numberStyle = unit == "%" ? .percent : .decimal
+        formatter.minimumFractionDigits = decimals
+        formatter.maximumFractionDigits = decimals
+        let formattedValue = unit == "%" ? value / 100 : value
+        let number = formatter.string(from: NSNumber(value: formattedValue)) ?? value.formatted(.number)
+        if unit == "%" || unit.isEmpty { return number }
+        return String(localized: "\(number)\(unit)")
     }
 
     // MARK: - Advanced
@@ -183,7 +189,7 @@ enum TrendStatMode: String, CaseIterable, Identifiable, Sendable {
     case standard
 
     var id: String { rawValue }
-    var label: String { self == .advanced ? "Advanced" : "Standard" }
+    var label: String { self == .advanced ? String(localized: "Advanced") : String(localized: "Standard") }
 }
 
 /// Which position group the Trends board is ranking.
@@ -201,11 +207,11 @@ enum TrendSide: String, CaseIterable, Identifiable, Sendable {
 
     var label: String {
         switch self {
-        case .qb:  return "Quarterbacks"
-        case .rb:  return "Running Backs"
-        case .wr:  return "Receivers"
-        case .te:  return "Tight Ends"
-        case .def: return "Defense"
+        case .qb:  return String(localized: "Quarterbacks")
+        case .rb:  return String(localized: "Running Backs")
+        case .wr:  return String(localized: "Receivers")
+        case .te:  return String(localized: "Tight Ends")
+        case .def: return String(localized: "Defense")
         }
     }
 
