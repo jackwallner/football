@@ -97,7 +97,7 @@ struct StatPickerMenu: View {
                 if option.isSelected {
                     Label(option.label, systemImage: "checkmark")
                 } else {
-                    Text(option.label)
+                    Text(MetricName.localized(option.label))
                 }
             }
         }
@@ -119,7 +119,11 @@ struct SortDirectionButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Sort direction")
-        .accessibilityValue("\(statLabel), \(descending ? "highest first" : "lowest first")")
+        .accessibilityValue(
+            descending
+                ? String(localized: "\(MetricName.localized(statLabel)), highest first")
+                : String(localized: "\(MetricName.localized(statLabel)), lowest first")
+        )
         .accessibilityHint("Tap to flip sort direction")
     }
 }
@@ -143,11 +147,11 @@ struct StatsBoardStatPicker: View {
         case .advanced:
             return viewModel.currentSortMetric ?? viewModel.sortLabel
         case .standard:
-            return bindings.standardStat
+            return MetricName.localized(bindings.standardStat)
         case .bestWorst:
-            return "Best & Worst"
+            return String(localized: "Best & Worst")
         case .contractValue:
-            return "Contract Value"
+            return String(localized: "Contract Value")
         }
     }
 
@@ -225,9 +229,9 @@ struct StatsViewMenu: View {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     if conference == viewModel.selectedConference {
-                        Label(conference.rawValue, systemImage: "checkmark")
+                        Label(conference.title, systemImage: "checkmark")
                     } else {
-                        Text(conference.rawValue)
+                        Text(conference.title)
                     }
                 }
             }
@@ -241,7 +245,7 @@ struct StatsViewMenu: View {
                     viewModel.qualifierLevel = level
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
-                    let title = "\(level.rawValue) · \(level.description)"
+                    let title = String(localized: "\(level.title) · \(level.description)")
                     if level == viewModel.qualifierLevel {
                         Label(title, systemImage: "checkmark")
                     } else {

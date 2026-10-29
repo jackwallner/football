@@ -155,10 +155,12 @@ struct Player: Identifiable, Codable, Hashable, Sendable {
 
     var shareSummary: String {
         let headline = headlineMetric.map { metric in
-            let valueText = metric.value.isEmpty ? "\(metric.percentile.ordinal) percentile" : "\(metric.value), \(metric.percentile.ordinal) percentile"
-            return "\(metric.label) \(valueText)"
-        } ?? "\(overallPercentile.ordinal) overall percentile"
-        return "\(name) · \(team) \(displayPosition)\nOverall: \(overallPercentile.ordinal) percentile\nTop stat: \(headline)\nGridiron StatScout"
+            let valueText = metric.value.isEmpty
+                ? String(localized: "\(metric.percentile.ordinal) percentile")
+                : String(localized: "\(metric.displayValue), \(metric.percentile.ordinal) percentile")
+            return String(localized: "\(MetricName.localized(metric.label)) \(valueText)")
+        } ?? String(localized: "\(overallPercentile.ordinal) overall percentile")
+        return String(localized: "\(name) · \(team) \(displayPosition)\nOverall: \(overallPercentile.ordinal) percentile\nTop stat: \(headline)\nGridiron StatScout")
     }
 
     func percentile(for category: MetricCategory) -> Int? {
@@ -185,8 +187,8 @@ enum SeasonPhase: String, Codable, CaseIterable, Identifiable, Hashable, Sendabl
     /// which the bar has.
     var label: String {
         switch self {
-        case .regular: return "Regular Season"
-        case .playoffs: return "Playoffs"
+        case .regular: return String(localized: "Regular Season")
+        case .playoffs: return String(localized: "Playoffs")
         }
     }
 }
@@ -226,12 +228,16 @@ struct Metric: Identifiable, Codable, Hashable, Sendable {
 
     /// Below the prorated playing-time bar for this metric.
     var isSmallSample: Bool { qualified == false }
+
+    var displayLabel: String { MetricName.localized(label) }
+    var displayValue: String { LocalizedNumber.text(value) }
 }
 
 struct StandardStat: Identifiable, Codable, Hashable, Sendable {
     let id: String
     let label: String
     let value: String
+    var displayValue: String { LocalizedNumber.text(value) }
 }
 
 /// Shared meaning for the compact values in `standard_stats`.
@@ -379,16 +385,22 @@ struct MetricValueFormat: Hashable, Sendable {
     }
 
     func string(_ value: Double) -> String {
-        var text: String
-        if decimals == 0, hasGrouping {
-            text = Int(value.rounded()).formatted(.number.grouping(.automatic))
-        } else if decimals == 0 {
-            text = String(Int(value.rounded()))
-        } else {
-            text = String(format: "%.\(decimals)f", value)
+        if decimals > 0, !isPercent, !hasGrouping {
+            let rawText = String(format: "% .\(decimals)f", value).trimmingCharacters(in: .whitespaces)
+            let formatter = NumberFormatter()
+            formatter.locale = .autoupdatingCurrent
+            let text = rawText.replacingOccurrences(of: ".", with: formatter.decimalSeparator ?? ".")
+            return isSigned && value > 0 ? "+\(text)" : text
         }
+        let formatter = NumberFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.numberStyle = isPercent ? .percent : .decimal
+        formatter.usesGroupingSeparator = hasGrouping
+        formatter.minimumFractionDigits = decimals
+        formatter.maximumFractionDigits = decimals
+        let formattedValue = isPercent ? value / 100 : value
+        var text = formatter.string(from: NSNumber(value: formattedValue)) ?? value.formatted(.number)
         if isSigned, value > 0 { text = "+" + text }
-        if isPercent { text += "%" }
         return text
     }
 }
@@ -545,8 +557,11 @@ enum PlayerPositionGroup: String, CaseIterable, Identifiable, Hashable, Sendable
 
     var cohortDescription: String {
         switch self {
-        case .defense: return "Among defensive players"
-        default: return "Among \(rawValue)s"
+        case .defense: return String(localized: "Among defensive players")
+        case .qb: return String(localized: "Among quarterbacks")
+        case .rb: return String(localized: "Among running backs")
+        case .wr: return String(localized: "Among receivers")
+        case .te: return String(localized: "Among tight ends")
         }
     }
 

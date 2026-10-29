@@ -315,7 +315,7 @@ struct PlayerComparisonView: View {
                     right: item.b
                 )
                 HStack(spacing: 8) {
-                    Text(item.label)
+                    Text(MetricName.localized(item.label))
                         .font(GridironType.smallBold)
                         .foregroundStyle(GridironPalette.ink)
                         .frame(width: 82, alignment: .leading)
@@ -522,7 +522,7 @@ struct PlayerComparisonView: View {
         } else {
             note = catalog.isLoadingHistory
                 ? "Loading past seasons…"
-                : "No \(SeasonLabel.text(season)) \(phase.label.lowercased()) data for \(current.name)."
+                : String(localized: "No \(SeasonLabel.text(season)) \(phase.label) data for \(current.name).")
             Task { await catalog.loadHistory?() }
         }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -530,7 +530,7 @@ struct PlayerComparisonView: View {
 
     private func categoryCard(category: MetricCategory, metrics: [(label: String, a: Metric?, b: Metric?)]) -> some View {
         VStack(spacing: 0) {
-            GridironSectionBar(title: category.rawValue.uppercased())
+            GridironSectionBar(title: category.title.localizedUppercase)
 
             HStack(spacing: 8) {
                 Text("METRIC")
@@ -556,7 +556,7 @@ struct PlayerComparisonView: View {
 
             ForEach(Array(metrics.enumerated()), id: \.offset) { index, item in
                 HStack(spacing: 8) {
-                    Text(item.label)
+                    Text(MetricName.localized(item.label))
                         .font(GridironType.smallBold)
                         .foregroundStyle(GridironPalette.ink)
                         .lineLimit(item.label.contains(" ") ? 2 : 1)
@@ -613,13 +613,13 @@ struct PlayerComparisonView: View {
                                 .foregroundStyle(Color.yellow)
                                 .accessibilityHidden(true)
                         }
-                        Text(hasValue ? m.value : "\(m.percentile)")
+                        Text(hasValue ? m.displayValue : m.percentile.formatted(.number.grouping(.never)))
                             .font(GridironType.statMed)
                             .foregroundStyle(pctTextColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
-                    Text(hasValue ? "" : "PERCENTILE")
+                    Text(hasValue ? "" : String(localized: "PERCENTILE"))
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(height: 10)
@@ -635,8 +635,8 @@ struct PlayerComparisonView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(
                     hasValue
-                        ? "\(m.value), \(m.percentile.ordinalString) percentile"
-                        : "\(m.percentile.ordinalString) percentile"
+                        ? String(localized: "\(m.displayValue), \(m.percentile.ordinalString) percentile")
+                        : String(localized: "\(m.percentile.ordinalString) percentile")
                 )
             } else {
                 Text("-")

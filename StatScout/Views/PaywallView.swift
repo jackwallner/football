@@ -54,56 +54,56 @@ enum PaywallTrigger: Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .pastSeason:        return "Unlock Past Seasons"
-        case .lockedSeason(let year): return "Unlock \(year)"
-        case .yearCompare:       return "Year-over-Year Comparison"
-        case .playerComparison:  return "Player Comparison"
-        case .onboarding:        return "Scout Like a GM"
-        case .activation:        return "Get the Full Picture"
-        case .upgrade:           return "Scout Every Player"
-        case .pastSeasonsLoad:   return "Load Past Seasons"
-        case .teamView:          return "Team Insights"
-        case .winback:           return "Welcome Back"
-        case .playerScouting:    return "Full Player Scouting"
-        case .recentForm:        return "Recent Form"
-        case .bestWorst:         return "Best & Worst"
-        case .advancedBoxScore:  return "Advanced Box Scores"
-        case .contractValue:     return "Contract Value"
+        case .pastSeason:        return String(localized: "Unlock Past Seasons")
+        case .lockedSeason(let year): return String(localized: "Unlock \(year.formatted(.number.grouping(.never)))")
+        case .yearCompare:       return String(localized: "Year-over-Year Comparison")
+        case .playerComparison:  return String(localized: "Player Comparison")
+        case .onboarding:        return String(localized: "Scout Like a GM")
+        case .activation:        return String(localized: "Get the Full Picture")
+        case .upgrade:           return String(localized: "Scout Every Player")
+        case .pastSeasonsLoad:   return String(localized: "Load Past Seasons")
+        case .teamView:          return String(localized: "Team Insights")
+        case .winback:           return String(localized: "Welcome Back")
+        case .playerScouting:    return String(localized: "Full Player Scouting")
+        case .recentForm:        return String(localized: "Recent Form")
+        case .bestWorst:         return String(localized: "Best & Worst")
+        case .advancedBoxScore:  return String(localized: "Advanced Box Scores")
+        case .contractValue:     return String(localized: "Contract Value")
         }
     }
 
     var subtitle: String {
         switch self {
         case .pastSeason:
-            return "Track how every player ranked since 2000, plus the year-over-year trends behind today's leaders."
+            return String(localized: "Track how every player ranked since 2000, plus the year-over-year trends behind today's leaders.")
         case .lockedSeason(let year):
-            return "See every player's \(year) percentile rankings, and how they stack up against any other season."
+            return String(localized: "See every player's \(year.formatted(.number.grouping(.never))) percentile rankings, and how they stack up against any other season.")
         case .yearCompare:
-            return "Compare any player's percentile rankings across any two seasons. See what changed, what held, and where they're headed."
+            return String(localized: "Compare any player's percentile rankings across any two seasons. See what changed, what held, and where they're headed.")
         case .playerComparison:
-            return "Stack any two players head-to-head across every NFL metric: EPA, CPOE, YAC, RYOE, and more."
+            return String(localized: "Stack any two players head-to-head across every NFL metric: EPA, CPOE, YAC, RYOE, and more.")
         case .onboarding:
-            return "The Trends board, recent form, head-to-head matchups, and every season back to 2000. The full NFL picture on every player."
+            return String(localized: "The Trends board, recent form, head-to-head matchups, and every season back to 2000. The full NFL picture on every player.")
         case .activation:
-            return "The Trends board, recent form, head-to-head matchups, and every season back to 2000. The full NFL picture on every player."
+            return String(localized: "The Trends board, recent form, head-to-head matchups, and every season back to 2000. The full NFL picture on every player.")
         case .upgrade:
-            return "The Trends board, recent form, head-to-head matchups, and every season back to 2000. The full NFL picture on every player."
+            return String(localized: "The Trends board, recent form, head-to-head matchups, and every season back to 2000. The full NFL picture on every player.")
         case .pastSeasonsLoad:
-            return "Load historical data to explore past seasons, year-over-year trends, and more."
+            return String(localized: "Load historical data to explore past seasons, year-over-year trends, and more.")
         case .teamView:
-            return "Advanced and standard stats for every club, a roster you can rank by any metric over any window, and side-by-side comparisons for every squad."
+            return String(localized: "Advanced and standard stats for every club, a roster you can rank by any metric over any window, and side-by-side comparisons for every squad.")
         case .winback:
-            return "Your StatScout+ access has lapsed. Pick it back up to get the Trends board, recent form, head-to-head matchups, and every past season."
+            return String(localized: "Your StatScout+ access has lapsed. Pick it back up to get the Trends board, recent form, head-to-head matchups, and every past season.")
         case .playerScouting:
-            return "Last 3 / 5 / 8 game form, head-to-head matchups, every roster. The full picture, not just season totals."
+            return String(localized: "Last 3 / 5 / 8 game form, head-to-head matchups, every roster. The full picture, not just season totals.")
         case .recentForm:
-            return "Every player's last 3 / 5 / 8 game form. Catch hot streaks and slumps before the season totals catch up."
+            return String(localized: "Every player's last 3 / 5 / 8 game form. Catch hot streaks and slumps before the season totals catch up.")
         case .bestWorst:
-            return "The league leader and the league trailer on every NFL metric, side by side, in one board."
+            return String(localized: "The league leader and the league trailer on every NFL metric, side by side, in one board.")
         case .advancedBoxScore:
-            return "Every player in every game: EPA, success rate, CPOE and depth of target, beside the box score."
+            return String(localized: "Every player in every game: EPA, success rate, CPOE and depth of target, beside the box score.")
         case .contractValue:
-            return "Every qualified player's production ranked against his pay. The bargains and the overpays at every position, updated every week."
+            return String(localized: "Every qualified player's production ranked against his pay. The bargains and the overpays at every position, updated every week.")
         }
     }
 
@@ -133,13 +133,13 @@ enum PaywallTrigger: Identifiable, Hashable {
     /// list was written and went unmentioned, so the pitch was selling less
     /// than the product does.
     private static let proFeatures: [(icon: String, title: String)] = [
-        ("flame.fill", "The Trends board: who's heating up and cooling off, league-wide"),
-        ("chart.bar.fill", "Last 3 / 5 / 8 game form on any player, team or leaderboard"),
-        ("person.2.fill", "Head-to-head: any two players, every metric"),
-        ("shield.lefthalf.filled", "Team scouting: advanced and standard, season or recent"),
-        ("sportscourt.fill", "Advanced box scores: EPA, success rate and CPOE for every player, every game"),
-        ("dollarsign.circle.fill", "Contract Value: the bargains and overpays at every position"),
-        ("calendar.badge.clock", "Every season back to 2000 + year-over-year trends")
+        ("flame.fill", String(localized: "The Trends board: who's heating up and cooling off, league-wide")),
+        ("chart.bar.fill", String(localized: "Last 3 / 5 / 8 game form on any player, team or leaderboard")),
+        ("person.2.fill", String(localized: "Head-to-head: any two players, every metric")),
+        ("shield.lefthalf.filled", String(localized: "Team scouting: advanced and standard, season or recent")),
+        ("sportscourt.fill", String(localized: "Advanced box scores: EPA, success rate and CPOE for every player, every game")),
+        ("dollarsign.circle.fill", String(localized: "Contract Value: the bargains and overpays at every position")),
+        ("calendar.badge.clock", String(localized: "Every season back to 2000 + year-over-year trends"))
     ]
 
     var features: [(icon: String, title: String)] {
@@ -212,7 +212,7 @@ struct PaywallView: View {
             Text("Couldn't Load Plans")
                 .font(GridironType.cardTitle)
                 .foregroundStyle(GridironPalette.inkSecondary)
-            Text(store.lastError ?? "Check your connection and try again.")
+            Text(store.lastError ?? String(localized: "Check your connection and try again."))
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .multilineTextAlignment(.center)
@@ -425,7 +425,7 @@ struct PaywallView: View {
             }
 
             Button(action: startRestore) {
-                Text(isRestoring ? "Restoring…" : "Restore Purchases")
+                Text(isRestoring ? String(localized: "Restoring…") : String(localized: "Restore Purchases"))
                     .font(GridironType.smallBold)
                     .foregroundStyle(GridironPalette.inkSecondary)
             }
@@ -461,7 +461,7 @@ struct PaywallView: View {
     // MARK: - Copy
 
     private var ctaTitle: String {
-        guard let package = selectedPackage else { return "Continue" }
+        guard let package = selectedPackage else { return String(localized: "Continue") }
         return store.planPickerCTALabel(for: package)
     }
 
@@ -507,12 +507,12 @@ struct PaywallView: View {
                 case .pending:
                     // Ask-to-Buy / deferred payment: nothing is unlocked yet and
                     // no error occurred - tell the user instead of going silent.
-                    restoreMessage = "Purchase pending approval. StatScout+ unlocks automatically once it's approved."
+                    restoreMessage = String(localized: "Purchase pending approval. StatScout+ unlocks automatically once it's approved.")
                 case .cancelled:
-                    errorMessage = "Purchase cancelled. Tap again to continue."
+                    errorMessage = String(localized: "Purchase cancelled. Tap again to continue.")
                 }
             } catch {
-                errorMessage = store.lastError ?? "Couldn't complete the purchase. Please try again."
+                errorMessage = store.lastError ?? String(localized: "Couldn't complete the purchase. Please try again.")
             }
         }
     }
@@ -525,7 +525,7 @@ struct PaywallView: View {
             defer { isRestoring = false }
             await store.restorePurchases()
             if !store.isPro {
-                restoreMessage = store.lastError ?? "No active StatScout+ purchase was found for this Apple ID."
+                restoreMessage = store.lastError ?? String(localized: "No active StatScout+ purchase was found for this Apple ID.")
             }
         }
     }
@@ -596,7 +596,7 @@ private struct PaywallPlanCard: View {
                         }
                     }
                     if showsTrialBadge, let trial = package.introOfferLabel {
-                        Text(trial.capitalized)
+                        Text(trial)
                             .font(GridironType.micro)
                             .tracking(0.3)
                             .foregroundStyle(GridironPalette.turf)

@@ -87,17 +87,22 @@ struct TeamWeekGameCard: View {
         let status = game.status()
         switch status {
         case .final:
-            return viewModel.hasStats(game) ? "Final · box score" : "Final · stats arriving"
+            return viewModel.hasStats(game)
+                ? String(localized: "Final · box score")
+                : String(localized: "Final · stats arriving")
         case .inProgress, .awaitingScore:
             return status.liveLabel
         case .upcoming:
-            return "\(game.dayLabel), \(game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "time TBD")"
+            let kickoff = game.kickoff?.formatted(date: .omitted, time: .shortened) ?? String(localized: "time TBD")
+            return String(localized: "\(game.dayLabel), \(kickoff)")
         }
     }
 
     private func shell<Content: View>(week: GameWeek, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(([week.label] + [viewModel.record(forTeam: team)].compactMap { $0 }).joined(separator: " · ").uppercased())
+            Text(viewModel.record(forTeam: team).map {
+                String(localized: "\(week.label) · \($0)")
+            }.map(\.localizedUppercase) ?? week.label.localizedUppercase)
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkSecondary)
             HStack(spacing: 10) {
@@ -146,7 +151,7 @@ struct TeamScheduleView: View {
                         }
                     }
                     if games.isEmpty {
-                        Text(viewModel.isGamesLoading ? "Loading schedule" : "Schedule not published yet")
+                        Text(viewModel.isGamesLoading ? String(localized: "Loading schedule") : String(localized: "Schedule not published yet"))
                             .font(GridironType.small)
                             .foregroundStyle(GridironPalette.inkTertiary)
                             .padding(.vertical, 32)
@@ -215,7 +220,7 @@ struct TeamScheduleView: View {
 
     private func row(_ game: Game) -> some View {
         HStack(spacing: 10) {
-            Text(game.seasonPhase == .regular ? "\(game.week)" : game.gameType)
+            Text(game.seasonPhase == .regular ? game.week.formatted(.number.grouping(.never)) : game.roundLabel)
                 .font(GridironType.statSmall)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(width: 30, alignment: .leading)
@@ -236,7 +241,9 @@ struct TeamScheduleView: View {
                     .font(GridironType.statMed)
                     .foregroundStyle(GridironPalette.resultColor(game.result(for: team)))
             } else {
-                Text(game.status() == .upcoming ? (game.kickoff?.formatted(date: .omitted, time: .shortened) ?? "TBD") : game.status().liveLabel)
+                Text(game.status() == .upcoming
+                     ? (game.kickoff?.formatted(date: .omitted, time: .shortened) ?? String(localized: "TBD"))
+                     : game.status().liveLabel)
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
             }
@@ -302,7 +309,7 @@ struct PlayerLastGameCard: View {
         let summary = GameBoxScore.summary(line)
         let content = VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Text(title(log).uppercased())
+                    Text(title(log).localizedUppercase)
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkSecondary)
                 Spacer(minLength: 0)
@@ -349,20 +356,20 @@ struct PlayerLastGameCard: View {
         if let game {
             NavigationLink(value: GameRoute(gameId: game.id)) { content }
                 .buttonStyle(.plain)
-                .accessibilityHint("Opens the game")
+        .accessibilityHint("Opens the game")
         } else {
             content
         }
     }
 
     private func title(_ log: PlayerGameLog) -> String {
-        if let game { return "Last game · \(game.roundLabel)" }
-        return "Last game · \(log.gameDate.formatted(DataCoverage.gameDayStyle))"
+        if let game { return String(localized: "Last game · \(game.roundLabel)") }
+        return String(localized: "Last game · \(log.gameDate.formatted(DataCoverage.gameDayStyle))")
     }
 
     private func matchup(_ log: PlayerGameLog, team: String) -> String {
-        if let game { return "\(game.matchupLabel(for: team)) · \(game.dayLabel)" }
-        return "vs \(displayTeamAbbr(log.opponent ?? ""))"
+        if let game { return String(localized: "\(game.matchupLabel(for: team)) · \(game.dayLabel)") }
+        return String(localized: "vs \(displayTeamAbbr(log.opponent ?? ""))")
     }
 }
 
@@ -396,7 +403,7 @@ struct PlayerGameLogCard: View {
         VStack(spacing: 0) {
             GridironSectionBar(title: "GAME LOG")
             if entries.isEmpty {
-                Text(failed ? "Couldn't load games. Pull to refresh." : (loadedKey == nil ? "Loading games…" : "No games yet this season."))
+                Text(failed ? String(localized: "Couldn't load games. Pull to refresh.") : (loadedKey == nil ? String(localized: "Loading games…") : String(localized: "No games yet this season.")))
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
                     .frame(maxWidth: .infinity)
@@ -456,7 +463,7 @@ struct PlayerGameLogCard: View {
     private func row(_ entry: Entry) -> some View {
         let game = entry.gameId.flatMap { viewModel.game(id: $0) }
         let content = HStack(alignment: .top, spacing: 10) {
-            Text(game.map { $0.seasonPhase == .regular ? "\($0.week)" : $0.gameType } ?? "-")
+            Text(game.map { $0.seasonPhase == .regular ? $0.week.formatted(.number.grouping(.never)) : $0.roundLabel } ?? "-")
                 .font(GridironType.statSmall)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(width: 28, alignment: .leading)
@@ -476,7 +483,7 @@ struct PlayerGameLogCard: View {
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                 }
-                Text(entry.summary.isEmpty ? "No box score line" : entry.summary)
+                Text(entry.summary.isEmpty ? String(localized: "No box score line") : entry.summary)
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
                     .monospacedDigit()

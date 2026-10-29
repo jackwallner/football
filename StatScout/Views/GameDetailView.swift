@@ -84,7 +84,7 @@ struct GameDetailView: View {
             loadError = nil
         } catch {
             if !isTaskCancellation(error), logs.isEmpty {
-                loadError = "Couldn't load the box score. Pull to try again."
+            loadError = String(localized: "Couldn't load the box score. Pull to try again.")
             }
         }
         if boxTeam.isEmpty { boxTeam = game.awayTeam }
@@ -176,8 +176,8 @@ struct GameDetailView: View {
 
     private func statusLine(_ game: Game, status: GameStatus) -> String {
         switch status {
-        case .final: return game.overtime ? "Final/OT" : "Final"
-        case .inProgress, .awaitingScore: return "Score posts at the final"
+        case .final: return game.overtime ? String(localized: "Final/OT") : String(localized: "Final")
+        case .inProgress, .awaitingScore: return String(localized: "Score posts at the final")
         case .upcoming: return game.kickoff.map { $0.formatted(.dateTime.month(.abbreviated).day()) } ?? ""
         }
     }
@@ -257,7 +257,7 @@ struct GameDetailView: View {
     }
 
     private func sectionHeading(_ title: String) -> some View {
-        Text(title.uppercased())
+        Text(String(localized: String.LocalizationValue(title)).localizedUppercase)
             .font(GridironType.sectionTitle)
             .foregroundStyle(GridironPalette.inkSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -272,7 +272,7 @@ struct GameDetailView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 4) {
                             TeamColorDot(abbr: leader.line.team, size: 6)
-                            Text("\(leader.title.uppercased()) · \(displayTeamAbbr(leader.line.team))")
+                            Text("\(String(localized: String.LocalizationValue(leader.title)).localizedUppercase) · \(displayTeamAbbr(leader.line.team))")
                                 .font(GridironType.micro)
                                 .foregroundStyle(GridironPalette.inkTertiary)
                         }
@@ -329,7 +329,7 @@ struct GameDetailView: View {
                 .foregroundStyle(awayBetter ? GridironPalette.ink : GridironPalette.inkSecondary)
                 .frame(width: 64, alignment: .leading)
             Spacer()
-            Text(label)
+            Text(String(localized: String.LocalizationValue(label)))
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
             Spacer()
@@ -386,7 +386,7 @@ struct GameDetailView: View {
                     AxisMarks(position: .leading, values: [0, 50, 100]) { value in
                         AxisValueLabel {
                             let wp = value.as(Double.self) ?? 50
-                            Text(wp == 100 ? displayTeamAbbr(game.homeTeam) : wp == 0 ? displayTeamAbbr(game.awayTeam) : "50%")
+                            Text(wp == 100 ? displayTeamAbbr(game.homeTeam) : wp == 0 ? displayTeamAbbr(game.awayTeam) : LocalizedNumber.fixed(50, fractionDigits: 0, percent: true))
                                 .font(GridironType.micro)
                                 .foregroundStyle(GridironPalette.inkTertiary)
                         }
@@ -414,7 +414,7 @@ struct GameDetailView: View {
         func format(_ value: Double) -> String {
             switch self {
             case .epa: return value.formatted(.number.precision(.fractionLength(2)).sign(strategy: .always(includingZero: false)))
-            case .percent: return (value * 100).formatted(.number.precision(.fractionLength(0))) + "%"
+            case .percent: return LocalizedNumber.fixed(value, fractionDigits: 0, percent: true)
             case .decimal: return value.formatted(.number.precision(.fractionLength(1)))
             case .signedDecimal: return value.formatted(.number.precision(.fractionLength(1)).sign(strategy: .always(includingZero: false)))
             case .count: return Int(value.rounded()).formatted()
@@ -491,9 +491,11 @@ struct GameDetailView: View {
             }
             return side[metric.key].map { metric.style.format($0.value) } ?? "-"
         }
+        let awayText = ratedText(text(away), percentile: away[metric.key]?.percentile)
+        let homeText = ratedText(text(home), percentile: home[metric.key]?.percentile)
         return HStack(spacing: 8) {
             ratedCell(text(away), percentile: away[metric.key]?.percentile, alignment: .leading)
-            Text(metric.label)
+            Text(MetricName.localized(metric.label))
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .lineLimit(1)
@@ -506,8 +508,7 @@ struct GameDetailView: View {
         .background(index.isMultiple(of: 2) ? GridironPalette.surface : GridironPalette.surfaceAlt)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(metric.label): \(teamFullName(game.awayTeam)) \(text(away))\(away[metric.key]?.percentile.map { ", \($0.ordinalString) percentile" } ?? ""), "
-                + "\(teamFullName(game.homeTeam)) \(text(home))\(home[metric.key]?.percentile.map { ", \($0.ordinalString) percentile" } ?? "")"
+            String(localized: "\(MetricName.localized(metric.label)): \(teamFullName(game.awayTeam)) \(awayText), \(teamFullName(game.homeTeam)) \(homeText)")
         )
     }
 
@@ -526,6 +527,11 @@ struct GameDetailView: View {
             }
         }
         .frame(width: 64, alignment: alignment == .leading ? .leading : .trailing)
+    }
+
+    private func ratedText(_ text: String, percentile: Int?) -> String {
+        guard let percentile else { return LocalizedNumber.text(text) }
+        return String(localized: "\(LocalizedNumber.text(text)), \(percentile.ordinalString) percentile")
     }
 
     private func bigPlaysCard(_ detail: GameDetail, game: Game) -> some View {
@@ -552,7 +558,7 @@ struct GameDetailView: View {
                         .foregroundStyle(GridironPalette.ink)
                         .lineLimit(3)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text((swing * 100).formatted(.number.precision(.fractionLength(0)).sign(strategy: .always())) + "%")
+                    Text(LocalizedNumber.fixed(swing * 100, fractionDigits: 0, percent: true, signed: true))
                         .font(GridironType.statMed)
                         .foregroundStyle(swing >= 0 ? GridironPalette.performanceHigh : GridironPalette.performanceLow)
                         .frame(width: 48, alignment: .trailing)
@@ -665,7 +671,7 @@ struct GameDetailView: View {
         let row = HStack(spacing: 0) {
             HStack(spacing: 6) {
                 TeamColorDot(abbr: line.team, size: 7)
-                Text(player?.name ?? line.name ?? "Player")
+                Text(player?.name ?? line.name ?? String(localized: "Player"))
                     .font(GridironType.bodyBold)
                     .foregroundStyle(GridironPalette.ink)
                     .lineLimit(1)
@@ -821,11 +827,7 @@ struct GameDetailView: View {
             }
             .padding(GridironGeo.padCard)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(
-                "Projection \(projection.label(home: game.homeTeam, away: game.awayTeam)). "
-                    + "\(teamFullName(game.awayTeam)) \(Int(((1 - homeShare) * 100).rounded())) percent, "
-                    + "\(teamFullName(game.homeTeam)) \(Int((homeShare * 100).rounded())) percent to win."
-            )
+            .accessibilityLabel(String(localized: "Projection \(projection.label(home: game.homeTeam, away: game.awayTeam)). \(teamFullName(game.awayTeam)) \(Int(((1 - homeShare) * 100).rounded()).formatted(.number.grouping(.never))) percent, \(teamFullName(game.homeTeam)) \(Int((homeShare * 100).rounded()).formatted(.number.grouping(.never))) percent to win."))
         }
     }
 
@@ -834,7 +836,7 @@ struct GameDetailView: View {
             rating.games > 0 ? Double(total) / Double(rating.games) : 0
         }
         let signed: (Double) -> String = { TeamRating.signed($0) }
-        let oneDecimal: (Double) -> String = { String(format: "%.1f", $0) }
+        let oneDecimal: (Double) -> String = { LocalizedNumber.fixed($0, fractionDigits: 1) }
         return card(title: "Tale of the tape") {
             HStack {
                 Text(displayTeamAbbr(game.awayTeam)).frame(width: 64, alignment: .leading)
@@ -898,7 +900,7 @@ struct GameDetailView: View {
         card(title: "Season leaders") {
             ForEach(Array(leaders.enumerated()), id: \.element.id) { index, leader in
                 VStack(spacing: 4) {
-                    Text(leader.title.uppercased())
+                    Text(String(localized: String.LocalizationValue(leader.title)).localizedUppercase)
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                     HStack(alignment: .top, spacing: 12) {
@@ -1011,7 +1013,7 @@ struct GameDetailView: View {
     }
 
     private func nameText(_ line: GameBoxScore.PlayerLine) -> some View {
-        Text(player(for: line)?.name ?? "Player \(line.playerId)")
+        Text(player(for: line)?.name ?? String(localized: "Player \(line.playerId)"))
             .font(GridironType.bodyBold)
             .foregroundStyle(GridironPalette.ink)
             .lineLimit(1)
@@ -1033,16 +1035,16 @@ struct GameDetailView: View {
             Image(systemName: icon)
                 .font(.system(size: 22))
                 .foregroundStyle(GridironPalette.inkTertiary)
-            Text(title)
+            Text(String(localized: String.LocalizationValue(title)))
                 .font(GridironType.cardTitle)
                 .foregroundStyle(GridironPalette.ink)
-            Text(text)
+            Text(String(localized: String.LocalizationValue(text)))
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             if let action {
-                Button(action.label, action: action.perform)
+                Button(String(localized: String.LocalizationValue(action.label)), action: action.perform)
                     .font(GridironType.smallBold)
                     .buttonStyle(.bordered)
                     .padding(.top, 4)
@@ -1061,7 +1063,7 @@ struct GameDetailView: View {
     }
 
     private func footnote(_ text: String) -> some View {
-        Text(text)
+        Text(String(localized: String.LocalizationValue(text)))
             .font(GridironType.micro)
             .foregroundStyle(GridironPalette.inkTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -1071,7 +1073,7 @@ struct GameDetailView: View {
     }
 
     private func footnoteRow(_ text: String) -> some View {
-        Text(text)
+        Text(String(localized: String.LocalizationValue(text)))
             .font(GridironType.micro)
             .foregroundStyle(GridironPalette.inkTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)

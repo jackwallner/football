@@ -49,7 +49,7 @@ struct MetricRankingView: View {
         ScrollView {
             VStack(spacing: 0) {
                 GridironSectionBar(
-                    title: "\(metricLabel) · \(metricCategory.rawValue)",
+                    title: String(localized: "\(MetricName.localized(metricLabel)) · \(metricCategory.title)"),
                     trailing: AnyView(
                         HStack(spacing: 12) {
                             if let season {
@@ -63,7 +63,7 @@ struct MetricRankingView: View {
                                 generator.impactOccurred()
                             }) {
                                 HStack(spacing: 4) {
-                                    Text(metricLabel)
+                                    Text(MetricName.localized(metricLabel))
                                     Image(systemName: sortDescending ? "arrow.down" : "arrow.up")
                                 }
                                 .font(GridironType.micro)
@@ -77,7 +77,7 @@ struct MetricRankingView: View {
                     ContentUnavailableView {
                         Label("No rankings found", systemImage: "chart.bar")
                     } description: {
-                        Text("No players have the \(metricLabel) metric for this season.")
+                        Text(String(localized: "No players have the \(MetricName.localized(metricLabel)) metric for this season."))
                     }
                     .padding(.vertical, 24)
                 } else {
@@ -116,7 +116,7 @@ struct MetricRankingView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(GridironPalette.canvas.ignoresSafeArea())
-        .navigationTitle("\(metricLabel) · \(metricCategory.rawValue)")
+        .navigationTitle("\(MetricName.localized(metricLabel)) · \(metricCategory.title)")
         .navigationBarTitleDisplayMode(.inline)
     }
 

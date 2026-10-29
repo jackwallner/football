@@ -56,11 +56,11 @@ struct OverallPercentileBadge: View {
 
     private var tierDescription: String {
         switch percentile {
-        case 90...100: return "Elite"
-        case 75..<90: return "Excellent"
-        case 50..<75: return "Above Average"
-        case 25..<50: return "Below Average"
-        default: return "Poor"
+        case 90...100: return String(localized: "Elite")
+        case 75..<90: return String(localized: "Excellent")
+        case 50..<75: return String(localized: "Above Average")
+        case 25..<50: return String(localized: "Below Average")
+        default: return String(localized: "Poor")
         }
     }
 
@@ -107,11 +107,13 @@ struct MetricBar: View {
 
     private var accessibilityLabel: String {
         if metric.isUnranked {
-            return "\(metric.label): \(metric.value), not ranked"
+            return String(localized: "\(metric.displayLabel): \(metric.displayValue), not ranked")
         }
-        let valueText = metric.value.isEmpty ? "\(metric.percentile.ordinalString) percentile" : "\(metric.value), \(metric.percentile.ordinalString) percentile"
+        let valueText = metric.value.isEmpty
+            ? String(localized: "\(metric.percentile.ordinalString) percentile")
+            : String(localized: "\(metric.displayValue), \(metric.percentile.ordinalString) percentile")
         let sample = metric.isSmallSample ? ", small sample" : ""
-        return "\(metric.label): \(valueText)\(sample)"
+        return String(localized: "\(metric.displayLabel): \(valueText)\(sample)")
     }
 
     var body: some View {
@@ -120,7 +122,7 @@ struct MetricBar: View {
             VStack(alignment: .leading, spacing: 1) {
                 // One-word labels stay on one line and shrink instead of
                 // hyphenating ("Aggres-siveness", "Explosive / %").
-                Text(metric.label)
+                Text(metric.displayLabel)
                     .font(GridironType.bodyBold)
                     .foregroundStyle(GridironPalette.ink)
                     .lineLimit(metric.label.contains(" ") ? 2 : 1)
@@ -158,7 +160,7 @@ struct MetricBar: View {
 
             // Value column - far right, fixed width (sized for "30.0 ft/s" / "0.421" range)
             if showValue && !metric.value.isEmpty {
-                Text(metric.value)
+                Text(metric.displayValue)
                     .font(GridironType.statMed)
                     .foregroundStyle(metric.isSmallSample || metric.isUnranked ? GridironPalette.inkSecondary : GridironPalette.ink)
                     .lineLimit(1)
@@ -212,7 +214,7 @@ struct MetricBar: View {
 struct DualMetricBar: View {
     let season: Metric
     var recent: Metric?
-    var recentCaption: String = "Recent"
+    var recentCaption: String = String(localized: "Recent")
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -258,7 +260,7 @@ struct SearchField: View {
     var focusOnAppear: Bool = false
     /// What this field searches. Defaults to the leaderboard's answer because
     /// that is where most of them live; the glossary searches stats.
-    var prompt: String = "Search players or teams"
+    var prompt: String = String(localized: "Search players or teams")
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -302,19 +304,19 @@ struct CategoryFilter: View {
     var showAllOption: Bool = false
 
     var body: some View {
-        let categoryTabs = MetricCategory.allCases.map { $0.rawValue }
+        let categoryTabs = MetricCategory.allCases.map(\.title)
         let tabs = showAllOption ? ["All"] + categoryTabs : categoryTabs
-        let selectedTab = selectedCategory?.rawValue ?? (showAllOption ? "All" : MetricCategory.passing.rawValue)
+        let selectedTab = selectedCategory?.title ?? (showAllOption ? String(localized: "All") : MetricCategory.passing.title)
 
         GridironTabs(
             tabs: tabs,
             selected: Binding(
                 get: { selectedTab },
                 set: { newValue in
-                    if showAllOption && newValue == "All" {
+                    if showAllOption && newValue == String(localized: "All") {
                         selectedCategory = nil
                     } else {
-                        selectedCategory = MetricCategory.allCases.first { $0.rawValue == newValue }
+                        selectedCategory = MetricCategory.allCases.first { $0.title == newValue }
                     }
                 }
             )
@@ -335,7 +337,7 @@ struct QualifierPicker: View {
                         selection = level
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     } label: {
-                        Text(level.rawValue)
+                        Text(level.title)
                             .font(GridironType.micro)
                             .foregroundStyle(selection == level ? .white : GridironPalette.inkSecondary)
                             .frame(maxWidth: .infinity)
@@ -374,9 +376,9 @@ struct QualifierMenu: View {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     if level == selection {
-                        Label("\(level.rawValue) · \(level.description)", systemImage: "checkmark")
+                        Label("\(level.title) · \(level.description)", systemImage: "checkmark")
                     } else {
-                        Text("\(level.rawValue) · \(level.description)")
+                        Text("\(level.title) · \(level.description)")
                     }
                 }
             }
@@ -384,7 +386,7 @@ struct QualifierMenu: View {
             HStack(spacing: 4) {
                 Image(systemName: "line.3.horizontal.decrease.circle")
                     .font(.system(size: 11, weight: .semibold))
-                Text(selection.rawValue)
+                Text(selection.title)
                     .font(GridironType.micro)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .bold))
@@ -398,7 +400,7 @@ struct QualifierMenu: View {
         }
         .menuOrder(.fixed)
         .accessibilityLabel("Qualifier")
-        .accessibilityValue("\(selection.rawValue), \(selection.description)")
+        .accessibilityValue(String(localized: "\(selection.title), \(selection.description)"))
     }
 }
 
@@ -410,10 +412,10 @@ struct SectionHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title)
+            Text(String(localized: String.LocalizationValue(title)))
                 .font(GridironType.sectionTitle)
                 .foregroundStyle(GridironPalette.ink)
-            Text(subtitle)
+            Text(String(localized: String.LocalizationValue(subtitle)))
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
         }
@@ -481,7 +483,7 @@ struct TrendArrow: View {
 
     private var text: String {
         if isFlat { return "0" }
-        return String(format: "%.\(decimals)f", abs(delta))
+        return LocalizedNumber.fixed(abs(delta), fractionDigits: decimals)
     }
 
     var body: some View {
@@ -496,7 +498,9 @@ struct TrendArrow: View {
         }
         .foregroundStyle(tint)
         .accessibilityLabel(
-            isFlat ? "No recent change" : "\(delta > 0 ? "Up" : "Down") \(text) recently"
+            isFlat
+                ? String(localized: "No recent change")
+                : String(localized: delta > 0 ? "Up \(text) recently" : "Down \(text) recently")
         )
     }
 }
@@ -530,7 +534,7 @@ struct PercentileBarMini: View {
 
 struct LeaderboardTableHeader: View {
     let sortDescending: Bool
-    var sortLabel: String = "OVERALL"
+    var sortLabel: String = String(localized: "Overall").localizedUppercase
     var metrics: [String] = []
     var onSelectMetric: (String) -> Void = { _ in }
     var onToggleDirection: () -> Void = {}
@@ -547,7 +551,7 @@ struct LeaderboardTableHeader: View {
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("TEAM")
+            Text("TEAM column")
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(width: 44, alignment: .leading)
@@ -559,15 +563,15 @@ struct LeaderboardTableHeader: View {
                             onSelectMetric(metric)
                         } label: {
                             if metric == sortLabel {
-                                Label(metric, systemImage: "checkmark")
+                                Label(MetricName.localized(metric), systemImage: "checkmark")
                             } else {
-                                Text(metric)
+                                Text(MetricName.localized(metric))
                             }
                         }
                     }
                 } label: {
                     HStack(spacing: 3) {
-                        Text(sortLabel.uppercased())
+                        Text(MetricName.localized(sortLabel).localizedUppercase)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                         Image(systemName: "chevron.down")
@@ -605,7 +609,7 @@ struct InlineLoadError: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            Text(message)
+            Text(String(localized: String.LocalizationValue(message)))
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
@@ -665,7 +669,7 @@ struct LeaderboardTableRow: View {
     private var displayValueText: String {
         if let valueOverride { return valueOverride }
         guard let metric = displayMetric else { return "-" }
-        if !metric.value.isEmpty { return metric.value }
+        if !metric.value.isEmpty { return metric.displayValue }
         return metric.percentile.ordinal
     }
 
@@ -699,7 +703,7 @@ struct LeaderboardTableRow: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
-                    Text(subtitle)
+                    Text(String(localized: String.LocalizationValue(subtitle)))
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .lineLimit(1)
@@ -788,7 +792,7 @@ struct BlurGateUnlock: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Text(headline)
+            Text(String(localized: String.LocalizationValue(headline)))
                 .font(GridironType.smallBold)
                 .foregroundStyle(GridironPalette.ink)
                 .multilineTextAlignment(.center)
@@ -998,9 +1002,9 @@ struct PlusDirectCTA: View {
                 break
             case .pending:
                 // Ask-to-Buy / deferred payment: not unlocked, not an error.
-                statusMessage = "Purchase pending approval. StatScout+ unlocks automatically once it's approved."
+                statusMessage = String(localized: "Purchase pending approval. StatScout+ unlocks automatically once it's approved.")
             case .cancelled:
-                statusMessage = "Purchase cancelled. Tap again to continue."
+                statusMessage = String(localized: "Purchase cancelled. Tap again to continue.")
             case .failed(let message):
                 statusMessage = message
             case .needsPlanPicker:
@@ -1009,25 +1013,6 @@ struct PlusDirectCTA: View {
                 showingPlans = true
             }
         }
-    }
-}
-
-// MARK: - Int Ordinal Extension
-
-extension Int {
-    var ordinal: String {
-        let suffix: String
-        switch self % 100 {
-        case 11...13: suffix = "th"
-        default:
-            switch self % 10 {
-            case 1: suffix = "st"
-            case 2: suffix = "nd"
-            case 3: suffix = "rd"
-            default: suffix = "th"
-            }
-        }
-        return "\(self)\(suffix)"
     }
 }
 
@@ -1042,15 +1027,8 @@ extension Array {
 }
 
 extension Int {
-    /// "1st", "22nd", "93rd", "11th": VoiceOver reads percentile ranks aloud.
+    /// VoiceOver reads percentile ranks aloud using the active locale.
     var ordinalString: String {
-        let tens = self % 100
-        if (11...13).contains(tens) { return "\(self)th" }
-        switch self % 10 {
-        case 1: return "\(self)st"
-        case 2: return "\(self)nd"
-        case 3: return "\(self)rd"
-        default: return "\(self)th"
-        }
+        ordinal
     }
 }

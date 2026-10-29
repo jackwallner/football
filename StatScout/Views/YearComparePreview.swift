@@ -45,11 +45,11 @@ struct YearComparePreview: View {
 
     private var mockYearPicker: some View {
         HStack(spacing: 12) {
-            mockYearButton(label: "2026", subtitle: "Recent")
+            mockYearButton(label: 2026.formatted(.number.grouping(.never)), subtitle: "Recent")
             Image(systemName: "arrow.right")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(GridironPalette.inkTertiary)
-            mockYearButton(label: "2025", subtitle: "Prior")
+            mockYearButton(label: 2025.formatted(.number.grouping(.never)), subtitle: "Prior")
         }
         .padding(16)
         .background(GridironPalette.surface)
@@ -99,11 +99,11 @@ struct YearComparePreview: View {
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text("2025")
+            Text(2025.formatted(.number.grouping(.never)))
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(width: 72)
-            Text("2026")
+            Text(2026.formatted(.number.grouping(.never)))
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(width: 72)
@@ -119,7 +119,7 @@ struct YearComparePreview: View {
         recentVal: String
     ) -> some View {
         HStack(spacing: 0) {
-            Text(label)
+            Text(MetricName.localized(label))
                 .font(GridironType.body)
                 .foregroundStyle(GridironPalette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -143,7 +143,7 @@ struct YearComparePreview: View {
     }
 
     private func mockYearValue(value: String, isFaded: Bool) -> some View {
-        Text(value)
+        Text(LocalizedNumber.text(value))
             .font(GridironType.statSmall)
             .foregroundStyle(isFaded ? GridironPalette.inkTertiary : GridironPalette.turf)
             .lineLimit(1)

@@ -136,12 +136,17 @@ struct Game: Codable, Hashable, Identifiable, Sendable {
         guard let result = result(for: team),
               let mine = score(of: team),
               let theirs = score(of: opponent(of: team)) else { return nil }
-        return "\(result) \(mine)-\(theirs)\(overtime ? " OT" : "")"
+        let score = "\(mine.formatted(.number.grouping(.never)))-\(theirs.formatted(.number.grouping(.never)))"
+        return overtime
+            ? String(localized: "\(result) \(score) OT")
+            : String(localized: "\(result) \(score)")
     }
 
     /// "vs HOU" at home, "at HOU" away.
     func matchupLabel(for team: String) -> String {
-        "\(isHome(team) ? "vs" : "at") \(displayTeamAbbr(opponent(of: team)))"
+        isHome(team)
+            ? String(localized: "vs \(displayTeamAbbr(opponent(of: team)))")
+            : String(localized: "at \(displayTeamAbbr(opponent(of: team)))")
     }
 
     var roundLabel: String {
@@ -166,7 +171,7 @@ enum GameStatus: Equatable, Sendable {
 
     /// The one word every screen uses for a game with no posted final.
     var liveLabel: String {
-        self == .awaitingScore ? "Final soon" : "In progress"
+        self == .awaitingScore ? String(localized: "Final soon") : String(localized: "In progress")
     }
 
     var sortOrder: Int {
@@ -189,16 +194,18 @@ struct GameWeek: Hashable, Identifiable, Sendable {
 
     /// Short chip text: "Wk 1", "WC", "SB".
     var shortLabel: String {
-        phase == .regular ? "Wk \(week)" : label
+        phase == .regular
+            ? String(localized: "Wk \(week.formatted(.number.grouping(.never)))")
+            : label
     }
 
     static func label(week: Int, gameType: String) -> String {
         switch gameType.uppercased() {
-        case "WC": return "Wild Card"
-        case "DIV": return "Divisional"
-        case "CON": return "Conference"
-        case "SB": return "Super Bowl"
-        default: return "Week \(week)"
+        case "WC": return String(localized: "Wild Card")
+        case "DIV": return String(localized: "Divisional")
+        case "CON": return String(localized: "Conference")
+        case "SB": return String(localized: "Super Bowl")
+        default: return String(localized: "Week \(week.formatted(.number.grouping(.never)))")
         }
     }
 
@@ -208,7 +215,9 @@ struct GameWeek: Hashable, Identifiable, Sendable {
             let week = GameWeek(
                 week: game.week,
                 phase: game.seasonPhase,
-                label: game.seasonPhase == .regular ? "Week \(game.week)" : label(week: game.week, gameType: game.gameType)
+                label: game.seasonPhase == .regular
+                    ? String(localized: "Week \(game.week.formatted(.number.grouping(.never)))")
+                    : label(week: game.week, gameType: game.gameType)
             )
             seen[week.id] = week
         }

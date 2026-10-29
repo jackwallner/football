@@ -129,7 +129,7 @@ struct RootTabView: View {
         var id: Int { rawValue }
 
         static func named(_ name: String?) -> Tab? {
-            allCases.first { $0.title.lowercased() == name?.lowercased() }
+            allCases.first { $0.launchName == name?.lowercased() }
         }
 
         #if DEBUG
@@ -150,11 +150,29 @@ struct RootTabView: View {
 
         var title: String {
             switch self {
-            case .games: return "Games"
-            case .stats: return "Stats"
-            case .trends: return "Trends"
-            case .teams: return "Teams"
-            case .compare: return "Compare"
+            case .games: return String(localized: "Games")
+            case .stats: return String(localized: "Stats")
+            case .trends: return String(localized: "Trends")
+            case .teams: return String(localized: "Teams")
+            case .compare: return String(localized: "Compare")
+            }
+        }
+
+        var tabBarTitle: String {
+            switch self {
+            case .games: return String(localized: "Games tab")
+            case .stats: return String(localized: "Stats tab")
+            default: return title
+            }
+        }
+
+        private var launchName: String {
+            switch self {
+            case .games: "games"
+            case .stats: "stats"
+            case .trends: "trends"
+            case .teams: "teams"
+            case .compare: "compare"
             }
         }
 
@@ -185,7 +203,7 @@ struct RootTabView: View {
             ForEach(Tab.allCases) { tab in
                 TabBarButton(
                     icon: tab.icon,
-                    label: tab.title,
+                    label: tab.tabBarTitle,
                     isSelected: selection == tab.rawValue
                 ) {
                     guard selection != tab.rawValue else { return }
@@ -214,7 +232,7 @@ struct RootTabView: View {
                 viewModel: viewModel,
                 isActive: selection == Tab.games.rawValue
             )
-                .navigationTitle("Games · \(String(viewModel.freeSeason))")
+                .navigationTitle(String(localized: "Games · \(viewModel.freeSeason.formatted(.number.grouping(.never)))"))
                 .navigationBarTitleDisplayMode(.inline)
                 .modifier(GridironNavBar())
                 .modifier(HomeTabToolbar(lastUpdated: viewModel.lastUpdated, dataCoverage: viewModel.dataCoverage))
@@ -539,11 +557,7 @@ private struct StandardDestinations: ViewModifier {
                     // default: an inline title is tight, and "Pass Yds · 2024
                     // Regular Season" sweeps into a truncation that "Pass Yds ·
                     // 2024 Playoffs" is worth paying for.
-                    .navigationTitle(
-                        route.stat + " · " + (phase == .regular
-                            ? SeasonLabel.text(season)
-                            : SeasonLabel.text(season, phase: phase))
-                    )
+                    .navigationTitle(String(localized: "\(MetricName.localized(route.stat)) · \(SeasonLabel.text(season, phase: phase))"))
                     .navigationBarTitleDisplayMode(.inline)
                     .modifier(GridironNavBar())
             }

@@ -55,8 +55,8 @@ struct YearComparisonView: View {
             Label("No Data Available", systemImage: "calendar.badge.clock")
         } description: {
             Text(availableYears.isEmpty
-                 ? "No historical data is available for this player."
-                 : "Data for \(String(recentYear)) or \(String(priorYear)) is not available.")
+                 ? String(localized: "No historical data is available for this player.")
+                 : String(localized: "Data for \(recentYear.formatted(.number.grouping(.never))) or \(priorYear.formatted(.number.grouping(.never))) is not available."))
         }
         .padding(.vertical, 48)
         .frame(maxWidth: .infinity)
@@ -73,11 +73,11 @@ struct YearComparisonView: View {
     private var yearPickerCard: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                yearButton(year: $yearB, otherYear: yearA, label: yearB > 0 ? String(yearB) : "Select")
+                yearButton(year: $yearB, otherYear: yearA, label: yearB > 0 ? yearB.formatted(.number.grouping(.never)) : String(localized: "Select"))
                 Image(systemName: "arrow.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(GridironPalette.inkTertiary)
-                yearButton(year: $yearA, otherYear: yearB, label: yearA > 0 ? String(yearA) : "Select")
+                yearButton(year: $yearA, otherYear: yearB, label: yearA > 0 ? yearA.formatted(.number.grouping(.never)) : String(localized: "Select"))
             }
         }
         .padding(16)
@@ -96,7 +96,7 @@ struct YearComparisonView: View {
                     year.wrappedValue = y
                 } label: {
                     HStack {
-                        Text(String(y))
+                        Text(y.formatted(.number.grouping(.never)))
                         if year.wrappedValue == y {
                             Image(systemName: "checkmark")
                         }
@@ -108,7 +108,7 @@ struct YearComparisonView: View {
                 Text(label)
                     .font(GridironType.statLarge)
                     .foregroundStyle(GridironPalette.ink)
-                Text(year.wrappedValue == recentYear ? "Recent" : "Prior")
+                Text(year.wrappedValue == recentYear ? String(localized: "Recent") : String(localized: "Prior"))
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
             }
@@ -174,7 +174,7 @@ struct YearComparisonView: View {
 
     private func categoryCard(category: MetricCategory, items: [MetricComparison]) -> some View {
         VStack(spacing: 0) {
-            GridironSubSectionBar(title: "ADVANCED · " + category.rawValue.uppercased())
+            GridironSubSectionBar(title: String(localized: "ADVANCED · \(category.title.localizedUppercase)"))
 
             columnHeader
 
@@ -240,8 +240,7 @@ struct YearComparisonView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(item.metricLabel): \(priorYear) \(item.percentileB.ordinalString) percentile, "
-                + "\(recentYear) \(item.percentileA.ordinalString) percentile"
+            String(localized: "\(item.metricLabel): \(priorYear) \(item.percentileB.ordinalString) percentile, \(recentYear) \(item.percentileA.ordinalString) percentile")
         )
         .frame(height: 48)
         .padding(.horizontal, GridironGeo.padInline)
@@ -263,7 +262,7 @@ struct YearComparisonView: View {
                         .foregroundStyle(Color.yellow)
                         .accessibilityHidden(true)
                 }
-                Text(value.isEmpty ? String(percentile) : value)
+                Text(value.isEmpty ? percentile.formatted(.number.grouping(.never)) : value)
                     .font(GridironType.statSmall)
                     .foregroundStyle(isWinner ? GridironPalette.turf : GridironPalette.inkSecondary)
                     .lineLimit(1)
@@ -290,7 +289,7 @@ struct YearComparisonView: View {
                     right: item.recent
                 )
                 HStack(spacing: 0) {
-                    Text(item.label)
+                    Text(MetricName.localized(item.label))
                         .font(GridironType.body)
                         .foregroundStyle(GridironPalette.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)

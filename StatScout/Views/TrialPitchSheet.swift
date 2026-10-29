@@ -171,14 +171,14 @@ struct TrialPitchSheet: View {
                 Image(systemName: trigger.icon)
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(GridironPalette.turf)
-                Text(trigger.title)
+                Text(String(localized: String.LocalizationValue(trigger.title)))
                     .font(GridironType.pageTitle)
                     .foregroundStyle(GridironPalette.ink)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
             }
 
-            Text(trigger.subtitle)
+            Text(String(localized: String.LocalizationValue(trigger.subtitle)))
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
@@ -198,10 +198,10 @@ struct TrialPitchSheet: View {
                         .frame(width: 24)
 
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(benefit.title)
+                        Text(String(localized: String.LocalizationValue(benefit.title)))
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.ink)
-                        Text(benefit.detail)
+                        Text(String(localized: String.LocalizationValue(benefit.detail)))
                             .font(GridironType.small)
                             .foregroundStyle(GridironPalette.inkSecondary)
                             .lineLimit(2)

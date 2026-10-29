@@ -47,12 +47,12 @@ struct MetricLeadersView: View {
     /// empty cell, fall back to the percentile so the row still carries signal.
     private func displayValue(_ raw: String, percentile: Int) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespaces)
-        return trimmed.isEmpty ? "\(percentile.ordinal) pct" : trimmed
+        return trimmed.isEmpty ? String(localized: "\(percentile.ordinal) percentile") : LocalizedNumber.text(trimmed)
     }
 
     private func categoryCard(_ group: (MetricCategory, [MetricLeaderEntry])) -> some View {
         VStack(spacing: 0) {
-            GridironSectionBar(title: group.0.rawValue.uppercased())
+            GridironSectionBar(title: group.0.title.localizedUppercase)
 
             HStack(spacing: 8) {
                 Text("METRIC")
@@ -80,7 +80,7 @@ struct MetricLeadersView: View {
                 HStack(spacing: 8) {
                     NavigationLink(value: MetricRoute(label: item.label, category: item.category)) {
                         HStack(spacing: 2) {
-                            Text(item.label)
+                            Text(MetricName.localized(item.label))
                                 .font(GridironType.smallBold)
                                 .foregroundStyle(GridironPalette.ink)
                             Image(systemName: "chevron.right")

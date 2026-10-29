@@ -113,7 +113,9 @@ struct FollowPlayersSheet: View {
                         .padding(12)
 
                         if candidates.isEmpty {
-                            Text(searchText.isEmpty ? "No players in this group yet." : "No players match “\(searchText)”.")
+                            Text(searchText.isEmpty
+                                 ? String(localized: "No players in this group yet.")
+                                 : String(localized: "No players match “\(searchText)”."))
                                 .font(GridironType.small)
                                 .foregroundStyle(GridironPalette.inkSecondary)
                                 .padding(.vertical, 24)

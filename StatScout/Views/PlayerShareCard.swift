@@ -93,8 +93,8 @@ struct PlayerShareCard: View {
     /// A current-season board moves weekly, so it carries its date. A past
     /// season is settled and just says what it is ranked against.
     private var footnote: String {
-        guard isCurrentSeason else { return "Ranked against NFL qualifiers" }
-        return "Through \(player.updatedAt.formatted(.dateTime.month(.abbreviated).day()))"
+        guard isCurrentSeason else { return String(localized: "Ranked against NFL qualifiers") }
+        return String(localized: "Through \(player.updatedAt.formatted(.dateTime.month(.abbreviated).day()))")
     }
 }
 

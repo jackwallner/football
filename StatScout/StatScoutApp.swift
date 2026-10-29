@@ -393,11 +393,13 @@ struct OnboardingCards: View {
                             defer { isRestoring = false }
                             await store.restorePurchases()
                             if !store.isPro {
-                                trialError = store.lastError ?? "No active StatScout+ purchase was found for this Apple ID."
+                                trialError = store.lastError ?? String(localized: "No active StatScout+ purchase was found for this Apple ID.")
                             }
                         }
                     } label: {
-                        Text(isRestoring ? "Restoring…" : "Restore Purchases")
+                        Text(isRestoring
+                             ? String(localized: "Restoring…")
+                             : String(localized: "Restore Purchases"))
                             .font(GridironType.micro)
                             .foregroundStyle(GridironPalette.inkTertiary)
                     }
@@ -463,12 +465,12 @@ struct OnboardingCards: View {
                 case .pending:
                     // Ask-to-Buy / deferred payment: onboarding stays up because
                     // isPro hasn't flipped, explain instead of appearing dead.
-                    trialError = "Purchase pending approval. StatScout+ unlocks automatically once it's approved."
+                    trialError = String(localized: "Purchase pending approval. StatScout+ unlocks automatically once it's approved.")
                 case .cancelled:
-                    trialError = "Purchase cancelled. Tap again to continue."
+                    trialError = String(localized: "Purchase cancelled. Tap again to continue.")
                 }
             } catch {
-                trialError = store.lastError ?? "Couldn't complete the purchase. Please try again."
+                trialError = store.lastError ?? String(localized: "Couldn't complete the purchase. Please try again.")
             }
         }
     }
@@ -550,12 +552,12 @@ struct OnboardingCard: View {
                 .shadow(color: GridironPalette.midnight.opacity(0.25), radius: 12, y: 4)
             }
 
-            Text(title)
+            Text(String(localized: String.LocalizationValue(title)))
                 .font(GridironType.playerName)
                 .foregroundStyle(GridironPalette.ink)
                 .multilineTextAlignment(.center)
 
-            Text(description)
+            Text(String(localized: String.LocalizationValue(description)))
                 .font(GridironType.body)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
@@ -567,7 +569,7 @@ struct OnboardingCard: View {
                         Image(systemName: bullet.icon)
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(bullet.color)
-                        Text(bullet.text)
+                        Text(String(localized: String.LocalizationValue(bullet.text)))
                             .font(GridironType.body)
                             .foregroundStyle(GridironPalette.ink)
                             // Wrap, never truncate. A benefit that ends in an

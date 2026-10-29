@@ -12,7 +12,7 @@ func positionAndHandedness(_ player: Player) -> String {
 func displayTeamFullName(_ abbr: String) -> String {
     let trimmed = abbr.trimmingCharacters(in: .whitespaces).uppercased()
     if trimmed.isEmpty || trimmed == "TBD" || trimmed == "\u{2014}" || trimmed == "-" {
-        return "Free Agent"
+        return String(localized: "Free Agent")
     }
     return teamFullName(abbr)
 }
@@ -30,9 +30,9 @@ struct PlayerIdentityStrip: View {
     private var bioLine: String {
         guard let profile else { return positionAndHandedness(player) }
         return [
-            profile.jersey.map { "#\($0)" },
+            profile.jersey.map { "#\($0.formatted(.number.grouping(.never)))" },
             player.displayPosition,
-            profile.age().map { "\($0) yrs" },
+            profile.age().map { String(localized: "\($0.formatted(.number.grouping(.never))) yrs") },
             profile.sizeLabel,
         ]
         .compactMap { $0 }
@@ -96,7 +96,9 @@ struct InjuryBadge: View {
     let report: InjuryReport
 
     var body: some View {
-        Text([report.shortStatus.uppercased(), report.injury].compactMap { $0 }.joined(separator: " · "))
+            Text(report.injury.map {
+                String(localized: "\(report.shortStatus.localizedUppercase) · \(InjuryName.localized($0))")
+            } ?? report.shortStatus.localizedUppercase)
             .font(GridironType.micro)
             .foregroundStyle(.white)
             .lineLimit(1)
@@ -105,7 +107,11 @@ struct InjuryBadge: View {
             .background(
                 Capsule().fill(report.isOut ? GridironPalette.performanceLow : Color(red: 0.72, green: 0.49, blue: 0.08))
             )
-            .accessibilityLabel("Injury report: \(report.status)\(report.injury.map { ", \($0)" } ?? "")")
+            .accessibilityLabel(
+                report.injury.map {
+                    String(localized: "Injury report: \(report.status), \(InjuryName.localized($0))")
+                } ?? String(localized: "Injury report: \(report.status)")
+            )
     }
 }
 
@@ -119,7 +125,7 @@ struct TeamIdentityStrip: View {
 
     private var seasonLabel: String {
         let year = season ?? Calendar(identifier: .gregorian).component(.year, from: Date())
-        return String(year) + " Season"
+        return String(localized: "\(year.formatted(.number.grouping(.never))) Season")
     }
 
     var body: some View {
@@ -158,7 +164,7 @@ struct GridironSectionBar: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Text(title.uppercased())
+            Text(String(localized: String.LocalizationValue(title)).localizedUppercase)
                 .font(GridironType.sectionTitle)
                 .foregroundStyle(GridironPalette.ink)
                 .padding(.leading, GridironGeo.padCard)
@@ -177,12 +183,12 @@ struct GridironSubSectionBar: View {
 
     var body: some View {
         HStack {
-            Text(title.uppercased())
+            Text(String(localized: String.LocalizationValue(title)).localizedUppercase)
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkSecondary)
             Spacer()
             if let trailing {
-                Text(trailing)
+                Text(String(localized: String.LocalizationValue(trailing)))
                     .font(GridironType.statSmall)
                     .foregroundStyle(trailingColor)
             }
@@ -209,7 +215,7 @@ struct GridironTabs: View {
                     generator.impactOccurred()
                 }) {
                     VStack(spacing: 0) {
-                        Text(tab.uppercased())
+                        Text(tab.localizedUppercase)
                             .font(GridironType.smallBold)
                             .foregroundStyle(selected == tab ? GridironPalette.ink : GridironPalette.inkTertiary)
                             .lineLimit(1)

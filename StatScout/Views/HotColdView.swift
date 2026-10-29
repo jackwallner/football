@@ -88,8 +88,8 @@ struct HotColdView: View {
     }
 
     private var earlyTitle: String {
-        let weeks = forms.compactMap(\.weekRangeLabel).first ?? "This season"
-        return "\(side.label.uppercased()) · \(weeks.uppercased()) LEADERS"
+        let weeks = forms.compactMap(\.weekRangeLabel).first ?? String(localized: "This season")
+        return String(localized: "\(side.label) · \(weeks) leaders").localizedUppercase
     }
 
     /// Ranked by improvement, hot first or cold first. Small samples are
@@ -237,8 +237,8 @@ struct HotColdView: View {
                 )
 
                 Text(isEarlySeason
-                     ? "Too early for movement: a \(viewModel.recentWindow.rawValue)-week comparison starts in Week \(movementStartWeek). Until then, the best of the season so far."
-                     : "League weeks, compared with the same span before them. Players inactive for the current span are excluded.")
+                     ? String(localized: "Too early for movement: a \(viewModel.recentWindow.rawValue)-week comparison starts in Week \(movementStartWeek). Until then, the best of the season so far.")
+                     : String(localized: "League weeks, compared with the same span before them. Players inactive for the current span are excluded."))
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -262,14 +262,14 @@ struct HotColdView: View {
             season: selectedSeason,
             phase: selectedPhase
         ) {
-            return "Through Week \(week)"
+            return String(localized: "Through Week \(week.formatted(.number.grouping(.never)))")
         }
         if let asOf = viewModel.recentFormAsOf(
             window: viewModel.recentWindow,
             season: selectedSeason,
             phase: selectedPhase
         ) {
-            return "Through \(asOf.formatted(DataCoverage.gameDayStyle))"
+            return String(localized: "Through \(asOf.formatted(DataCoverage.gameDayStyle))")
         }
         return nil
     }
@@ -358,7 +358,7 @@ struct HotColdView: View {
             ContentUnavailableView {
                 Label("No movement to rank yet", systemImage: "chart.line.flattrend.xyaxis")
             } description: {
-                Text("\(metric.label) doesn't have a prior window to compare against yet. Try another stat or a shorter window.")
+                Text(String(localized: "\(metric.displayLabel) doesn't have a prior window to compare against yet. Try another stat or a shorter window."))
             }
             .padding(.vertical, 32)
         } else {
@@ -440,7 +440,9 @@ struct HotColdView: View {
                 if viewModel.isRecentFormLoading {
                     ProgressView().scaleEffect(0.7)
                 }
-                Text(viewModel.isRecentFormLoading ? "Loading the board…" : "No movement to rank yet")
+                Text(viewModel.isRecentFormLoading
+                     ? String(localized: "Loading the board…")
+                     : String(localized: "No movement to rank yet"))
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkTertiary)
                 Spacer(minLength: 0)
@@ -459,8 +461,8 @@ struct HotColdView: View {
     /// two sides, so "in the league" is unambiguous there; here it's one of
     /// five position groups and the group is the more useful half of the title.
     private var boardTitle: String {
-        let direction = showingCold ? "COOLING OFF" : "HEATING UP"
-        return "\(side.label.uppercased()) · \(direction)"
+        let direction = showingCold ? String(localized: "Cooling Off") : String(localized: "Heating Up")
+        return String(localized: "\(side.label) · \(direction)").localizedUppercase
     }
 
     private func earlySection(forms: [RecentForm]) -> some View {
@@ -519,7 +521,7 @@ struct HotColdView: View {
         )
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(rank). \(player?.name ?? "Player"), \(metric.label) \(value), \(volumeText(form))")
+        .accessibilityLabel(String(localized: "\(rank). \(player?.name ?? String(localized: "Player")), \(metric.displayLabel) \(value), \(volumeText(form))"))
 
         if let player {
             NavigationLink(value: player) { rowContent }
@@ -531,9 +533,9 @@ struct HotColdView: View {
     }
 
     private func volumeText(_ form: RecentForm) -> String {
-        let games = form.games == 1 ? "1 game" : "\(form.games) games"
+        let games = String(localized: "\(form.games) games")
         switch form.playerType {
-        case "qb", "rb", "wr", "te": return "\(games) · \(form.plays) plays"
+        case "qb", "rb", "wr", "te": return String(localized: "\(games) · \(form.plays) plays")
         default: return games
         }
     }

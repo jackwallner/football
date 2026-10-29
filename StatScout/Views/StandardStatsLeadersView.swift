@@ -231,12 +231,12 @@ struct StandardStatsLeadersView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("TEAM")
+                    Text("TEAM column")
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
                         .frame(width: 44, alignment: .leading)
                     HStack(spacing: 4) {
-                        Text(selectedStat.uppercased())
+                        Text(MetricName.localized(selectedStat).localizedUppercase)
                             .font(GridironType.micro)
                             .foregroundStyle(GridironPalette.turf)
                             .lineLimit(1)
@@ -266,7 +266,7 @@ struct StandardStatsLeadersView: View {
                 ContentUnavailableView {
                     Label("No data available", systemImage: "chart.bar")
                 } description: {
-                    Text("No \(selectedPosition.rawValue) players have \(selectedStat) data for this season.")
+                    Text(String(localized: "No data for \(MetricName.localized(selectedStat)) among \(selectedPosition.localizedPluralName) this season."))
                 }
                 .padding(.vertical, 48)
                 .background(GridironPalette.surface)
@@ -357,8 +357,8 @@ struct StandardStatsLeadersView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(
                     isZero
-                        ? "\(selectedStat): \(statDisplay(for: player)), not ranked"
-                        : "\(selectedStat): \(statDisplay(for: player)), \(pct.ordinalString) percentile"
+                        ? String(localized: "\(MetricName.localized(selectedStat)): \(statDisplay(for: player)), not ranked")
+                        : String(localized: "\(MetricName.localized(selectedStat)): \(statDisplay(for: player)), \(pct.ordinalString) percentile")
                 )
             }
             .frame(height: GridironGeo.rowHeight)
@@ -393,8 +393,8 @@ struct StandardStatsLeadersView: View {
     }
 
     private var sampleLabel: String {
-        guard let viewModel else { return "PLAYER" }
-        return viewModel.qualifierLevel == .qualified ? "QUALIFIED PLAYERS" : "ALL PLAYERS"
+        guard let viewModel else { return String(localized: "Player").localizedUppercase }
+        return (viewModel.qualifierLevel == .qualified ? String(localized: "Qualified Players") : String(localized: "All Players")).localizedUppercase
     }
 
     /// Defense on the live season, while PFR's advanced table is still out:
@@ -423,21 +423,21 @@ struct StandardStatsLeadersView: View {
         }
         let stat = selectedStat.uppercased()
         if stat.hasPrefix("PASS") || stat == "INT" || stat == "CMP/ATT" || stat == "RATING" || stat == "Y/A" {
-            return denominator(value("Cmp/Att")).map { "\($0) att" }
+            return denominator(value("Cmp/Att")).map { String(localized: "\($0) att") }
         }
         if stat.hasPrefix("RUSH") || stat == "Y/C" {
-            return value("Car").map { "\($0) car" }
+            return value("Car").map { String(localized: "\($0) car") }
         }
         if stat.hasPrefix("REC") {
-            return denominator(value("Rec/Tgt")).map { "\($0) tgt" }
+            return denominator(value("Rec/Tgt")).map { String(localized: "\($0) tgt") }
         }
         if selectedPosition == .defense, let viewModel,
            let caption = viewModel.volumeCaption(for: player, category: .defense),
            caption.hasSuffix("snaps") {
             return caption
         }
-        guard stat != "G", let games = value("G") else { return nil }
-        return games == "1" ? "1 game" : "\(games) games"
+        guard stat != "G", let games = value("G"), let count = Int(games) else { return nil }
+        return String(localized: "\(count) games")
     }
 
     private func numericStat(for player: Player) -> Double? {

@@ -126,7 +126,9 @@ struct RecentForm: Codable, Hashable, Sendable, Identifiable {
         // back, so a three-week window in Week 1 starts at "Week -1". No games
         // exist before Week 1; label the weeks that do.
         let first = max(1, startWeek)
-        return first >= endWeek ? "Week \(endWeek)" : "Weeks \(first)-\(endWeek)"
+        return first >= endWeek
+            ? String(localized: "Week \(endWeek.formatted(.number.grouping(.never)))")
+            : String(localized: "Weeks \(first.formatted(.number.grouping(.never)))-\(endWeek.formatted(.number.grouping(.never)))")
     }
 
     /// Small samples make wild deltas. Volume means different things by
@@ -229,12 +231,14 @@ enum RecentMetricKey {
     /// rate its decimals, and a yardage total its thousands separator.
     static func format(_ value: Double, label: String) -> String {
         let places = decimals(for: label)
-        if label.hasSuffix("%") { return String(format: "%.1f%%", value) }
-        if places == 0 {
-            let whole = Int(value.rounded())
-            return whole.formatted(.number.grouping(.automatic))
-        }
-        return String(format: "%.\(places)f", value)
+        let formatter = NumberFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.numberStyle = label.hasSuffix("%") ? .percent : .decimal
+        formatter.usesGroupingSeparator = places == 0
+        formatter.minimumFractionDigits = places
+        formatter.maximumFractionDigits = places
+        let formattedValue = label.hasSuffix("%") ? value / 100 : value
+        return formatter.string(from: NSNumber(value: formattedValue)) ?? value.formatted(.number)
     }
 }
 
@@ -245,9 +249,9 @@ enum RecentWindow: Int, CaseIterable, Identifiable, Sendable {
     case eight = 8
 
     var id: Int { rawValue }
-    var label: String { "Last \(rawValue) games" }
-    var segmentLabel: String { "\(rawValue) games" }
-    var shortLabel: String { "\(rawValue)G" }
+    var label: String { String(localized: "Last \(rawValue) games") }
+    var segmentLabel: String { String(localized: "\(rawValue) games") }
+    var shortLabel: String { "\(rawValue.formatted(.number.grouping(.never)))G" }
 }
 
 /// League-anchored windows used only by Trends.
@@ -257,6 +261,6 @@ enum TrendWindow: Int, CaseIterable, Identifiable, Sendable {
     case eight = 8
 
     var id: Int { rawValue }
-    var label: String { "Last \(rawValue) weeks" }
-    var segmentLabel: String { "\(rawValue) weeks" }
+    var label: String { String(localized: "Last \(rawValue) weeks") }
+    var segmentLabel: String { String(localized: "\(rawValue) weeks") }
 }

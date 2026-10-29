@@ -47,13 +47,13 @@ enum DataFreshnessStatus: String, Codable, CaseIterable, Sendable {
 
     var accessibilityName: String {
         switch self {
-        case .ready: "Ready"
-        case .checking: "Checking"
-        case .pending: "Waiting for source data"
-        case .partial: "Partial data"
-        case .stale: "Stale data"
-        case .offline: "Offline"
-        case .failed: "Refresh failed"
+        case .ready: String(localized: "Ready")
+        case .checking: String(localized: "Checking")
+        case .pending: String(localized: "Waiting for source data")
+        case .partial: String(localized: "Partial data")
+        case .stale: String(localized: "Stale data")
+        case .offline: String(localized: "Offline")
+        case .failed: String(localized: "Refresh failed")
         }
     }
 }

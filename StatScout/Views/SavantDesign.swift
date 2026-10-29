@@ -180,6 +180,7 @@ enum NFLConference: String, CaseIterable, Identifiable, Hashable, Sendable {
     case nfc = "NFC"
 
     var id: String { rawValue }
+    var title: String { self == .all ? String(localized: "All") : rawValue }
 
     func contains(team: String) -> Bool {
         let abbr = normalizedTeamAbbreviation(team)

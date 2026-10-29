@@ -50,14 +50,14 @@ struct TeamsView: View {
     /// alphabetical wall even before the space saving. Four across also sits
     /// more comfortably than baseball's five.
     static let divisions: [(name: String, teams: [String])] = [
-        ("AFC East",    ["BUF", "MIA", "NE", "NYJ"]),
-        ("AFC North",   ["BAL", "CIN", "CLE", "PIT"]),
-        ("AFC South",   ["HOU", "IND", "JAX", "TEN"]),
-        ("AFC West",    ["DEN", "KC", "LV", "LAC"]),
-        ("NFC East",    ["DAL", "NYG", "PHI", "WAS"]),
-        ("NFC North",   ["CHI", "DET", "GB", "MIN"]),
-        ("NFC South",   ["ATL", "CAR", "NO", "TB"]),
-        ("NFC West",    ["ARI", "LA", "SF", "SEA"]),
+        (String(localized: "AFC East"),    ["BUF", "MIA", "NE", "NYJ"]),
+        (String(localized: "AFC North"),   ["BAL", "CIN", "CLE", "PIT"]),
+        (String(localized: "AFC South"),   ["HOU", "IND", "JAX", "TEN"]),
+        (String(localized: "AFC West"),    ["DEN", "KC", "LV", "LAC"]),
+        (String(localized: "NFC East"),    ["DAL", "NYG", "PHI", "WAS"]),
+        (String(localized: "NFC North"),   ["CHI", "DET", "GB", "MIN"]),
+        (String(localized: "NFC South"),   ["ATL", "CAR", "NO", "TB"]),
+        (String(localized: "NFC West"),    ["ARI", "LA", "SF", "SEA"]),
     ]
 
     private var filteredTeams: [String] {
@@ -203,7 +203,7 @@ struct TeamsView: View {
                 viewModel.selectedSeason = latestUnlockedSeason
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             } label: {
-                Text("Show " + SeasonLabel.text(latestUnlockedSeason))
+                Text(String(localized: "Show \(SeasonLabel.text(latestUnlockedSeason))"))
                     .font(GridironType.smallBold)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 18)
@@ -350,7 +350,7 @@ struct TeamsView: View {
             ForEach(Self.divisions, id: \.name) { division in
                 VStack(spacing: 6) {
                     HStack {
-                        Text(division.name.uppercased())
+                        Text(division.name.localizedUppercase)
                             .font(GridironType.micro)
                             .foregroundStyle(GridironPalette.inkTertiary)
                         Spacer()
@@ -427,13 +427,15 @@ struct TeamsView: View {
             // Keep the record beside it: game day is when people check it.
             let record = viewModel.record(forTeam: abbr)
             return (
-                record.map { "\($0) · Live" } ?? "Live",
-                "playing \(game.matchupLabel(for: abbr))" + (record.map { ", record \($0)" } ?? ""),
+                record.map { String(localized: "\($0) · Live") } ?? String(localized: "Live"),
+                record.map {
+                    String(localized: "Playing \(game.matchupLabel(for: abbr)), record \($0)")
+                } ?? String(localized: "Playing \(game.matchupLabel(for: abbr))"),
                 GridironPalette.performanceLow
             )
         }
         if let record = viewModel.record(forTeam: abbr) {
-            return (record, "record \(record)", GridironPalette.inkSecondary)
+            return (record, String(localized: "Record \(record)"), GridironPalette.inkSecondary)
         }
         return legacyWeekStatus(abbr)
     }
@@ -442,19 +444,19 @@ struct TeamsView: View {
     private func legacyWeekStatus(_ abbr: String) -> (text: String, spoken: String, color: Color)? {
         guard let week = viewModel.currentGameWeek else { return nil }
         guard let game = viewModel.currentGame(forTeam: abbr) else {
-            return week.phase == .regular ? ("Bye", "bye week", GridironPalette.inkTertiary) : nil
+            return week.phase == .regular ? (String(localized: "Bye"), String(localized: "Bye week"), GridironPalette.inkTertiary) : nil
         }
         switch game.status() {
         case .final:
-            let line = game.resultLine(for: abbr) ?? "Final"
+            let line = game.resultLine(for: abbr) ?? String(localized: "Final")
             let color = GridironPalette.resultColor(game.result(for: abbr))
-            return (line, "\(line) \(game.matchupLabel(for: abbr))", color)
+            return (line, String(localized: "\(line) \(game.matchupLabel(for: abbr))"), color)
         case .inProgress, .awaitingScore:
-            return ("Live", "playing \(game.matchupLabel(for: abbr))", GridironPalette.performanceLow)
+            return (String(localized: "Live"), String(localized: "Playing \(game.matchupLabel(for: abbr))"), GridironPalette.performanceLow)
         case .upcoming:
             return (
-                game.kickoff?.formatted(.dateTime.weekday(.abbreviated)) ?? "TBD",
-                "\(game.matchupLabel(for: abbr)), \(game.dayLabel)",
+                game.kickoff?.formatted(.dateTime.weekday(.abbreviated)) ?? String(localized: "TBD"),
+                String(localized: "\(game.matchupLabel(for: abbr)), \(game.dayLabel)"),
                 GridironPalette.inkSecondary
             )
         }

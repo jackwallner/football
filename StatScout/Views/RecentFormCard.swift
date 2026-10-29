@@ -208,11 +208,11 @@ struct RecentFormCard: View {
     private var emptyStateText: String {
         switch freshnessStatus {
         case .pending, .partial, .checking:
-            return "Recent game data is still arriving"
+            return String(localized: "Recent game data is still arriving")
         case .offline, .failed:
-            return "Recent game data is unavailable right now"
+            return String(localized: "Recent game data is unavailable right now")
         default:
-            return "No games played yet this season"
+            return String(localized: "No games played yet this season")
         }
     }
 
@@ -263,7 +263,7 @@ struct RecentFormCard: View {
 
     private func summaryStat(label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(label)
+            Text(MetricName.localized(label))
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
             Text(value)
@@ -314,7 +314,7 @@ struct RecentFormCard: View {
             return Metric(
                 id: spec.key,
                 label: spec.label,
-                value: String(format: spec.format, v),
+                value: LocalizedNumber.fixed(v, format: spec.format),
                 percentile: pct,
                 category: category
             )
@@ -331,7 +331,7 @@ struct RecentFormCard: View {
             logs = result
         } catch {
             if !isTaskCancellation(error) {
-                loadError = "Couldn't load recent games."
+                loadError = String(localized: "Couldn't load recent games.")
             }
         }
         loading = false

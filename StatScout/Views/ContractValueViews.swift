@@ -44,8 +44,8 @@ struct ContractValueBoard: View {
             HStack(spacing: 8) {
                 GridironSegmented(
                     segments: [
-                        .init(value: true, label: "Bargains"),
-                        .init(value: false, label: "Overpaid"),
+                        .init(value: true, label: String(localized: "Bargains")),
+                        .init(value: false, label: String(localized: "Overpaid")),
                     ],
                     selection: $showingBargains
                 )
@@ -181,15 +181,13 @@ struct ContractValueBoard: View {
             .background(rank % 2 == 1 ? GridironPalette.surface : GridironPalette.surfaceAlt)
             .contentShape(Rectangle())
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(
-                "\(rank). \(entry.player.name), paid like the \(entry.value.payPercentile.ordinalString) percentile, producing like the \(entry.value.productionPercentile.ordinalString). Value \(entry.value.scoreLabel), \(entry.value.verdict.rawValue)"
-            )
+            .accessibilityLabel(String(localized: "\(rank). \(entry.player.name), paid like the \(entry.value.payPercentile.ordinal) percentile, producing like the \(entry.value.productionPercentile.ordinal) percentile. Value \(entry.value.scoreLabel), \(entry.value.verdict.displayName)"))
         }
         .buttonStyle(.plain)
     }
 
     private var footnote: some View {
-        Text("Pay is each deal's yearly average as a share of the cap when it was signed; play is the player's average percentile on the stats he qualifies for. Both are ranked among qualified \(viewModel.selectedPosition.rawValue)s with a contract, and value is play minus pay. Contracts: OverTheCap via nflverse.")
+        Text(String(localized: "Pay is each deal's yearly average as a share of the cap when it was signed; production is the player's average percentile on the stats he qualifies for. Both are ranked among qualified \(viewModel.selectedPosition.localizedPluralName) with a contract, and value is production minus pay. Contracts: OverTheCap via nflverse."))
             .font(GridironType.micro)
             .foregroundStyle(GridironPalette.inkTertiary)
             .fixedSize(horizontal: false, vertical: true)
@@ -200,9 +198,9 @@ struct ContractValueBoard: View {
 
     private func emptyState(title: String, detail: String) -> some View {
         ContentUnavailableView {
-            Label(title, systemImage: "dollarsign.circle")
+            Label(String(localized: String.LocalizationValue(title)), systemImage: "dollarsign.circle")
         } description: {
-            Text(detail)
+            Text(String(localized: String.LocalizationValue(detail)))
         }
         .padding(.vertical, 32)
         .frame(maxWidth: .infinity)
@@ -223,10 +221,10 @@ struct ContractValueCard: View {
     var body: some View {
         VStack(spacing: 0) {
             GridironSectionBar(
-                title: "CONTRACT VALUE",
+                title: String(localized: "CONTRACT VALUE"),
                 trailing: value.map { value in
                     AnyView(
-                        Text("\(value.scoreLabel) · \(value.verdict.rawValue)")
+                        Text("\(value.scoreLabel) · \(value.verdict.displayName)")
                             .font(GridironType.smallBold)
                             .foregroundStyle(value.tint)
                     )
@@ -269,33 +267,35 @@ struct ContractValueCard: View {
         guard let apy = profile.contractLabel else { return nil }
         var parts = [apy]
         if let share = profile.contractCapShare, share > 0 {
-            parts.append(String(format: "%.1f%% of cap", share * 100))
+            parts.append(String(localized: "\(LocalizedNumber.fixed(share * 100, fractionDigits: 1))% of cap"))
         }
         if let years = profile.contractYears, let signed = profile.contractYearSigned {
-            parts.append("\(years) yr\(years == 1 ? "" : "s"), signed \(signed)")
+            parts.append(String(localized: "\(years) years, signed \(signed)"))
         }
         return parts.joined(separator: " · ")
     }
 
     private var unavailableReason: String {
         if profile.contractLabel == nil {
-            return "No active contract on file."
+            return String(localized: "No active contract on file.")
         }
         if !ContractValue.positions.contains(player.positionGroup) {
-            return "Value rankings cover quarterbacks, running backs, receivers and tight ends for now."
+            return String(localized: "Value rankings cover quarterbacks, running backs, receivers and tight ends for now.")
         }
-        return "Ranks once \(player.name) clears the playing-time minimum at his position."
+        return String(localized: "Ranks once \(player.name) clears the playing-time minimum at their position.")
     }
 
     private func explanation(_ value: ContractValue) -> String {
-        let group = player.positionGroup.rawValue
-        let through = coverage.map { " \($0)." } ?? "."
-        return "Paid like the \(value.payPercentile.ordinalString) percentile \(group), producing like the \(value.productionPercentile.ordinalString), among \(value.poolSize) qualified \(group)s with a contract\(through) Contracts: OverTheCap via nflverse."
+        let group = player.positionGroup.localizedPluralName
+        if let coverage {
+            return String(localized: "Pay ranks at the \(value.payPercentile.ordinal) percentile; production ranks at the \(value.productionPercentile.ordinal) percentile among \(value.poolSize) qualified \(group) with a contract. Data through \(coverage). Contracts: OverTheCap via nflverse.")
+        }
+        return String(localized: "Pay ranks at the \(value.payPercentile.ordinal) percentile; production ranks at the \(value.productionPercentile.ordinal) percentile among \(value.poolSize) qualified \(group) with a contract. Contracts: OverTheCap via nflverse.")
     }
 
     private func bar(label: String, percentile: Int, neutral: Bool) -> some View {
         HStack(spacing: 10) {
-            Text(label)
+            Text(String(localized: String.LocalizationValue(label)))
                 .font(GridironType.smallBold)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .frame(width: 34, alignment: .leading)
