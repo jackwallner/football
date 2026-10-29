@@ -17,6 +17,9 @@ baseball StatScout repo. Metadata/screenshots here are app-specific.
 **Android port** (`android/`, Play package `com.jackwallner.football`): identity, products,
 RevenueCat IDs, emulator, store assets and Play state are in `.claude/rules/android.md`.
 
+**In-app localization** (`es`, `de`, `nl`, `it`): catalog, feed-label mapping,
+plural rules and screenshot proof are in `.claude/rules/localization.md`.
+
 **App Store reviews:** system `requestReview()` only, no custom rating question
 (App Review 5.6.1). `ReviewPromptTracker` gates it (2nd launch on, onboarding
 done, 30-day cooldown, Settings "Rate StatScout" row ends asks; "Send Feedback"

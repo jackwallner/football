@@ -14,6 +14,13 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>de</string>
+		<string>es</string>
+		<string>it</string>
+		<string>nl</string>
+	</array>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
