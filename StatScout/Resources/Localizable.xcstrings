@@ -1270,7 +1270,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Winstkans voor %@ per spel. Gestegen naar %@, gedaald naar %@."
+            "value": "Winstkans voor %@ per spel. Omhoog is %@, omlaag is %@."
           }
         },
         "it": {
@@ -6013,7 +6013,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ofertas"
+            "value": "Gangas"
           }
         },
         "de": {
@@ -6363,7 +6363,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mejor valor"
+            "value": "Mejor precio"
           }
         },
         "de": {
@@ -6929,7 +6929,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Catch% abgefangen"
+            "value": "Catch%"
           }
         },
         "nl": {
@@ -8428,7 +8428,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Valor del contrato: ofertas y sobrepagos en cada posición"
+            "value": "Valor del contrato: gangas y sobrepagos en cada posición"
           }
         },
         "de": {
@@ -10808,7 +10808,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La producción de cada jugador calificado comparada con su sueldo. Ofertas y sobrepagos en cada posición, actualizados cada semana."
+            "value": "La producción de cada jugador calificado comparada con su sueldo. Gangas y sobrepagos en cada posición, actualizados cada semana."
           }
         },
         "de": {
@@ -25023,7 +25023,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ve las ofertas y los sobrepagos en cada posición"
+            "value": "Ve las gangas y los sobrepagos en cada posición"
           }
         },
         "de": {
