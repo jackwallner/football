@@ -9,7 +9,7 @@
 ## Guides
 
 - [Best NFL Stats App for iPhone: 6 Compared (2026)](https://jackwallner.com/ios/football/best-nfl-stats-app.html.md): Which NFL stats app fits you? Six iPhone apps compared on advanced stats, scores, fantasy and price model, with ratings and trade-offs as of October 2026.
-- [What Is EPA Per Play in Football? EPA and CPOE Explained](https://jackwallner.com/ios/football/what-is-epa-per-play.html.md): EPA per play measures how much each play changes a team's expected points. Learn how it works, what CPOE adds, and what good looks like for NFL quarterbacks.
+- [What Is EPA Per Play in Football? EPA and CPOE Explained](https://jackwallner.com/ios/football/what-is-epa-per-play.html.md): EPA per play measures how much each play changes a team's expected points. How it works, what CPOE adds, and what good looks like for NFL quarterbacks.
 
 ## Optional
 

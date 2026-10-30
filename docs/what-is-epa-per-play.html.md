@@ -1,6 +1,6 @@
 # What Is EPA Per Play in Football? EPA and CPOE Explained
 
-> EPA per play measures how much each play changes a team's expected points. Learn how it works, what CPOE adds, and what good looks like for NFL quarterbacks.
+> EPA per play measures how much each play changes a team's expected points. How it works, what CPOE adds, and what good looks like for NFL quarterbacks.
 
 Web page: https://jackwallner.com/ios/football/what-is-epa-per-play.html
 
