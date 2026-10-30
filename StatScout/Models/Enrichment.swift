@@ -108,13 +108,14 @@ struct PlayerProfile: Decodable, Hashable, Sendable {
     /// against `date` directly in a western zone started the birthday the
     /// previous evening: it read as the birth day's date minus seven or eight
     /// hours. The birth day's own year, month and day are read in UTC and
-    /// compared with `date`'s day in the viewer's zone.
+    /// compared with `date`'s day in the viewer's zone, always on the
+    /// Gregorian calendar whatever calendar the viewer uses.
     func age(on date: Date = .now, calendar: Calendar = .current) -> Int? {
         guard let birthDate else { return nil }
         var utc = Calendar(identifier: .gregorian)
         utc.timeZone = TimeZone(identifier: "UTC") ?? .current
         let born = utc.dateComponents([.year, .month, .day], from: birthDate)
-        let today = calendar.dateComponents([.year, .month, .day], from: date)
+        let today = calendar.gregorian.dateComponents([.year, .month, .day], from: date)
         guard let bornYear = born.year, let bornMonth = born.month, let bornDay = born.day,
               let year = today.year, let month = today.month, let day = today.day else { return nil }
         let hadBirthday = (month, day) >= (bornMonth, bornDay)

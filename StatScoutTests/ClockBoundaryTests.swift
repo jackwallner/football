@@ -258,4 +258,79 @@ final class ClockBoundaryTests: XCTestCase {
         )
         XCTAssertEqual(player.weeklyDelta(asOf: now), 3)
     }
+
+    // MARK: Non-Gregorian device calendars
+
+    private func calendar(_ id: Calendar.Identifier, zone: String = "America/Los_Angeles") -> Calendar {
+        var calendar = Calendar(identifier: id)
+        calendar.timeZone = TimeZone(identifier: zone)!
+        return calendar
+    }
+
+    /// Overnight audit 2026-10-30 (F1): a phone set to region Thailand uses the
+    /// Buddhist calendar, so the season resolved to 2569 and nothing loaded.
+    /// Japanese, Islamic and Persian fell back to the 2025 floor. The NFL
+    /// season is a Gregorian rule whatever calendar the viewer uses.
+    func testSeasonIsGregorianOnEveryDeviceCalendar() {
+        let date = local(la, 2026, 10, 30, 12)
+        let ids: [Calendar.Identifier] = [.buddhist, .japanese, .islamicUmmAlQura, .persian, .hebrew, .republicOfChina]
+        for id in ids {
+            XCTAssertEqual(StatScoutSeason.season(on: date, calendar: calendar(id)), 2026, "\(id)")
+        }
+        XCTAssertEqual(StatScoutSeason.season(on: local(la, 2027, 8, 31, 23), calendar: calendar(.buddhist)), 2026)
+        XCTAssertEqual(StatScoutSeason.season(on: local(la, 2027, 9, 1), calendar: calendar(.japanese)), 2027)
+    }
+
+    /// F1: the zone of the device calendar still decides the day.
+    func testSeasonKeepsTheDeviceZoneOnANonGregorianCalendar() {
+        let instantAfterUTCMidnight = instant("2026-09-01T00:30:00Z")
+        XCTAssertEqual(StatScoutSeason.season(on: instantAfterUTCMidnight, calendar: calendar(.buddhist, zone: "UTC")), 2026)
+        XCTAssertEqual(StatScoutSeason.season(on: instantAfterUTCMidnight, calendar: calendar(.buddhist)), 2025)
+    }
+
+    /// F1: the team Recent window asked for `game_date=gte.2569-...`.
+    func testGameLogWindowIsGregorianOnABuddhistCalendar() {
+        let now = local(la, 2026, 10, 30, 12)
+        let buddhist = StatScoutSeason.gameLogWindowStart(season: 2025, days: 10, now: now, calendar: calendar(.buddhist))
+        let gregorian = StatScoutSeason.gameLogWindowStart(season: 2025, days: 10, now: now, calendar: la)
+        XCTAssertEqual(buddhist, gregorian)
+        XCTAssertEqual(la.component(.year, from: buddhist), 2026)
+    }
+
+    /// F1: a 1995 birthday read "574 yrs" on a Buddhist calendar.
+    func testAgeIsGregorianOnEveryDeviceCalendar() throws {
+        let player = try profile(born: "1995-09-17")
+        let date = local(la, 2026, 10, 30, 12)
+        for id in [Calendar.Identifier.buddhist, .japanese, .islamicUmmAlQura, .hebrew] {
+            XCTAssertEqual(player.age(on: date, calendar: calendar(id)), 31, "\(id)")
+        }
+    }
+
+    /// F1: fixed-format feed dates parsed into 1483 on a Thai-region phone.
+    /// Meaningful under `-testRegion TH` as well as on a Gregorian host.
+    func testFeedDayParsesAsGregorianOnAnyRegion() throws {
+        var eastern = Calendar(identifier: .gregorian)
+        eastern.timeZone = TimeZone(identifier: "America/New_York")!
+        let parsed = try XCTUnwrap(DataFreshness.parseDate("2026-10-26"))
+        XCTAssertEqual(eastern.dateComponents([.year, .month, .day], from: parsed),
+                       DateComponents(year: 2026, month: 10, day: 26))
+        print("CALENDAR region=\(Locale.current.identifier) calendar=\(Calendar.current.identifier) current=\(StatScoutSeason.current)")
+    }
+
+    /// F1: the shared feed-day formatter cannot fall back to the device's
+    /// calendar or locale.
+    func testFeedDayFormatterIsGregorianAndPOSIX() {
+        let formatter = DateFormatter.feedDay
+        XCTAssertEqual(formatter.calendar.identifier, .gregorian)
+        XCTAssertEqual(formatter.locale.identifier, "en_US_POSIX")
+        XCTAssertEqual(formatter.timeZone.identifier, "America/New_York")
+    }
+
+    /// F1: `StatScoutSeason.current` itself, on whatever host runs the suite.
+    func testCurrentSeasonIsAGregorianYear() {
+        var eastern = Calendar(identifier: .gregorian)
+        eastern.timeZone = TimeZone(identifier: "America/New_York")!
+        let year = eastern.component(.year, from: .now)
+        XCTAssertTrue((year - 1...year).contains(StatScoutSeason.current), "\(StatScoutSeason.current)")
+    }
 }

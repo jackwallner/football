@@ -99,7 +99,7 @@ struct TeamView: View {
         viewModel?.selectedSeason
             ?? seedSeason
             ?? seedPlayers.compactMap(\.season).max()
-            ?? Calendar.current.component(.year, from: Date())
+            ?? StatScoutSeason.current
     }
 
     private var leaguePlayers: [Player] {
