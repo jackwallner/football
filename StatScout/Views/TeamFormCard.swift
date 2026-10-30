@@ -335,6 +335,7 @@ struct TeamRankingsCard: View {
                     .blur(radius: 8)
                     .disabled(true)
                     .allowsHitTesting(false)
+                    .accessibilityHidden(true)
                 BlurGateUnlock(
                     headline: "See every team's last 3 / 5 / 8 game form",
                     trigger: .teamView

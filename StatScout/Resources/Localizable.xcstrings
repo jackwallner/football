@@ -8906,6 +8906,41 @@
         }
       }
     },
+    "Couldn't load subscription options. Check your connection and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load subscription options. Check your connection and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar las opciones de suscripción. Revisa tu conexión e inténtalo de nuevo."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Abo-Optionen konnten nicht geladen werden. Prüf deine Verbindung und versuch es erneut."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnementopties konden niet worden geladen. Controleer je verbinding en probeer het opnieuw."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile caricare le opzioni di abbonamento. Controlla la connessione e riprova."
+          }
+        }
+      }
+    },
     "Couldn't load team form. Check your connection and try again.": {
       "extractionState": "manual",
       "localizations": {
@@ -27287,6 +27322,41 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abbonati"
+          }
+        }
+      }
+    },
+    "Subscription options are temporarily unavailable. Please try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscription options are temporarily unavailable. Please try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las opciones de suscripción no están disponibles por ahora. Inténtalo de nuevo."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Abo-Optionen sind gerade nicht verfügbar. Bitte versuch es erneut."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnementopties zijn tijdelijk niet beschikbaar. Probeer het opnieuw."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le opzioni di abbonamento non sono al momento disponibili. Riprova."
           }
         }
       }

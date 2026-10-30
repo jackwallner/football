@@ -196,3 +196,20 @@ final class StoreKitPurchaseTests: XCTestCase {
         XCTAssertTrue(eligible, "A user with no purchase history should be offered the trial")
     }
 }
+
+/// Overnight audit 2026-10-30 (F4): RevenueCat throws for a cancelled Apple
+/// sheet and for Ask to Buy, so both read "Couldn't complete the purchase".
+final class PurchaseErrorMappingTests: XCTestCase {
+    func testCancelAndAskToBuyAreNotFailures() {
+        XCTAssertEqual(StoreService.purchaseState(for: ErrorCode.purchaseCancelledError), .cancelled)
+        XCTAssertEqual(StoreService.purchaseState(for: ErrorCode.paymentPendingError), .pending)
+        let bridged = NSError(domain: ErrorCode.errorDomain, code: ErrorCode.purchaseCancelledError.rawValue)
+        XCTAssertEqual(StoreService.purchaseState(for: bridged), .cancelled)
+    }
+
+    func testRealFailuresStillThrow() {
+        XCTAssertNil(StoreService.purchaseState(for: ErrorCode.networkError))
+        XCTAssertNil(StoreService.purchaseState(for: ErrorCode.storeProblemError))
+        XCTAssertNil(StoreService.purchaseState(for: URLError(.notConnectedToInternet)))
+    }
+}

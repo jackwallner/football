@@ -13,6 +13,7 @@ struct YearComparePreview: View {
             mockContent
                 .blur(radius: 5)
                 .clipped()
+                .accessibilityHidden(true)
 
             BlurGateUnlock(
                 headline: "See how \(playerName) evolved season to season",

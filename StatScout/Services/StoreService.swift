@@ -738,14 +738,14 @@ final class StoreService: NSObject, ObservableObject {
                 ? await fetchDirectPackages()
                 : offeringPackages
             lastError = products.isEmpty
-                ? "Subscription options are temporarily unavailable. Please try again."
+                ? String(localized: "Subscription options are temporarily unavailable. Please try again.")
                 : nil
             await refreshIntroEligibility()
         } catch {
             logger.error("Offering fetch failed: \(String(describing: error), privacy: .public)")
             products = await fetchDirectPackages()
             lastError = products.isEmpty
-                ? "Couldn't load subscription options. Check your connection and try again."
+                ? String(localized: "Couldn't load subscription options. Check your connection and try again.")
                 : nil
             await refreshIntroEligibility()
         }
@@ -782,9 +782,18 @@ final class StoreService: NSObject, ObservableObject {
         }
         purchaseInFlight = true
         defer { purchaseInFlight = false }
+        // Callers show `lastError` when this throws; a message left by an
+        // earlier restore or refresh has nothing to do with this purchase.
+        lastError = nil
 
         let startedTrial = isEligibleForIntroOffer(product)
-        let result = try await Purchases.shared.purchase(package: product)
+        let result: PurchaseResultData
+        do {
+            result = try await Purchases.shared.purchase(package: product)
+        } catch {
+            if let state = Self.purchaseState(for: error) { return state }
+            throw error
+        }
         apply(customerInfo: result.customerInfo)
         if result.userCancelled {
             return .cancelled
@@ -798,6 +807,17 @@ final class StoreService: NSObject, ObservableObject {
             return .purchased
         } else {
             return .pending
+        }
+    }
+
+    /// RevenueCat throws for a cancelled Apple sheet and for Ask to Buy rather
+    /// than returning `userCancelled` or an entitlement-less result, so both
+    /// read as failures unless they are mapped back here.
+    nonisolated static func purchaseState(for error: Error) -> PurchaseState? {
+        switch error as? ErrorCode {
+        case .purchaseCancelledError?: .cancelled
+        case .paymentPendingError?: .pending
+        default: nil
         }
     }
 

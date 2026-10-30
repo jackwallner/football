@@ -32,6 +32,9 @@ struct PlayerProfileView: View {
     var freshnessViewModel: DashboardViewModel? = nil
     var comparisonCatalog: ComparisonCatalog?
     @State private var showPercentileInfo = false
+    /// `onAppear` fires again when a pushed leaderboard or comparison pops,
+    /// which is navigation, not another profile open.
+    @State private var hasCountedOpen = false
     @State private var selectedTab: PlayerStatTab = .advanced
     @State private var selectedPercentileSeason: Int? = nil
     @State private var paywallTrigger: PaywallTrigger?
@@ -295,6 +298,8 @@ struct PlayerProfileView: View {
             // group chat shouldn't hit a subscription story before scrolling a
             // single row. Show it from the *second* profile open onward (Pro-only
             // controls - Recent Form, past seasons, Compare - still pitch on tap).
+            guard !hasCountedOpen else { return }
+            hasCountedOpen = true
             let opens = UserDefaults.standard.integer(forKey: profileOpenCountKey) + 1
             UserDefaults.standard.set(opens, forKey: profileOpenCountKey)
             if !store.isPro, opens >= 2, PaywallGate.shared.shouldPresent(.playerScouting) {
@@ -566,7 +571,6 @@ struct PlayerProfileView: View {
                 proPerk("chart.line.uptrend.xyaxis", "Year-over-year trends across every metric")
                 proPerk("person.2.fill", "Head-to-head comparisons vs any player")
                 proPerk("calendar.badge.clock", "Every past season, not just this one")
-                proPerk("arrow.down.circle.fill", "Saved offline, works on the road")
             }
 
             Button {
@@ -816,8 +820,11 @@ struct PlayerProfileView: View {
                             Text("ⓘ")
                                 .font(GridironType.micro)
                                 .foregroundStyle(GridironPalette.linkBlue)
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("About Percentiles")
                     }
                 )
             )

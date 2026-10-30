@@ -136,6 +136,7 @@ struct RecentFormCard: View {
                     .blur(radius: 8)
                     .disabled(true)
                     .allowsHitTesting(false)
+                    .accessibilityHidden(true)
                 BlurGateUnlock(
                     headline: "See last 3 / 5 / 8 game form for any player",
                     trigger: .recentForm

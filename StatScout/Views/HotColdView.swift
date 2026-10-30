@@ -398,6 +398,7 @@ struct HotColdView: View {
                     }
                     .blur(radius: 8)
                     .allowsHitTesting(false)
+                    .accessibilityHidden(true)
                 }
                 .clipped()
                 .overlay(alignment: .bottom) {

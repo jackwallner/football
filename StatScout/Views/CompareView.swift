@@ -200,6 +200,7 @@ struct CompareView: View {
                     .blur(radius: store.isPro ? 0 : 5)
                     .disabled(!store.isPro)
                     .allowsHitTesting(store.isPro)
+                    .accessibilityHidden(!store.isPro)
 
                     if !store.isPro {
                         // The same gate every other locked module uses, rather

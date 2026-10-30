@@ -106,6 +106,7 @@ struct ContractValueBoard: View {
                         }
                         .blur(radius: 8)
                         .allowsHitTesting(false)
+                        .accessibilityHidden(true)
                         BlurGateUnlock(
                             headline: "See every bargain and overpay at every position",
                             trigger: .contractValue
