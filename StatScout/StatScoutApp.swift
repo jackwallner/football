@@ -626,7 +626,7 @@ struct ConfigMissingView: View {
                 .font(GridironType.body)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
-            if let supportURL = URL(string: "https://jackwallner.github.io/football/support.html") {
+            if let supportURL = URL(string: "https://jackwallner.com/ios/football/support.html") {
                 Link("Contact Support", destination: supportURL)
                     .buttonStyle(.borderedProminent)
                     .tint(GridironPalette.turf)

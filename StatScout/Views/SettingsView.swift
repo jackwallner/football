@@ -250,7 +250,7 @@ struct AboutView: View {
 
             Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
 
-            if let privacyURL = URL(string: "https://jackwallner.github.io/football/privacy-policy.html") {
+            if let privacyURL = URL(string: "https://jackwallner.com/ios/football/privacy-policy.html") {
                 Link(destination: privacyURL) {
                     row(
                         icon: "shield.lefthalf.filled",

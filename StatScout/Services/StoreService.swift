@@ -176,7 +176,7 @@ enum SeasonLabel {
 enum StatScoutLegal {
     /// Apple's standard EULA - required on the paywall unless a custom one is hosted.
     static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
-    static let privacyURL = URL(string: "https://jackwallner.github.io/football/privacy-policy.html")!
+    static let privacyURL = URL(string: "https://jackwallner.com/ios/football/privacy-policy.html")!
 }
 
 /// Session-scoped cap so the same contextual paywall can't be re-presented
