@@ -414,7 +414,7 @@ struct GameDetailView: View {
         func format(_ value: Double) -> String {
             switch self {
             case .epa: return value.formatted(.number.precision(.fractionLength(2)).sign(strategy: .always(includingZero: false)))
-            case .percent: return LocalizedNumber.fixed(value, fractionDigits: 0, percent: true)
+            case .percent: return LocalizedNumber.fixed(value * 100, fractionDigits: 0, percent: true)
             case .decimal: return value.formatted(.number.precision(.fractionLength(1)))
             case .signedDecimal: return value.formatted(.number.precision(.fractionLength(1)).sign(strategy: .always(includingZero: false)))
             case .count: return Int(value.rounded()).formatted()

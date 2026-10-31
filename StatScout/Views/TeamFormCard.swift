@@ -301,12 +301,13 @@ struct TeamRankingsCard: View {
         }
     }
 
+    /// Feed shaped, because `MetricBar` localizes `Metric.value` itself.
     private func formattedValue(_ v: Double, label: String) -> String {
         // "Cmp% Allowed" and "Missed Tkl%" are percentages too.
-        if label.contains("%") { return LocalizedNumber.fixed(v, fractionDigits: 1, percent: true) }
-        if ["EPA/Play", "EPA/Rush", "EPA/Tgt", "RACR"].contains(label) { return LocalizedNumber.fixed(v, fractionDigits: 2) }
-        if abs(v) >= 100 { return LocalizedNumber.fixed(v, fractionDigits: 0) }
-        return LocalizedNumber.fixed(v, fractionDigits: 1)
+        if label.contains("%") { return FeedNumber.fixed(v, format: "%.1f%%") }
+        if ["EPA/Play", "EPA/Rush", "EPA/Tgt", "RACR"].contains(label) { return FeedNumber.fixed(v, format: "%.2f") }
+        if abs(v) >= 100 { return FeedNumber.fixed(v, format: "%.0f") }
+        return FeedNumber.fixed(v, format: "%.1f")
     }
 
     // MARK: - Recent

@@ -315,7 +315,7 @@ struct RecentFormCard: View {
             return Metric(
                 id: spec.key,
                 label: spec.label,
-                value: LocalizedNumber.fixed(v, format: spec.format),
+                value: FeedNumber.fixed(v, format: spec.format),
                 percentile: pct,
                 category: category
             )

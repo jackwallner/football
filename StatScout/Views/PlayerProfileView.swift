@@ -1155,9 +1155,7 @@ struct PlayerProfileView: View {
             return Metric(
                 id: "recent-\(spec.label)",
                 label: seasonMetric.label,
-                value: (perGame < 10 && perGame != perGame.rounded()
-                    ? LocalizedNumber.fixed(perGame, fractionDigits: 1)
-                    : String(localized: "\(LocalizedNumber.fixed(perGame, fractionDigits: 0))/g")),
+                value: FeedNumber.perGame(perGame),
                 percentile: pct,
                 category: seasonMetric.category
             )
@@ -1166,7 +1164,7 @@ struct PlayerProfileView: View {
         return Metric(
             id: "recent-\(spec.label)",
             label: seasonMetric.label,
-            value: LocalizedNumber.fixed(v, format: spec.format),
+            value: FeedNumber.fixed(v, format: spec.format),
             percentile: pct,
             category: seasonMetric.category
         )
@@ -1420,9 +1418,7 @@ struct PlayerProfileView: View {
               let window = standardRecentWindow, window.games > 0,
               let value = window.metrics[key] else { return nil }
         let perGame = value / Double(window.games)
-        let text = (perGame < 10 && perGame != perGame.rounded()
-            ? LocalizedNumber.fixed(perGame, fractionDigits: 1)
-            : String(localized: "\(LocalizedNumber.fixed(perGame, fractionDigits: 0))/g"))
+        let text = FeedNumber.perGame(perGame)
         let peers = peerPerGameValues(forStat: seasonMetric.label)
         return Metric(
             id: "std-recent-\(seasonMetric.label)",

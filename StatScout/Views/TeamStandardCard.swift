@@ -179,7 +179,7 @@ struct TeamStandardCard: View {
                         metric: Metric(
                             id: "team-std-\(label)",
                             label: label,
-                            value: format(label, value),
+                            value: feedValue(label, value),
                             percentile: seasonPercentile(label: label, line: line, league: league),
                             category: side == .defense ? .defense : .passing
                         )
@@ -636,6 +636,15 @@ struct TeamStandardCard: View {
             return LocalizedNumber.fixed(value, fractionDigits: 1)
         default:
             return Int(value.rounded()).formatted(.number.grouping(.automatic))
+        }
+    }
+
+    /// `format` in the feed's shape, for a `Metric` that `MetricBar` localizes.
+    private func feedValue(_ label: String, _ value: Double) -> String {
+        switch label {
+        case "CMP%", "INT%", "CATCH%": return FeedNumber.fixed(value, format: "%.1f%%")
+        case "Y/A", "Y/C", "Y/R", "SACKS": return FeedNumber.fixed(value, format: "%.1f")
+        default: return FeedNumber.integer(value)
         }
     }
 

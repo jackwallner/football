@@ -16,6 +16,7 @@
 		11F23B977D61537B383CF446 /* StoreKitTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F145A82B62823673B7E930D /* StoreKitTest.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		13627AAB67147D0AE5954433 /* StandardStatsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EAE4FBE4CF576F735F06C7 /* StandardStatsTests.swift */; };
 		14FE0A5789F558B6C9BBCA6A /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9C629EF1C253BCEAF314EF /* RootTabView.swift */; };
+		1536228F93CBCB1F3765114D /* NumberFormattingRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C63E0C81B3842B4910F7366D /* NumberFormattingRegressionTests.swift */; };
 		17124CBBF816F46215922CCE /* TrendsTeaserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157E8C62374F49106683CF14 /* TrendsTeaserTests.swift */; };
 		1782405A39830DB4FF57E16C /* GameLogPhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33915899668AEDAE2BD69339 /* GameLogPhaseTests.swift */; };
 		189D1222312FEE374CFA4DEE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 147A7B626DB00162FDED79EA /* SettingsView.swift */; };
@@ -221,6 +222,7 @@
 		C1F9C4B1F4674E2DABB9CF60 /* SavantMenus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavantMenus.swift; sourceTree = "<group>"; };
 		C4A643A0893CC93A640AE0CD /* ClockBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockBoundaryTests.swift; sourceTree = "<group>"; };
 		C62780264C15B926A095378C /* ReviewPromptTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptTracker.swift; sourceTree = "<group>"; };
+		C63E0C81B3842B4910F7366D /* NumberFormattingRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberFormattingRegressionTests.swift; sourceTree = "<group>"; };
 		C7699F37BE47BC9BE5A5A4B1 /* StatScoutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = StatScoutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3ED5C39610593199876A2FB /* MetricAggregationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricAggregationTests.swift; sourceTree = "<group>"; };
 		D4B5205CC0E1403F3AFD4DD9 /* OpeningWeekCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpeningWeekCacheTests.swift; sourceTree = "<group>"; };
@@ -315,6 +317,7 @@
 				84613D1270C1E46CDDD09A6D /* LocalizationTests.swift */,
 				D3ED5C39610593199876A2FB /* MetricAggregationTests.swift */,
 				918C7323DB9AE6711E8FB291 /* MetricCoverageTests.swift */,
+				C63E0C81B3842B4910F7366D /* NumberFormattingRegressionTests.swift */,
 				D4B5205CC0E1403F3AFD4DD9 /* OpeningWeekCacheTests.swift */,
 				5D3ACCAE6ED2788F0378F5DF /* PaywallFunnelTests.swift */,
 				880A0DD853D22AB060960F5D /* PerformanceBudgetTests.swift */,
@@ -681,6 +684,7 @@
 				300CC9DD39911080ED3A635B /* LocalizationTests.swift in Sources */,
 				882B19DAA2CDCB0931A3D971 /* MetricAggregationTests.swift in Sources */,
 				74B3141C99DE044EECFC3928 /* MetricCoverageTests.swift in Sources */,
+				1536228F93CBCB1F3765114D /* NumberFormattingRegressionTests.swift in Sources */,
 				8A4F04D7F58AFCC5F858A7F0 /* OpeningWeekCacheTests.swift in Sources */,
 				DD94DB0E328E4A929185BC69 /* PaywallFunnelTests.swift in Sources */,
 				5A5E91CC9BD961513A336D1D /* PerformanceBudgetTests.swift in Sources */,
@@ -804,7 +808,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = StatScout/StatScout.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CURRENT_PROJECT_VERSION = 69;
+				CURRENT_PROJECT_VERSION = 71;
 				DEVELOPMENT_TEAM = YXG4MP6W39;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StatScout/Info.plist;
@@ -925,7 +929,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = StatScout/StatScout.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 69;
+				CURRENT_PROJECT_VERSION = 71;
 				DEVELOPMENT_TEAM = YXG4MP6W39;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StatScout/Info.plist;

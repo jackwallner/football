@@ -64,10 +64,11 @@ enum LocalizedNumber {
         _ value: Double,
         fractionDigits: Int,
         percent: Bool = false,
-        signed: Bool = false
+        signed: Bool = false,
+        locale: Locale = .autoupdatingCurrent
     ) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = .autoupdatingCurrent
+        formatter.locale = locale
         formatter.numberStyle = percent ? .percent : .decimal
         formatter.usesGroupingSeparator = false
         formatter.minimumFractionDigits = fractionDigits
@@ -78,19 +79,19 @@ enum LocalizedNumber {
         return text
     }
 
-    static func fixed(_ value: Double, format: String) -> String {
+    static func fixed(_ value: Double, format: String, locale: Locale = .autoupdatingCurrent) -> String {
         let digits = format.range(of: #"%\.([0-9]+)f"#, options: .regularExpression)
             .flatMap { Int(format[$0].dropFirst(2).dropLast()) } ?? 0
-        return fixed(value, fractionDigits: digits, percent: format.contains("%%"))
+        return fixed(value, fractionDigits: digits, percent: format.contains("%%"), locale: locale)
     }
 
-    static func text(_ rawValue: String) -> String {
+    static func text(_ rawValue: String, locale: Locale = .autoupdatingCurrent) -> String {
         let value = rawValue.trimmingCharacters(in: .whitespaces)
         guard !value.isEmpty, value != "-" else { return value }
 
         if value.contains("/"), !value.contains(" ") {
             let parts = value.split(separator: "/", omittingEmptySubsequences: false)
-            if parts.count == 2 {
+            if parts.count == 2, metricNumericValue(String(parts[1])) != nil {
                 return "\(integer(String(parts[0])))/\(integer(String(parts[1])))"
             }
         }
@@ -113,20 +114,40 @@ enum LocalizedNumber {
         }
         let isPercent = suffix.trimmingCharacters(in: .whitespaces) == "%"
         let formatter = NumberFormatter()
-        formatter.locale = .autoupdatingCurrent
+        formatter.locale = locale
         formatter.numberStyle = isPercent ? .percent : .decimal
         formatter.usesGroupingSeparator = rawNumber.contains(",")
         formatter.minimumFractionDigits = decimalPlaces
         formatter.maximumFractionDigits = decimalPlaces
         let formattedNumber = formatter.string(from: NSNumber(value: isPercent ? number / 100 : number))
             ?? rawNumber
-        if suffix.isEmpty || isPercent { return formattedNumber }
-        return String(localized: "\(formattedNumber)\(suffix)")
+        let sign = rawNumber.hasPrefix("+") ? "+" : ""
+        if suffix.isEmpty || isPercent { return sign + formattedNumber }
+        if suffix == "/g" { return String(localized: "\(sign + formattedNumber)/g") }
+        return String(localized: "\(sign + formattedNumber)\(suffix)")
     }
 
     private static func integer(_ rawValue: String) -> String {
         guard let number = metricNumericValue(rawValue) else { return rawValue }
         return Int(number.rounded()).formatted(.number.grouping(.never))
+    }
+}
+
+/// Values the app computes itself, written the way the feed ships them (POSIX
+/// digits). `Metric.value` holds this form and `displayValue` localizes it
+/// once: a value already formatted as "4,1" is re-read as 41.
+enum FeedNumber {
+    static func fixed(_ value: Double, format: String) -> String {
+        String(format: format, value)
+    }
+
+    static func perGame(_ value: Double) -> String {
+        String(format: value < 10 && value != value.rounded() ? "%.1f/g" : "%.0f/g", value)
+    }
+
+    /// "3,322", grouped the way the feed ships yardage.
+    static func integer(_ value: Double) -> String {
+        Int(value.rounded()).formatted(.number.grouping(.automatic).locale(Locale(identifier: "en_US")))
     }
 }
 

@@ -12447,7 +12447,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Games tab"
+            "value": "Games"
           }
         },
         "es": {
@@ -27157,7 +27157,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stats tab"
+            "value": "Stats"
           }
         },
         "es": {
@@ -27717,7 +27717,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "TEAM column"
+            "value": "TEAM"
           }
         },
         "es": {
