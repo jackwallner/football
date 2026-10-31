@@ -22,9 +22,11 @@ final class NewcomerDraftsUITests: XCTestCase {
         notes = []
     }
 
-    override func tearDown() {
+    /// Attached from each test body (via `defer`), not from `tearDown`: the
+    /// `tearDown` override is nonisolated and Swift 6 rejects calling a
+    /// main-actor helper from it.
+    private func flushNotes() {
         attachText(notes.joined(separator: "\n"), name: "notes_\(tag)")
-        super.tearDown()
     }
 
     // MARK: - Flows
@@ -34,6 +36,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// onboarding stays gone on the next launch.
     func testN01FirstRunOnboarding() {
         tag = "n01"
+        defer { flushNotes() }
         let app = XCUIApplication()
         app.launchArguments = ["-ResetUITestState"]
         app.launch()
@@ -102,6 +105,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// mock products (the harness is the only way to see a price on a simulator).
     func testN02PricedSurfaces() {
         tag = "n02"
+        defer { flushNotes() }
         for mode in ["onboarding", "trial", "monthly"] {
             let app = XCUIApplication()
             app.launchArguments = ["-PaywallSnapshot", mode]
@@ -122,6 +126,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// the percentile card, ask what a percentile is, open the glossary.
     func testN03FirstResultAndProfile() {
         tag = "n03"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats")
         guard waitForRows(app) else { return }
         settle(1.0)
@@ -204,6 +209,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// Tabs a newcomer will try next, on the free tier.
     func testN04OtherTabs() {
         tag = "n04"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats")
         guard waitForRows(app) else { return }
         for name in ["Games", "Trends", "Teams", "Compare"] {
@@ -230,6 +236,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// Settings, the toolbar upgrade pill and what the free tier shows there.
     func testN05SettingsAndUpgrade() {
         tag = "n05"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats")
         guard waitForRows(app) else { return }
         let upgrade = app.buttons.matching(
@@ -266,6 +273,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// A newcomer's first instinct: type a name or a team.
     func testN06Search() {
         tag = "n06"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats")
         guard waitForRows(app) else { return }
         let chip = vis(app, "Search players or teams")
@@ -282,6 +290,14 @@ final class NewcomerDraftsUITests: XCTestCase {
             return
         }
         snap(app, "n50_search_open")
+        // The simulator's first-run "Speed up your typing" sheet covers the
+        // keyboard; its Continue button is the only Continue on a seeded launch.
+        let intro = app.buttons["Continue"]
+        if intro.waitForExistence(timeout: 2), intro.isHittable {
+            note("dismissed the keyboard intro sheet")
+            intro.tap()
+            settle(0.8)
+        }
         field.typeText("Chiefs")
         settle(1.2)
         snap(app, "n51_search_chiefs")
@@ -299,6 +315,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// Second profile open: the free-tier pitch sheet, and how to leave it.
     func testN07SecondProfile() {
         tag = "n07"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats")
         guard waitForRows(app) else { return }
         guard openRow(app, index: 0) else { return }
@@ -320,6 +337,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// Return visit with the seeded provider: the tab and filter you left.
     func testN08ReturnVisitSeeded() {
         tag = "n08"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats")
         guard waitForRows(app) else { return }
         let wr = vis(app, "WR")
@@ -345,6 +363,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// user is ever in; `-favorites.playerIds "()"` overrides it with an empty list.
     func testN09EmptyFollowState() {
         tag = "n09"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats", extra: ["-favorites.playerIds", "()"])
         guard waitForRows(app) else { return }
         tap(vis(app, "Following"), "Following segment")
@@ -389,6 +408,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// the very first profile of the next cold launch?
     func testN10ReturnVisitPitch() {
         tag = "n10"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats")
         guard waitForRows(app) else { return }
         for index in 0..<3 {
@@ -419,6 +439,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// does "View" offer, and what is the stat chip for.
     func testN11BoardMenus() {
         tag = "n11"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats")
         guard waitForRows(app) else { return }
         let view = vis(app, "View options")
@@ -462,6 +483,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     /// after the profile becomes tappable. Not a frame-rate measurement.
     func testN12ProfileLateLayout() {
         tag = "n12"
+        defer { flushNotes() }
         let app = launchSeeded(tab: "stats")
         guard waitForRows(app) else { return }
         guard openRow(app, index: 0) else { return }
@@ -484,7 +506,62 @@ final class NewcomerDraftsUITests: XCTestCase {
                 NSPredicate(format: "label CONTAINS 'LAST GAME' OR label CONTAINS 'Last game'")
             ).firstMatch
             note("   last-game card present: \(strip.exists)")
+            // The tab strip sits under the late-arriving last-game card, so its
+            // y position moves if that card is inserted after first paint.
+            note("   Advanced tab \(frameText(vis(app, "Advanced")))")
         }
+    }
+
+    /// A percentile row is a link to that stat's league ranking but draws no
+    /// chevron. Taps the first one and records what a newcomer lands on.
+    func testN13MetricRowTap() {
+        tag = "n13"
+        defer { flushNotes() }
+        let app = launchSeeded(tab: "stats")
+        guard waitForRows(app) else { return }
+        guard openRow(app, index: 0) else { return }
+        settle(1.2)
+        let rows = app.buttons.matching(NSPredicate(format: "label CONTAINS 'percentile'"))
+        note("-- percentile row buttons")
+        for row in rows.allElementsBoundByIndex.prefix(8) {
+            note("   '\(row.label)' \(frameText(row))")
+        }
+        guard let first = rows.allElementsBoundByIndex.first(where: { $0.isHittable }) else {
+            note("no hittable percentile row")
+            snap(app, "n99_no_percentile_row")
+            return
+        }
+        snap(app, "n99_before_row_tap")
+        first.tap()
+        settle(1.8)
+        snap(app, "n99_metric_row_ranking")
+        noteStaticTexts(app, "metric ranking texts")
+        noteButtons(app, "metric ranking buttons")
+    }
+
+    /// The other two profile tabs on the free tier: the plain-numbers tab and
+    /// the locked year-over-year preview.
+    func testN14ProfileTabsFree() {
+        tag = "n14"
+        defer { flushNotes() }
+        let app = launchSeeded(tab: "stats")
+        guard waitForRows(app) else { return }
+        guard openRow(app, index: 0) else { return }
+        settle(1.0)
+        tap(vis(app, "Standard"), "Standard tab")
+        settle(1.5)
+        snap(app, "n100_profile_standard_tab")
+        noteStaticTexts(app, "standard tab texts")
+        app.swipeUp()
+        settle(0.8)
+        snap(app, "n101_profile_standard_scrolled")
+        app.swipeDown()
+        settle(0.5)
+        tap(vis(app, "Year Compare"), "Year Compare tab")
+        settle(1.8)
+        snap(app, "n102_profile_year_compare_free")
+        noteStaticTexts(app, "year compare texts")
+        noteButtons(app, "year compare buttons")
     }
 
     // MARK: - Helpers
