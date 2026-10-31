@@ -49,6 +49,12 @@ internal fun purchaseOutcome(code: PurchasesErrorCode, userCancelled: Boolean): 
     else -> null
 }
 
+internal const val PURCHASE_FAILED = "Couldn't complete the purchase. Please try again."
+
+/** A failed buy shows its own message, never a stale one left by an earlier restore or refresh. */
+internal fun directFailureMessage(error: Throwable): String =
+    (error as? PurchaseException)?.message ?: PURCHASE_FAILED
+
 internal fun managedSubscriptionId(activeSubscriptions: Set<String>): String? =
     activeSubscriptions.map { it.substringBefore(":") }.sorted().firstOrNull()
 
@@ -287,6 +293,9 @@ class SubscriptionService(
             forcePro = true
             return PurchaseOutcome.PURCHASED
         }
+        // Callers show lastError when this throws; a message left by an earlier
+        // restore or refresh has nothing to do with this purchase.
+        lastError = null
         val pkg = plan?.let { p -> packages.firstOrNull { it.identifier == p.packageId } }
         if (!configureIfNeeded() || pkg == null) throw PurchaseException(UNAVAILABLE)
         purchaseInFlight = true
@@ -305,8 +314,8 @@ class SubscriptionService(
             PurchaseOutcome.PURCHASED
         } catch (error: PurchasesTransactionException) {
             purchaseOutcome(error.code, error.userCancelled) ?: run {
-                lastError = "Couldn't complete the purchase. Please try again."
-                throw PurchaseException(lastError!!)
+                lastError = PURCHASE_FAILED
+                throw PurchaseException(PURCHASE_FAILED)
             }
         } finally {
             purchaseInFlight = false
@@ -329,7 +338,7 @@ class SubscriptionService(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Throwable) {
-            DirectPurchaseOutcome.Failed(lastError ?: "Couldn't complete the purchase. Please try again.")
+            DirectPurchaseOutcome.Failed(directFailureMessage(error))
         }
     }
 

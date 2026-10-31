@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
@@ -94,7 +95,7 @@ fun RefreshableBox(onRefresh: suspend () -> Unit, modifier: Modifier = Modifier,
  * blur, so the teaser is faded nearly out instead of shown legibly.
  */
 fun Modifier.gateBlur(): Modifier =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) this.blur(8.dp) else this.alpha(0.12f)
+    (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) this.blur(8.dp) else this.alpha(0.12f)).clearAndSetSemantics { }
 
 /** The first-run loading card over an empty board. */
 @Composable

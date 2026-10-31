@@ -30,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -429,7 +431,8 @@ private fun PercentileCard(
                     "ⓘ",
                     style = GridironType.micro,
                     color = GridironPalette.linkBlue,
-                    modifier = Modifier.padding(start = 4.dp).clip(CircleShape).clickable(onClick = onInfo).padding(6.dp)
+                    modifier = Modifier.padding(start = 4.dp).clip(CircleShape).clickable(onClick = onInfo)
+                        .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp).wrapContentSize(Alignment.Center)
                         .semantics { contentDescription = "About percentiles" },
                 )
             },
@@ -712,7 +715,6 @@ private fun ProUpsellCard(name: String, onTap: () -> Unit) {
                 "chart.line.uptrend.xyaxis" to "Year-over-year trends across every metric",
                 "person.2.fill" to "Head-to-head comparisons vs any player",
                 "calendar.badge.clock" to "Every past season, not just this one",
-                "arrow.down.circle.fill" to "Saved offline, works on the road",
             ).forEach { (icon, text) ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.width(16.dp), contentAlignment = Alignment.Center) { SfIcon(icon, 14.dp, GridironPalette.turf) }

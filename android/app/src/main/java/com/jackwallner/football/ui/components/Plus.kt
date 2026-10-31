@@ -38,8 +38,10 @@ import androidx.compose.ui.unit.sp
 import com.jackwallner.football.data.DirectPurchaseOutcome
 import com.jackwallner.football.data.PaywallTrigger
 import com.jackwallner.football.data.PriceEmphasis
+import com.jackwallner.football.data.StoreLinks
 import com.jackwallner.football.ui.LocalAppActions
 import com.jackwallner.football.ui.LocalGraph
+import com.jackwallner.football.ui.openUrl
 import com.jackwallner.football.ui.findActivity
 import com.jackwallner.football.ui.nav.LocalNavigator
 import com.jackwallner.football.ui.nav.Route
@@ -59,6 +61,7 @@ fun PlusDirectCTA(
     trigger: PaywallTrigger,
     style: PlusCTAStyle = PlusCTAStyle.BAR,
     showsAllPlansLink: Boolean = true,
+    showsLegalLinks: Boolean = true,
     emphasis: PriceEmphasis = PriceEmphasis.BILLED_AMOUNT_FIRST,
 ) {
     val graph = LocalGraph.current
@@ -126,8 +129,17 @@ fun PlusDirectCTA(
             Text(it, style = GridironType.micro.copy(letterSpacing = 0.3.sp), color = GridironPalette.inkTertiary, textAlign = TextAlign.Center)
         }
         status?.let { Text(it, style = GridironType.micro, color = GridironPalette.turf, textAlign = TextAlign.Center) }
-        if (showsAllPlansLink) {
-            TextAction("See all plans", GridironType.micro.copy(letterSpacing = 0.3.sp), GridironPalette.inkSecondary, { actions.openPaywall(trigger) })
+        if (showsLegalLinks || showsAllPlansLink) {
+            val linkStyle = GridironType.micro.copy(letterSpacing = 0.3.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (showsLegalLinks) {
+                    TextAction("Terms", linkStyle, GridironPalette.inkSecondary, { context.openUrl(StoreLinks.TERMS_URL) })
+                    TextAction("Privacy", linkStyle, GridironPalette.inkSecondary, { context.openUrl(StoreLinks.PRIVACY_URL) })
+                }
+                if (showsAllPlansLink) {
+                    TextAction("See all plans", linkStyle, GridironPalette.inkSecondary, { actions.openPaywall(trigger) })
+                }
+            }
         }
     }
 }
