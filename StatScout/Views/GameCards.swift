@@ -220,7 +220,7 @@ struct TeamScheduleView: View {
 
     private func row(_ game: Game) -> some View {
         HStack(spacing: 10) {
-            Text(game.seasonPhase == .regular ? game.week.formatted(.number.grouping(.never)) : game.roundLabel)
+            Text(game.seasonPhase == .regular ? game.week.formatted(.number.grouping(.never)) : game.gameType)
                 .font(GridironType.statSmall)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(width: 30, alignment: .leading)
@@ -463,7 +463,7 @@ struct PlayerGameLogCard: View {
     private func row(_ entry: Entry) -> some View {
         let game = entry.gameId.flatMap { viewModel.game(id: $0) }
         let content = HStack(alignment: .top, spacing: 10) {
-            Text(game.map { $0.seasonPhase == .regular ? $0.week.formatted(.number.grouping(.never)) : $0.roundLabel } ?? "-")
+            Text(game.map { $0.seasonPhase == .regular ? $0.week.formatted(.number.grouping(.never)) : $0.gameType } ?? "-")
                 .font(GridironType.statSmall)
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(width: 28, alignment: .leading)

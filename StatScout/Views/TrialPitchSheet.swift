@@ -36,8 +36,8 @@ struct TrialPitchSheet: View {
     private struct Benefit: Identifiable {
         let id = UUID()
         let icon: String
-        let title: String
-        let detail: String
+        let title: String.LocalizationValue
+        let detail: String.LocalizationValue
     }
 
     /// Three, never more, and each one line.
@@ -198,10 +198,10 @@ struct TrialPitchSheet: View {
                         .frame(width: 24)
 
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(String(localized: String.LocalizationValue(benefit.title)))
+                        Text(String(localized: benefit.title))
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.ink)
-                        Text(String(localized: String.LocalizationValue(benefit.detail)))
+                        Text(String(localized: benefit.detail))
                             .font(GridironType.small)
                             .foregroundStyle(GridironPalette.inkSecondary)
                             .lineLimit(2)

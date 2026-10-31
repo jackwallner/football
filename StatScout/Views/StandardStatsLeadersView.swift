@@ -431,10 +431,9 @@ struct StandardStatsLeadersView: View {
         if stat.hasPrefix("REC") {
             return denominator(value("Rec/Tgt")).map { String(localized: "\($0) tgt") }
         }
-        if selectedPosition == .defense, let viewModel,
-           let caption = viewModel.volumeCaption(for: player, category: .defense),
-           caption.hasSuffix("snaps") {
-            return caption
+        if selectedPosition == .defense,
+           let snaps = viewModel?.profile(for: player)?.defenseSnaps, snaps > 0 {
+            return String(localized: "\(snaps) snaps")
         }
         guard stat != "G", let games = value("G"), let count = Int(games) else { return nil }
         return String(localized: "\(count) games")
