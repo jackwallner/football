@@ -35,6 +35,30 @@ final class StandardStatsTests: XCTestCase {
         )
     }
 
+    private func searchPlayer(_ name: String, team: String, type: String) -> Player {
+        Player(
+            playerId: 1, name: name, team: team, position: type.uppercased(), handedness: "",
+            updatedAt: Date(), season: StatScoutSeason.current, playerType: type,
+            metrics: [], standardStats: [], games: []
+        )
+    }
+
+    func testSearchFindsAPlayerOnAnotherPositionTab() {
+        let receiver = searchPlayer("Jalen Cross", team: "KC", type: "wr")
+        XCTAssertEqual(receiver.positionGroup, .wr)
+        XCTAssertTrue(StandardBoardSearch.matches(receiver, query: "jalen"))
+        XCTAssertTrue(StandardBoardSearch.matches(receiver, query: "Chiefs"))
+        XCTAssertFalse(StandardBoardSearch.matches(receiver, query: "Mahomes"))
+        let scope = StandardBoardSearch.positions(selected: .qb, query: "jalen")
+        XCTAssertEqual(scope.first, .qb)
+        XCTAssertTrue(scope.contains(.wr))
+        XCTAssertEqual(Set(scope), Set(PlayerPositionGroup.allCases))
+    }
+
+    func testBlankSearchStaysOnTheSelectedPosition() {
+        XCTAssertEqual(StandardBoardSearch.positions(selected: .te, query: ""), [.te])
+    }
+
     func testQuarterbackInterceptionsDefaultLowestFirst() {
         XCTAssertFalse(StandardStatCatalog.defaultDescending(for: "INT", position: .qb))
         XCTAssertTrue(StandardStatCatalog.defaultDescending(for: "Def INT", position: .defense))

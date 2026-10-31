@@ -27,6 +27,23 @@ enum StandardStatCategory: String, CaseIterable {
 
 /// Traditional leaderboard with the same position tabs and control vocabulary
 /// as the Advanced board.
+/// Search on the Standard board reaches every position, not only the tab on
+/// screen: a name typed from the QB tab must still find the receiver.
+enum StandardBoardSearch {
+    static func matches(_ player: Player, query: String) -> Bool {
+        query.isEmpty
+            || player.name.localizedCaseInsensitiveContains(query)
+            || player.team.localizedCaseInsensitiveContains(query)
+            || teamFullName(player.team).localizedCaseInsensitiveContains(query)
+    }
+
+    /// The selected position first, then the rest, only while searching.
+    static func positions(selected: PlayerPositionGroup, query: String) -> [PlayerPositionGroup] {
+        guard !query.isEmpty else { return [selected] }
+        return [selected] + PlayerPositionGroup.allCases.filter { $0 != selected }
+    }
+}
+
 struct StandardStatsLeadersView: View {
     let players: [Player]
     @Binding var selectedStat: String
@@ -42,19 +59,37 @@ struct StandardStatsLeadersView: View {
         StandardStatCatalog.stats(for: selectedPosition)
     }
 
-    private var filteredPlayers: [Player] {
+    private var trimmedQuery: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// The stat a position's rows are ranked by. The selected tab uses the
+    /// chosen stat; another position, reached only through search, uses the
+    /// chosen stat when it offers it and its own default otherwise.
+    private func statLabel(for position: PlayerPositionGroup) -> String {
+        if position == selectedPosition { return selectedStat }
+        let offered = StandardStatCatalog.stats(for: position)
+        return offered.contains(selectedStat) ? selectedStat : StandardStatCatalog.defaultStat(for: position)
+    }
+
+    private func filteredPlayers(for position: PlayerPositionGroup) -> [Player] {
         players.filter { player in
-            player.positionGroup == selectedPosition
+            player.positionGroup == position
                 && numericStat(for: player) != nil
         }
     }
 
-    private var sortedPlayers: [Player] {
-        filteredPlayers.sorted { first, second in
+    private var sortedPlayers: [Player] { sortedPlayers(for: selectedPosition) }
+
+    private func sortedPlayers(for position: PlayerPositionGroup) -> [Player] {
+        let descending = position == selectedPosition
+            ? sortDescending
+            : StandardStatCatalog.defaultDescending(for: statLabel(for: position), position: position)
+        return filteredPlayers(for: position).sorted { first, second in
             let firstValue = numericStat(for: first) ?? 0
             let secondValue = numericStat(for: second) ?? 0
             if firstValue != secondValue {
-                return sortDescending
+                return descending
                     ? firstValue > secondValue
                     : firstValue < secondValue
             }
@@ -262,7 +297,7 @@ struct StandardStatsLeadersView: View {
             if viewModel?.isLoading == true && players.isEmpty {
                 ProgressView("Loading player stats")
                     .padding(.vertical, 48)
-            } else if sortedPlayers.isEmpty {
+            } else if sortedPlayers.isEmpty && trimmedQuery.isEmpty {
                 ContentUnavailableView {
                     Label("No data available", systemImage: "chart.bar")
                 } description: {
@@ -271,20 +306,18 @@ struct StandardStatsLeadersView: View {
                 .padding(.vertical, 48)
                 .background(GridironPalette.surface)
             } else {
-                let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                let ranks = competitionRanks(sortedPlayers.map { numericStat(for: $0) })
-                let ranked = Array(sortedPlayers.enumerated()).filter { _, player in
-                    query.isEmpty || player.name.localizedCaseInsensitiveContains(query)
-                        || player.team.localizedCaseInsensitiveContains(query)
-                        || teamFullName(player.team).localizedCaseInsensitiveContains(query)
-                }
-                let peerValues = filteredPlayers.compactMap { standardStat(for: $0)?.value }
-                if ranked.isEmpty {
+                let sections = boardSections(query: trimmedQuery)
+                if sections.isEmpty {
                     ContentUnavailableView.search(text: searchText)
                         .padding(.vertical, 24)
                 }
-                ForEach(ranked, id: \.element.id) { index, player in
-                    playerRow(rank: ranks[index], stripe: index, player: player, peerValues: peerValues)
+                ForEach(sections) { section in
+                    if section.position != selectedPosition {
+                        sectionHeader(for: section.position)
+                    }
+                    ForEach(section.rows, id: \.player.id) { row in
+                        playerRow(rank: row.rank, stripe: row.index, player: row.player, peerValues: section.peerValues)
+                    }
                 }
             }
         }
@@ -294,6 +327,51 @@ struct StandardStatsLeadersView: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
+    }
+
+    private struct BoardRow {
+        let index: Int
+        let rank: Int
+        let player: Player
+    }
+
+    private struct BoardSection: Identifiable {
+        let position: PlayerPositionGroup
+        let rows: [BoardRow]
+        let peerValues: [String]
+        var id: PlayerPositionGroup { position }
+    }
+
+    /// The selected position's rows, then, while a search is typed, the other
+    /// positions' matches. Each position keeps its own rank and percentile
+    /// cohort, so a receiver found from the QB tab is ranked among receivers.
+    private func boardSections(query: String) -> [BoardSection] {
+        StandardBoardSearch.positions(selected: selectedPosition, query: query).compactMap { position in
+            let sorted = sortedPlayers(for: position)
+            let ranks = competitionRanks(sorted.map { numericStat(for: $0) })
+            let rows = sorted.enumerated().compactMap { index, player -> BoardRow? in
+                StandardBoardSearch.matches(player, query: query)
+                    ? BoardRow(index: index, rank: ranks[index], player: player)
+                    : nil
+            }
+            guard !rows.isEmpty else { return nil }
+            return BoardSection(
+                position: position,
+                rows: rows,
+                peerValues: sorted.compactMap { standardStat(for: $0)?.value }
+            )
+        }
+    }
+
+    private func sectionHeader(for position: PlayerPositionGroup) -> some View {
+        Text("\(position.localizedPluralName) · \(MetricName.localized(statLabel(for: position)))".localizedUppercase)
+            .font(GridironType.micro)
+            .foregroundStyle(GridironPalette.inkTertiary)
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: GridironGeo.rowHeightHeader)
+            .padding(.horizontal, GridironGeo.padInline)
+            .background(GridironPalette.surfaceAlt)
     }
 
     private func playerRow(rank: Int, stripe: Int, player: Player, peerValues: [String]) -> some View {
@@ -338,7 +416,7 @@ struct StandardStatsLeadersView: View {
                 // Not for a lower-is-better count: a passer's 0 INT is the
                 // best line on the board, not an absence.
                 let isZero = numericStat(for: player) == 0
-                    && StandardStatSemantics.higherIsBetter(label: selectedStat)
+                    && StandardStatSemantics.higherIsBetter(label: statLabel(for: player.positionGroup))
                 HStack(spacing: 8) {
                     if isZero {
                         Color.clear.frame(width: 34, height: 7)
@@ -357,8 +435,8 @@ struct StandardStatsLeadersView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(
                     isZero
-                        ? String(localized: "\(MetricName.localized(selectedStat)): \(statDisplay(for: player)), not ranked")
-                        : String(localized: "\(MetricName.localized(selectedStat)): \(statDisplay(for: player)), \(pct.ordinalString) percentile")
+                        ? String(localized: "\(MetricName.localized(statLabel(for: player.positionGroup))): \(statDisplay(for: player)), not ranked")
+                        : String(localized: "\(MetricName.localized(statLabel(for: player.positionGroup))): \(statDisplay(for: player)), \(pct.ordinalString) percentile")
                 )
             }
             .frame(height: GridironGeo.rowHeight)
@@ -388,7 +466,7 @@ struct StandardStatsLeadersView: View {
     /// harmless instead of silent.
     private func standardStat(for player: Player) -> StandardStat? {
         player.standardStats?.first {
-            $0.label.compare(selectedStat, options: .caseInsensitive) == .orderedSame
+            $0.label.compare(statLabel(for: player.positionGroup), options: .caseInsensitive) == .orderedSame
         }
     }
 
@@ -421,7 +499,7 @@ struct StandardStatsLeadersView: View {
         func denominator(_ pair: String?) -> String? {
             pair?.split(separator: "/").last.map(String.init)
         }
-        let stat = selectedStat.uppercased()
+        let stat = statLabel(for: player.positionGroup).uppercased()
         if stat.hasPrefix("PASS") || stat == "INT" || stat == "CMP/ATT" || stat == "RATING" || stat == "Y/A" {
             return denominator(value("Cmp/Att")).map { String(localized: "\($0) att") }
         }
@@ -431,7 +509,7 @@ struct StandardStatsLeadersView: View {
         if stat.hasPrefix("REC") {
             return denominator(value("Rec/Tgt")).map { String(localized: "\($0) tgt") }
         }
-        if selectedPosition == .defense,
+        if player.positionGroup == .defense,
            let snaps = viewModel?.profile(for: player)?.defenseSnaps, snaps > 0 {
             return String(localized: "\(snaps) snaps")
         }
