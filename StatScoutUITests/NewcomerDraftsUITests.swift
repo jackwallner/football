@@ -71,8 +71,8 @@ final class NewcomerDraftsUITests: XCTestCase {
         // The paid path: with no loaded offering this is the plan-picker fallback.
         let paid = app.buttons.matching(
             NSPredicate(format: "label CONTAINS[c] 'upgrade' OR label CONTAINS[c] 'trial' OR label CONTAINS[c] 'continue with'")
-        ).firstMatch
-        if paid.waitForExistence(timeout: 5) {
+        ).allElementsBoundByIndex.first { $0.isHittable }
+        if let paid {
             noteFrame("paid CTA '\(paid.label)'", paid)
             paid.tap()
             settle(2.0)
@@ -82,7 +82,7 @@ final class NewcomerDraftsUITests: XCTestCase {
             settle(1.0)
             snap(app, "n05_onboarding_after_sheet_dismiss")
         } else {
-            note("no paid CTA found on page 3")
+            note("no hittable paid CTA found on page 3")
         }
 
         // The free path.
@@ -241,8 +241,8 @@ final class NewcomerDraftsUITests: XCTestCase {
         guard waitForRows(app) else { return }
         let upgrade = app.buttons.matching(
             NSPredicate(format: "label CONTAINS[c] 'unlock all features'")
-        ).firstMatch
-        if upgrade.waitForExistence(timeout: 5) {
+        ).allElementsBoundByIndex.first { $0.isHittable } ?? vis(app, "Upgrade")
+        if upgrade.exists {
             noteFrame("toolbar upgrade pill '\(upgrade.label)'", upgrade)
             tap(upgrade, "toolbar upgrade pill")
             settle(2.5)
@@ -613,7 +613,10 @@ final class NewcomerDraftsUITests: XCTestCase {
         let deadline = Date().addingTimeInterval(30)
         while Date() < deadline {
             if compare.exists, compare.isHittable { return true }
-            usleep(200_000)
+            // A free user's second profile opens under the pitch sheet, which
+            // can cover the toolbar; its "Maybe later" button proves the push.
+            if app.buttons["Maybe later"].exists { return true }
+            usleep(300_000)
         }
         note("profile did not become ready after tapping row \(index)")
         snap(app, "profile_not_ready_row\(index)")
@@ -682,7 +685,7 @@ final class NewcomerDraftsUITests: XCTestCase {
     }
 
     private func settle(_ seconds: TimeInterval) {
-        Thread.sleep(forTimeInterval: seconds)
+        Thread.sleep(forTimeInterval: max(0.3, seconds * 0.7))
     }
 
     private func note(_ text: String) {
@@ -700,20 +703,25 @@ final class NewcomerDraftsUITests: XCTestCase {
     }
 
     private func noteButtons(_ app: XCUIApplication, _ heading: String) {
-        let buttons = app.buttons.allElementsBoundByIndex.prefix(45)
-        note("-- \(heading)")
-        for button in buttons {
-            guard button.exists else { continue }
-            note("   button '\(button.label)' \(frameText(button))")
-        }
+        noteTreeLines(app, heading, kinds: ["Button"])
     }
 
     private func noteStaticTexts(_ app: XCUIApplication, _ heading: String) {
-        let texts = app.staticTexts.allElementsBoundByIndex.prefix(60)
+        noteTreeLines(app, heading, kinds: ["StaticText"])
+    }
+
+    /// One accessibility snapshot filtered by element type. Reading each
+    /// element's label and frame on its own costs several snapshots apiece on a
+    /// CI runner, which made the first version of this script take an hour.
+    private func noteTreeLines(_ app: XCUIApplication, _ heading: String, kinds: [String]) {
         note("-- \(heading)")
-        for text in texts {
-            guard text.exists, !text.label.isEmpty else { continue }
-            note("   text '\(text.label)' \(frameText(text))")
+        var kept = 0
+        for line in app.debugDescription.split(separator: "\n") {
+            let text = line.trimmingCharacters(in: .whitespaces)
+            guard kinds.contains(where: { text.hasPrefix($0) }) else { continue }
+            note("   \(text)")
+            kept += 1
+            if kept >= 400 { break }
         }
     }
 
