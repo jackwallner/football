@@ -41,7 +41,7 @@ StatScout+ adds:
 Choose Monthly, Yearly or Lifetime. Subscriptions include a free trial for eligible new subscribers, and the app shows its length before you start. Subscriptions renew automatically unless canceled at least 24 hours before the period ends. Manage or cancel in your Apple ID settings.
 
 PRIVACY
-No account, no ads and no cross-app tracking. The app only contacts the servers that supply NFL stats and Apple's purchase service.
+No account, no ads and no cross-app tracking. The app only contacts the servers that supply NFL stats and handle purchases.
 
 Stats are built from public NFL play-by-play and player data. StatScout is not affiliated with, authorized, endorsed by, or sponsored by the National Football League (NFL), any NFL team, or the NFLPA. Player names, team names, and statistics are used for identification and informational purposes only.
 
