@@ -118,3 +118,12 @@ Before editing `fastlane/metadata/`, run
 `./scripts/pull-appstore-metadata.sh` and compare the pull with its timestamped
 backup. Do not run the full metadata uploader when changing only one version's
 What's New text.
+
+## Current release, 2026-10-31
+
+- App Store version 1.2.8 (build 74, commit aba3560) is `READY_FOR_SALE`,
+  released manually via `POST /v1/appStoreVersionReleaseRequests`. Replaces
+  1.2.7 (build 67). Ships de/es/it/nl localization; What's New in those
+  locales is still the English text.
+- The "PPO 2026-10 icon 4-way" test was running at release; build 74 keeps
+  the same alternate icons. Confirm the test is still running.
