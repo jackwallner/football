@@ -125,7 +125,7 @@ struct MetricBar: View {
                 Text(metric.displayLabel)
                     .font(GridironType.bodyBold)
                     .foregroundStyle(GridironPalette.ink)
-                    .lineLimit(metric.label.contains(" ") ? 2 : 1)
+                    .lineLimit(metric.displayLabel.contains(" ") ? 2 : 1)
                     .minimumScaleFactor(0.7)
                 if metric.isSmallSample, !metric.isUnranked {
                     Text("Small sample")

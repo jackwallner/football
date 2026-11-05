@@ -216,7 +216,7 @@ struct YearComparisonView: View {
     private func comparisonRow(item: MetricComparison, isAlt: Bool) -> some View {
         return HStack(spacing: 0) {
             // Metric label
-            Text(item.metricLabel)
+            Text(MetricName.localized(item.metricLabel))
                 .font(GridironType.body)
                 .foregroundStyle(GridironPalette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -240,7 +240,7 @@ struct YearComparisonView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            String(localized: "\(item.metricLabel): \(priorYear) \(item.percentileB.ordinalString) percentile, \(recentYear) \(item.percentileA.ordinalString) percentile")
+            String(localized: "\(MetricName.localized(item.metricLabel)): \(priorYear) \(item.percentileB.ordinalString) percentile, \(recentYear) \(item.percentileA.ordinalString) percentile")
         )
         .frame(height: 48)
         .padding(.horizontal, GridironGeo.padInline)
