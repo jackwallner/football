@@ -1,0 +1,91 @@
+{
+  "verdict": "FIX",
+  "header_fixes": [
+    {
+      "locale": "es-MX",
+      "file": "02-know-what-makes-a-player-elite.png",
+      "before": "Qué distingue\na los mejores",
+      "after": "Qué distingue a\nun jugador de élite",
+      "why": "Names the player explicitly and preserves the English elite-player meaning; balanced two-line copy."
+    },
+    {
+      "locale": "es-MX",
+      "file": "03-see-who-is-heating-up-right-now.png",
+      "before": "Quién está\nen racha",
+      "after": "Jugadores\nen racha",
+      "why": "Names the players instead of relying on quién; natural Mexican Spanish for the hot-streak screen."
+    },
+    {
+      "locale": "es-MX",
+      "file": "07-see-how-a-season-changed.png",
+      "before": "Compara cada\ntemporada",
+      "after": "Compara dos\ntemporadas",
+      "why": "The screen compares two selected seasons. Cada temporada suggests every season rather than this comparison; the replacement has balanced lines."
+    },
+    {
+      "locale": "de-DE",
+      "file": "03-see-who-is-heating-up-right-now.png",
+      "before": "Wer gerade\nin Topform ist",
+      "after": "Spieler\nin Topform",
+      "why": "Names the players instead of relying on wer; natural German for the current-form screen."
+    },
+    {
+      "locale": "de-DE",
+      "file": "05-keep-your-players-one-tap-away.png",
+      "before": "Deine Spieler\nauf einen Tipp",
+      "after": "Deine Spieler\nmit einem Tipp",
+      "why": "Auf einen Tipp is an incomplete, unnatural access phrase. Mit einem Tipp expresses access in a single tap and keeps balanced lines."
+    }
+  ],
+  "ui_defects": [
+    {
+      "locale": "es-MX",
+      "file": "09_ipad_qb_leaders.png",
+      "what": "Configured iPad frame is absent from fastlane/screenshots/es-MX. Only seven phone PNGs were delivered. report.json confirms the iPad output was withheld after a teardown failure; the localized iPad UI and composition cannot be approved.",
+      "severity": "blocker"
+    },
+    {
+      "locale": "es-MX",
+      "file": "07-see-how-a-season-changed.png",
+      "what": "The advanced-comparison row visible at the bottom still reads EPA/Play, although the catalog translates this key as EPA/jugada. Confirmed in the full frame. The same metric is localized on the other screens.",
+      "severity": "blocker"
+    },
+    {
+      "locale": "es-MX",
+      "file": "04-scout-your-team-in-one-view.png",
+      "what": "The Explosive% row is visibly truncated to Jugadas expl..., hiding the end of the metric name and its percent marker. Confirmed in the full frame. The catalog value is longer than the metric column can display.",
+      "severity": "minor"
+    },
+    {
+      "locale": "de-DE",
+      "file": "09_ipad_qb_leaders.png",
+      "what": "Configured iPad frame is absent from fastlane/screenshots/de-DE. Only seven phone PNGs were delivered. report.json confirms the iPad output was withheld after a teardown failure; the localized iPad UI and composition cannot be approved.",
+      "severity": "blocker"
+    },
+    {
+      "locale": "de-DE",
+      "file": "07-see-how-a-season-changed.png",
+      "what": "The advanced-comparison row visible at the bottom still reads EPA/Play, although the catalog translates this key as EPA/Spielzug. Confirmed in the full frame. The same metric is localized on the other screens.",
+      "severity": "blocker"
+    },
+    {
+      "locale": "de-DE",
+      "file": "04-scout-your-team-in-one-view.png",
+      "what": "The Explosive% row is visibly truncated to Explosive Pla..., hiding the end of the metric name and its percent marker. Confirmed in the full frame. The catalog value is longer than the metric column can display.",
+      "severity": "minor"
+    },
+    {
+      "locale": "de-DE",
+      "file": "07-see-how-a-season-changed.png",
+      "what": "The 2025 selector subtitle reads Vorherig, an unfinished German adjective, exactly as stored for Prior in the catalog. Use a complete label such as Vorherige Saison with enough room. Confirmed in the full frame; this is wording, not image clipping.",
+      "severity": "minor"
+    }
+  ],
+  "unsure": [
+    "Header edits are saved in copy/headers.json but are not rendered into the installed PNGs. tools/reskin.py unconditionally requires raw_path(...).is_file() for every frame and has no existing-screen reuse option. Raw captures are absent, so the orchestrator must recompose both complete phone sets with uniform CoreText sizing, then verify fit and line balance. No reskin or recapture was attempted.",
+    "All four locale/set sheets were generated with tools/sheet.py and frames.json and viewed once. With swiftc absent, only sheet-label rendering was replaced in memory with Pillow. The iPad localized rows were explicitly marked MISSING / NOT DELIVERED placeholders, not localized screenshots. Review sheets are scratch files under /tmp/football-l10n-review/sheets/.",
+    "Raw checks were skipped as requested. The installed 14 phone frames show the intended seven screens, aligned devices, visually consistent header sizes within each locale, no clipped headers or visible header seams, and no observed private personal data. The player names match the synthetic screenshot fixtures. Decimal commas in German, decimal points in Mexican Spanish, and the localized October dates are appropriate.",
+    "English-looking German football terms such as Regular Season, Time to Throw, Pass Yards, Receiving Yards, Stats, Trends, Offense and Defense were checked with targeted rg catalog lookups. They match the shipped translations and were not treated as untranslated UI. Recepciones/targets in Spanish also matches the catalog. Wrapping at word boundaries in Time to Throw and Tiempo hasta el pase remains legible.",
+    "The fetched English references have four tabs and week-five data; both localized sets consistently have five tabs and week-six fixture data. This is a source-version difference, not a wrong-screen finding. The iPad reference is also an older layout, as report.json notes."
+  ]
+}
