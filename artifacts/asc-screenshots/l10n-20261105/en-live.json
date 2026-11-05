@@ -1,0 +1,68 @@
+{
+ "phone": {
+  "display_type": "APP_IPHONE_67",
+  "frames": [
+   {
+    "file": "01-know-who-leads-the-league.png",
+    "md5": "e83cbd04c8c3fe626d0b66d3fe5d5e0f",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/PSbXJN2hYUEMBHHgYamC_Q/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "02-know-what-makes-a-player-elite.png",
+    "md5": "6dadae8a7ccd9a473e5c0417335f0e04",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/eG4XvmWWW9-fZlNVC5TDUw/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "03-see-who-is-heating-up-right-now.png",
+    "md5": "43862df50675a7356fb099cd2680844f",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/f1O6Q8K4UNXxk_EsZsZCgg/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "04-scout-your-team-in-one-view.png",
+    "md5": "5a5c419074222830cf90ac81386b97ab",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/EvMBfH8ITQW2z5FKn3ZsxQ/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "05-keep-your-players-one-tap-away.png",
+    "md5": "1f00d2e6240c39428442809c4194139b",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/EisZE24JdBpTf3fi2bI-pg/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "06-settle-the-debate-side-by-side.png",
+    "md5": "f23fbc8463cd4b142376983fa8e1ae81",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/PJIuzKi0OqeDVCtQi6zfQg/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "07-see-how-a-season-changed.png",
+    "md5": "5bdc7df5ce7100826af75eb41b6578d8",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/ysJ2N9g-i6paU8ZF7kgEXQ/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   }
+  ]
+ },
+ "ipad": {
+  "display_type": "APP_IPAD_PRO_3GEN_129",
+  "frames": [
+   {
+    "file": "09_ipad_qb_leaders.png",
+    "md5": "423ee850549e1dc0d9a32b1a7e424041",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/ARuuc-OGBoGKomY53tSpxw/2048x2732bb.png",
+    "w": 2048,
+    "h": 2732
+   }
+  ]
+ }
+}

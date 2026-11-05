@@ -1,0 +1,34 @@
+{
+ "repo": "football",
+ "github": "jackwallner/football",
+ "bundle": "com.jackwallner.football",
+ "family": "statscout",
+ "asc_id": "6792930447",
+ "live_version": "1.2.8",
+ "targets": [
+  {
+   "rank": 16,
+   "store_locale": "es-MX",
+   "lang": "es",
+   "apple_languages": "(es)",
+   "apple_locale": "es_MX",
+   "regions": [
+    "Mexico"
+   ],
+   "customers": 35.0
+  },
+  {
+   "rank": 77,
+   "store_locale": "de-DE",
+   "lang": "de",
+   "apple_languages": "(de)",
+   "apple_locale": "de_DE",
+   "regions": [
+    "Germany"
+   ],
+   "customers": 8.0
+  }
+ ],
+ "store_locales_missing": [],
+ "dest": "artifacts/asc-screenshots/l10n-20261105"
+}
