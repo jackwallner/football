@@ -1,0 +1,223 @@
+{
+  "english_locale": "en-US",
+  "sets": {
+    "phone": {
+      "canvas": [
+        1320,
+        2868
+      ],
+      "frames": [
+        {
+          "file": "01-know-who-leads-the-league.png",
+          "base": "en-live/phone/01-know-who-leads-the-league.png",
+          "raw": "01",
+          "screen": [
+            130,
+            521,
+            1059,
+            2302
+          ],
+          "radius": 100,
+          "header_box": [
+            40,
+            75,
+            1240,
+            425
+          ],
+          "font": "HelveticaNeue",
+          "color": [
+            252,
+            250,
+            240
+          ],
+          "max_size": 155,
+          "min_size": 95,
+          "align": "center"
+        },
+        {
+          "file": "02-know-what-makes-a-player-elite.png",
+          "base": "en-live/phone/02-know-what-makes-a-player-elite.png",
+          "raw": "02",
+          "screen": [
+            130,
+            522,
+            1058,
+            2300
+          ],
+          "radius": 100,
+          "header_box": [
+            40,
+            75,
+            1240,
+            425
+          ],
+          "font": "HelveticaNeue",
+          "color": [
+            9,
+            20,
+            18
+          ],
+          "max_size": 155,
+          "min_size": 95,
+          "align": "center"
+        },
+        {
+          "file": "03-see-who-is-heating-up-right-now.png",
+          "base": "en-live/phone/03-see-who-is-heating-up-right-now.png",
+          "raw": "03",
+          "screen": [
+            130,
+            521,
+            1059,
+            2302
+          ],
+          "radius": 100,
+          "header_box": [
+            40,
+            75,
+            1240,
+            425
+          ],
+          "font": "HelveticaNeue",
+          "color": [
+            252,
+            250,
+            240
+          ],
+          "max_size": 155,
+          "min_size": 95,
+          "align": "center"
+        },
+        {
+          "file": "04-scout-your-team-in-one-view.png",
+          "base": "en-live/phone/04-scout-your-team-in-one-view.png",
+          "raw": "04",
+          "screen": [
+            130,
+            522,
+            1058,
+            2300
+          ],
+          "radius": 100,
+          "header_box": [
+            40,
+            75,
+            1240,
+            425
+          ],
+          "font": "HelveticaNeue",
+          "color": [
+            252,
+            250,
+            240
+          ],
+          "max_size": 155,
+          "min_size": 95,
+          "align": "center"
+        },
+        {
+          "file": "05-keep-your-players-one-tap-away.png",
+          "base": "en-live/phone/05-keep-your-players-one-tap-away.png",
+          "raw": "05",
+          "screen": [
+            130,
+            521,
+            1059,
+            2302
+          ],
+          "radius": 100,
+          "header_box": [
+            40,
+            75,
+            1240,
+            425
+          ],
+          "font": "HelveticaNeue",
+          "color": [
+            9,
+            20,
+            18
+          ],
+          "max_size": 155,
+          "min_size": 95,
+          "align": "center"
+        },
+        {
+          "file": "06-settle-the-debate-side-by-side.png",
+          "base": "en-live/phone/06-settle-the-debate-side-by-side.png",
+          "raw": "06",
+          "screen": [
+            130,
+            521,
+            1059,
+            2302
+          ],
+          "radius": 100,
+          "header_box": [
+            40,
+            75,
+            1240,
+            425
+          ],
+          "font": "HelveticaNeue",
+          "color": [
+            9,
+            20,
+            18
+          ],
+          "max_size": 155,
+          "min_size": 95,
+          "align": "center"
+        },
+        {
+          "file": "07-see-how-a-season-changed.png",
+          "base": "en-live/phone/07-see-how-a-season-changed.png",
+          "raw": "07",
+          "screen": [
+            130,
+            521,
+            1059,
+            2302
+          ],
+          "radius": 100,
+          "header_box": [
+            40,
+            75,
+            1240,
+            425
+          ],
+          "font": "HelveticaNeue",
+          "color": [
+            9,
+            20,
+            18
+          ],
+          "max_size": 155,
+          "min_size": 95,
+          "align": "center"
+        }
+      ]
+    },
+    "ipad": {
+      "canvas": [
+        2048,
+        2732
+      ],
+      "frames": [
+        {
+          "file": "09_ipad_qb_leaders.png",
+          "base": "en-live/ipad/09_ipad_qb_leaders.png",
+          "raw": "01",
+          "screen": [
+            0,
+            0,
+            2048,
+            2732
+          ],
+          "radius": 0,
+          "headerless": true
+        }
+      ]
+    }
+  }
+}

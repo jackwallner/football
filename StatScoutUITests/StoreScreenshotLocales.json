@@ -1,0 +1,5 @@
+[
+  {"store":"en-US","language":"en","region":"en_US","following":"Following","compare":"Compare with another player","years":"Year Compare"},
+  {"store":"de-DE","language":"de","region":"de_DE","following":"Gefolgt","compare":"Mit anderem Spieler vergleichen","years":"Jahr zu Jahr"},
+  {"store":"es-MX","language":"es","region":"es_MX","following":"Siguiendo","compare":"Comparar con otro jugador","years":"Año a año"}
+]

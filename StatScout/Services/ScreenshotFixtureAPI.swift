@@ -29,7 +29,9 @@ struct ScreenshotFixtureAPI: StatcastProviding {
     private static let priorSeason = season - 1
     // Week 2 is a coherent fictional capture date for the 2026 season. It
     // keeps the current-season windows honest and repeatable.
-    private static let asOf = makeDate("2026-09-16T20:00:00Z")
+    private static let storeCapture = ProcessInfo.processInfo.arguments.contains("-StoreScreenshotData")
+    private static let asOf = makeDate(storeCapture ? "2026-10-14T20:00:00Z" : "2026-09-16T20:00:00Z")
+    private static let coverageWeek = storeCapture ? 6 : 2
     private static let playersBySeason: [Int: [Player]] = [
         season: makePlayers(season: season, prior: false),
         priorSeason: makePlayers(season: priorSeason, prior: true),
@@ -52,7 +54,7 @@ struct ScreenshotFixtureAPI: StatcastProviding {
         season: Int,
         seasonPhase: SeasonPhase
     ) async throws -> [PlayerGameLog] {
-        guard seasonPhase == .regular,
+        guard !Self.storeCapture, seasonPhase == .regular,
               season == Self.season,
               let player = Self.playersBySeason[season]?.first(where: { $0.playerId == playerId })
         else { return [] }
@@ -89,7 +91,7 @@ struct ScreenshotFixtureAPI: StatcastProviding {
 
     func fetchDataCoverage(season: Int) async throws -> DataCoverage? {
         guard season == Self.season else { return nil }
-        return DataCoverage(asOf: Self.asOf, week: 2, phase: .regular, gamesIncluded: 32)
+        return DataCoverage(asOf: Self.asOf, week: Self.coverageWeek, phase: .regular, gamesIncluded: Self.storeCapture ? 96 : 32)
     }
 
     func fetchDataFreshness(season: Int) async throws -> DataFreshness? {
@@ -100,8 +102,8 @@ struct ScreenshotFixtureAPI: StatcastProviding {
             sourcePublishedAt: Self.asOf,
             publishedAt: Self.asOf,
             checkedAt: Self.asOf,
-            coverage: DataCoverage(asOf: Self.asOf, week: 2, phase: .regular, gamesIncluded: 32),
-            message: "Fixture data through Week 2",
+            coverage: DataCoverage(asOf: Self.asOf, week: Self.coverageWeek, phase: .regular, gamesIncluded: Self.storeCapture ? 96 : 32),
+            message: Self.storeCapture ? nil : "Fixture data through Week 2",
             isCached: false
         )
     }
@@ -140,7 +142,13 @@ extension ScreenshotFixtureAPI {
     ]
 
     static func makePlayers(season: Int, prior: Bool) -> [Player] {
-        seeds.map { seed in
+        let extraQuarterbacks: [PlayerSeed] = ProcessInfo.processInfo.arguments.contains("-StoreScreenshotIPad")
+            ? (0..<18).map { index in
+                let names = ["Evan Porter", "Noah Bennett", "Miles Carter", "Logan Brooks", "Dylan Wright", "Owen Parker", "Eli Turner", "Ryan Collins", "Jared Wells", "Nolan Hayes", "Lucas Morgan", "Aaron Price", "Cole Taylor", "Wyatt Hughes", "Drew Palmer", "Trevor Scott", "Jacob Ford", "Zach Orton"]
+                let teams = ["DAL", "LAC", "MIN", "ATL", "JAX", "DEN", "NYG", "IND", "TEN", "PIT", "CHI", "HOU", "NO", "ARI", "LAR", "CLE", "WAS", "LV"]
+                return PlayerSeed(id: 13000 + index, name: names[index], team: teams[index], position: "QB", type: "qb", percentile: 68 - index, headline: 0.04 - Double(index) * 0.01)
+            } : []
+        return (seeds + extraQuarterbacks).map { seed in
             let scale = prior ? 0.84 : 1.0
             let percentile = prior ? max(55, seed.percentile - 4) : seed.percentile
             return Player(
@@ -416,12 +424,12 @@ extension ScreenshotFixtureAPI {
             playerType: type,
             windowWeeks: windowWeeks,
             asOf: asOf,
-            startWeek: max(1, 3 - windowWeeks),
-            endWeek: 2,
+            startWeek: max(1, coverageWeek + 1 - windowWeeks),
+            endWeek: coverageWeek,
             team: player.team,
-            games: min(windowWeeks, 2),
-            plays: max(plays(for: type) * min(windowWeeks, 2), 1),
-            touches: touches(for: type) * min(windowWeeks, 2),
+            games: min(windowWeeks, coverageWeek),
+            plays: max(plays(for: type) * min(windowWeeks, coverageWeek), 1),
+            touches: touches(for: type) * min(windowWeeks, coverageWeek),
             metrics: metrics,
             priorMetrics: priorMetrics,
             delta: delta

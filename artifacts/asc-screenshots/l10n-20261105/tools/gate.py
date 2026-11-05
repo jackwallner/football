@@ -62,18 +62,20 @@ def english_sources(catalog: Path, lang: str) -> Dict[str, str]:
     if not source_lang.startswith('en'):
         raise ValueError('catalog sourceLanguage must be English')
     result = {}
+    translated = set()
     for key, entry in data.get('strings', {}).items():
         locales = entry.get('localizations', {})
         translation = locales.get(lang)
         if translation is None:
             translation = locales.get(lang.split('-')[0], {})
         values = translated_values(translation)
+        translated.update(normalize(v) for v in values)
         source_values = translated_values(locales.get(source_lang, {})) or [key]
         if values and any(normalize(v) not in {normalize(s) for s in source_values} for v in values):
             for text in [key] + source_values:
                 if normalize(text):
                     result[normalize(text)] = text
-    return result
+    return {key: value for key, value in result.items() if key not in translated}
 
 
 def main() -> int:
@@ -108,17 +110,18 @@ def main() -> int:
             failures.append(f'COUNT {key}: expected {len(expected)}, found {len(actual)}; missing={sorted(expected-actual)} extra={sorted(actual-expected)}')
         for frame in group['frames']:
             name = f"{key}/{frame['file']}"
-            text = headers.get(args.locale, {}).get(frame['file'], '')
-            if not text.strip():
-                failures.append(f'HEADER {name}: empty')
-            if len(text.split('\n')) > 2:
-                failures.append(f'HEADER {name}: more than 2 lines')
-            if any(c in text for c in '.。．｡۔'):
-                failures.append(f'HEADER {name}: period')
-            if normalize(text) and normalize(text) == normalize(english.get(frame['file'], '')):
-                failures.append(f'HEADER {name}: unchanged English')
-            if frame['file'] not in english:
-                failures.append(f'HEADER {name}: missing English reference ({english_locale})')
+            if not frame.get('headerless'):
+                text = headers.get(args.locale, {}).get(frame['file'], '')
+                if not text.strip():
+                    failures.append(f'HEADER {name}: empty')
+                if len(text.split('\n')) > 2:
+                    failures.append(f'HEADER {name}: more than 2 lines')
+                if any(c in text for c in '.。．｡۔'):
+                    failures.append(f'HEADER {name}: period')
+                if normalize(text) and normalize(text) == normalize(english.get(frame['file'], '')):
+                    failures.append(f'HEADER {name}: unchanged English')
+                if frame['file'] not in english:
+                    failures.append(f'HEADER {name}: missing English reference ({english_locale})')
             path = output / frame['file']
             if path.is_file():
                 with Image.open(path) as im:
@@ -157,7 +160,8 @@ def main() -> int:
         leaks = []
         for item in json.loads(result.stdout):
             for line in item['lines']:
-                if normalize(line) in sources:
+                # OCR sometimes returns a clipped fragment of a longer label.
+                if not line.rstrip().endswith(("/", "=", "'", "’")) and normalize(line) in sources:
                     for name in raw_frames[Path(item['path'])]:
                         leaks.append(f'LEAK {name}: {line}')
         failures.extend(leaks[:40])

@@ -1,0 +1,27 @@
+{
+  "locales": [
+    "es-MX",
+    "de-DE"
+  ],
+  "frames": 7,
+  "gate": {
+    "es-MX": "PASS",
+    "de-DE": "PASS"
+  },
+  "gh_sim_jobs": 6,
+  "app_code_changed": [
+    {
+      "path": "StatScout/Services/ScreenshotFixtureAPI.swift",
+      "debug_only": true
+    }
+  ],
+  "defects": [
+    "The final iPad UI test failed while terminating the app after all three screenshots were attached; the proposed termination fix has not been run on a simulator.",
+    "The live iPad reference predates the current app layout, so image matching could not determine geometry; it is a full-screen capture.",
+    "Both gates passed on the composed phone and iPad outputs; only phone outputs were installed because the final iPad test failed."
+  ],
+  "left_out": [
+    "09_ipad_qb_leaders.png: final iPad capture test failed during teardown; clean rerun required"
+  ],
+  "adapter": "xcuitest"
+}
