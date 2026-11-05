@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import unicodedata
@@ -69,12 +70,16 @@ def english_sources(catalog: Path, lang: str) -> Dict[str, str]:
         if translation is None:
             translation = locales.get(lang.split('-')[0], {})
         values = translated_values(translation)
-        translated.update(normalize(v) for v in values)
+        normalized_values = [normalize(value) for value in values]
+        translated.update(normalized_values)
+        for value in values:
+            translated.update(normalize(word) for word in re.findall(r"\w+", value))
         source_values = translated_values(locales.get(source_lang, {})) or [key]
         if values and any(normalize(v) not in {normalize(s) for s in source_values} for v in values):
             for text in [key] + source_values:
-                if normalize(text):
-                    result[normalize(text)] = text
+                normalized_source = normalize(text)
+                if normalized_source:
+                    result[normalized_source] = text
     return {key: value for key, value in result.items() if key not in translated}
 
 

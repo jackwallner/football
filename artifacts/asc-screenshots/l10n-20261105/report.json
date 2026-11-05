@@ -3,25 +3,102 @@
     "es-MX",
     "de-DE"
   ],
-  "frames": 7,
+  "frames_per_locale": 8,
+  "sets": {
+    "phone": 7,
+    "ipad": 1
+  },
   "gate": {
     "es-MX": "PASS",
     "de-DE": "PASS"
   },
-  "gh_sim_jobs": 6,
-  "app_code_changed": [
+  "gh_sim_jobs": 3,
+  "unit_tests": {
+    "job": "football-shots@20261105-121222-66b8-codex-mbpro38900-1105-121821-174",
+    "suite": "StatScoutTests",
+    "passed": 262,
+    "failed": 0,
+    "result": "PASS"
+  },
+  "capture_jobs": [
     {
-      "path": "StatScout/Services/ScreenshotFixtureAPI.swift",
-      "debug_only": true
+      "job": "football-shots@20261105-121222-66b8-codex-mbpro38900-1105-122711-29352",
+      "device": "iPhone 17 Pro Max",
+      "set": "phone",
+      "captures": 21,
+      "result": "PASS"
+    },
+    {
+      "job": "football-shots@20261105-121222-66b8-codex-mbpro38900-1105-124445-4793",
+      "device": "iPad Pro 13-inch (M5)",
+      "set": "ipad",
+      "captures": 3,
+      "result": "PASS"
     }
   ],
-  "defects": [
-    "The final iPad UI test failed while terminating the app after all three screenshots were attached; the proposed termination fix has not been run on a simulator.",
-    "The live iPad reference predates the current app layout, so image matching could not determine geometry; it is a full-screen capture.",
-    "Both gates passed on the composed phone and iPad outputs; only phone outputs were installed because the final iPad test failed."
+  "app_code_changed": [
+    {
+      "path": "StatScout/Views/Components.swift",
+      "debug_only": false
+    },
+    {
+      "path": "StatScout/Views/YearComparisonView.swift",
+      "debug_only": false
+    },
+    {
+      "path": "StatScout/Resources/Localizable.xcstrings",
+      "debug_only": false
+    }
   ],
-  "left_out": [
-    "09_ipad_qb_leaders.png: final iPad capture test failed during teardown; clean rerun required"
+  "tooling_changed": [
+    "artifacts/asc-screenshots/l10n-20261105/tools/gate.py"
   ],
+  "review_resolutions": [
+    {
+      "locale": "es-MX",
+      "file": "09_ipad_qb_leaders.png",
+      "resolution": "Recaptured the missing iPad frame. The iPad UI test passed and teardown completed."
+    },
+    {
+      "locale": "es-MX",
+      "file": "07-see-how-a-season-changed.png",
+      "resolution": "YearComparisonView now displays MetricName.localized(item.metricLabel), showing EPA/jugada."
+    },
+    {
+      "locale": "es-MX",
+      "file": "04-scout-your-team-in-one-view.png",
+      "resolution": "MetricBar now wraps the rendered localized label to two lines and scales it when needed. Jugadas explosivas % is fully visible."
+    },
+    {
+      "locale": "de-DE",
+      "file": "09_ipad_qb_leaders.png",
+      "resolution": "Recaptured the missing iPad frame. The iPad UI test passed and teardown completed."
+    },
+    {
+      "locale": "de-DE",
+      "file": "07-see-how-a-season-changed.png",
+      "resolution": "YearComparisonView now displays MetricName.localized(item.metricLabel), showing EPA/Spielzug."
+    },
+    {
+      "locale": "de-DE",
+      "file": "04-scout-your-team-in-one-view.png",
+      "resolution": "MetricBar now wraps the rendered localized label to two lines and scales it when needed. Explosive Plays % is fully visible."
+    },
+    {
+      "locale": "de-DE",
+      "file": "07-see-how-a-season-changed.png",
+      "resolution": "The Prior catalog value is now Vorherige Saison."
+    }
+  ],
+  "headers_recomposed": true,
+  "sheets_viewed": [
+    "es-MX-phone.jpg",
+    "es-MX-ipad.jpg",
+    "de-DE-phone.jpg",
+    "de-DE-ipad.jpg"
+  ],
+  "screenshots_installed": 16,
+  "defects": [],
+  "left_out": [],
   "adapter": "xcuitest"
 }
