@@ -1,6 +1,15 @@
 import SwiftUI
 
 struct AboutView: View {
+    /// The language the app is running in, named in that language, as iOS
+    /// Settings names it ("Deutsch", "Español").
+    private static var currentLanguageName: String {
+        let code = Bundle.main.preferredLocalizations.first ?? "en"
+        let locale = Locale(identifier: code)
+        guard let name = locale.localizedString(forLanguageCode: code) else { return code }
+        return name.prefix(1).uppercased(with: locale) + name.dropFirst()
+    }
+
     @EnvironmentObject private var store: StoreService
     let lastUpdated: Date?
     var dataCoverage: DataCoverage?
@@ -260,6 +269,24 @@ struct AboutView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
+
+            // iOS keeps the per-app language on the app's own Settings page,
+            // where few people think to look. This row only points there.
+            Button {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            } label: {
+                row(
+                    icon: "globe",
+                    title: "Language",
+                    subtitle: Self.currentLanguageName
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens iOS Settings")
         }
         .background(GridironPalette.surface)
         .clipShape(RoundedRectangle(cornerRadius: GridironGeo.radiusCard))

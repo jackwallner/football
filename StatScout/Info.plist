@@ -73,5 +73,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIPrefersShowingLanguageSettings</key>
+	<true/>
 </dict>
 </plist>
