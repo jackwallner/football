@@ -228,6 +228,13 @@ struct SeasonPhaseNavBar: ViewModifier {
     /// about what you're looking at, not two settings that happen to be adjacent.
     ///
     /// See `SeasonPhasePicker` for why season type sits above the season list.
+    private var pillTitle: String {
+        let year = SeasonLabel.text(selectedSeason)
+        let english = Bundle.main.preferredLocalizations.first?.hasPrefix("en") ?? true
+        if selectedPhase == .regular && !english { return year }
+        return String(localized: "\(year) · \(selectedPhase.label)")
+    }
+
     private var pills: some View {
         SeasonPhasePicker(
             seasons: seasons,
@@ -247,9 +254,13 @@ struct SeasonPhaseNavBar: ViewModifier {
             // it, and it is the right thing to cut: a four-digit year beside the
             // word "Season" is already unmistakably a date, so the icon was
             // decoration sitting in front of the label it decorated.
-            GridironNavPill(
-                title: String(localized: "\(SeasonLabel.text(selectedSeason)) · \(selectedPhase.label)")
-            )
+            //
+            // That budget only holds for English. "Temporada regular" and the
+            // longer translated CTAs overrun it, and the overflow iOS draws for
+            // this one custom item opens nothing, which cut those users off from
+            // Settings and the CTA. So other languages name the regular season
+            // by its year alone; the picker still spells the phase out.
+            GridironNavPill(title: pillTitle)
         }
     }
 }
