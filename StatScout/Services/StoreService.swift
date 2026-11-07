@@ -52,7 +52,40 @@ enum StatScoutSeason {
     ///
     /// Floored at 2025 so this can never resolve to a season older than the
     /// one the app shipped with, whatever the device clock says.
-    static let current: Int = season(on: .now)
+    ///
+    /// Read from the clock on every access, not once per process: a process
+    /// suspended across 1 September kept last season as the free season and
+    /// kept fetching it as the live one.
+    static var current: Int { liveSeasonClock.season }
+
+    static let liveSeasonClock = LiveSeasonClock()
+
+    /// Memoizes the calendar read for a minute, because board filters read
+    /// `current` once per row. Tests swap the clock with `setNow`.
+    final class LiveSeasonClock: @unchecked Sendable {
+        private let lock = NSLock()
+        private var now: @Sendable () -> Date = { Date() }
+        private var cached: (season: Int, at: Date)?
+
+        var season: Int {
+            lock.withLock {
+                let date = now()
+                if let cached, abs(date.timeIntervalSince(cached.at)) < 60 {
+                    return cached.season
+                }
+                let season = StatScoutSeason.season(on: date)
+                cached = (season, date)
+                return season
+            }
+        }
+
+        func setNow(_ now: @escaping @Sendable () -> Date) {
+            lock.withLock {
+                self.now = now
+                cached = nil
+            }
+        }
+    }
 
     /// The season `date` falls in under `current`'s rule, read in `calendar`'s
     /// zone. Split out so the September flip can be tested at a fixed clock.
@@ -72,7 +105,7 @@ enum StatScoutSeason {
     /// before it is StatScout+. It used to trail the data instead, holding the
     /// app on last season until the new one had a full slate, which left 2026
     /// invisible (and 2025 free) after the opener had already been played.
-    static let free = current
+    static var free: Int { current }
 
     /// Oldest season with per-game history, and so the floor for Recent Form.
     ///

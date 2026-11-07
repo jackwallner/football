@@ -1359,6 +1359,7 @@ final class DashboardViewModel {
     /// foreground. A changed ready revision triggers the normal full load;
     /// unchanged or pending status leaves the current screen in place.
     func refreshOnForeground(now: Date = .now) async {
+        if await rollOverSeasonIfNeeded(now: now) { return }
         let interval: TimeInterval = dataFreshness?.status == .pending ? 120 : 300
         if let lastForegroundCheckAt,
            now.timeIntervalSince(lastForegroundCheckAt) < interval {
@@ -1370,6 +1371,23 @@ final class DashboardViewModel {
         } else {
             await loadGames()
         }
+    }
+
+    /// The live season this process last loaded. A process suspended across
+    /// 1 September resumes on a new live season: move the screens still on
+    /// the old one forward and load the new season, as a fresh launch would.
+    @ObservationIgnored private var loadedLiveSeason = StatScoutSeason.current
+
+    private func rollOverSeasonIfNeeded(now: Date) async -> Bool {
+        let live = StatScoutSeason.current
+        guard live != loadedLiveSeason else { return false }
+        let previous = loadedLiveSeason
+        loadedLiveSeason = live
+        if selectedSeason == previous { selectedSeason = live }
+        clampSelectedSeason()
+        lastForegroundCheckAt = now
+        await load()
+        return true
     }
 
     @discardableResult
