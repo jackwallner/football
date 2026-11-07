@@ -1,3 +1,1 @@
-Teile die Perzentil-Übersicht jedes Spielers als Bild, direkt aus seinem Profil.
-Bestenlisten, Suche und Saisonwechsel sind deutlich schneller, vor allem bei früheren Saisons.
-Klarere Preise auf dem Upgrade-Bildschirm.
+Du kannst die Sprache der App jetzt in den Einstellungen ändern. Dieses Update enthält außerdem Fehlerbehebungen und Verbesserungen.

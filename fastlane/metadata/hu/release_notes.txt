@@ -1,3 +1,1 @@
-Oszd meg bármely játékos percentilis tábláját képként, közvetlenül a profiljáról.
-A ranglisták, a keresés és a szezonváltás sokkal gyorsabb, főleg a korábbi szezonoknál.
-Áttekinthetőbb árak a frissítési képernyőn.
+Az app nyelvét mostantól a Beállításokban módosíthatod. A frissítés javításokat és fejlesztéseket is tartalmaz.

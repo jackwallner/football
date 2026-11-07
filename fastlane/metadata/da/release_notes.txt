@@ -1,3 +1,1 @@
-Del enhver spillers percentiltavle som et billede direkte fra profilen.
-Ranglister, søgning og skift af sæson er meget hurtigere, især for tidligere sæsoner.
-Tydeligere priser på opgraderingsskærmen.
+Nu kan du ændre appens sprog fra Indstillinger. Denne opdatering indeholder også rettelser og forbedringer.

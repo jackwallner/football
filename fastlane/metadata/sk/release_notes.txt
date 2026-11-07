@@ -1,3 +1,1 @@
-Zdieľajte percentilovú tabuľku ľubovoľného hráča ako obrázok priamo z jeho profilu.
-Rebríčky, vyhľadávanie a prepínanie sezón sú oveľa rýchlejšie, najmä pri minulých sezónach.
-Prehľadnejšie ceny na obrazovke upgradu.
+Jazyk aplikácie môžete teraz zmeniť v Nastaveniach. Táto aktualizácia prináša aj opravy a vylepšenia.
