@@ -6,6 +6,7 @@ Developer notes and historical audits for this repository. The published site re
 
 - [state-machines-2026-11-06.md](audits/state-machines-2026-11-06.md): State machine audit: purchase, recent-form cache, follow store, review prompt (1 proved bug, repro in `state-machines-2026-11-06-repro.swift`)
 - [state-machines-2026-11-06-review.md](audits/state-machines-2026-11-06-review.md): Independent review of the state machine audit: 1 confirmed, 3 minor, 1 sub-claim rejected
+- [state-machines-2026-11-06-fixes.md](audits/state-machines-2026-11-06-fixes.md): Fixes for the reviewed state machine audit: 4 fixed (SM-1 to SM-4), 0 held, 0 skipped
 - [aso827.md](audits/aso827.md): Football Next ASO Audit
 - [audit823.md](audits/audit823.md): Football Next: StatScout, audit823
 - [caudit914.md](audits/caudit914.md): 1.2 release-readiness audit (caudit914)
