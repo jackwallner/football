@@ -654,13 +654,22 @@ final class DashboardViewModel {
 
     // MARK: - Recent form
 
-    /// Rolling windows keyed by length, cached per season so flipping between
-    /// 3 / 5 / 8 doesn't refetch what's already in hand.
-    var recentFormByWindow: [Int: [Int: RecentForm]] = [:]
-    var recentFormLoadingWindows: Set<Int> = []
+    /// One rolling-window slot. The Trends tab and a team's Recent roster stay
+    /// mounted side by side and can ask for different seasons or phases, so
+    /// each (season, phase, window) keeps its own data: one screen's load must
+    /// never clear what the other is showing.
+    struct RecentFormSlot: Hashable {
+        let season: Int
+        let phase: SeasonPhase
+        let window: Int
+    }
+
+    /// Rolling windows keyed by slot, so flipping between 3 / 5 / 8 (or
+    /// between screens) doesn't refetch what's already in hand.
+    private var recentFormBySlot: [RecentFormSlot: [Int: RecentForm]] = [:]
+    private var recentFormLoadingSlots: Set<RecentFormSlot> = []
     var recentFormError: String?
-    private var recentFormContext: String?
-    private var recentFormTasks: [Int: Task<Void, Never>] = [:]
+    private var recentFormTasks: [RecentFormSlot: Task<Void, Never>] = [:]
 
     /// The window the Trends board and the trend arrows read from.
     ///
@@ -681,7 +690,8 @@ final class DashboardViewModel {
     ) -> RecentForm? {
         let targetSeason = season ?? selectedSeason
         let targetPhase = phase ?? selectedPhase
-        return recentFormByWindow[(window ?? recentWindow).rawValue]?[playerId]
+        let slot = recentFormSlot((window ?? recentWindow).rawValue, targetSeason, targetPhase)
+        return recentFormBySlot[slot]?[playerId]
             .flatMap {
                 $0.season == targetSeason && $0.seasonPhase == targetPhase ? $0 : nil
             }
@@ -695,14 +705,24 @@ final class DashboardViewModel {
     ) -> RecentForm? {
         let targetSeason = season ?? selectedSeason
         let targetPhase = phase ?? selectedPhase
-        return recentFormByWindow[window.rawValue]?[playerId]
+        return recentFormBySlot[recentFormSlot(window.rawValue, targetSeason, targetPhase)]?[playerId]
             .flatMap {
                 $0.season == targetSeason && $0.seasonPhase == targetPhase ? $0 : nil
             }
     }
 
-    var isRecentFormLoading: Bool {
-        recentFormLoadingWindows.contains(recentWindow.rawValue)
+    func isRecentFormLoading(season: Int, phase: SeasonPhase) -> Bool {
+        recentFormLoadingSlots.contains(recentFormSlot(recentWindow.rawValue, season, phase))
+    }
+
+    /// True once a window has loaded for the season and phase, defaulting to
+    /// the shared selection (the Team page's).
+    func hasRecentForm(window: RecentWindow, season: Int? = nil, phase: SeasonPhase? = nil) -> Bool {
+        recentFormBySlot[recentFormSlot(window.rawValue, season ?? selectedSeason, phase ?? selectedPhase)] != nil
+    }
+
+    private func recentFormSlot(_ window: Int, _ season: Int, _ phase: SeasonPhase) -> RecentFormSlot {
+        RecentFormSlot(season: season, phase: phase, window: window)
     }
 
     /// The last game date covered by the loaded window, for honest labelling.
@@ -711,7 +731,7 @@ final class DashboardViewModel {
         season: Int,
         phase: SeasonPhase
     ) -> Date? {
-        recentFormRowsByWindow[window.rawValue]?
+        recentFormRowsBySlot[recentFormSlot(window.rawValue, season, phase)]?
             .filter { $0.season == season && $0.seasonPhase == phase }
             .compactMap(\.asOf)
             .max()
@@ -724,7 +744,7 @@ final class DashboardViewModel {
         season: Int,
         phase: SeasonPhase
     ) -> Int? {
-        recentFormRowsByWindow[window.rawValue]?
+        recentFormRowsBySlot[recentFormSlot(window.rawValue, season, phase)]?
             .filter { $0.season == season && $0.seasonPhase == phase }
             .compactMap(\.endWeek)
             .max()
@@ -739,7 +759,7 @@ final class DashboardViewModel {
         season: Int,
         phase: SeasonPhase
     ) -> [RecentForm] {
-        (recentFormRowsByWindow[window.rawValue] ?? [])
+        (recentFormRowsBySlot[recentFormSlot(window.rawValue, season, phase)] ?? [])
             .filter {
                 $0.playerType == playerType
                     && $0.season == season
@@ -747,7 +767,7 @@ final class DashboardViewModel {
             }
     }
 
-    private var recentFormRowsByWindow: [Int: [RecentForm]] = [:]
+    private var recentFormRowsBySlot: [RecentFormSlot: [RecentForm]] = [:]
 
     /// Clears every league recent-form window after a new active data revision
     /// is adopted. In-flight requests are cancelled so an older response cannot
@@ -755,10 +775,9 @@ final class DashboardViewModel {
     func invalidateRecentFormCache() {
         for task in recentFormTasks.values { task.cancel() }
         recentFormTasks.removeAll()
-        recentFormLoadingWindows.removeAll()
-        recentFormByWindow.removeAll()
-        recentFormRowsByWindow.removeAll()
-        recentFormContext = nil
+        recentFormLoadingSlots.removeAll()
+        recentFormBySlot.removeAll()
+        recentFormRowsBySlot.removeAll()
         recentFormError = nil
     }
 
@@ -768,10 +787,12 @@ final class DashboardViewModel {
         phase: SeasonPhase? = nil
     ) async {
         let target = window ?? recentWindow
-        recentFormTasks[target.rawValue]?.cancel()
-        recentFormTasks.removeValue(forKey: target.rawValue)
-        recentFormByWindow.removeValue(forKey: target.rawValue)
-        recentFormRowsByWindow.removeValue(forKey: target.rawValue)
+        let slot = recentFormSlot(target.rawValue, season ?? selectedSeason, phase ?? selectedPhase)
+        recentFormTasks[slot]?.cancel()
+        recentFormTasks.removeValue(forKey: slot)
+        recentFormLoadingSlots.remove(slot)
+        recentFormBySlot.removeValue(forKey: slot)
+        recentFormRowsBySlot.removeValue(forKey: slot)
         recentFormError = nil
         await loadRecentFormIfNeeded(window: target, season: season, phase: phase)
     }
@@ -784,30 +805,26 @@ final class DashboardViewModel {
         let target = window ?? recentWindow
         let targetSeason = season ?? selectedSeason
         let targetPhase = phase ?? selectedPhase
-        // Season changed under us, the cache describes a different year.
-        let context = "\(targetSeason)-\(targetPhase.rawValue)"
-        if recentFormContext != context {
-            for task in recentFormTasks.values { task.cancel() }
-            recentFormTasks.removeAll()
-            recentFormLoadingWindows.removeAll()
-            recentFormByWindow.removeAll()
-            recentFormRowsByWindow.removeAll()
-            recentFormContext = context
-        }
-        guard recentFormByWindow[target.rawValue] == nil else { return }
+        let slot = recentFormSlot(target.rawValue, targetSeason, targetPhase)
+        guard recentFormBySlot[slot] == nil else { return }
 
-        if let inFlight = recentFormTasks[target.rawValue] {
+        if let inFlight = recentFormTasks[slot] {
             await inFlight.value
             return
         }
 
-        recentFormLoadingWindows.insert(target.rawValue)
+        recentFormLoadingSlots.insert(slot)
         recentFormError = nil
         let task = Task { @MainActor [weak self] in
             guard let self else { return }
+            // A cancelled task was already removed by whoever cancelled it
+            // (invalidation or a reload), which may have started a newer one
+            // for this slot.
             defer {
-                self.recentFormLoadingWindows.remove(target.rawValue)
-                self.recentFormTasks.removeValue(forKey: target.rawValue)
+                if !Task.isCancelled {
+                    self.recentFormLoadingSlots.remove(slot)
+                    self.recentFormTasks.removeValue(forKey: slot)
+                }
             }
             do {
                 let rows = try await self.provider.fetchRecentForm(
@@ -815,7 +832,7 @@ final class DashboardViewModel {
                     seasonPhase: targetPhase,
                     windowWeeks: target.rawValue
                 )
-                guard self.recentFormContext == context,
+                guard !Task.isCancelled,
                       rows.allSatisfy({
                           $0.season == targetSeason && $0.seasonPhase == targetPhase
                       }) else { return }
@@ -825,15 +842,15 @@ final class DashboardViewModel {
                        existing.plays >= row.plays { continue }
                     byPlayer[row.playerId] = row
                 }
-                self.recentFormByWindow[target.rawValue] = byPlayer
-                self.recentFormRowsByWindow[target.rawValue] = rows
+                self.recentFormBySlot[slot] = byPlayer
+                self.recentFormRowsBySlot[slot] = rows
             } catch {
                 if !isTaskCancellation(error) {
                     self.recentFormError = String(localized: "Couldn't load recent form.")
                 }
             }
         }
-        recentFormTasks[target.rawValue] = task
+        recentFormTasks[slot] = task
         await task.value
     }
 

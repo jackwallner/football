@@ -189,7 +189,7 @@ struct TeamView: View {
     }
 
     private var hasRecentData: Bool {
-        viewModel?.recentFormByWindow[rosterWindow.rawValue] != nil
+        viewModel?.hasRecentForm(window: rosterWindow) == true
     }
 
     private var isRosterRecent: Bool {

@@ -326,7 +326,7 @@ struct HotColdView: View {
 
     @ViewBuilder
     private var proContent: some View {
-        if viewModel.isRecentFormLoading && forms.isEmpty {
+        if viewModel.isRecentFormLoading(season: selectedSeason, phase: selectedPhase) && forms.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
@@ -438,10 +438,10 @@ struct HotColdView: View {
             row(form: leader, rank: 1, index: 0)
         } else {
             HStack(spacing: 10) {
-                if viewModel.isRecentFormLoading {
+                if viewModel.isRecentFormLoading(season: selectedSeason, phase: selectedPhase) {
                     ProgressView().scaleEffect(0.7)
                 }
-                Text(viewModel.isRecentFormLoading
+                Text(viewModel.isRecentFormLoading(season: selectedSeason, phase: selectedPhase)
                      ? String(localized: "Loading the board…")
                      : String(localized: "No movement to rank yet"))
                     .font(GridironType.small)
