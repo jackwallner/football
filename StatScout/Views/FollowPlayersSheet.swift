@@ -36,9 +36,7 @@ struct FollowPlayersSheet: View {
         // Ordered by when they were followed, matching the Trends board.
         // A followed player with no line this season (injured, retired) falls
         // back to his latest season, so he can still be unfollowed here.
-        favorites.playerIds.compactMap { id in
-            allPlayers.first { $0.playerId == id } ?? viewModel.playerHistories[id]?.first
-        }
+        viewModel.followedPlayers(ids: favorites.playerIds)
     }
 
     private var candidates: [Player] {
@@ -131,6 +129,9 @@ struct FollowPlayersSheet: View {
                 }
             }
             .background(GridironPalette.canvas)
+            .task(id: favorites.playerIds) {
+                await viewModel.loadArchivedFollowedPlayers(ids: favorites.playerIds)
+            }
             .navigationTitle("Follow Players")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

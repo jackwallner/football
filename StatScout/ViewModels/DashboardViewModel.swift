@@ -1692,19 +1692,7 @@ final class DashboardViewModel {
         loadingMessage = String(localized: "Loading past seasons…")
         loadingProgress = 0.12
 
-        var historical: [Player] = await Task.detached { [cache] in
-            if let cache = cache as? TwoTierPlayerCache {
-                return cache.loadHistoricalPlayers()
-            }
-            return ((try? cache?.loadPlayers()) ?? []).filter { ($0.season ?? 0) < StatScoutSeason.current }
-        }.value
-
-        // The screenshot fixture and lightweight providers may intentionally
-        // disable the disk cache. Fetch their historical tier directly rather
-        // than leaving a Pro season menu with no data.
-        if historical.isEmpty {
-            historical = (try? await provider.fetchHistoricalPlayers()) ?? []
-        }
+        let historical = await historicalPlayerRows()
 
         loadingMessage = String(localized: "Preparing season history…")
         loadingProgress = 0.78
@@ -1716,6 +1704,67 @@ final class DashboardViewModel {
 
         isHistoricalLoading = false
         loadingProgress = 1
+    }
+
+    private func historicalPlayerRows() async -> [Player] {
+        let historical: [Player] = await Task.detached { [cache] in
+            if let cache = cache as? TwoTierPlayerCache {
+                return cache.loadHistoricalPlayers()
+            }
+            return ((try? cache?.loadPlayers()) ?? []).filter { ($0.season ?? 0) < StatScoutSeason.current }
+        }.value
+
+        // The screenshot fixture and lightweight providers may intentionally
+        // disable the disk cache. Fetch their historical tier directly rather
+        // than leaving a Pro season menu with no data.
+        if historical.isEmpty {
+            return (try? await provider.fetchHistoricalPlayers()) ?? []
+        }
+        return historical
+    }
+
+    // MARK: - Followed players outside the loaded seasons
+
+    /// Latest past-season row for followed players the loaded data doesn't
+    /// cover. Free users load only the live season, so a followed player with
+    /// no live row (retired, unsigned, out all year) had no row anywhere to
+    /// unfollow him from. Kept apart from `playerHistories` so nothing past
+    /// the free tier unlocks.
+    private(set) var archivedFollowedPlayers: [Int: Player] = [:]
+    @ObservationIgnored private var archivedLookupIds: Set<Int> = []
+
+    /// Followed players in follow order, falling back to the latest season
+    /// on record when the selected season has no row for them.
+    func followedPlayers(ids: [Int]) -> [Player] {
+        let current = players(forSeason: selectedSeason)
+        return ids.compactMap { id in
+            current.first { $0.playerId == id }
+                ?? playerHistories[id]?.first
+                ?? archivedFollowedPlayers[id]
+        }
+    }
+
+    /// Looks up followed ids that `followedPlayers(ids:)` can't resolve, once
+    /// per id per process.
+    func loadArchivedFollowedPlayers(ids: [Int]) async {
+        let missing = Set(ids).subtracting(playerHistories.keys).subtracting(archivedLookupIds)
+        guard !missing.isEmpty else { return }
+        archivedLookupIds.formUnion(missing)
+        let latest = await historicalPlayerRows()
+            .filter { missing.contains($0.playerId) }
+            .reduce(into: [Int: Player]()) { best, row in
+                guard let current = best[row.playerId] else {
+                    best[row.playerId] = row
+                    return
+                }
+                let rowSeason = row.season ?? 0
+                let currentSeason = current.season ?? 0
+                if rowSeason > currentSeason
+                    || (rowSeason == currentSeason && row.seasonPhase == .regular && current.seasonPhase != .regular) {
+                    best[row.playerId] = row
+                }
+            }
+        archivedFollowedPlayers.merge(latest) { _, new in new }
     }
 
     private func ingestPlayers(_ players: [Player]) {
