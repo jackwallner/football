@@ -142,6 +142,12 @@ final class DashboardViewModel {
             .filter { $0 >= StatScoutSeason.earliestRecentForm }
     }
 
+    /// The Trends board's own season, moved back to the live one when it is
+    /// locked (Pro lapsed while the board sat on last season).
+    func trendsSeason(clamping season: Int) -> Int {
+        isSeasonLocked(season) ? recentFormSeason : season
+    }
+
     /// Whether Recent/Both controls should appear for this season at all.
     /// False hides the control rather than locking it: it is not a Pro upsell,
     /// the data does not exist.

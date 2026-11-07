@@ -196,6 +196,11 @@ struct HotColdView: View {
         .onChange(of: viewModel.recentFormSeason) { _, season in
             selectedSeason = season
         }
+        // A trial or subscription that lapses mid-session must not leave the
+        // board on a season the free tier doesn't include.
+        .onChange(of: viewModel.isPro) { _, _ in
+            selectedSeason = viewModel.trendsSeason(clamping: selectedSeason)
+        }
         .sheet(item: $paywallTrigger, onDismiss: { pendingUnlock.finish(isPro: store.isPro) }) { trigger in
             TrialPitchSheet(trigger: trigger)
         }
