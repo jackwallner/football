@@ -44,6 +44,6 @@ Quirks from the it and nl-NL run: `capture.sh` passes fixture `SUPABASE_URL` and
 `SUPABASE_ANON_KEY` xcargs so captures never reach live data. `gate.py` ignores
 OCR fragments of two characters or fewer, because a label clipped by the tab bar
 at the bottom of a scroller (as in the English frames) can read as an English
-catalog word. GitHub's Macs queued the iPad job for over 2 hours; the phone
+catalog word. GitHub's Macs queued the iPad job for about 2 hours 20 minutes before it ran; the phone
 job from an earlier run can be reused by sorting its `attachments/manifest.json`
 into `raw/<locale>/phone/`.

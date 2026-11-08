@@ -6,16 +6,16 @@
   "frames": 7,
   "sets": {
     "phone": 7,
-    "ipad": 0
+    "ipad": 1
   },
   "gate": {
-    "it": "PASS (phone; iPad frame pending)",
-    "nl-NL": "PASS (phone; iPad frame pending)"
+    "it": "PASS",
+    "nl-NL": "PASS"
   },
   "gh_sim_jobs": 2,
   "jobs": [
     "football-shots@20261107-230821-3cdf-claude-mbpro7f5a-1108-002411-32059 (phone, en-US/it/nl-NL, 21 captures, reused from previous run)",
-    "football-shots@20261108-033444-610f-claude-mbpro1a9f-1108-034053-20219 (iPad, queued on GitHub run 42476813618 for 2h+ at report time)"
+    "football-shots@20261108-033444-610f-claude-mbpro1a9f-1108-034053-20219 (iPad, 3 captures, PASS)"
   ],
   "app_code_changed": [],
   "tooling_changed": [
@@ -25,9 +25,7 @@
   "defects": [
     "Bottom of long scrollers is covered by the tab bar and clips a label fragment, identical to the English frames"
   ],
-  "left_out": [
-    "ipad 09_ipad_qb_leaders.png: GitHub job queued for 2h+ and not finished; rerun SCREENSHOT_SET=ipad tools/capture.sh then tools/compose.sh"
-  ],
+  "left_out": [],
   "adapter": "xcuitest",
   "previous_run": [
     "es-MX",
