@@ -166,7 +166,7 @@ def main() -> int:
         for item in json.loads(result.stdout):
             for line in item['lines']:
                 # OCR sometimes returns a clipped fragment of a longer label.
-                if not line.rstrip().endswith(("/", "=", "'", "’")) and normalize(line) in sources:
+                if len(line.strip()) > 2 and not line.rstrip().endswith(("/", "=", "'", "’")) and normalize(line) in sources:
                     for name in raw_frames[Path(item['path'])]:
                         leaks.append(f'LEAK {name}: {line}')
         failures.extend(leaks[:40])

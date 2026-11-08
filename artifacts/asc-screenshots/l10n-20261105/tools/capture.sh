@@ -35,7 +35,7 @@ PY
     # Resume a run that was queued but whose client was stopped: RESUME_PHONE=<gh-sim id>
     ID="${!RESUME_VAR}"; gh-sim get "$ID"; rm -f "$ID_FILE"
   else
-    gh-sim test --scheme StatScoutUITests --device "$DEVICE" --only StatScoutUITests/LocalizedStoreScreenshotUITests --id-file "$ID_FILE"
+    gh-sim test --scheme StatScoutUITests --device "$DEVICE" --only StatScoutUITests/LocalizedStoreScreenshotUITests --xcarg SUPABASE_URL=https://example.invalid --xcarg SUPABASE_ANON_KEY=store-screenshot-fixture --id-file "$ID_FILE"
     ID=$(cat "$ID_FILE"); rm -f "$ID_FILE"
   fi
   python3 - "$HOME/.gh-sim/results/$ID/attachments" "$KIT/raw" "$SET" "$TEST_CONFIG" <<'PY'
