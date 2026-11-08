@@ -4,6 +4,7 @@ Developer notes and historical audits for this repository. The published site re
 
 ## Audits
 
+- [presubmit-review-2026-11-07.md](audits/presubmit-review-2026-11-07.md): Pre-submit review of 1.2.9 (build 77) against live 1.2.8: 0 P0/P1, 2 P2 noted, no code changes
 - [state-machines-2026-11-06.md](audits/state-machines-2026-11-06.md): State machine audit: purchase, recent-form cache, follow store, review prompt (1 proved bug, repro in `state-machines-2026-11-06-repro.swift`)
 - [state-machines-2026-11-06-review.md](audits/state-machines-2026-11-06-review.md): Independent review of the state machine audit: 1 confirmed, 3 minor, 1 sub-claim rejected
 - [state-machines-2026-11-06-fixes.md](audits/state-machines-2026-11-06-fixes.md): Fixes for the reviewed state machine audit: 4 fixed (SM-1 to SM-4), 0 held, 0 skipped
