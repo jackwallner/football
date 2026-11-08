@@ -1,29 +1,47 @@
 {
-  "en-US": {
-    "01-know-who-leads-the-league.png": "Know who leads\nthe league",
-    "02-know-what-makes-a-player-elite.png": "Know what makes\na player elite",
-    "03-see-who-is-heating-up-right-now.png": "See who is heating\nup right now",
-    "04-scout-your-team-in-one-view.png": "Scout your team\nin one view",
-    "05-keep-your-players-one-tap-away.png": "Keep your players\none tap away",
-    "06-settle-the-debate-side-by-side.png": "Settle the debate\nside by side",
-    "07-see-how-a-season-changed.png": "See how a\nseason changed"
-  },
-  "de-DE": {
-    "01-know-who-leads-the-league.png": "Die Spitzenreiter\nder Liga",
-    "02-know-what-makes-a-player-elite.png": "Was Topspieler\nauszeichnet",
-    "03-see-who-is-heating-up-right-now.png": "Spieler\nin Topform",
-    "04-scout-your-team-in-one-view.png": "Dein Team\nauf einen Blick",
-    "05-keep-your-players-one-tap-away.png": "Deine Spieler\nmit einem Tipp",
-    "06-settle-the-debate-side-by-side.png": "Spieler direkt\nvergleichen",
-    "07-see-how-a-season-changed.png": "Saisons im\nVergleich"
-  },
-  "es-MX": {
-    "01-know-who-leads-the-league.png": "Los líderes\nde la liga",
-    "02-know-what-makes-a-player-elite.png": "Qué distingue a\nun jugador de élite",
-    "03-see-who-is-heating-up-right-now.png": "Jugadores\nen racha",
-    "04-scout-your-team-in-one-view.png": "Tu equipo\nde un vistazo",
-    "05-keep-your-players-one-tap-away.png": "Tus jugadores\na un toque",
-    "06-settle-the-debate-side-by-side.png": "Compara jugadores\ncara a cara",
-    "07-see-how-a-season-changed.png": "Compara dos\ntemporadas"
-  }
+ "en-US": {
+  "01-know-who-leads-the-league.png": "Know who leads\nthe league",
+  "02-know-what-makes-a-player-elite.png": "Know what makes\na player elite",
+  "03-see-who-is-heating-up-right-now.png": "See who is heating\nup right now",
+  "04-scout-your-team-in-one-view.png": "Scout your team\nin one view",
+  "05-keep-your-players-one-tap-away.png": "Keep your players\none tap away",
+  "06-settle-the-debate-side-by-side.png": "Settle the debate\nside by side",
+  "07-see-how-a-season-changed.png": "See how a\nseason changed"
+ },
+ "de-DE": {
+  "01-know-who-leads-the-league.png": "Die Spitzenreiter\nder Liga",
+  "02-know-what-makes-a-player-elite.png": "Was Topspieler\nauszeichnet",
+  "03-see-who-is-heating-up-right-now.png": "Spieler\nin Topform",
+  "04-scout-your-team-in-one-view.png": "Dein Team\nauf einen Blick",
+  "05-keep-your-players-one-tap-away.png": "Deine Spieler\nmit einem Tipp",
+  "06-settle-the-debate-side-by-side.png": "Spieler direkt\nvergleichen",
+  "07-see-how-a-season-changed.png": "Saisons im\nVergleich"
+ },
+ "es-MX": {
+  "01-know-who-leads-the-league.png": "Los líderes\nde la liga",
+  "02-know-what-makes-a-player-elite.png": "Qué distingue a\nun jugador de élite",
+  "03-see-who-is-heating-up-right-now.png": "Jugadores\nen racha",
+  "04-scout-your-team-in-one-view.png": "Tu equipo\nde un vistazo",
+  "05-keep-your-players-one-tap-away.png": "Tus jugadores\na un toque",
+  "06-settle-the-debate-side-by-side.png": "Compara jugadores\ncara a cara",
+  "07-see-how-a-season-changed.png": "Compara dos\ntemporadas"
+ },
+ "it": {
+  "01-know-who-leads-the-league.png": "I leader\ndella lega",
+  "02-know-what-makes-a-player-elite.png": "Cosa rende un\ngiocatore elite",
+  "03-see-who-is-heating-up-right-now.png": "I giocatori\nin gran forma",
+  "04-scout-your-team-in-one-view.png": "La tua squadra\nin un colpo d'occhio",
+  "05-keep-your-players-one-tap-away.png": "I tuoi giocatori\na portata di tap",
+  "06-settle-the-debate-side-by-side.png": "Confronta i giocatori\nfianco a fianco",
+  "07-see-how-a-season-changed.png": "Come è cambiata\nuna stagione"
+ },
+ "nl-NL": {
+  "01-know-who-leads-the-league.png": "De leiders van\nde competitie",
+  "02-know-what-makes-a-player-elite.png": "Wat een speler\nelite maakt",
+  "03-see-who-is-heating-up-right-now.png": "Spelers die nu\nin topvorm zijn",
+  "04-scout-your-team-in-one-view.png": "Je team in\neen oogopslag",
+  "05-keep-your-players-one-tap-away.png": "Je spelers altijd\neen tik weg",
+  "06-settle-the-debate-side-by-side.png": "Vergelijk spelers\nnaast elkaar",
+  "07-see-how-a-season-changed.png": "Zie hoe een\nseizoen veranderde"
+ }
 }
