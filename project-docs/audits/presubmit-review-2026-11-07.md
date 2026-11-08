@@ -51,3 +51,9 @@ No P0 or P1 issues were found, so this pass changes no code.
   (Apple's own route), `UIPrefersShowingLanguageSettings` is a documented key,
   and the new strings have no prices, platform links or health claims.
   `python3 Tools/Localization/check.py`: 900 keys, 4 languages, 0 problems.
+
+## Tests
+
+`gh-sim test --scheme StatScout --only StatScoutTests` on `ce1df6ae` plus this report
+(run `football@20261107-222733-0237-claude-mbpro3a06d-1107-223015-21542`, GitHub
+Actions 42455014286, Xcode 27.1, iPhone 17 iOS 27.2): 273 passed, 0 failed.
