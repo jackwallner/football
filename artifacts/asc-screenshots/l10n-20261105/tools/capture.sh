@@ -3,7 +3,7 @@ set -euo pipefail
 KIT="$(cd "$(dirname "$0")/.." && pwd)"
 ROOT="$(cd "$KIT/../../.." && pwd)"
 cd "$ROOT"
-LOCALES=("${@:-es-MX de-DE}")
+LOCALES=("${@:-it nl-NL}")
 TEST_CONFIG=StatScoutUITests/StoreScreenshotLocales.json
 BACKUP=$(mktemp)
 cp "$TEST_CONFIG" "$BACKUP"
@@ -17,7 +17,7 @@ for SET in "${SETS[@]}"; do
 import json, sys
 app, dest, device, *wanted = sys.argv[1:]
 wanted = set(' '.join(wanted).split()) | {'en-US'}
-labels = {'en-US': ('en', 'en_US', 'Following', 'Compare with another player', 'Year Compare'), 'de-DE': ('de', 'de_DE', 'Gefolgt', 'Mit anderem Spieler vergleichen', 'Jahr zu Jahr'), 'es-MX': ('es', 'es_MX', 'Siguiendo', 'Comparar con otro jugador', 'Año a año')}
+labels = {'en-US': ('en', 'en_US', 'Following', 'Compare with another player', 'Year Compare'), 'de-DE': ('de', 'de_DE', 'Gefolgt', 'Mit anderem Spieler vergleichen', 'Jahr zu Jahr'), 'es-MX': ('es', 'es_MX', 'Siguiendo', 'Comparar con otro jugador', 'Año a año'), 'it': ('it', 'it_IT', 'Seguiti', 'Confronta con un altro giocatore', 'Per anno'), 'nl-NL': ('nl', 'nl_NL', 'Volgen', 'Vergelijk met een andere speler', 'Per jaar')}
 allowed = {'en-US'} | {item['store_locale'] for item in json.load(open(app))['targets']}
 if wanted - allowed:
     raise SystemExit(f'Unknown locales: {wanted - allowed}')
@@ -30,8 +30,14 @@ with open(dest, 'w') as f:
 PY
   if [ "$SET" = phone ]; then DEVICE='iPhone 17 Pro Max'; else DEVICE='iPad Pro 13-inch (M5)'; fi
   ID_FILE=$(mktemp)
-  gh-sim test --scheme StatScoutUITests --device "$DEVICE" --only StatScoutUITests/LocalizedStoreScreenshotUITests --id-file "$ID_FILE"
-  ID=$(cat "$ID_FILE"); rm -f "$ID_FILE"
+  RESUME_VAR="RESUME_$(echo "$SET" | tr a-z A-Z)"
+  if [ -n "${!RESUME_VAR:-}" ]; then
+    # Resume a run that was queued but whose client was stopped: RESUME_PHONE=<gh-sim id>
+    ID="${!RESUME_VAR}"; gh-sim get "$ID"; rm -f "$ID_FILE"
+  else
+    gh-sim test --scheme StatScoutUITests --device "$DEVICE" --only StatScoutUITests/LocalizedStoreScreenshotUITests --id-file "$ID_FILE"
+    ID=$(cat "$ID_FILE"); rm -f "$ID_FILE"
+  fi
   python3 - "$HOME/.gh-sim/results/$ID/attachments" "$KIT/raw" "$SET" "$TEST_CONFIG" <<'PY'
 import json, re, shutil, sys
 from pathlib import Path
@@ -42,7 +48,7 @@ count = 0
 for entry in manifest:
     for item in entry.get('attachments', []):
         name = item.get('suggestedHumanReadableName', '')
-        match = re.search(r'(en-US|es-MX|de-DE)__(\d\d)', name)
+        match = re.search(r'(en-US|es-MX|de-DE|it|nl-NL)__(\d\d)', name)
         source = src / item.get('exportedFileName', '')
         if match and source.is_file() and source.suffix.lower() == '.png':
             target = dest / match[1] / device / (match[2] + '.png')
