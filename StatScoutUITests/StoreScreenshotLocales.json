@@ -1,5 +1,56 @@
 [
-  {"store":"en-US","language":"en","region":"en_US","following":"Following","compare":"Compare with another player","years":"Year Compare"},
-  {"store":"de-DE","language":"de","region":"de_DE","following":"Gefolgt","compare":"Mit anderem Spieler vergleichen","years":"Jahr zu Jahr"},
-  {"store":"es-MX","language":"es","region":"es_MX","following":"Siguiendo","compare":"Comparar con otro jugador","years":"Año a año"}
+  {
+    "store": "en-US",
+    "language": "en",
+    "region": "en_US",
+    "following": "Following",
+    "compare": "Compare with another player",
+    "years": "Year Compare",
+    "board": "standard",
+    "scenes": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  {
+    "store": "it",
+    "language": "it",
+    "region": "it_IT",
+    "following": "Seguiti",
+    "compare": "Confronta con un altro giocatore",
+    "years": "Per anno",
+    "board": "standard",
+    "scenes": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  {
+    "store": "nl-NL",
+    "language": "nl",
+    "region": "nl_NL",
+    "following": "Volgen",
+    "compare": "Vergelijk met een andere speler",
+    "years": "Per jaar",
+    "board": "standard",
+    "scenes": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  }
 ]

@@ -5,7 +5,7 @@ ROOT="$(cd "$KIT/../../.." && pwd)"
 PY="$KIT/.venv/bin/python"
 mkdir -p "$KIT/sheets"
 result=0
-for pair in es-MX:es de-DE:de; do
+for pair in it:it nl-NL:nl; do
   locale=${pair%%:*}; lang=${pair#*:}
   "$PY" "$KIT/tools/reskin.py" --config "$KIT/frames.json" --raw-root "$KIT/raw" --headers "$KIT/copy/headers.json" --locale "$locale" --out "$KIT/out"
   "$PY" "$KIT/tools/sheet.py" --config "$KIT/frames.json" --locale "$locale" --out-root "$KIT/out"
