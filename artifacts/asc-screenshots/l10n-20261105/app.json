@@ -7,26 +7,22 @@
  "live_version": "1.2.8",
  "targets": [
   {
-   "rank": 16,
-   "store_locale": "es-MX",
-   "lang": "es",
-   "apple_languages": "(es)",
-   "apple_locale": "es_MX",
-   "regions": [
-    "Mexico"
-   ],
-   "customers": 35.0
+   "rank": 1,
+   "store_locale": "it",
+   "lang": "it",
+   "apple_languages": "(it)",
+   "apple_locale": "it_IT",
+   "regions": [],
+   "customers": 0
   },
   {
-   "rank": 77,
-   "store_locale": "de-DE",
-   "lang": "de",
-   "apple_languages": "(de)",
-   "apple_locale": "de_DE",
-   "regions": [
-    "Germany"
-   ],
-   "customers": 8.0
+   "rank": 2,
+   "store_locale": "nl-NL",
+   "lang": "nl",
+   "apple_languages": "(nl)",
+   "apple_locale": "nl_NL",
+   "regions": [],
+   "customers": 0
   }
  ],
  "store_locales_missing": [],
