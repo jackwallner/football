@@ -1,12 +1,12 @@
-# What Is EPA Per Play in Football? EPA and CPOE Explained
+# What Is EPA Per Play? EPA, CPOE and Good QB Numbers
 
-> EPA per play measures how much each play changes a team's expected points. Learn how it works, what CPOE adds, and what good looks like for NFL quarterbacks.
+> EPA per play is how much a play changes expected points. In 2025 the median QB was +0.05 per dropback and the top 10% reached +0.20. How EPA and CPOE work.
 
 Web page: https://jackwallner.com/ios/football/what-is-epa-per-play.html
 
 ## What is EPA per play in football? (And what CPOE adds)
 
-By Jack Wallner. Last updated October 28, 2026.
+By Jack Wallner. Last updated November 11, 2026.
 
 EPA per play is the average number of points a play adds to its team's expected score on the drive. A positive number means the play left the offense better off than before the snap, and a negative number means worse. CPOE, completion percentage over expected, is the companion stat that judges a passer's accuracy against how hard each throw was.
 
