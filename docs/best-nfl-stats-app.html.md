@@ -1,16 +1,16 @@
 # Best NFL Stats App for iPhone: 6 Compared (2026)
 
-> Which NFL stats app fits you? Six iPhone apps compared on advanced stats, scores, fantasy and price model, with ratings and trade-offs as of October 2026.
+> Which NFL stats app fits you? Six iPhone apps compared on advanced stats, scores, fantasy and price model, with ratings and trade-offs as of November 2026.
 
 Web page: https://jackwallner.com/ios/football/best-nfl-stats-app.html
 
-## Best NFL stats app for iPhone (October 2026)
+## Best NFL stats app for iPhone (November 2026)
 
-By [Jack Wallner](https://jackwallner.com/). Last updated October 28, 2026.
+By [Jack Wallner](https://jackwallner.com/). Last updated November 11, 2026.
 
 The best NFL stats app depends on what you mean by stats. Best for advanced percentiles such as EPA per play and CPOE with no account: Pro Football: EPA StatScout. Best for live scores, play-by-play and alerts: Superfan Sports. Best for the official league experience and video: the NFL app. Best for fantasy rankings and prop picks: PFF. Best for answering a one-off stats question: StatMuse.
 
-**How we compared.** I read each app's App Store listing and pulled its rating, update date and supported devices from Apple's public lookup on October 12, 2026 (US storefront). I opened HOF on a Mac to see what a new user gets before signing in. The other apps are described from their listings, so I only state what a listing says. Jack Wallner makes Pro Football: EPA StatScout, so read its entries with that in mind.
+**How we compared.** I read each app's App Store listing and pulled its rating, update date and supported devices from Apple's public lookup on November 11, 2026 (US storefront). I opened HOF on a Mac to see what a new user gets before signing in. The other apps are described from their listings, so I only state what a listing says. Jack Wallner makes Pro Football: EPA StatScout, so read its entries with that in mind.
 
 ## How do the NFL stats apps compare?
 
@@ -18,14 +18,14 @@ StatScout shows advanced-stat percentiles such as EPA and CPOE, Superfan Sports 
 
 | App | Best for | Price model | Apple Watch | iPad | Account | Rating (count) | Last updated |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Pro Football: EPA StatScout | Advanced-stat percentiles (EPA, CPOE) for every player | Free + subscription or one-time purchase | No | Yes | No account | No ratings yet | Oct 10, 2026 |
-| Superfan Sports: NFL Football | Scores, play-by-play, alerts, odds and box scores | Free + subscription | No | Yes | Not stated in listing | 4.82 (9,629) | Oct 9, 2026 |
-| NFL | Official hub: live games, video, highlights | Free + subscription (NFL+) | No | Yes | Not stated in listing | 4.48 (412,237) | Oct 6, 2026 |
-| PFF: Betting & Fantasy Tools | Fantasy rankings, prop picks, draft tools | Free + subscription (PFF+) | No | Yes | Not stated in listing | 4.27 (409) | Oct 11, 2026 |
-| StatMuse | Asking a stats question in plain English | Free | No | Yes | Not stated in listing | 3.86 (78) | Aug 8, 2026 |
-| HOF: Sports Stats & Data | Prop and parlay research across 15 leagues | Free + subscription | No | Yes | Yes, web login before content (checked) | 4.86 (10,690) | Oct 5, 2026 |
+| Pro Football: EPA StatScout | Advanced-stat percentiles (EPA, CPOE) for every player | Free + subscription or one-time purchase | No | Yes | No account | No ratings yet | Nov 9, 2026 |
+| Superfan Sports: NFL Football | Scores, play-by-play, alerts, odds and box scores | Free + subscription | No | Yes | Not stated in listing | 4.81 (9,858) | Oct 24, 2026 |
+| NFL | Official hub: live games, video, highlights | Free + subscription (NFL+) | No | Yes | Not stated in listing | 4.48 (412,485) | Nov 3, 2026 |
+| PFF: Betting & Fantasy Tools | Fantasy rankings, prop picks, draft tools | Free + subscription (PFF+) | No | Yes | Not stated in listing | 4.29 (427) | Oct 23, 2026 |
+| StatMuse | Asking a stats question in plain English | Free | No | Yes | Not stated in listing | 3.72 (83) | Aug 8, 2026 |
+| HOF: Sports Stats & Data | Prop and parlay research across 15 leagues | Free + subscription | No | Yes | Yes, web login before content (checked) | 4.86 (10,809) | Nov 11, 2026 |
 
-Ratings, update dates and device support come from Apple's App Store lookup on October 12, 2026. Pro Football: EPA StatScout is new and has no ratings yet. "Not stated" means the listing does not say.
+Ratings, update dates and device support come from Apple's App Store lookup on November 11, 2026. Pro Football: EPA StatScout is new and has no ratings yet. "Not stated" means the listing does not say.
 
 ## Pro Football: EPA StatScout
 
@@ -53,11 +53,11 @@ HOF is aimed at prop and parlay research, with hit-rate leaderboards, matchup gr
 
 ## What other NFL stats apps will you see?
 
-One more app shows up when you search for an NFL stats app. I did not open it; the note below comes from its App Store listing as of October 13, 2026.
+One more app shows up when you search for an NFL stats app. I did not open it; the note below comes from its App Store listing as of November 11, 2026.
 
 ### theScore: Sports News & Scores
 
-theScore is a general sports app rather than an NFL stats tool. Its listing covers real-time scores and alerts, news, video, box scores with team and player stats, standings and league leaders across the NFL, college football and dozens of other leagues, plus a personalized favorites feed and fan chat. It suits fans who follow several sports and want scores and headlines in one place. The listing does not mention advanced metrics such as EPA or CPOE. It has a 4.82 rating from 857,439 ratings and was last updated October 10, 2026.
+theScore is a general sports app rather than an NFL stats tool. Its listing covers real-time scores and alerts, news, video, box scores with team and player stats, standings and league leaders across the NFL, college football and dozens of other leagues, plus a personalized favorites feed and fan chat. It suits fans who follow several sports and want scores and headlines in one place. The listing does not mention advanced metrics such as EPA or CPOE. It has a 4.82 rating from 863,310 ratings and was last updated October 29, 2026.
 
 ## Which should you pick?
 
@@ -83,7 +83,7 @@ Superfan Sports: NFL Football lists live scores, play-by-play, alerts and box sc
 
 ### Is there an app for Pro Football Reference?
 
-No. A search of the US App Store on October 12, 2026 found no app from Pro Football Reference itself. Sports Reference lists a Pro Football Draft Machine app, which is a draft tool.
+No. A search of the US App Store on November 11, 2026 found no app from Pro Football Reference itself. Sports Reference lists a Pro Football Draft Machine app, which is a draft tool.
 
 ### Which app is best for fantasy football stats?
 
