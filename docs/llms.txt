@@ -8,7 +8,7 @@
 
 ## Guides
 
-- [Best NFL Stats App for iPhone: 6 Compared (2026)](https://jackwallner.com/ios/football/best-nfl-stats-app.html.md): Which NFL stats app fits you? Six iPhone apps compared on advanced stats, scores, fantasy and price model, with ratings and trade-offs as of October 2026.
+- [Best NFL Stats App for iPhone: 6 Compared (2026)](https://jackwallner.com/ios/football/best-nfl-stats-app.html.md): Which NFL stats app fits you? Six iPhone apps compared on advanced stats, scores, fantasy and price model, with ratings and trade-offs as of November 2026.
 - [What Is EPA Per Play? EPA, CPOE and Good QB Numbers](https://jackwallner.com/ios/football/what-is-epa-per-play.html.md): EPA per play is how much a play changes expected points. In 2025 the median QB was +0.05 per dropback and the top 10% reached +0.20. How EPA and CPOE work.
 
 ## Optional
