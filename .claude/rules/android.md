@@ -117,3 +117,5 @@ es-ES; the app UI is English only). Privacy and terms pages are
   rolled out to a track. Google developer notifications are not connected.
 - RevenueCat Play products are attached to the packages and entitlement
   (`...monthly:monthly`, `...yearly:yearly`, `...pro` one-time).
+
+- 2026-11-16: Play SUSPENDED the app (Impersonation policy) for "NFL" in localized titles and short descriptions (de-DE, da-DK, es-US, ar and others; en-US passed). Repo titles and shorts are now mark-free and `scripts/validate-play-listing.py` fails on any league name in them. The live listing cannot be edited while suspended; next step is the Play Console appeal or a relaunch.

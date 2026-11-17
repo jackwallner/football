@@ -1,1 +1,1 @@
-Thống kê NFL theo phân vị: EPA, CPOE, dẫn đầu, xu hướng và so sánh cầu thủ.
+Thống kê bóng bầu dục Mỹ theo phân vị: EPA, CPOE, dẫn đầu, xu hướng và so sánh.
