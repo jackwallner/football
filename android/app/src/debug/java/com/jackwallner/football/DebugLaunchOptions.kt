@@ -5,6 +5,7 @@ import com.jackwallner.football.data.PackageKind
 import com.jackwallner.football.data.PeriodUnit
 import com.jackwallner.football.data.Plan
 import com.jackwallner.football.data.PlanPeriod
+import com.jackwallner.football.model.cityOnlyTeamNames
 
 /**
  * Debug-only launch extras, the Android side of the iOS launch arguments.
@@ -14,6 +15,7 @@ import com.jackwallner.football.data.PlanPeriod
  *         --ez resetAll true --ez onboarded true --ez forcePro true --ei tab 2
  *
  * `--ez screenshotData true` swaps in the fictional fixture feed for store captures.
+ * `--ez cityTeamNames true` shows clubs by city alone, for store captures only.
  */
 object DebugLaunchOptions {
     var launchTab: Int? = null
@@ -30,6 +32,7 @@ object DebugLaunchOptions {
             graph.feedOverride = ScreenshotFixtureApi to ScreenshotFixtureApi.cache
             graph.review.isAutomationRun = true
         }
+        cityOnlyTeamNames = extras.getBoolean("cityTeamNames")
         extras.getString("statsBoard")?.let { graph.defaults.putString("stats.board", it) }
         if (extras.getBoolean("onboarded")) graph.defaults.putBoolean("hasCompletedOnboarding", true)
         // The graph outlives an activity, so a reset also clears a Pro unlock left by an earlier launch.

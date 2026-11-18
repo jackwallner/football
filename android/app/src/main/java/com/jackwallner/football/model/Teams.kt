@@ -63,10 +63,21 @@ fun normalizedTeamAbbreviation(team: String): String {
     return TEAM_ALIASES[key] ?: key
 }
 
-fun teamFullName(abbr: String): String = TEAM_NAMES[normalizedTeamAbbreviation(abbr)] ?: abbr
+/**
+ * Store captures show the city alone ("Kansas City"), so listing screenshots carry no club
+ * names. Only the debug launch extra `cityTeamNames` sets this.
+ */
+@Volatile
+var cityOnlyTeamNames: Boolean = false
+
+fun teamFullName(abbr: String): String {
+    val name = TEAM_NAMES[normalizedTeamAbbreviation(abbr)] ?: return abbr
+    return if (cityOnlyTeamNames) name.substringBeforeLast(" ") else name
+}
 
 /** "Seahawks" from "Seattle Seahawks". */
-fun teamNickname(abbr: String): String = teamFullName(abbr).split(" ").lastOrNull() ?: abbr
+fun teamNickname(abbr: String): String =
+    (TEAM_NAMES[normalizedTeamAbbreviation(abbr)] ?: abbr).split(" ").lastOrNull() ?: abbr
 
 private fun isUnsignedTeam(abbr: String): Boolean {
     val trimmed = abbr.trim().uppercase()

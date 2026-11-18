@@ -10,7 +10,9 @@ import com.jackwallner.football.model.NFLConference
 import com.jackwallner.football.model.SeasonLabel
 import com.jackwallner.football.model.SeasonPhase
 import com.jackwallner.football.model.StatScoutSeason
+import com.jackwallner.football.model.cityOnlyTeamNames
 import com.jackwallner.football.model.teamFullName
+import com.jackwallner.football.model.teamNickname
 import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerializationException
@@ -65,6 +67,19 @@ class DashboardViewModelTest {
         assertEquals("San Francisco 49ers", teamFullName("SF"))
         assertEquals("Philadelphia Eagles", teamFullName("PHI"))
         assertEquals("Unknown", teamFullName("Unknown"))
+    }
+
+    @Test
+    fun cityOnlyTeamNamesDropTheClubName() {
+        cityOnlyTeamNames = true
+        try {
+            assertEquals("Kansas City", teamFullName("KC"))
+            assertEquals("San Francisco", teamFullName("SF"))
+            assertEquals("Unknown", teamFullName("Unknown"))
+            assertEquals("Chiefs", teamNickname("KC"))
+        } finally {
+            cityOnlyTeamNames = false
+        }
     }
 
     @Test

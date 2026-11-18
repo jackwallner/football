@@ -76,13 +76,15 @@ This app has used a temporary AVD `football_agent_test` on port 5560
 
 Debug launch extras (`DebugLaunchOptions`, debug builds only): `resetAll`,
 `onboarded`, `forcePro`, `previewStore`, `previewTrialUsed`, `tab`,
-`onboardingPage`, `uiTest`, `statsBoard`, and `screenshotData` (the fictional
-iOS fixture feed, `ScreenshotFixtureApi`).
+`onboardingPage`, `uiTest`, `statsBoard`, `screenshotData` (the fictional
+iOS fixture feed, `ScreenshotFixtureApi`) and `cityTeamNames` (clubs shown by
+city alone, "Kansas City"; store captures only, so listing screenshots carry no
+club names).
 
 ## Store assets
 
 Raw captures are 1080x2400 from the debug build with `--ez screenshotData true
---ez forcePro true --ei tab <n>` and System UI demo mode (clock 0941, mobile
+--ez cityTeamNames true --ez forcePro true --ei tab <n>` and System UI demo mode (clock 0941, mobile
 hidden). `python3 scripts/play_screenshot_compositor.py` writes the seven
 1080x1920 frames (App Store headlines) and the 1024x500 feature graphic into
 `android/play-assets/`. Listing text and changelogs are in
