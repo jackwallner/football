@@ -4,9 +4,8 @@
 Checks every locale folder for Play's limits (title 30, short 80, full 4000),
 the house rules (no em dashes, no prices, no Apple wording, no promo words in
 the title, no medical claims) and the StatScout specifics: the brand in every
-title, the Google Play billing paragraph, the privacy and terms links, the NFL
-non-affiliation line and, outside English, the line saying the app is in
-English. Exit 1 on any failure.
+title, the Google Play billing paragraph, the privacy and terms links and,
+outside English, the line saying the app is in English. Exit 1 on any failure.
 
 Usage: scripts/validate-play-listing.py [--root DIR]
 """
@@ -18,9 +17,11 @@ import sys
 from pathlib import Path
 
 # Play suspended Football on 2026-11-16 (Impersonation) for league names in localized
-# titles and short descriptions. Keep marks out of both; the full description may name
-# the league only in the non-affiliation line and factual copy.
-LEAGUE_MARK = re.compile(r"NFL|NBA|MLB|NHL|NFLPA|NBPA|MLBPA|NHLPA|НХЛ|Statcast|스탯캐스트")
+# titles and short descriptions, and the full descriptions were then cleaned too. Keep
+# league names and marks out of all three.
+LEAGUE_MARK = re.compile(
+    r"NFLPA|NFL|National Football League|NBPA|NBA|MLBPA|MLB|NHLPA|NHL|НХЛ|Statcast|스탯캐스트"
+)
 
 ROOT = Path(__file__).resolve().parent.parent / "android/play-assets/metadata/android"
 LIMITS = {"title.txt": 30, "short_description.txt": 80, "full_description.txt": 4000}
@@ -107,7 +108,7 @@ def check(locale_dir: Path) -> list[str]:
     loc = locale_dir.name
     if loc not in PLAY_LANGS:
         errs.append(f"unknown Play language code {loc}")
-    for name in ("title.txt", "short_description.txt"):
+    for name in ("title.txt", "short_description.txt", "full_description.txt"):
         p = locale_dir / name
         hit = LEAGUE_MARK.search(p.read_text(encoding="utf-8")) if p.exists() else None
         if hit:
@@ -144,8 +145,6 @@ def check(locale_dir: Path) -> list[str]:
     for url in (PRIVACY_URL, TERMS_URL):
         if url not in full:
             errs.append(f"full description lacks {url}")
-    if "NFLPA" not in full:
-        errs.append("full description lacks the NFL non-affiliation line")
     if not loc.startswith("en"):
         note = ENGLISH_NOTE.get(loc)
         if note is None:

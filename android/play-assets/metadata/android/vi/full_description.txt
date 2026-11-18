@@ -1,5 +1,5 @@
 Ai thật sự nổi bật trong giải, khi nhìn sâu hơn những con số cơ bản?
-Xếp hạng cầu thủ NFL theo chỉ số nâng cao, mở hồ sơ phân vị đầy đủ chỉ với một chạm và xem ai đang thăng hoa hay đang chững lại.
+Xếp hạng cầu thủ bóng bầu dục Mỹ theo chỉ số nâng cao, mở hồ sơ phân vị đầy đủ chỉ với một chạm và xem ai đang thăng hoa hay đang chững lại.
 
 StatScout gom EPA mỗi pha bóng, CPOE, YAC vượt kỳ vọng, hiệu quả chạy bóng, khả năng bắt bóng, tác động phòng thủ và các thống kê truyền thống vào một ứng dụng bóng bầu dục Mỹ nhanh gọn cho Android.
 
@@ -10,7 +10,7 @@ HỒ SƠ CẦU THỦ ĐẦY ĐỦ
 Chạm vào cầu thủ để xem phân vị ở chuyền bóng, chạy bóng, bắt bóng và phòng thủ, chuyển giữa chỉ số nâng cao và thống kê mùa giải thông thường, rồi xem phong độ từng trận.
 
 CẬP NHẬT NGAY NGÀY THI ĐẤU
-Trong mùa giải, StatScout kiểm tra thống kê NFL mới công bố suốt cả ngày và cập nhật ngay khi có. Mỗi màn hình cho biết số liệu gồm tuần nào và những trận nào.
+Trong mùa giải, StatScout kiểm tra thống kê mới công bố suốt cả ngày và cập nhật ngay khi có. Mỗi màn hình cho biết số liệu gồm tuần nào và những trận nào.
 
 TỶ SỐ, BOX SCORE VÀ BẢNG XẾP HẠNG
 Theo dõi mọi trận trong tuần với tỷ số chung cuộc, box score, những pha bóng quyết định, bảng xếp hạng và power ranking của cả 32 đội.
@@ -29,7 +29,7 @@ Mở khóa phần còn lại của ứng dụng với StatScout+:
 Chọn gói Tháng, Năm hoặc Lifetime. Một lần mua mở khóa tất cả.
 
 QUYỀN RIÊNG TƯ TRÊN HẾT
-Không tài khoản, không đăng ký, không quảng cáo, không theo dõi bởi bên thứ ba. Ứng dụng chỉ gửi các yêu cầu mạng cần thiết cho thống kê NFL và xác minh giao dịch mua.
+Không tài khoản, không đăng ký, không quảng cáo, không theo dõi bởi bên thứ ba. Ứng dụng chỉ gửi các yêu cầu mạng cần thiết cho thống kê và xác minh giao dịch mua.
 
 Chi tiết gói đăng ký
 StatScout+ có dạng gói đăng ký tự động gia hạn (Tháng hoặc Năm, kèm dùng thử miễn phí cho người đăng ký mới đủ điều kiện) hoặc mua một lần Lifetime. Giá hiển thị trong ứng dụng trước khi mua và khác nhau theo khu vực. Google Play trừ tiền tài khoản của bạn khi bạn xác nhận. Gói đăng ký tự động gia hạn cho đến khi bị hủy. Quản lý hoặc hủy bất cứ lúc nào trong Google Play tại mục Thanh toán và gói đăng ký.
@@ -39,4 +39,4 @@ Bản thân ứng dụng sử dụng tiếng Anh.
 Chính sách quyền riêng tư: https://jackwallner.github.io/football/android-privacy.html
 Điều khoản sử dụng: https://jackwallner.github.io/football/android-terms.html
 
-StatScout không liên kết với, không được cấp phép, xác nhận hay tài trợ bởi National Football League (NFL), bất kỳ đội NFL nào hoặc NFLPA. Tên cầu thủ, tên đội và số liệu thống kê chỉ được dùng cho mục đích nhận diện và cung cấp thông tin.
+StatScout là ứng dụng độc lập. Ứng dụng không liên kết với, không được cấp phép, xác nhận hay tài trợ bởi bất kỳ giải bóng bầu dục chuyên nghiệp, đội hay hiệp hội cầu thủ nào. Tên cầu thủ, tên đội và số liệu thống kê chỉ được dùng cho mục đích nhận diện và cung cấp thông tin.

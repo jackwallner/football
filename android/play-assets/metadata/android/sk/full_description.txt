@@ -1,5 +1,5 @@
 Kto v lige naozaj vládne, keď sa pozriete pod povrch?
-Zoraďte hráčov NFL podľa pokročilých štatistík, otvorte celý percentilový profil jedným ťuknutím a sledujte, kto je vo forme a kto upadá.
+Zoraďte hráčov amerického futbalu podľa pokročilých štatistík, otvorte celý percentilový profil jedným ťuknutím a sledujte, kto je vo forme a kto upadá.
 
 StatScout spája EPA na akciu, CPOE, YAC nad očakávanie, efektivitu behov, produkciu v príjme, vplyv obrany a klasické štatistiky v jednej rýchlej aplikácii o americkom futbale pre Android.
 
@@ -10,7 +10,7 @@ KOMPLETNÉ PROFILY HRÁČOV
 Ťuknite na hráča a uvidíte percentily v prihrávkach, behoch, príjme a obrane, prepnete medzi pokročilými a štandardnými štatistikami a prejdete formu zápas po zápase.
 
 AKTUÁLNE V DEŇ ZÁPASU
-Počas sezóny StatScout celý deň hľadá novo zverejnené štatistiky NFL a aktualizuje ich, len čo sú k dispozícii. Každá obrazovka ukazuje, ktorý týždeň a ktoré zápasy čísla zahŕňajú.
+Počas sezóny StatScout celý deň hľadá novo zverejnené štatistiky a aktualizuje ich, len čo sú k dispozícii. Každá obrazovka ukazuje, ktorý týždeň a ktoré zápasy čísla zahŕňajú.
 
 VÝSLEDKY, BOX SCORE A TABUĽKY
 Sledujte každý zápas týždňa s konečnými výsledkami, box score, rozhodujúcimi akciami, tabuľkami a power rankingmi všetkých 32 tímov.
@@ -29,7 +29,7 @@ Odomknite zvyšok aplikácie so StatScout+:
 Vyberte si mesačné, ročné alebo Lifetime. Jeden nákup odomkne všetko.
 
 SÚKROMIE NA PRVOM MIESTE
-Žiadny účet, žiadna registrácia, žiadne reklamy, žiadne sledovanie tretími stranami. Aplikácia posiela len požiadavky potrebné pre štatistiky NFL a overenie nákupu.
+Žiadny účet, žiadna registrácia, žiadne reklamy, žiadne sledovanie tretími stranami. Aplikácia posiela len požiadavky potrebné pre štatistiky a overenie nákupu.
 
 Podrobnosti o predplatnom
 StatScout+ je dostupný ako automaticky obnovované predplatné (mesačné alebo ročné, s bezplatnou skúšobnou dobou pre oprávnených nových predplatiteľov) alebo ako jednorazový nákup Lifetime. Ceny sa zobrazia v aplikácii pred nákupom a líšia sa podľa regiónu. Google Play zaúčtuje platbu na váš účet po potvrdení. Predplatné sa automaticky obnovuje, kým ho nezrušíte. Spravovať alebo zrušiť ho môžete kedykoľvek v Google Play v časti Platby a predplatné.
@@ -39,4 +39,4 @@ Samotná aplikácia je v angličtine.
 Zásady ochrany súkromia: https://jackwallner.github.io/football/android-privacy.html
 Podmienky používania: https://jackwallner.github.io/football/android-terms.html
 
-StatScout nie je pridružený k National Football League (NFL), žiadnemu tímu NFL ani NFLPA a nie je nimi autorizovaný, podporovaný ani sponzorovaný. Mená hráčov, názvy tímov a štatistiky slúžia len na identifikáciu a informáciu.
+StatScout je nezávislá aplikácia. Nie je pridružená k žiadnej profesionálnej lige amerického futbalu, tímu ani asociácii hráčov a nie je nimi autorizovaná, podporovaná ani sponzorovaná. Mená hráčov, názvy tímov a štatistiky slúžia len na identifikáciu a informáciu.

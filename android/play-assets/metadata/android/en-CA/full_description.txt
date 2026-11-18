@@ -1,5 +1,5 @@
 See who leads beyond the box score.
-Rank NFL players by advanced metrics, read a full percentile profile in one tap, and track who is heating up or cooling off right now.
+Rank pro football players by advanced metrics, read a full percentile profile in one tap, and track who is heating up or cooling off right now.
 
 StatScout puts EPA per play, CPOE, YAC over expected, rushing efficiency, receiving production, defensive impact, and the familiar box-score totals in one fast Android app.
 
@@ -10,7 +10,7 @@ COMPLETE PLAYER PROFILES
 Tap any player to see the full picture: percentile rankings across Passing, Rushing, Receiving, and Defense, a switch between advanced metrics and standard season stats, and recent form game by game.
 
 STATS THAT KEEP UP WITH GAME DAY
-During the season, StatScout checks for newly published NFL stats throughout the day and updates as soon as they arrive. Every screen shows which week and games the numbers include, so you always know what you are looking at.
+During the season, StatScout checks for newly published stats throughout the day and updates as soon as they arrive. Every screen shows which week and games the numbers include, so you always know what you are looking at.
 
 SCORES, BOX SCORES AND STANDINGS
 Follow every game of the week with final scores, box scores, the plays that swung the game, standings, and power rankings for all 32 clubs.
@@ -29,7 +29,7 @@ Unlock the rest of the app with StatScout+:
 Choose Monthly, Yearly, or Lifetime. One purchase covers everything.
 
 PRIVACY-FIRST
-No accounts. No sign-up. No ads. No third-party tracking. The app makes only the network requests needed for NFL statistics and purchase verification.
+No accounts. No sign-up. No ads. No third-party tracking. The app makes only the network requests needed for statistics and purchase verification.
 
 Subscription details
 StatScout+ is available as an auto-renewing subscription (Monthly or Yearly, each with a free trial for eligible new subscribers) or as a one-time Lifetime purchase. Prices are shown in the app before you buy and vary by region. Google Play charges your account when you confirm. Subscriptions renew automatically until cancelled. Manage or cancel anytime in Google Play under Payments & subscriptions.
@@ -37,4 +37,4 @@ StatScout+ is available as an auto-renewing subscription (Monthly or Yearly, eac
 Privacy Policy: https://jackwallner.github.io/football/android-privacy.html
 Terms of Use: https://jackwallner.github.io/football/android-terms.html
 
-StatScout is not affiliated with, authorized, endorsed by, or sponsored by the National Football League (NFL), any NFL team, or the NFLPA. Player names, team names, and statistics are used for identification and informational purposes only.
+StatScout is an independent app. It is not affiliated with, authorized, endorsed by, or sponsored by any professional football league, team, or players association. Player names, team names, and statistics are used for identification and informational purposes only.

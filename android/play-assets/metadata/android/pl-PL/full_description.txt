@@ -1,5 +1,5 @@
 Kto naprawdę rządzi w lidze, poza zwykłymi liczbami?
-Szereguj graczy NFL według zaawansowanych statystyk, otwieraj pełny profil percentyli jednym dotknięciem i sprawdzaj, kto jest w formie, a kto ją traci.
+Szereguj graczy futbolu amerykańskiego według zaawansowanych statystyk, otwieraj pełny profil percentyli jednym dotknięciem i sprawdzaj, kto jest w formie, a kto ją traci.
 
 StatScout łączy EPA na akcję, CPOE, YAC ponad oczekiwania, skuteczność biegów, produkcję w odbiorze, wpływ obrony i klasyczne statystyki w jednej szybkiej aplikacji o futbolu amerykańskim na Androida.
 
@@ -10,7 +10,7 @@ PEŁNE PROFILE GRACZY
 Dotknij gracza, aby zobaczyć percentyle w podaniach, biegach, odbiorze i obronie, przełączać się między statystykami zaawansowanymi i standardowymi oraz śledzić formę mecz po meczu.
 
 NA BIEŻĄCO W DNIU MECZOWYM
-W sezonie StatScout przez cały dzień sprawdza nowo opublikowane statystyki NFL i aktualizuje je od razu. Każdy ekran pokazuje, który tydzień i które mecze obejmują liczby.
+W sezonie StatScout przez cały dzień sprawdza nowo opublikowane statystyki i aktualizuje je od razu. Każdy ekran pokazuje, który tydzień i które mecze obejmują liczby.
 
 WYNIKI, BOX SCORE I TABELE
 Śledź każdy mecz tygodnia: wyniki końcowe, box score, akcje, które przesądziły o wyniku, tabele i power rankingi wszystkich 32 drużyn.
@@ -29,7 +29,7 @@ Odblokuj resztę aplikacji dzięki StatScout+:
 Wybierz plan miesięczny, roczny lub Lifetime. Jeden zakup odblokowuje wszystko.
 
 PRYWATNOŚĆ PRZEDE WSZYSTKIM
-Bez konta, bez rejestracji, bez reklam, bez śledzenia przez podmioty trzecie. Aplikacja wysyła tylko zapytania potrzebne do pobrania statystyk NFL i weryfikacji zakupów.
+Bez konta, bez rejestracji, bez reklam, bez śledzenia przez podmioty trzecie. Aplikacja wysyła tylko zapytania potrzebne do pobrania statystyk i weryfikacji zakupów.
 
 Szczegóły subskrypcji
 StatScout+ jest dostępny jako automatycznie odnawiana subskrypcja (miesięczna lub roczna, z bezpłatnym okresem próbnym dla uprawnionych nowych subskrybentów) albo jako jednorazowy zakup Lifetime. Ceny są widoczne w aplikacji przed zakupem i różnią się w zależności od regionu. Google Play obciąża Twoje konto po potwierdzeniu. Subskrypcje odnawiają się automatycznie do czasu anulowania. Zarządzaj nimi lub anuluj je w dowolnej chwili w Google Play, w sekcji Płatności i subskrypcje.
@@ -39,4 +39,4 @@ Sama aplikacja jest w języku angielskim.
 Polityka prywatności: https://jackwallner.github.io/football/android-privacy.html
 Warunki korzystania: https://jackwallner.github.io/football/android-terms.html
 
-StatScout nie jest powiązany z National Football League (NFL), żadną drużyną NFL ani NFLPA, ani przez nie autoryzowany, popierany czy sponsorowany. Nazwiska graczy, nazwy drużyn i statystyki służą wyłącznie celom identyfikacyjnym i informacyjnym.
+StatScout to niezależna aplikacja. Nie jest powiązana z żadną profesjonalną ligą futbolu amerykańskiego, drużyną ani związkiem zawodowym graczy, ani przez nie autoryzowana, popierana czy sponsorowana. Nazwiska graczy, nazwy drużyn i statystyki służą wyłącznie celom identyfikacyjnym i informacyjnym.

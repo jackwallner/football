@@ -124,8 +124,8 @@ def feature_graphic() -> Path:
     img.paste(icon, (64, 82), icon)
     draw.text((64, 250), "StatScout", font=sans(76, 700), fill=CREAM_TEXT)
     tagline = sans(32, 500)
-    draw.text((66, 352), "NFL percentiles and", font=tagline, fill=(196, 210, 199))
-    draw.text((66, 394), "advanced stats.", font=tagline, fill=(196, 210, 199))
+    draw.text((66, 352), "Pro football percentiles", font=tagline, fill=(196, 210, 199))
+    draw.text((66, 394), "and advanced stats.", font=tagline, fill=(196, 210, 199))
 
     board = Image.open(RAW / "01_league_leaders.png").convert("RGB").crop((30, 700, 1050, 1610))
     board = rounded(board.resize((round(board.width * 380 / board.height), 380), Image.LANCZOS), 26)

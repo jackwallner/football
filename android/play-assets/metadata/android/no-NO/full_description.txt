@@ -1,5 +1,5 @@
 Hvem er egentlig best, bak boxscoren?
-Ranger NFL-spillere etter avansert statistikk, åpne en komplett persentilprofil med ett trykk og se hvem som er varme eller kjølner akkurat nå.
+Ranger football-spillere etter avansert statistikk, åpne en komplett persentilprofil med ett trykk og se hvem som er varme eller kjølner akkurat nå.
 
 StatScout samler EPA per spill, CPOE, YAC over forventet, løpseffektivitet, mottak, forsvarsinnsats og klassiske boxscore-tall i én rask amerikansk fotball-app for Android.
 
@@ -10,7 +10,7 @@ KOMPLETTE SPILLERPROFILER
 Trykk på en spiller for å se persentiler i pasninger, løp, mottak og forsvar, bytte mellom avanserte mål og vanlig sesongstatistikk og følge formen kamp for kamp.
 
 OPPDATERT PÅ KAMPDAGEN
-I sesongen ser StatScout etter nypublisert NFL-statistikk gjennom hele dagen og oppdaterer så snart den kommer. Hver skjerm viser hvilken uke og hvilke kamper som er med.
+I sesongen ser StatScout etter nypublisert statistikk gjennom hele dagen og oppdaterer så snart den kommer. Hver skjerm viser hvilken uke og hvilke kamper som er med.
 
 RESULTATER, BOXSCORES OG TABELLER
 Følg ukens kamper med sluttresultater, boxscores, de avgjørende spillene, tabeller og power rankings for alle 32 lag.
@@ -29,7 +29,7 @@ Lås opp resten av appen med StatScout+:
 Velg månedlig, årlig eller Lifetime. Ett kjøp låser opp alt.
 
 PERSONVERN FØRST
-Ingen konto, ingen registrering, ingen reklame, ingen sporing fra tredjeparter. Appen gjør bare nettverksforespørslene som trengs for NFL-statistikk og kjøpsbekreftelse.
+Ingen konto, ingen registrering, ingen reklame, ingen sporing fra tredjeparter. Appen gjør bare nettverksforespørslene som trengs for statistikk og kjøpsbekreftelse.
 
 Om abonnementet
 StatScout+ finnes som et abonnement som fornyes automatisk (månedlig eller årlig, med gratis prøveperiode for kvalifiserte nye abonnenter) eller som et engangskjøp Lifetime. Prisene vises i appen før du kjøper og varierer mellom regioner. Google Play belaster kontoen din når du bekrefter. Abonnementer fornyes automatisk til de sies opp. Administrer eller avslutt når som helst i Google Play under Betalinger og abonnementer.
@@ -39,4 +39,4 @@ Selve appen er på engelsk.
 Personvernerklæring: https://jackwallner.github.io/football/android-privacy.html
 Vilkår for bruk: https://jackwallner.github.io/football/android-terms.html
 
-StatScout er ikke tilknyttet, autorisert, godkjent eller sponset av National Football League (NFL), noe NFL-lag eller NFLPA. Spiller- og lagnavn og statistikk brukes kun til identifikasjon og informasjon.
+StatScout er en uavhengig app. Den er ikke tilknyttet, autorisert, godkjent eller sponset av noen profesjonell footballliga, noe lag eller noen spillerforening. Spiller- og lagnavn og statistikk brukes kun til identifikasjon og informasjon.

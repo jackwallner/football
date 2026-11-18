@@ -1,5 +1,5 @@
 Wie is er echt goed, voorbij de boxscore?
-Rangschik NFL-spelers op geavanceerde statistieken, open met één tik een volledig percentielprofiel en zie wie op dit moment in vorm is of afkoelt.
+Rangschik American football-spelers op geavanceerde statistieken, open met één tik een volledig percentielprofiel en zie wie op dit moment in vorm is of afkoelt.
 
 StatScout brengt EPA per play, CPOE, YAC boven verwachting, loopefficiëntie, ontvangstproductie, verdedigende impact en de bekende boxscore-cijfers samen in één snelle American football-app voor Android.
 
@@ -10,7 +10,7 @@ VOLLEDIGE SPELERSPROFIELEN
 Tik op een speler voor zijn percentielen in Passing, Rushing, Receiving en Defense, wissel tussen geavanceerde cijfers en standaard seizoensstatistieken en volg de recente vorm wedstrijd voor wedstrijd.
 
 ACTUEEL OP SPEELDAG
-Tijdens het seizoen controleert StatScout de hele dag op nieuw gepubliceerde NFL-statistieken en werkt ze bij zodra ze binnen zijn. Elk scherm laat zien welke week en welke wedstrijden zijn meegenomen.
+Tijdens het seizoen controleert StatScout de hele dag op nieuw gepubliceerde statistieken en werkt ze bij zodra ze binnen zijn. Elk scherm laat zien welke week en welke wedstrijden zijn meegenomen.
 
 UITSLAGEN, BOXSCORES EN STANDEN
 Volg elke wedstrijd van de week met einduitslagen, boxscores, de beslissende plays, standen en power rankings van alle 32 teams.
@@ -29,7 +29,7 @@ Ontgrendel de rest van de app met StatScout+:
 Kies Maandelijks, Jaarlijks of Lifetime. Eén aankoop ontgrendelt alles.
 
 PRIVACY VOOROP
-Geen account. Geen registratie. Geen advertenties. Geen tracking door derden. De app doet alleen de netwerkverzoeken die nodig zijn voor NFL-statistieken en aankoopverificatie.
+Geen account. Geen registratie. Geen advertenties. Geen tracking door derden. De app doet alleen de netwerkverzoeken die nodig zijn voor statistieken en aankoopverificatie.
 
 Abonnementsdetails
 StatScout+ is beschikbaar als automatisch verlengend abonnement (Maandelijks of Jaarlijks, elk met een gratis proefperiode voor nieuwe abonnees die in aanmerking komen) of als eenmalige Lifetime-aankoop. Prijzen worden vóór aankoop in de app getoond en verschillen per regio. Google Play brengt het bedrag in rekening wanneer je bevestigt. Abonnementen worden automatisch verlengd tot je opzegt. Beheer of annuleer altijd in Google Play onder Betalingen en abonnementen.
@@ -39,4 +39,4 @@ De app zelf is in het Engels.
 Privacybeleid: https://jackwallner.github.io/football/android-privacy.html
 Gebruiksvoorwaarden: https://jackwallner.github.io/football/android-terms.html
 
-StatScout is niet gelieerd aan, geautoriseerd, goedgekeurd of gesponsord door de National Football League (NFL), een NFL-team of de NFLPA. Namen van spelers en teams en statistieken worden alleen gebruikt ter identificatie en informatie.
+StatScout is een onafhankelijke app. De app is niet gelieerd aan, geautoriseerd, goedgekeurd of gesponsord door een professionele American football-competitie, een team of een spelersvakbond. Namen van spelers en teams en statistieken worden alleen gebruikt ter identificatie en informatie.
