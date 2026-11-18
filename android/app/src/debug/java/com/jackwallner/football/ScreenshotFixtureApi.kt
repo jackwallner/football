@@ -83,7 +83,7 @@ object ScreenshotFixtureApi : StatcastProviding {
         if (season != this.season) return null
         return DataFreshness(
             status = DataFreshnessStatus.READY,
-            revision = "screenshot-fixture-v12",
+            revision = "screenshot-fixture-v13",
             sourcePublishedAt = asOf,
             publishedAt = asOf,
             checkedAt = asOf,
@@ -138,24 +138,34 @@ object ScreenshotFixtureApi : StatcastProviding {
         )
     }
 
-    private fun metrics(seed: Seed, scale: Double, p: Int): List<Metric> {
+    /**
+     * Each seed trails its position's best by its percentile gap, so clubs rank apart on the
+     * team page instead of tying at 50. The best seed keeps the base values.
+     */
+    private fun quality(seed: Seed): Double =
+        1.0 - (seeds.filter { it.type == seed.type }.maxOf { it.percentile } - seed.percentile) * 0.01
+
+    private fun metrics(seed: Seed, seasonScale: Double, p: Int): List<Metric> {
         fun m(label: String, value: Double, percentile: Int, category: MetricCategory) =
             Metric(label = label, value = formatted(label, value), percentile = percentile, category = category, qualified = true)
         fun less(n: Int) = max(50, p - n)
+        val scale = seasonScale * quality(seed)
+        // One rival passer leads the two style metrics, so the top club is not first in everything.
+        val style = if (seed.id == 12002) 1.12 else 1.0
         return when (seed.type) {
             "qb" -> listOf(
-                m("EPA/Play", seed.headline * scale, p, MetricCategory.PASSING),
+                m("EPA/Play", seed.headline * seasonScale, p, MetricCategory.PASSING),
                 m("CPOE", 6.4 * scale, less(3), MetricCategory.PASSING),
                 m("INT%", 1.3 / scale, less(7), MetricCategory.PASSING),
                 m("Sack%", 4.8 / scale, less(4), MetricCategory.PASSING),
-                m("Time to Throw", 2.63 / scale, less(5), MetricCategory.PASSING),
-                m("Aggressiveness", 18.2 * scale, less(8), MetricCategory.PASSING),
+                m("Time to Throw", 2.63 * scale * style, less(5), MetricCategory.PASSING),
+                m("Aggressiveness", 18.2 * scale * style, less(8), MetricCategory.PASSING),
                 m("Intended Air Yds", 8.7 * scale, less(2), MetricCategory.PASSING),
                 m("EPA/Rush", 0.12 * scale, less(8), MetricCategory.RUSHING),
                 m("RYOE", 34 * scale, less(12), MetricCategory.RUSHING),
             )
             "rb" -> listOf(
-                m("EPA/Rush", seed.headline * scale, p, MetricCategory.RUSHING),
+                m("EPA/Rush", seed.headline * seasonScale, p, MetricCategory.RUSHING),
                 m("RYOE", 49 * scale, less(3), MetricCategory.RUSHING),
                 m("Explosive%", 14.2 * scale, less(7), MetricCategory.RUSHING),
                 m("Rush EPA", 11.4 * scale, less(4), MetricCategory.RUSHING),
@@ -163,7 +173,7 @@ object ScreenshotFixtureApi : StatcastProviding {
                 m("EPA/Tgt", 0.16 * scale, less(7), MetricCategory.RECEIVING),
             )
             "wr", "te" -> listOf(
-                m("EPA/Tgt", seed.headline * scale, p, MetricCategory.RECEIVING),
+                m("EPA/Tgt", seed.headline * seasonScale, p, MetricCategory.RECEIVING),
                 m("WOPR", 0.51 * scale, less(3), MetricCategory.RECEIVING),
                 m("Target Share", 24.8 * scale, less(5), MetricCategory.RECEIVING),
                 m("RACR", 1.34 * scale, less(2), MetricCategory.RECEIVING),
