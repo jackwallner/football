@@ -19,6 +19,7 @@ Developer notes and historical audits for this repository. The published site re
 - [laudit915.md](audits/laudit915.md): Football Next: StatScout 1.2.1 release-readiness audit
 - [luxaudit0926.md](audits/luxaudit0926.md): Football Next: StatScout, independent UX audit, 2026-09-26
 - [uxaudit0923.md](audits/uxaudit0923.md): Football Next: StatScout: product / UX audit, 2026 Week 3
+- [2026-11-20-bug-ux.html](audits/2026-11-20-bug-ux.html): Bug and UX catalog, 2026-11-20: 13 bugs (2 medium, 11 low; 9 confirmed), 13 UX items, October audit items rechecked. Catalog only, nothing fixed.
 
 ## Marketing
 
