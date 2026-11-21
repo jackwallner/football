@@ -731,7 +731,9 @@ final class StoreService: NSObject, ObservableObject {
     private let logger = Logger(subsystem: "com.jackwallner.football", category: "Store")
     private var isConfigured = false
 
-    private override init() {}
+    /// The app uses `shared`. Internal so a test can drive a store of its own
+    /// without flipping the running app's entitlement.
+    override init() {}
 
     func start() {
         #if DEBUG
@@ -917,8 +919,16 @@ final class StoreService: NSObject, ObservableObject {
             introEligibility = [:]
             return
         }
+        guard let result = await introEligibilityLookup(identifiers) else { return }
+        introEligibility = result
+    }
+
+    /// RevenueCat's eligibility check, nil when it is not configured. Swapped
+    /// in tests, which never configure it.
+    var introEligibilityLookup: @MainActor ([String]) async -> [String: Bool]? = { identifiers in
+        guard Purchases.isConfigured else { return nil }
         let result = await Purchases.shared.checkTrialOrIntroDiscountEligibility(productIdentifiers: identifiers)
-        introEligibility = result.mapValues { $0.status == .eligible }
+        return result.mapValues { $0.status == .eligible }
     }
 
     func apply(customerInfo: CustomerInfo) {
@@ -926,12 +936,22 @@ final class StoreService: NSObject, ObservableObject {
         let activeKeys = customerInfo.entitlements.active.keys.sorted().joined(separator: ", ")
         let allKeys = customerInfo.entitlements.all.keys.sorted().joined(separator: ", ")
         logger.info("Applied customerInfo - active: [\(activeKeys, privacy: .public)] all: [\(allKeys, privacy: .public)]")
-        let hasActiveSubscription = customerInfo.hasProEntitlement
-        if isPro != hasActiveSubscription {
-            isPro = hasActiveSubscription
-            logger.info("isPro updated to \(hasActiveSubscription, privacy: .public)")
-        }
+        applyEntitlement(customerInfo.hasProEntitlement)
     }
+
+    /// Eligibility was read once per launch, so a trial that started and
+    /// lapsed in one long-lived process still offered "Start 7-day free
+    /// trial" that the App Store would not grant. Read it again whenever the
+    /// entitlement changes.
+    func applyEntitlement(_ hasPro: Bool) {
+        guard isPro != hasPro else { return }
+        isPro = hasPro
+        logger.info("isPro updated to \(hasPro, privacy: .public)")
+        eligibilityRefresh = Task { await refreshIntroEligibility() }
+    }
+
+    /// Held so tests can await the refresh an entitlement change started.
+    private(set) var eligibilityRefresh: Task<Void, Never>?
 
     #if DEBUG
     /// Populates `products` with mock packages (RevenueCat `TestStoreProduct`) so

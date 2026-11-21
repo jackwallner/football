@@ -1042,4 +1042,23 @@ final class CatalogBugTests: XCTestCase {
         )
     }
 
+    // B10: trial eligibility was read once per process.
+    func testB10_EntitlementChangeRereadsTrialEligibility() async throws {
+        let store = StoreService()
+        store.loadScreenshotProducts()
+        let monthly = try XCTUnwrap(store.monthlyPackage)
+        XCTAssertTrue(store.isEligibleForIntroOffer(monthly), "precondition: eligible at launch")
+
+        // The trial is used up: the App Store now says no.
+        store.introEligibilityLookup = { identifiers in
+            Dictionary(uniqueKeysWithValues: identifiers.map { ($0, false) })
+        }
+        store.applyEntitlement(true)
+        await store.eligibilityRefresh?.value
+        store.applyEntitlement(false)
+        await store.eligibilityRefresh?.value
+
+        XCTAssertFalse(store.isEligibleForIntroOffer(monthly), "a lapsed trial is still offered as free")
+    }
+
 }
