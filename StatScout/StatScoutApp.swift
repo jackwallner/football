@@ -372,7 +372,13 @@ struct OnboardingCards: View {
             // others it is empty. Its constant height is what keeps the button's
             // bottom edge, and therefore its Y, pinned across pages.
             Group {
-                if isLastPage, !dataReady {
+                switch Self.footer(
+                    isLastPage: isLastPage,
+                    isPro: store.isPro,
+                    dataReady: dataReady,
+                    isLoading: viewModel.isLoading
+                ) {
+                case .loading:
                     HStack(spacing: 8) {
                         ProgressView()
                             .progressViewStyle(.circular)
@@ -382,7 +388,7 @@ struct OnboardingCards: View {
                             .font(GridironType.micro)
                     }
                     .foregroundStyle(GridironPalette.inkSecondary)
-                } else if isLastPage && !store.isPro {
+                case .restore:
                     Button {
                         // Surface the outcome through the same trialError line the
                         // purchase CTA uses, a restore that silently does nothing
@@ -405,13 +411,28 @@ struct OnboardingCards: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(isRestoring)
-                } else {
+                case .empty:
                     Color.clear
                 }
             }
             .frame(height: 24)
         }
         .frame(maxWidth: .infinity, alignment: .bottom)
+    }
+
+    enum Footer: Equatable {
+        case loading
+        case restore
+        case empty
+    }
+
+    /// The slot under the last page's button. The spinner is for a load in
+    /// flight only: after a failed load the data is still not ready, and the
+    /// spinner stood in for Restore Purchases for good.
+    static func footer(isLastPage: Bool, isPro: Bool, dataReady: Bool, isLoading: Bool) -> Footer {
+        guard isLastPage else { return .empty }
+        if !dataReady, isLoading { return .loading }
+        return isPro ? .empty : .restore
     }
 
     /// "Get Started" dismisses onboarding into the free tier. `prominent` is the

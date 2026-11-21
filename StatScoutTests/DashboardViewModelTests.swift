@@ -1022,4 +1022,24 @@ final class CatalogBugTests: XCTestCase {
         XCTAssertFalse(vm.seasonPlayers.isEmpty)
     }
 
+    // B5: the onboarding footer kept its spinner after a failed load.
+    func testB5_OnboardingOffersRestoreAfterAFailedLoad() async {
+        let vm = DashboardViewModel(provider: MockProvider(error: URLError(.timedOut)))
+        XCTAssertEqual(
+            OnboardingCards.footer(isLastPage: true, isPro: false, dataReady: vm.isReady, isLoading: vm.isLoading),
+            .loading,
+            "a load in flight still shows progress"
+        )
+        await vm.load()
+        XCTAssertFalse(vm.isReady, "precondition: the data never loaded")
+        XCTAssertEqual(
+            OnboardingCards.footer(isLastPage: true, isPro: false, dataReady: vm.isReady, isLoading: vm.isLoading),
+            .restore
+        )
+        XCTAssertEqual(
+            OnboardingCards.footer(isLastPage: false, isPro: false, dataReady: vm.isReady, isLoading: vm.isLoading),
+            .empty
+        )
+    }
+
 }
