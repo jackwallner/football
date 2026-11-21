@@ -700,6 +700,23 @@ final class CatalogBugUITests: XCTestCase {
         )
     }
 
+    // B8: the Follow Players search ran only inside the selected group.
+    func testB8_FollowSheetSearchFindsADefenderFromTheQBGroup() throws {
+        launchFixture(tab: "compare")
+        let edit = try XCTUnwrap(hittable(app.buttons, "Edit"), "Follow Players entry never appeared")
+        edit.tap()
+
+        let field = app.textFields["Search players"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        field.typeText("Isaiah")
+
+        XCTAssertTrue(
+            app.buttons["Follow Isaiah Boone"].waitForExistence(timeout: 10),
+            "a linebacker searched from the QB group was reported as not found"
+        )
+    }
+
     // B6: Settings printed an error left by another screen's store call.
     func testB6_SettingsShowsOnlyItsOwnRestoreResult() throws {
         app.launchArguments += ["-ResetUITestState", "-stats.board", "standard"]

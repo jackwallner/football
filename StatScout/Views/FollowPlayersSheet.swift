@@ -42,10 +42,11 @@ struct FollowPlayersSheet: View {
     private var candidates: [Player] {
         let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
         let wanted: String = listSide.playerType
-        let sameSide: [Player] = allPlayers.filter { player in
+        // The group menu is for browsing. A typed name searches every group,
+        // so a defender is found without first switching the menu to DEF.
+        let matching: [Player] = query.isEmpty ? allPlayers.filter { player in
             (player.playerType ?? "") == wanted
-        }
-        let matching: [Player] = query.isEmpty ? sameSide : sameSide.filter { player in
+        } : allPlayers.filter { player in
             player.name.lowercased().contains(query) || player.team.lowercased().contains(query)
                 || teamFullName(player.team).lowercased().contains(query)
         }
