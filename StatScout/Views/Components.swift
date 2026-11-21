@@ -626,6 +626,7 @@ struct InlineLoadError: View {
 }
 
 struct LeaderboardTableRow: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let rank: Int
     let player: Player
     /// Row position for the zebra band, when tied ranks repeat a number.
@@ -700,7 +701,7 @@ struct LeaderboardTableRow: View {
                     Text(player.name)
                         .font(GridironType.bodyBold)
                         .foregroundStyle(GridironPalette.ink)
-                        .lineLimit(1)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
                         .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
                     Text(String(localized: String.LocalizationValue(subtitle)))
@@ -759,8 +760,11 @@ struct LeaderboardTableRow: View {
                     .frame(width: 46, alignment: .trailing)
             }
         }
-        .frame(height: GridironGeo.rowHeight)
+        // A floor, not a height: a fixed 44pt row let large text spill into
+        // the next row. Capped where the fixed columns still fit.
+        .frame(minHeight: GridironGeo.rowHeight)
         .padding(.horizontal, GridironGeo.padInline)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         // Banded rows, the same white / near-white alternation the Trends board
         // and the standard-stats board already use. Fifty rows of one flat
         // surface is where the eye loses its place tracking a name across to a

@@ -224,6 +224,9 @@ struct RootTabView: View {
         .overlay(Capsule().stroke(GridironPalette.hairline, lineWidth: 0.5))
         .shadow(color: .black.opacity(0.10), radius: 12, y: 4)
         .padding(.bottom, 12)
+        // Five labels share a phone's width, so like the system tab bar they
+        // stop growing early; a long press shows the large content viewer.
+        .dynamicTypeSize(...DynamicTypeSize.xLarge)
     }
 
     private var gamesTab: some View {
@@ -321,6 +324,10 @@ private struct TabBarButton: View {
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .accessibilityShowsLargeContentViewer {
+            Image(systemName: icon)
+            Text(label)
+        }
         .accessibilityLabel(label)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : [.isButton])
     }
@@ -410,6 +417,9 @@ private struct HomeTabToolbar: ViewModifier {
                 upgradeButton
             }
         }
+        // Same cap as the season pill: grown past xxxLarge, the pair folded
+        // into one "..." overflow and hid the upgrade CTA.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     func body(content: Content) -> some View {

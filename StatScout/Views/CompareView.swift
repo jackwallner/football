@@ -407,7 +407,7 @@ struct CompareView: View {
                             .font(GridironType.smallBold)
                             .foregroundStyle(.white)
                             .padding(.horizontal, 16)
-                            .frame(height: GridironControl.height)
+                            .frame(minHeight: GridironControl.height)
                             .background(GridironPalette.turf)
                             .clipShape(Capsule())
                     }

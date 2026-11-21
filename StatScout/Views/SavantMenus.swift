@@ -207,12 +207,18 @@ struct SeasonPhaseNavBar: ViewModifier {
                 // The green pills are their own capsules; suppress the iOS 26
                 // Liquid Glass container or each reads as a pill inside a pill.
                 if #available(iOS 26.0, *) {
-                    ToolbarItem(placement: .topBarLeading) { pills }
+                    ToolbarItem(placement: .topBarLeading) { cappedPills }
                         .sharedBackgroundVisibility(.hidden)
                 } else {
-                    ToolbarItem(placement: .topBarLeading) { pills }
+                    ToolbarItem(placement: .topBarLeading) { cappedPills }
                 }
             }
+    }
+
+    /// A bar is one line high at every text size. Past xxxLarge the pill
+    /// outgrew it and iOS folded the gear and the upgrade CTA into "...".
+    private var cappedPills: some View {
+        pills.dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     /// One pill, not two.

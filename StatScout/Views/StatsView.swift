@@ -50,6 +50,10 @@ struct StatsView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // The board's columns, control row and position tabs have fixed
+        // widths and heights. Past AX1 the rows overlapped and every label
+        // read as an ellipsis.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .background(GridironPalette.canvas)
         .modifier(
             SeasonPhaseNavBar(

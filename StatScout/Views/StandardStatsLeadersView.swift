@@ -103,6 +103,7 @@ struct StandardStatsLeadersView: View {
     var viewModel: DashboardViewModel? = nil
     @State private var isSearching = false
     @State private var searchText = ""
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var availableStats: [String] {
         StandardStatCatalog.stats(for: selectedPosition)
@@ -455,7 +456,7 @@ struct StandardStatsLeadersView: View {
                         Text(player.name)
                             .font(GridironType.bodyBold)
                             .foregroundStyle(GridironPalette.ink)
-                            .lineLimit(1)
+                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
                             .minimumScaleFactor(0.85)
                             .truncationMode(.tail)
                         Text([player.displayPosition, volumeText(for: player)].compactMap { $0 }.joined(separator: " · "))
@@ -502,8 +503,11 @@ struct StandardStatsLeadersView: View {
                         : String(localized: "\(MetricName.localized(statLabel(for: player.positionGroup))): \(statDisplay(for: player)), \(pct.ordinalString) percentile")
                 )
             }
-            .frame(height: GridironGeo.rowHeight)
+            // A floor, not a height: a fixed 44pt row let large text spill
+            // into the next row. Capped where the fixed columns still fit.
+            .frame(minHeight: GridironGeo.rowHeight)
             .padding(.horizontal, GridironGeo.padInline)
+            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             .background(
                 (stripe + 1).isMultiple(of: 2)
                     ? GridironPalette.surfaceAlt
