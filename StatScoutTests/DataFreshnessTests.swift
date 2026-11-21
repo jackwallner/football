@@ -31,9 +31,14 @@ final class DataFreshnessTests: XCTestCase {
         let provider = RevisionProvider(revisions: ["v1", "v2"])
         let model = DashboardViewModel(provider: provider)
         await model.load()
-        XCTAssertNil(model.freshnessRevision)
-        XCTAssertTrue(model.players.isEmpty)
-        XCTAssertNil(model.freshnessForDisplay?.coverage)
+        // The v1/v2 bracket is never adopted. On a cold start there is no
+        // prior display to keep, so the load runs again at once and adopts
+        // v2 from a v2/v2 bracket (2026-11-20 catalog, B13). This used to
+        // assert the empty board that bug reported.
+        XCTAssertEqual(model.freshnessRevision, "v2")
+        XCTAssertFalse(model.players.isEmpty)
+        let fetches = await provider.playerFetches
+        XCTAssertEqual(fetches, 2, "the drifted load and one retry")
     }
 
     @MainActor

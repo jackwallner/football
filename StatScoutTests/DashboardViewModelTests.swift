@@ -1082,4 +1082,29 @@ final class CatalogBugTests: XCTestCase {
         XCTAssertFalse(vm.lastFetchFailed)
     }
 
+    // B13: a revision published mid-load on a cold start left an empty board.
+    func testB13_RevisionDriftOnAColdStartLoadsTheNewRevisionAtOnce() async {
+        let feed = CatalogFeed()
+        feed.players = [player(1), player(2)]
+        feed.revisions = ["rev-A", "rev-B"]
+        let vm = DashboardViewModel(provider: CatalogProvider(feed: feed))
+        await vm.load()
+        XCTAssertEqual(Set(vm.seasonPlayers.map(\.playerId)), [1, 2])
+        XCTAssertFalse(vm.isLoading)
+    }
+
+    func testB13_RevisionDriftKeepsTheBoardOnScreenWhenRowsExist() async {
+        let feed = CatalogFeed()
+        feed.players = [player(1)]
+        feed.revisions = ["rev-A"]
+        let vm = DashboardViewModel(provider: CatalogProvider(feed: feed))
+        await vm.load()
+        XCTAssertEqual(vm.seasonPlayers.map(\.playerId), [1])
+
+        feed.players = [player(1), player(3)]
+        feed.revisions = ["rev-A", "rev-B", "rev-C"]
+        await vm.load()
+        XCTAssertEqual(vm.seasonPlayers.map(\.playerId), [1], "drift with rows on screen keeps the prior display")
+    }
+
 }

@@ -1475,7 +1475,7 @@ final class DashboardViewModel {
         }
     }
 
-    private func performLoad() async {
+    private func performLoad(retryOnDrift: Bool = true) async {
         defer { loadTask = nil }
         hasStartedLoading = true
         isLoading = players.isEmpty
@@ -1610,6 +1610,12 @@ final class DashboardViewModel {
                     message: .some("A newer game revision arrived while this update was loading."),
                     isCached: .some(true)
                 )
+            }
+            // With nothing on screen there is no prior display to keep, and
+            // the next status tick is minutes away. Load the new revision now.
+            if players.isEmpty, retryOnDrift {
+                await performLoad(retryOnDrift: false)
+                return
             }
         } else if let replacementsToIngest {
             ingestPlayers(mergePlayers(replacing: replacementsToIngest))
