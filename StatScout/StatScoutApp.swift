@@ -534,7 +534,27 @@ struct OnboardingCard: View {
     /// to set on one line at the default text size, and they wrap rather than
     /// truncate if a larger one pushes them over. Losing 20pt of illustration is
     /// nothing next to losing the copy.
+    ///
+    /// Full art when it fits, smaller art when it does not, and a scrolling
+    /// page when even that is too tall (large accessibility text).
+    ///
+    /// Every page shares the same short slot above the upsell block, and on
+    /// the StatScout+ page the full card did not fit it at the default text
+    /// size: SwiftUI compressed the two-line title to "Go Deeper..." and cut
+    /// the plan name. The title and description now never compress; the art
+    /// gives way first.
     var body: some View {
+        ViewThatFits(in: .vertical) {
+            card(artScale: 1)
+            card(artScale: 0.7)
+            ScrollView {
+                card(artScale: 0.7)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+    }
+
+    private func card(artScale: CGFloat) -> some View {
         VStack(spacing: 16) {
             Spacer(minLength: 0)
 
@@ -551,16 +571,20 @@ struct OnboardingCard: View {
                 }
                 .shadow(color: GridironPalette.midnight.opacity(0.25), radius: 12, y: 4)
             }
+            .scaleEffect(artScale)
+            .frame(width: 200 * artScale, height: 104 * artScale)
 
             Text(String(localized: String.LocalizationValue(title)))
                 .font(GridironType.playerName)
                 .foregroundStyle(GridironPalette.ink)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(String(localized: String.LocalizationValue(description)))
                 .font(GridironType.body)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 32)
 
             VStack(alignment: .leading, spacing: 10) {
