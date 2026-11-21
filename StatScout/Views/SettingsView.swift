@@ -15,6 +15,11 @@ struct AboutView: View {
     var dataCoverage: DataCoverage?
     var freshness: DataFreshness?
     @State private var paywallTrigger: PaywallTrigger?
+    /// The outcome of a restore started here. `store.lastError` is shared by
+    /// every store call (launch refresh, product fetch, other screens), so
+    /// Settings shows only what its own Restore produced.
+    @State private var restoreMessage: String?
+    @State private var isRestoring = false
 
     private var version: String {
         let short = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -130,13 +135,18 @@ struct AboutView: View {
                 .padding(GridironGeo.padCard)
 
                 Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
-                Button {
-                    Task { await store.restorePurchases() }
-                } label: {
+                Button(action: startRestore) {
                     HStack {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.caption)
-                        Text("Restore Purchases")
+                        if isRestoring {
+                            ProgressView()
+                                .controlSize(.mini)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.caption)
+                        }
+                        Text(isRestoring
+                             ? String(localized: "Restoring…")
+                             : String(localized: "Restore Purchases"))
                             .font(GridironType.smallBold)
                     }
                     .foregroundStyle(GridironPalette.linkBlue)
@@ -144,8 +154,9 @@ struct AboutView: View {
                     .padding(GridironGeo.padCard)
                 }
                 .buttonStyle(.plain)
+                .disabled(isRestoring)
 
-                if let error = store.lastError {
+                if let error = restoreMessage {
                     Rectangle().fill(GridironPalette.divider).frame(height: GridironGeo.hairline)
                     Text(error)
                         .font(GridironType.small)
@@ -161,6 +172,17 @@ struct AboutView: View {
             RoundedRectangle(cornerRadius: GridironGeo.radiusCard)
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
+    }
+
+    private func startRestore() {
+        restoreMessage = nil
+        isRestoring = true
+        Task { @MainActor in
+            defer { isRestoring = false }
+            await store.restorePurchases()
+            restoreMessage = store.lastError
+                ?? (store.isPro ? String(localized: "Purchases restored.") : nil)
+        }
     }
 
     /// Which games are in, phrased the way the boards phrase it.

@@ -700,4 +700,38 @@ final class CatalogBugUITests: XCTestCase {
         )
     }
 
+    // B6: Settings printed an error left by another screen's store call.
+    func testB6_SettingsShowsOnlyItsOwnRestoreResult() throws {
+        app.launchArguments += ["-ResetUITestState", "-stats.board", "standard"]
+        app.launch()
+
+        // A restore on onboarding fails on the simulator and leaves the
+        // shared store error behind.
+        for _ in 0..<2 {
+            let next = try XCTUnwrap(hittable(app.buttons, "Continue"))
+            next.tap()
+        }
+        // The first load decodes the bundled history in a debug build, which
+        // can take minutes under the test runner.
+        let restore = try XCTUnwrap(
+            hittable(app.buttons, "Restore Purchases", timeout: 360),
+            "onboarding never offered Restore"
+        )
+        restore.tap()
+        let simulatorError = "Purchases are unavailable in simulator builds."
+        XCTAssertTrue(app.staticTexts[simulatorError].waitForExistence(timeout: 10), "precondition: the store error is set")
+        let start = try XCTUnwrap(hittable(app.buttons, "Get Started"))
+        start.tap()
+
+        let gear = try XCTUnwrap(hittable(app.buttons, "Settings"))
+        gear.tap()
+        let settingsRestore = try XCTUnwrap(hittable(app.buttons, "Restore Purchases"), "Settings never opened")
+        XCTAssertFalse(app.staticTexts[simulatorError].exists, "Settings showed another screen's store error")
+
+        settingsRestore.tap()
+        XCTAssertTrue(
+            app.staticTexts[simulatorError].waitForExistence(timeout: 10),
+            "a restore started in Settings must report its own result"
+        )
+    }
 }
