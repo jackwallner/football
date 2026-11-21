@@ -832,3 +832,194 @@ final class HistoryRefreshRaceTests: XCTestCase {
         XCTAssertEqual(vm.playerHistories[3]?.count, 1)
     }
 }
+
+// MARK: - 2026-11-20 bug catalog
+
+/// Serves a fixed live set and a status row whose revision can move between
+/// reads, with the network switched on and off by the test.
+private final class CatalogFeed: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _online = true
+    private var _players: [Player] = []
+    private var _revisions: [String] = []
+    private var _statusReads = 0
+
+    var online: Bool {
+        get { lock.withLock { _online } }
+        set { lock.withLock { _online = newValue } }
+    }
+    var players: [Player] {
+        get { lock.withLock { _players } }
+        set { lock.withLock { _players = newValue } }
+    }
+    /// One revision per status read; the last one repeats.
+    var revisions: [String] {
+        get { lock.withLock { _revisions } }
+        set { lock.withLock { _revisions = newValue; _statusReads = 0 } }
+    }
+
+    func nextRevision() -> String? {
+        lock.withLock {
+            guard !_revisions.isEmpty else { return nil }
+            let revision = _revisions[min(_statusReads, _revisions.count - 1)]
+            _statusReads += 1
+            return revision
+        }
+    }
+}
+
+private struct CatalogProvider: StatcastProviding, @unchecked Sendable {
+    let feed: CatalogFeed
+
+    func fetchPlayers() async throws -> [Player] { try await fetchCurrentPlayers() }
+    func fetchHistoricalPlayers() async throws -> [Player] { [] }
+    func fetchCurrentPlayers() async throws -> [Player] {
+        guard feed.online else { throw URLError(.notConnectedToInternet) }
+        return feed.players
+    }
+    func fetchGameLogs(playerId: Int, season: Int, seasonPhase: SeasonPhase) async throws -> [PlayerGameLog] { [] }
+    func fetchTeamGameLogs(team: String, season: Int, seasonPhase: SeasonPhase, sinceDate: Date) async throws -> [PlayerGameLog] { [] }
+    func fetchRecentForm(season: Int, seasonPhase: SeasonPhase, windowWeeks: Int) async throws -> [RecentForm] { [] }
+    func fetchDataCoverage(season: Int) async throws -> DataCoverage? { nil }
+    func fetchDataFreshness(season: Int) async throws -> DataFreshness? {
+        guard feed.online else { throw URLError(.notConnectedToInternet) }
+        guard let revision = feed.nextRevision() else { return nil }
+        return DataFreshness(status: .ready, revision: revision, publishedAt: Date(), checkedAt: Date())
+    }
+}
+
+/// Holds `loadPlayers` until the test opens it, once armed, so a past-season
+/// decode can be observed while it is still running.
+private final class GatedHistoryCache: PlayerCaching, @unchecked Sendable {
+    private let lock = NSLock()
+    private let rows: [Player]
+    private var armed = false
+    private let gate = DispatchSemaphore(value: 0)
+
+    init(rows: [Player]) { self.rows = rows }
+
+    func arm() { lock.withLock { armed = true } }
+    func open() { gate.signal() }
+
+    /// Empty until armed, so the live load's cache read sees no rows.
+    func loadPlayers() throws -> [Player] {
+        let wait = lock.withLock { () -> Bool in
+            defer { armed = false }
+            return armed
+        }
+        guard wait else { return [] }
+        gate.wait()
+        return rows
+    }
+    func savePlayers(_ players: [Player]) throws {}
+}
+
+@MainActor
+final class CatalogBugTests: XCTestCase {
+    private final class TestClock: @unchecked Sendable {
+        private let lock = NSLock()
+        private var value: Date
+        init(_ date: Date) { value = date }
+        var date: Date {
+            get { lock.withLock { value } }
+            set { lock.withLock { value = newValue } }
+        }
+    }
+
+    override func setUp() {
+        super.setUp()
+        UserDefaults.standard.removeObject(forKey: "stats.qualifier")
+        UserDefaults.standard.removeObject(forKey: "statcast.dataFreshness")
+        UserDefaults.standard.removeObject(forKey: "statcast.displayedDataRevision")
+    }
+
+    override func tearDown() {
+        UserDefaults.standard.removeObject(forKey: "statcast.dataFreshness")
+        UserDefaults.standard.removeObject(forKey: "statcast.displayedDataRevision")
+        super.tearDown()
+    }
+
+    private func player(_ id: Int, season: Int = StatScoutSeason.current, type: String = "qb") -> Player {
+        let position = type == "def" ? "LB" : type.uppercased()
+        return Player(
+            playerId: id, name: "P\(id)", team: "KC", position: position, handedness: "",
+            updatedAt: Date(), season: season, playerType: type,
+            metrics: [Metric(id: "epa-\(id)", label: "EPA/Play", value: "0.2", percentile: 80, category: .passing)],
+            standardStats: [StandardStat(id: "yds-\(id)", label: "Pass Yds", value: "300")],
+            games: []
+        )
+    }
+
+    private func noon(_ year: Int, _ month: Int, _ day: Int) -> Date {
+        Calendar.current.date(from: DateComponents(year: year, month: month, day: day, hour: 12))!
+    }
+
+    private func useClock(_ clock: TestClock) {
+        StatScoutSeason.liveSeasonClock.setNow { clock.date }
+        addTeardownBlock { StatScoutSeason.liveSeasonClock.setNow { Date() } }
+    }
+
+    private func standardPlaceholder(_ vm: DashboardViewModel) -> StandardBoardPlaceholder {
+        StandardBoardPlaceholder.resolve(
+            players: vm.qualifiedSeasonPlayers,
+            hasRankedRows: false,
+            isSearching: false,
+            viewModel: vm
+        )
+    }
+
+    // B1: a failed first load drew "No data available" on the default board.
+    func testB1_FailedFirstLoadShowsTheFailureStateOnTheStandardBoard() async {
+        let vm = DashboardViewModel(provider: MockProvider(error: URLError(.notConnectedToInternet)))
+        await vm.load()
+        XCTAssertTrue(vm.players.isEmpty, "precondition: nothing loaded")
+        XCTAssertFalse(vm.isLoading, "precondition: the load is over")
+        XCTAssertTrue(vm.lastFailureWasConnectivity, "precondition: offline")
+        XCTAssertEqual(standardPlaceholder(vm), .failed)
+    }
+
+    // B1: the caption said "Showing saved stats" with nothing saved.
+    func testB1_FailedFirstLoadCaptionDoesNotClaimSavedStats() async {
+        let vm = DashboardViewModel(provider: MockProvider(error: URLError(.notConnectedToInternet)))
+        await vm.load()
+        XCTAssertEqual(DataFreshnessView(viewModel: vm).text(now: .now), String(localized: "Couldn't update"))
+    }
+
+    func testB1_FailedRefreshOverSavedRowsStillSaysSavedStats() async {
+        let cache = InMemoryPlayerCache(seed: [player(1)])
+        let vm = DashboardViewModel(provider: MockProvider(error: URLError(.notConnectedToInternet)), cache: cache)
+        await vm.load()
+        XCTAssertFalse(vm.seasonPlayers.isEmpty)
+        XCTAssertEqual(StandardBoardPlaceholder.resolve(
+            players: vm.qualifiedSeasonPlayers, hasRankedRows: true, isSearching: false, viewModel: vm
+        ), StandardBoardPlaceholder.none)
+        XCTAssertEqual(
+            DataFreshnessView(viewModel: vm).text(now: .now),
+            String(localized: "Couldn't update · Showing saved stats")
+        )
+    }
+
+    // B4: a past season still decoding drew "No data available".
+    func testB4_PastSeasonStillLoadingShowsASpinnerOnTheStandardBoard() async {
+        let past = StatScoutSeason.current - 2
+        let cache = GatedHistoryCache(rows: [player(2, season: past)])
+        let feed = CatalogFeed()
+        feed.players = [player(1)]
+        let vm = DashboardViewModel(provider: CatalogProvider(feed: feed), cache: cache)
+        vm.isPro = true
+        await vm.load()
+
+        cache.arm()
+        vm.selectSeason(past)
+        for _ in 0..<200 where !vm.isHistoricalLoading { await Task.yield() }
+        XCTAssertTrue(vm.isHistoricalLoading, "precondition: the past season is decoding")
+        XCTAssertTrue(vm.seasonPlayers.isEmpty, "precondition: no rows yet")
+        XCTAssertFalse(vm.isLoading, "precondition: the live load is over")
+        XCTAssertEqual(standardPlaceholder(vm), .loadingSeason)
+
+        cache.open()
+        await vm.seasonLoadTask?.value
+        XCTAssertFalse(vm.seasonPlayers.isEmpty)
+    }
+
+}

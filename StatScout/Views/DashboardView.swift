@@ -343,30 +343,8 @@ struct DashboardView: View {
                 }
                 .padding(.vertical, 24)
                 .frame(minHeight: 200)
-            } else if let errorMessage = viewModel.errorMessage, viewModel.leaderboard.isEmpty {
-                // An offline first run is not a data error. The live season
-                // ships no bundled rows, so there is genuinely nothing to show
-                // until one update lands, and saying "Data Error" beside a
-                // warning triangle blamed the stats for the phone's signal.
-                let isOffline = viewModel.lastFailureWasConnectivity
-                ContentUnavailableView {
-                    Label(
-                        isOffline ? "No connection" : "Data Error",
-                        systemImage: isOffline ? "wifi.exclamationmark" : "exclamationmark.triangle"
-                    )
-                } description: {
-                    Text(isOffline
-                         ? "The current season needs a connection for its first update. Once it has loaded, your saved stats are here offline."
-                         : errorMessage)
-                } actions: {
-                    Button("Retry") {
-                        Task { await viewModel.load() }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(GridironPalette.inkTertiary)
-                }
-                .padding(.vertical, 24)
-                .frame(minHeight: 200)
+            } else if viewModel.errorMessage != nil, viewModel.leaderboard.isEmpty {
+                BoardFailureState(viewModel: viewModel)
             } else if viewModel.leaderboard.isEmpty && viewModel.isHistoricalLoading {
                 // Season history is fetched on demand, so the first tap on a past
                 // season (or on All since 2000) arrives before its rows do. This
@@ -374,14 +352,7 @@ struct DashboardView: View {
                 // reads as a permanent answer to a temporary state - the board
                 // filled in seconds later, by which point the user had believed
                 // the app.
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Loading \(SeasonLabel.text(viewModel.selectedSeason))…")
-                        .font(GridironType.small)
-                        .foregroundStyle(GridironPalette.inkSecondary)
-                }
-                .padding(.vertical, 40)
-                .frame(maxWidth: .infinity, minHeight: 200)
+                BoardSeasonLoadingState(season: viewModel.selectedSeason)
             } else if viewModel.leaderboard.isEmpty && !viewModel.isLoading {
                 let hasSeasonData = !viewModel.seasonPlayers.isEmpty
                 // The live season ships no bundled rows on purpose: a snapshot
@@ -506,6 +477,55 @@ struct DashboardView: View {
                 .stroke(GridironPalette.hairline, lineWidth: 0.5)
         )
         .padding(.horizontal, 12)
+    }
+}
+
+/// The empty league board after a failed load, shared by the Advanced and
+/// Standard boards so both say why and offer the same Retry.
+///
+/// An offline first run is not a data error. The live season ships no bundled
+/// rows, so there is genuinely nothing to show until one update lands, and
+/// saying "Data Error" beside a warning triangle blamed the stats for the
+/// phone's signal.
+struct BoardFailureState: View {
+    let viewModel: DashboardViewModel
+
+    var body: some View {
+        let isOffline = viewModel.lastFailureWasConnectivity
+        ContentUnavailableView {
+            Label(
+                isOffline ? String(localized: "No connection") : String(localized: "Data Error"),
+                systemImage: isOffline ? "wifi.exclamationmark" : "exclamationmark.triangle"
+            )
+        } description: {
+            Text(isOffline
+                 ? String(localized: "The current season needs a connection for its first update. Once it has loaded, your saved stats are here offline.")
+                 : (viewModel.errorMessage ?? ""))
+        } actions: {
+            Button("Retry") {
+                Task { await viewModel.load() }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(GridironPalette.inkTertiary)
+        }
+        .padding(.vertical, 24)
+        .frame(minHeight: 200)
+    }
+}
+
+/// A past season's rows still decoding: a spinner, not an empty verdict.
+struct BoardSeasonLoadingState: View {
+    let season: Int
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+            Text("Loading \(SeasonLabel.text(season))…")
+                .font(GridironType.small)
+                .foregroundStyle(GridironPalette.inkSecondary)
+        }
+        .padding(.vertical, 40)
+        .frame(maxWidth: .infinity, minHeight: 200)
     }
 }
 

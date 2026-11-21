@@ -44,6 +44,55 @@ enum StandardBoardSearch {
     }
 }
 
+/// What the Standard board draws in place of its rows.
+///
+/// The board is the Stats tab's default, so it has to tell the same story as
+/// the Advanced board when the season is empty: a spinner while a past season
+/// is still decoding, and the offline or failed state with Retry after a load
+/// that threw. Falling through to "No data available" in either case read as
+/// a verdict on the season.
+enum StandardBoardPlaceholder: Equatable {
+    case loading
+    case loadingSeason
+    case failed
+    case noData
+    /// Rows, or search results, are on screen.
+    case none
+
+    static func resolve(
+        hasSeasonRows: Bool,
+        hasRankedRows: Bool,
+        isSearching: Bool,
+        isLoading: Bool,
+        isLoadingPastSeason: Bool,
+        hasLoadError: Bool
+    ) -> Self {
+        if isLoading && !hasSeasonRows { return .loading }
+        guard !hasRankedRows, !isSearching else { return .none }
+        guard !hasSeasonRows else { return .noData }
+        if isLoadingPastSeason { return .loadingSeason }
+        if hasLoadError { return .failed }
+        return .noData
+    }
+
+    @MainActor
+    static func resolve(
+        players: [Player],
+        hasRankedRows: Bool,
+        isSearching: Bool,
+        viewModel: DashboardViewModel?
+    ) -> Self {
+        resolve(
+            hasSeasonRows: !players.isEmpty,
+            hasRankedRows: hasRankedRows,
+            isSearching: isSearching,
+            isLoading: viewModel?.isLoading == true,
+            isLoadingPastSeason: viewModel.map { $0.isHistoricalLoading && $0.selectedSeason != $0.freeSeason } ?? false,
+            hasLoadError: viewModel?.errorMessage != nil
+        )
+    }
+}
+
 struct StandardStatsLeadersView: View {
     let players: [Player]
     @Binding var selectedStat: String
@@ -294,10 +343,24 @@ struct StandardStatsLeadersView: View {
             }
             .buttonStyle(.plain)
 
-            if viewModel?.isLoading == true && players.isEmpty {
+            switch StandardBoardPlaceholder.resolve(
+                players: players,
+                hasRankedRows: !sortedPlayers.isEmpty,
+                isSearching: !trimmedQuery.isEmpty,
+                viewModel: viewModel
+            ) {
+            case .loading:
                 ProgressView("Loading player stats")
                     .padding(.vertical, 48)
-            } else if sortedPlayers.isEmpty && trimmedQuery.isEmpty {
+            case .loadingSeason:
+                BoardSeasonLoadingState(season: viewModel?.selectedSeason ?? season ?? StatScoutSeason.current)
+                    .background(GridironPalette.surface)
+            case .failed:
+                if let viewModel {
+                    BoardFailureState(viewModel: viewModel)
+                        .background(GridironPalette.surface)
+                }
+            case .noData:
                 ContentUnavailableView {
                     Label("No data available", systemImage: "chart.bar")
                 } description: {
@@ -305,7 +368,7 @@ struct StandardStatsLeadersView: View {
                 }
                 .padding(.vertical, 48)
                 .background(GridironPalette.surface)
-            } else {
+            case .none:
                 let sections = boardSections(query: trimmedQuery)
                 if sections.isEmpty {
                     ContentUnavailableView.search(text: searchText)

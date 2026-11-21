@@ -91,12 +91,22 @@ struct DataFreshnessView: View {
         }
     }
 
-    private func text(now: Date) -> String {
+    /// Whether the live season has rows on this device. A first run that
+    /// never loaded has none, so the caption must not claim to show them.
+    private var hasSavedLiveStats: Bool {
+        !viewModel.players(forSeason: viewModel.freeSeason, phase: .regular).isEmpty
+    }
+
+    func text(now: Date) -> String {
         switch status {
         case .offline:
-            return String(localized: "Offline · Showing saved stats")
+            return hasSavedLiveStats
+                ? String(localized: "Offline · Showing saved stats")
+                : String(localized: "Offline")
         case .failed:
-            return String(localized: "Couldn't update · Showing saved stats")
+            return hasSavedLiveStats
+                ? String(localized: "Couldn't update · Showing saved stats")
+                : String(localized: "Couldn't update")
         case .stale:
             return String(localized: "Newer stats available · Tap to load")
         case .checking where coverageText == nil:
