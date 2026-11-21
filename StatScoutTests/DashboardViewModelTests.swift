@@ -1061,4 +1061,25 @@ final class CatalogBugTests: XCTestCase {
         XCTAssertFalse(store.isEligibleForIntroOffer(monthly), "a lapsed trial is still offered as free")
     }
 
+    // B11: an offline launch with a kept revision never reloaded on its own.
+    func testB11_ReconnectReloadsAnEmptyBoardWithAKeptRevision() async {
+        DataFreshnessCache.save(
+            DataFreshness(status: .ready, revision: "rev-1", publishedAt: Date(), checkedAt: Date()),
+            displayedRevision: "rev-1"
+        )
+        let feed = CatalogFeed()
+        feed.players = [player(1), player(2)]
+        feed.revisions = ["rev-1"]
+        feed.online = false
+        let vm = DashboardViewModel(provider: CatalogProvider(feed: feed), cache: InMemoryPlayerCache())
+        await vm.load()
+        XCTAssertTrue(vm.players.isEmpty, "precondition: offline launch with the saved rows gone")
+
+        feed.online = true
+        await vm.refreshOnForeground(now: Date().addingTimeInterval(600))
+
+        XCTAssertEqual(Set(vm.seasonPlayers.map(\.playerId)), [1, 2])
+        XCTAssertFalse(vm.lastFetchFailed)
+    }
+
 }

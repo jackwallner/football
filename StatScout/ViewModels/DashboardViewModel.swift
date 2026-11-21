@@ -1372,11 +1372,22 @@ final class DashboardViewModel {
             return
         }
         lastForegroundCheckAt = now
-        if await checkForUpdates(force: false) == .updated {
+        let result = await checkForUpdates(force: false, now: now)
+        if result == .updated || needsReloadAfterReconnect(result) {
             await load()
         } else {
             await loadGames()
         }
+    }
+
+    /// A load that failed for want of a connection is only retried by a
+    /// revision change, and the revision kept from the last session can match
+    /// the server's while the rows it named are gone (iOS purged Caches, or an
+    /// old snapshot was dropped on update). The status check reaching the
+    /// server is the sign the connection is back, so reload then.
+    private func needsReloadAfterReconnect(_ result: FreshnessCheckResult) -> Bool {
+        guard lastFetchFailed, lastFailureWasConnectivity else { return false }
+        return result != .failed && result != .throttled
     }
 
     /// The live season this process last loaded. A process suspended across
@@ -1397,13 +1408,13 @@ final class DashboardViewModel {
     }
 
     @discardableResult
-    func checkForUpdates(force: Bool = false) async -> FreshnessCheckResult {
+    func checkForUpdates(force: Bool = false, now: Date = Date()) async -> FreshnessCheckResult {
         if let freshnessCheckTask {
             return await freshnessCheckTask.value
         }
         if !force,
            let lastStatusCheckAt,
-           Date().timeIntervalSince(lastStatusCheckAt) < (dataFreshness?.status == .pending ? 120 : 300) {
+           now.timeIntervalSince(lastStatusCheckAt) < (dataFreshness?.status == .pending ? 120 : 300) {
             return .throttled
         }
 
