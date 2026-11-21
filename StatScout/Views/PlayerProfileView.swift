@@ -355,7 +355,8 @@ struct PlayerProfileView: View {
             player: displayedPlayer,
             groups: groups,
             seasonLabel: seasonLabel,
-            isCurrentSeason: (activeSeason ?? currentSeason) == currentSeason
+            isCurrentSeason: (activeSeason ?? currentSeason) == currentSeason,
+            coverage: freshnessViewModel?.dataCoverage
         ))
     }
 

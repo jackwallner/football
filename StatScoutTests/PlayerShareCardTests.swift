@@ -38,4 +38,30 @@ final class PlayerShareCardTests: XCTestCase {
         XCTAssertTrue(message.contains("https://apps.apple.com/app/id\(AppStoreReviewLinks.appStoreID)"))
         XCTAssertTrue(message.hasPrefix("Geno Smith, 2026 percentiles"))
     }
+
+    // B12: the footer dated the card by the pipeline's write time, in the
+    // phone's zone, instead of the last game the data covers.
+    func testB12_FooterNamesTheCoveredWeekNotTheWriteTime() throws {
+        var eastern = Calendar(identifier: .gregorian)
+        eastern.timeZone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        let lastGameDay = try XCTUnwrap(eastern.date(from: DateComponents(year: 2026, month: 9, day: 14)))
+        let written = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-09-16T06:00:00Z"))
+        let player = Player(playerId: 1, name: "Geno Smith", team: "SEA", position: "QB", handedness: "",
+            updatedAt: written, season: 2026, playerType: "qb",
+            metrics: [metric("EPA/Play", "0.24", 96)], standardStats: [], games: [])
+        func card(_ coverage: DataCoverage?) -> PlayerShareCard {
+            PlayerShareCard(player: player, groups: [("Efficiency", player.metrics)],
+                            seasonLabel: "2026", isCurrentSeason: true, coverage: coverage)
+        }
+
+        XCTAssertEqual(
+            card(DataCoverage(asOf: lastGameDay, week: 2, phase: .regular)).footnote,
+            String(localized: "Through Week 2")
+        )
+        XCTAssertEqual(
+            card(DataCoverage(asOf: lastGameDay, week: nil, phase: .regular)).footnote,
+            String(localized: "Through \(lastGameDay.formatted(DataCoverage.gameDayStyle))")
+        )
+        XCTAssertTrue(card(DataCoverage(asOf: lastGameDay, week: nil, phase: .regular)).footnote.contains("14"))
+    }
 }

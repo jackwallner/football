@@ -11,6 +11,9 @@ struct PlayerShareCard: View {
     let groups: [(title: String, metrics: [Metric])]
     let seasonLabel: String
     let isCurrentSeason: Bool
+    /// The last game the live data covers. The rows' own `updatedAt` is when
+    /// the pipeline wrote them, which can be a day with no games.
+    var coverage: DataCoverage? = nil
 
     static let width: CGFloat = 390
 
@@ -92,9 +95,16 @@ struct PlayerShareCard: View {
 
     /// A current-season board moves weekly, so it carries its date. A past
     /// season is settled and just says what it is ranked against.
-    private var footnote: String {
-        guard isCurrentSeason else { return String(localized: "Ranked against NFL qualifiers") }
-        return String(localized: "Through \(player.updatedAt.formatted(.dateTime.month(.abbreviated).day()))")
+    var footnote: String {
+        guard isCurrentSeason, let coverage, coverage.phase == player.seasonPhase else {
+            return String(localized: "Ranked against NFL qualifiers")
+        }
+        if let week = coverage.week {
+            return coverage.phase == .playoffs
+                ? String(localized: "Through playoff week \(week)")
+                : String(localized: "Through Week \(week)")
+        }
+        return String(localized: "Through \(coverage.asOf.formatted(DataCoverage.gameDayStyle))")
     }
 }
 
