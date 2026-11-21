@@ -632,3 +632,72 @@ extension XCUIElement {
         self.typeText(deleteString)
     }
 }
+
+// MARK: - 2026-11-20 bug catalog
+
+/// Screen-level checks for the catalog bugs that live in a view's own state.
+/// All but the Settings test run on the fixed screenshot fixture, so they do
+/// not depend on the feed.
+@MainActor
+final class CatalogBugUITests: XCTestCase {
+    private var app: XCUIApplication!
+    private let timeout: TimeInterval = 120
+
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+        app = XCUIApplication()
+    }
+
+    private func launchFixture(tab: String) {
+        app.launchArguments += ["-ResetUITestState", "-ScreenshotData"]
+        app.launchArguments += ["-hasCompletedOnboarding", "YES", "-profileOpenCount", "0"]
+        app.launchArguments += ["-stats.board", "standard", "-stats.qualifier", "All Players"]
+        app.launchArguments += ["-StartTab", tab]
+        app.launch()
+    }
+
+    private func anything(containing text: String) -> XCUIElement {
+        app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", text))
+            .firstMatch
+    }
+
+    private func hittable(_ query: XCUIElementQuery, _ label: String, timeout: TimeInterval? = nil) -> XCUIElement? {
+        let deadline = Date().addingTimeInterval(timeout ?? self.timeout)
+        while Date() < deadline {
+            let matches = query.matching(NSPredicate(format: "label == %@", label))
+            if let match = matches.allElementsBoundByIndex.first(where: { $0.exists && $0.isHittable }) {
+                return match
+            }
+            usleep(300_000)
+        }
+        return nil
+    }
+
+    // B2: the Stats tab search could not reach other positions.
+    func testB2_StandardBoardSearchFromTheQBTabFindsATightEnd() throws {
+        launchFixture(tab: "stats")
+        XCTAssertTrue(app.staticTexts["RANK"].waitForExistence(timeout: timeout), "board never appeared")
+        XCTAssertTrue(anything(containing: "Caleb Mercer").waitForExistence(timeout: 30), "precondition: QB tab is on screen")
+
+        let chip = try XCTUnwrap(hittable(app.buttons, "Search players or teams"))
+        chip.tap()
+        // Every mounted tab keeps its views alive; type into the one on screen.
+        let deadline = Date().addingTimeInterval(10)
+        var field: XCUIElement?
+        while field == nil, Date() < deadline {
+            field = app.textFields.allElementsBoundByIndex.first { $0.exists && $0.isHittable }
+            if field == nil { usleep(300_000) }
+        }
+        let searchField = try XCTUnwrap(field, "search field never appeared")
+        searchField.tap()
+        searchField.typeText("Theo Banks")
+
+        XCTAssertTrue(
+            anything(containing: "Theo Banks").waitForExistence(timeout: 10),
+            "a tight end typed on the QB tab was reported as not found"
+        )
+    }
+
+}

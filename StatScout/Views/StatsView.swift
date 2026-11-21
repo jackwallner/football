@@ -105,11 +105,11 @@ struct StatsView: View {
         }
     }
 
+    /// Every position, not only the tab on screen: the board ranks each
+    /// position on its own, and its search reaches the other positions only
+    /// when their rows are here.
     private var standardBoardPlayers: [Player] {
-        viewModel.qualifiedSeasonPlayers.filter {
-            $0.positionGroup == viewModel.selectedPosition
-                && viewModel.matchesSelectedConference($0)
-        }
+        viewModel.qualifiedSeasonPlayers.filter { viewModel.matchesSelectedConference($0) }
     }
 
     private var selectedPositionBinding: Binding<PlayerPositionGroup> {
