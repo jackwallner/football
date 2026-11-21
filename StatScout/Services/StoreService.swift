@@ -79,6 +79,11 @@ enum StatScoutSeason {
             }
         }
 
+        /// The clock's current date, for checks that need more than the season.
+        var date: Date {
+            lock.withLock { now() }
+        }
+
         func setNow(_ now: @escaping @Sendable () -> Date) {
             lock.withLock {
                 self.now = now
@@ -106,6 +111,12 @@ enum StatScoutSeason {
     /// app on last season until the new one had a full slate, which left 2026
     /// invisible (and 2025 free) after the opener had already been played.
     static var free: Int { current }
+
+    /// September, when the live season is named but its opener has not yet
+    /// published a row. See `DashboardViewModel.openingGapSeason`.
+    static var isOpeningMonth: Bool {
+        Calendar.current.gregorian.component(.month, from: liveSeasonClock.date) == 9
+    }
 
     /// Oldest season with per-game history, and so the floor for Recent Form.
     ///

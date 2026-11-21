@@ -1107,4 +1107,71 @@ final class CatalogBugTests: XCTestCase {
         XCTAssertEqual(vm.seasonPlayers.map(\.playerId), [1], "drift with rows on screen keeps the prior display")
     }
 
+    // Extra check: the free season flips on 1 September, before the opener
+    // has published a row.
+    func testOpeningGap_FreeUserGetsLastSeasonUntilTheOpenerPublishes() async {
+        let clock = TestClock(noon(2031, 9, 3))
+        useClock(clock)
+        let feed = CatalogFeed()
+        feed.players = []
+        let cache = InMemoryPlayerCache(seed: [player(7, season: 2030), player(8, season: 2030)])
+        let vm = DashboardViewModel(provider: CatalogProvider(feed: feed), cache: cache)
+        await vm.load()
+        await vm.seasonLoadTask?.value
+
+        XCTAssertEqual(vm.freeSeason, 2031)
+        XCTAssertTrue(vm.players(forSeason: 2031).isEmpty, "precondition: the opener has not published")
+        XCTAssertFalse(vm.isSeasonLocked(2030), "every season with numbers was behind the paywall")
+        XCTAssertEqual(vm.selectedSeason, 2030, "the board opened on an empty live season")
+        XCTAssertEqual(Set(vm.seasonPlayers.map(\.playerId)), [7, 8])
+        XCTAssertTrue(vm.isSeasonLocked(2029))
+
+        clock.date = noon(2031, 9, 11)
+        feed.players = [player(1, season: 2031)]
+        await vm.load()
+
+        XCTAssertEqual(vm.selectedSeason, 2031, "back on the live season once it has rows")
+        XCTAssertTrue(vm.isSeasonLocked(2030))
+    }
+
+    func testOpeningGap_AUserWhoPicksTheLiveSeasonKeepsIt() async {
+        let clock = TestClock(noon(2031, 9, 3))
+        useClock(clock)
+        let feed = CatalogFeed()
+        let cache = InMemoryPlayerCache(seed: [player(7, season: 2030)])
+        let vm = DashboardViewModel(provider: CatalogProvider(feed: feed), cache: cache)
+        await vm.load()
+        await vm.seasonLoadTask?.value
+        XCTAssertEqual(vm.selectedSeason, 2030, "precondition: opened on last season")
+
+        vm.selectSeason(2031)
+        await vm.load()
+        XCTAssertEqual(vm.selectedSeason, 2031, "a reload undid the user's own pick")
+    }
+
+    func testOpeningGap_DoesNotUnlockLastSeasonOutsideSeptember() async {
+        let clock = TestClock(noon(2031, 11, 3))
+        useClock(clock)
+        let feed = CatalogFeed()
+        feed.players = []
+        let cache = InMemoryPlayerCache(seed: [player(7, season: 2030)])
+        let vm = DashboardViewModel(provider: CatalogProvider(feed: feed), cache: cache)
+        await vm.load()
+
+        XCTAssertTrue(vm.isSeasonLocked(2030))
+        XCTAssertEqual(vm.selectedSeason, 2031)
+    }
+
+    func testOpeningGap_DoesNotUnlockLastSeasonOnAFailedLoad() async {
+        let clock = TestClock(noon(2031, 9, 3))
+        useClock(clock)
+        let feed = CatalogFeed()
+        feed.online = false
+        let cache = InMemoryPlayerCache(seed: [player(7, season: 2030)])
+        let vm = DashboardViewModel(provider: CatalogProvider(feed: feed), cache: cache)
+        await vm.load()
+
+        XCTAssertTrue(vm.isSeasonLocked(2030))
+        XCTAssertEqual(vm.selectedSeason, 2031)
+    }
 }

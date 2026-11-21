@@ -116,7 +116,54 @@ final class DashboardViewModel {
     var freeSeason: Int { StatScoutSeason.free }
 
     func isSeasonLocked(_ season: Int) -> Bool {
-        !isPro && season != freeSeason
+        !isPro && season != freeSeason && season != openingGapSeason
+    }
+
+    /// Last season, while the live one has no rows yet.
+    ///
+    /// The live season is named on 1 September, about ten days before its
+    /// opener publishes a single row. A free user spent that window on an
+    /// empty board with every season that has numbers behind the paywall.
+    /// Until the live season's first rows land, the season before it is free
+    /// too, and the boards open on it. September only, and only after the feed
+    /// answered with no live rows, so a later outage or an offline launch
+    /// cannot unlock a past season. Once seen, an offline reload does not
+    /// lock it again until the live season has rows.
+    var openingGapSeason: Int? {
+        guard hasCompletedLiveLoad, hadOpeningGap || !lastFetchFailed,
+              StatScoutSeason.isOpeningMonth,
+              !seasonIndex.keys.contains(where: { $0.season == freeSeason })
+        else { return nil }
+        return freeSeason - 1
+    }
+
+    /// A load has finished, so an empty live season is the feed's answer
+    /// rather than a load still in flight.
+    private var hasCompletedLiveLoad = false
+    /// The boards were moved to `openingGapSeason` for the user, not by them,
+    /// so they move back to the live season once it has rows.
+    @ObservationIgnored private var openedOnGapSeason = false
+    /// Once per launch: a user who then picks the empty live season keeps it.
+    @ObservationIgnored private var didOpenOnGapSeason = false
+    /// The gap was in effect after an earlier load.
+    @ObservationIgnored private var hadOpeningGap = false
+
+    private func applyOpeningGap() {
+        if let gap = openingGapSeason {
+            hadOpeningGap = true
+            if !didOpenOnGapSeason, selectedSeason == freeSeason {
+                selectSeason(gap)
+                openedOnGapSeason = true
+                didOpenOnGapSeason = true
+            }
+            return
+        }
+        guard hadOpeningGap else { return }
+        // The live season has rows now: last season is paid again.
+        hadOpeningGap = false
+        if openedOnGapSeason, selectedSeason == freeSeason - 1 { selectedSeason = freeSeason }
+        openedOnGapSeason = false
+        clampSelectedSeason()
     }
 
     /// The season Recent form opens on: the live one.
@@ -169,6 +216,7 @@ final class DashboardViewModel {
     /// updates on the tap, so the screen acknowledges you immediately and the
     /// board fills in behind it.
     func selectSeason(_ season: Int) {
+        openedOnGapSeason = false
         selectedSeason = season
         guard !hasLoadedHistorical, season != freeSeason else { return }
         seasonLoadTask = Task { await loadHistoricalIfNeeded() }
@@ -1637,6 +1685,8 @@ final class DashboardViewModel {
             )
         }
         persistFreshness()
+        hasCompletedLiveLoad = true
+        applyOpeningGap()
         await loadProfiles()
         await loadGames(force: true)
     }
