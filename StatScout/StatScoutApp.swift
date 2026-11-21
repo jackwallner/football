@@ -221,6 +221,7 @@ struct OnboardingCards: View {
                     .allowsHitTesting(!isLastPage)
                 }
                 .frame(height: 32)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
 
                 TabView(selection: $currentPage) {
                     ForEach(Array(pages.enumerated()), id: \.offset) { index, page in
@@ -239,6 +240,10 @@ struct OnboardingCards: View {
                 bottomButtons
                     .padding(.horizontal, 24)
                     .padding(.bottom, 32)
+                    // The block sits under the pager and does not scroll, so
+                    // past AX1 it outgrew the screen and squeezed the pages
+                    // to nothing. The pages scroll at any size.
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
             .frame(maxWidth: 700)
         }
@@ -291,7 +296,7 @@ struct OnboardingCards: View {
                     .foregroundStyle(GridironPalette.performanceLow)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 32, alignment: .top)
+                    .frame(minHeight: 32, alignment: .top)
 
                 if let disclosure = trialDisclosure {
                     Text(disclosure)
@@ -321,7 +326,7 @@ struct OnboardingCards: View {
                 Text(store.monthlyPackage?.priceLabel ?? " ")
                     .font(GridironType.priceLead)
                     .foregroundStyle(GridironPalette.ink)
-                    .frame(height: 22)
+                    .frame(minHeight: 22)
             }
             .opacity(showsUpsellBlock ? 1 : 0)
             .allowsHitTesting(showsUpsellBlock)
@@ -337,6 +342,7 @@ struct OnboardingCards: View {
                     } label: {
                         ZStack {
                             Text(proCTALabel)
+                                .multilineTextAlignment(.center)
                                 .opacity(isStartingTrial ? 0 : 1)
                             if isStartingTrial {
                                 ProgressView().tint(.white)
@@ -344,8 +350,10 @@ struct OnboardingCards: View {
                         }
                         .font(GridironType.bodyBold)
                         .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 52)
+                        .frame(minHeight: 52)
                         .background(GridironPalette.turf)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
@@ -360,7 +368,7 @@ struct OnboardingCards: View {
                         .font(GridironType.bodyBold)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 52)
+                        .frame(minHeight: 52)
                         .background(GridironPalette.turf)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
@@ -448,7 +456,7 @@ struct OnboardingCards: View {
                     .font(GridironType.bodyBold)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 52)
+                    .frame(minHeight: 52)
                     .background(GridironPalette.turf)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             } else {
@@ -460,7 +468,7 @@ struct OnboardingCards: View {
                     .font(GridironType.bodyBold)
                     .foregroundStyle(GridironPalette.ink)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 52)
+                    .frame(minHeight: 52)
             }
         }
         .buttonStyle(.plain)

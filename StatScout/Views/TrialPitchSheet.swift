@@ -30,6 +30,7 @@ struct PendingUnlockAction {
 struct TrialPitchSheet: View {
     @EnvironmentObject private var store: StoreService
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let trigger: PaywallTrigger
 
@@ -135,10 +136,19 @@ struct TrialPitchSheet: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 18)
                 .padding(.bottom, 10)
+
+                // At accessibility sizes the pinned footer alone outgrew the
+                // sheet, so the price, button and Maybe later were cut off.
+                // There it scrolls with the rest.
+                if dynamicTypeSize.isAccessibilitySize {
+                    footer
+                }
             }
             .scrollBounceBehavior(.basedOnSize)
 
-            footer
+            if !dynamicTypeSize.isAccessibilitySize {
+                footer
+            }
         }
         .background(GridironPalette.canvas.ignoresSafeArea())
         // A fixed height rather than a fraction, because what has to fit is a
@@ -148,7 +158,7 @@ struct TrialPitchSheet: View {
         // current phone, which is the size this pitch has always been, and
         // two-thirds on the smallest, where it needs to be. Drags up to full
         // height for large accessibility text.
-        .presentationDetents([.height(460), .large])
+        .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.height(460), .large])
         .presentationDragIndicator(.visible)
         // Tick the session cap on the *pitch* sheet too, not just the full
         // PaywallView. Otherwise PaywallGate.shouldPresent(.playerScouting)

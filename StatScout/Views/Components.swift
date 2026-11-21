@@ -914,7 +914,9 @@ struct PlusDirectCTA: View {
                 .font(GridironType.priceLead)
                 .foregroundStyle(GridironPalette.ink)
                 .multilineTextAlignment(.center)
-                .frame(height: 22)
+                // A floor, so large text grows the slot instead of drawing
+                // the price over the button.
+                .frame(minHeight: 22)
 
             Button(action: buy) {
                 label
@@ -990,14 +992,17 @@ struct PlusDirectCTA: View {
             ZStack {
                 Text(store.directCTALabel(for: trigger))
                     .font(GridironType.bodyBold)
+                    .multilineTextAlignment(.center)
                     .opacity(isPurchasing ? 0 : 1)
                 if isPurchasing {
                     ProgressView().tint(.white)
                 }
             }
             .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .frame(maxWidth: .infinity)
-            .frame(height: 50)
+            .frame(minHeight: 50)
             .background(GridironPalette.turf)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }

@@ -152,6 +152,7 @@ enum PaywallTrigger: Identifiable, Hashable {
 struct PaywallView: View {
     @EnvironmentObject private var store: StoreService
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let trigger: PaywallTrigger
 
@@ -287,14 +288,16 @@ struct PaywallView: View {
                     .font(GridironType.playerName)
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
+                    // The page scrolls, so at accessibility sizes the hero
+                    // wraps in full instead of ending in an ellipsis.
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                     .minimumScaleFactor(0.9)
 
                 Text(trigger.subtitle)
                     .font(GridironType.small)
                     .foregroundStyle(.white.opacity(0.85))
                     .multilineTextAlignment(.center)
-                    .lineLimit(3)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
                     .minimumScaleFactor(0.9)
                     .padding(.horizontal, 22)
             }
@@ -383,7 +386,7 @@ struct PaywallView: View {
             Text(selectedPackage?.priceLabel ?? " ")
                 .font(GridironType.priceLead)
                 .foregroundStyle(GridironPalette.ink)
-                .frame(height: 22)
+                .frame(minHeight: 22)
 
             Button(action: startPurchase) {
                 ZStack {
