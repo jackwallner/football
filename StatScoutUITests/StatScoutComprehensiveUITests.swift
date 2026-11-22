@@ -694,8 +694,11 @@ final class CatalogBugUITests: XCTestCase {
         searchField.tap()
         searchField.typeText("Theo Banks")
 
+        // A board row is a button; the "No Results for Theo Banks" view also
+        // contains the name, so a bare label match passed without the fix.
+        let row = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Theo Banks")).firstMatch
         XCTAssertTrue(
-            anything(containing: "Theo Banks").waitForExistence(timeout: 10),
+            row.waitForExistence(timeout: 10),
             "a tight end typed on the QB tab was reported as not found"
         )
     }

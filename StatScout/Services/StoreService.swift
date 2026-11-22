@@ -110,6 +110,8 @@ enum StatScoutSeason {
     /// before it is StatScout+. It used to trail the data instead, holding the
     /// app on last season until the new one had a full slate, which left 2026
     /// invisible (and 2025 free) after the opener had already been played.
+    /// One exception: in September, until the live season has a row, last
+    /// season is free too (`DashboardViewModel.openingGapSeason`).
     static var free: Int { current }
 
     /// September, when the live season is named but its opener has not yet
