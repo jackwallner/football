@@ -20,6 +20,7 @@ Developer notes and historical audits for this repository. The published site re
 - [luxaudit0926.md](audits/luxaudit0926.md): Football Next: StatScout, independent UX audit, 2026-09-26
 - [uxaudit0923.md](audits/uxaudit0923.md): Football Next: StatScout: product / UX audit, 2026 Week 3
 - [2026-11-20-bug-ux.html](audits/2026-11-20-bug-ux.html): Bug and UX catalog, 2026-11-20: 13 bugs (2 medium, 11 low; 9 confirmed), 13 UX items, October audit items rechecked. Catalog only, nothing fixed.
+- [2026-11-20-bug-fixes.md](audits/2026-11-20-bug-fixes.md): Bug fix status after independent review of the 2026-11-20 catalog: 13 fixed and verified (B2, B7, B9 finished by the reviewer), September free-season gap fixed pending Jack's call, 7 pre-existing feed-dependent UI failures
 
 ## Marketing
 
