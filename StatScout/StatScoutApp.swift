@@ -576,10 +576,13 @@ struct OnboardingCard: View {
         ViewThatFits(in: .vertical) {
             card(artScale: 1)
             card(artScale: 0.7)
+            // The viewport stops above the page dots, which the pager draws
+            // over its own bottom edge; scrolled text ran under them.
             ScrollView {
                 card(artScale: 0.7)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .padding(.bottom, 40)
         }
     }
 

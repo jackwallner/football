@@ -192,7 +192,8 @@ struct TrialPitchSheet: View {
                 .font(GridironType.small)
                 .foregroundStyle(GridironPalette.inkSecondary)
                 .multilineTextAlignment(.center)
-                .lineLimit(3)
+                // At accessibility sizes the sheet scrolls, so wrap in full.
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity)
@@ -214,7 +215,7 @@ struct TrialPitchSheet: View {
                         Text(String(localized: benefit.detail))
                             .font(GridironType.small)
                             .foregroundStyle(GridironPalette.inkSecondary)
-                            .lineLimit(2)
+                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
