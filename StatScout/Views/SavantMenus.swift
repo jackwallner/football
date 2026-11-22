@@ -215,10 +215,11 @@ struct SeasonPhaseNavBar: ViewModifier {
             }
     }
 
-    /// A bar is one line high at every text size. Past xxxLarge the pill
-    /// outgrew it and iOS folded the gear and the upgrade CTA into "...".
+    /// A bar is one line high at every text size. Any larger than the
+    /// default size, the pill and the trailing pair outgrew it and iOS folded
+    /// the gear and the upgrade CTA into "...".
     private var cappedPills: some View {
-        pills.dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        pills.dynamicTypeSize(...DynamicTypeSize.large)
     }
 
     /// One pill, not two.

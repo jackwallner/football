@@ -417,9 +417,9 @@ private struct HomeTabToolbar: ViewModifier {
                 upgradeButton
             }
         }
-        // Same cap as the season pill: grown past xxxLarge, the pair folded
-        // into one "..." overflow and hid the upgrade CTA.
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        // Same cap as the season pill: grown past the default size beside
+        // it, the pair folded into one "..." overflow and hid the upgrade CTA.
+        .dynamicTypeSize(...DynamicTypeSize.large)
     }
 
     func body(content: Content) -> some View {

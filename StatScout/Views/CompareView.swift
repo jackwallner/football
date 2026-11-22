@@ -532,7 +532,10 @@ struct CompareView: View {
         }
         .padding(.leading, GridironGeo.padInline)
         .padding(.trailing, store.isPro ? 6 : GridironGeo.padInline)
-        .frame(height: GridironGeo.rowHeight)
+        // A floor, not a height, capped like the Stats board rows: a fixed
+        // 44pt row let large text spill into the next one.
+        .frame(minHeight: GridironGeo.rowHeight)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .contentShape(Rectangle())
     }
 
