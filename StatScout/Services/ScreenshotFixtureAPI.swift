@@ -17,13 +17,35 @@ struct ScreenshotFixtureAPI: StatcastProviding {
     /// the Following board deterministic without teaching a product view about
     /// test data.
     static func prepareUserDefaults() {
-        UserDefaults.standard.set([12001, 12007, 12011], forKey: "favorites.playerIds")
-        UserDefaults.standard.set("KC", forKey: "favoriteTeam")
-        UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        let defaults = UserDefaults.standard
+        // `-FixtureKeepState` seeds once per install and then leaves the fan
+        // context alone, so a release journey can prove that a follow survives
+        // a kill and relaunch. Without it every launch reseeds, which would
+        // hide a persistence bug.
+        if ProcessInfo.processInfo.arguments.contains(keepStateArgument) {
+            if defaults.bool(forKey: "fixture.seeded") { return }
+            defaults.set(true, forKey: "fixture.seeded")
+        }
+        // `-FixtureFresh` is the first-run look: no followed players or club and
+        // no onboarding flag, so a journey can walk onboarding on fixture data.
+        if ProcessInfo.processInfo.arguments.contains(freshLaunchArgument) {
+            defaults.removeObject(forKey: "favorites.playerIds")
+            defaults.removeObject(forKey: "favoriteTeam")
+            defaults.set(false, forKey: "hasCompletedOnboarding")
+            // The shared store may have read the defaults before this ran.
+            MainActor.assumeIsolated { FavoritesStore.shared.setFavorite(team: nil) }
+        } else {
+            defaults.set([12001, 12007, 12011], forKey: "favorites.playerIds")
+            defaults.set("KC", forKey: "favoriteTeam")
+            defaults.set(true, forKey: "hasCompletedOnboarding")
+        }
         UserDefaults.standard.set("standard", forKey: "stats.board")
         UserDefaults.standard.removeObject(forKey: "statcast.dataFreshness")
         UserDefaults.standard.removeObject(forKey: "statcast.displayedDataRevision")
     }
+
+    static let freshLaunchArgument = "-FixtureFresh"
+    static let keepStateArgument = "-FixtureKeepState"
 
     private static let season = StatScoutSeason.current
     private static let priorSeason = season - 1
