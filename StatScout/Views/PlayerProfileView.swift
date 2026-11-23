@@ -541,6 +541,8 @@ struct PlayerProfileView: View {
                 .font(GridironType.smallBold)
                 .buttonStyle(.bordered)
                 .tint(GridironPalette.midnight)
+                .lineLimit(1)
+                .fixedSize()
             }
             if selectedTab == .yearCompare, store.isPro {
                 yearCompareContent
