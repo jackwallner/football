@@ -238,7 +238,11 @@ struct SeasonPhaseNavBar: ViewModifier {
     private var pillTitle: String {
         let year = SeasonLabel.text(selectedSeason)
         let english = Bundle.main.preferredLocalizations.first?.hasPrefix("en") ?? true
-        if selectedPhase == .regular && !english { return year }
+        // The narrowest phones (375pt and under) have no room for the spelled
+        // out phase beside the gear and the upgrade CTA either: iOS folds the
+        // pair into an overflow that opens nothing.
+        let narrow = UIScreen.main.bounds.width <= 375
+        if selectedPhase == .regular && (!english || narrow) { return year }
         return String(localized: "\(year) · \(selectedPhase.label)")
     }
 
