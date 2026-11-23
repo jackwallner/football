@@ -310,6 +310,7 @@ private struct TabBarButton: View {
             VStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .semibold))
+                    .frame(height: 24)
                 Text(label)
                     .font(GridironType.smallBold)
                     .lineLimit(1)
