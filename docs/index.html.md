@@ -52,9 +52,15 @@ Included with StatScout+
 
 ### All 32 clubs
 
-Advanced and standard team stats, with the same percentile treatment.
+Advanced and standard team stats, a roster you can rank by any metric, division standings and StatScout Power Ratings.
 
-Included with StatScout+
+### Every game
+
+Each week's slate with projected margins, and an advanced box score for every finished game: win probability by play, team efficiency and the plays that swung it.
+
+### Contract Value
+
+Quarterbacks, running backs, receivers and tight ends, with production set against pay. The full boards come with StatScout+.
 
 ### Back to 2000
 
@@ -88,7 +94,9 @@ Leaderboards, filters, and full percentile profiles are free. StatScout+ is avai
 
 **Comparisons.** Two players side by side, or one player's seasons against each other.
 
-**Team scouting and history.** All 32 clubs, every season back to 2000, and all-time career percentiles.
+**Best & Worst and game efficiency.** The league leader and trailer on every metric, and EPA, success rate, CPOE and depth of target for every passer, rusher and receiver in each game.
+
+**Contract Value and history.** The full Contract Value boards, every season back to 2000, and all-time career percentiles.
 
 ### Specs
 
@@ -132,7 +140,7 @@ During the season, the app checks for newly published stats throughout the day a
 
 ## Is Pro Football: EPA StatScout free?
 
-Yes, leaderboards, filters, full percentile profiles and Following are free. The optional StatScout+ upgrade adds trends, recent form, player comparisons, team scouting and history back to 2000, and prices are shown in the app before you buy and vary by region.
+Yes, leaderboards, filters, full percentile profiles and Following are free. The optional StatScout+ upgrade adds trends, recent form, player comparisons, Best & Worst, the full Contract Value boards and history back to 2000, and prices are shown in the app before you buy and vary by region.
 
 ## Where does the data come from?
 

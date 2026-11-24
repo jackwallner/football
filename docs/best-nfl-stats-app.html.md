@@ -29,7 +29,7 @@ Ratings, update dates and device support come from Apple's App Store lookup on N
 
 ## Pro Football: EPA StatScout
 
-StatScout ranks NFL players on advanced percentiles in Passing, Rushing, Receiving and Defense, with a red-to-green style bar on every metric, EPA per play, CPOE and YAC over expected among them. Leaderboards, full profiles, search and a Following list are free with no account and no ads, and it checks for new stats through the day in season. The trade-offs are real: it has no live scores, play-by-play, video, news, odds or fantasy tools, it is iPhone and iPad only, and trends, recent-form windows, comparisons, team scouting and seasons back to 2000 sit in the paid StatScout+ tier. It is new, with no ratings yet.
+StatScout ranks NFL players on advanced percentiles in Passing, Rushing, Receiving and Defense, with a red-to-green style bar on every metric, EPA per play, CPOE and YAC over expected among them. Leaderboards, full profiles, search and a Following list are free with no account and no ads, and it checks for new stats through the day in season. The trade-offs are real: it has no live scores, play-by-play, video, news, odds or fantasy tools, it is iPhone and iPad only, and trends, recent-form windows, comparisons, Best & Worst, the full Contract Value boards and seasons back to 2000 sit in the paid StatScout+ tier. It is new, with no ratings yet.
 
 ## Superfan Sports: NFL Football
 
