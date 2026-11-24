@@ -8,7 +8,7 @@ Web page: https://jackwallner.com/ios/football/
 
 EPA StatScout is an NFL stats app for iPhone: every player ranked on advanced percentiles, with the full profile one tap away and the whole league sorted by who's heating up.
 
-iPhone and Android · Fresh after every game · No account
+iPhone · Fresh after every game · No account
 
 [Download on the App Store](https://apps.apple.com/us/app/football-next-statscout/id6792930447?pt=128748779&ct=jw-football-home&mt=8)
 
@@ -154,6 +154,6 @@ StatScout is not affiliated with, authorized, endorsed by, or sponsored by the N
 
 ## Know who's actually good
 
-Free on the App Store and Google Play. No account required. StatScout+ optional.
+Free on the App Store. No account required. StatScout+ optional.
 
 [Download on the App Store](https://apps.apple.com/us/app/football-next-statscout/id6792930447?pt=128748779&ct=jw-football-home&mt=8)

@@ -6,7 +6,7 @@ Web page: https://jackwallner.com/ios/football/what-is-epa-per-play.html
 
 ## What is EPA per play in football? (And what CPOE adds)
 
-By Jack Wallner. Last updated November 11, 2026.
+By Jack Wallner. Last updated November 24, 2026.
 
 EPA per play is the average number of points a play adds to its team's expected score on the drive. A positive number means the play left the offense better off than before the snap, and a negative number means worse. CPOE, completion percentage over expected, is the companion stat that judges a passer's accuracy against how hard each throw was.
 

@@ -6,7 +6,7 @@ Web page: https://jackwallner.com/ios/football/best-nfl-stats-app.html
 
 ## Best NFL stats app for iPhone (November 2026)
 
-By [Jack Wallner](https://jackwallner.com/). Last updated November 12, 2026.
+By [Jack Wallner](https://jackwallner.com/). Last updated November 24, 2026.
 
 The best NFL stats app depends on what you mean by stats. Best for advanced percentiles such as EPA per play and CPOE with no account: Pro Football: EPA StatScout. Best for live scores, play-by-play and alerts: Superfan Sports. Best for the official league experience and video: the NFL app. Best for fantasy rankings and prop picks: PFF. Best for answering a one-off stats question: StatMuse.
 
@@ -104,11 +104,10 @@ For a website, Pro Football Reference from Sports Reference is a free archive of
 ## Sources
 
 1. [Pro Football: EPA StatScout on the App Store](https://apps.apple.com/us/app/id6792930447?pt=128748779&ct=jw-football-best-nfl-stats-app&mt=8)
-2. [Pro Football: EPA StatScout on Google Play](https://play.google.com/store/apps/details?id=com.jackwallner.football)
-3. [Superfan Sports: NFL Football on the App Store](https://apps.apple.com/us/app/id1237698160)
-4. [NFL on the App Store](https://apps.apple.com/us/app/id389781154)
-5. [PFF: Betting & Fantasy Tools on the App Store](https://apps.apple.com/us/app/id1582525285)
-6. [StatMuse on the App Store](https://apps.apple.com/us/app/id1234654160)
-7. [HOF: Sports Stats & Data on the App Store](https://apps.apple.com/us/app/id6449443337)
-8. [Pro Football Draft Machine on the App Store](https://apps.apple.com/us/app/id983032756)
-9. [theScore: Sports News & Scores on the App Store](https://apps.apple.com/us/app/id285692706)
+2. [Superfan Sports: NFL Football on the App Store](https://apps.apple.com/us/app/id1237698160)
+3. [NFL on the App Store](https://apps.apple.com/us/app/id389781154)
+4. [PFF: Betting & Fantasy Tools on the App Store](https://apps.apple.com/us/app/id1582525285)
+5. [StatMuse on the App Store](https://apps.apple.com/us/app/id1234654160)
+6. [HOF: Sports Stats & Data on the App Store](https://apps.apple.com/us/app/id6449443337)
+7. [Pro Football Draft Machine on the App Store](https://apps.apple.com/us/app/id983032756)
+8. [theScore: Sports News & Scores on the App Store](https://apps.apple.com/us/app/id285692706)
