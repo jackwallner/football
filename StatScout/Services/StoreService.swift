@@ -632,25 +632,6 @@ final class StoreService: NSObject, ObservableObject {
         return String(localized: "\(trialTitle), then \(price). Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions.")
     }
 
-    /// Onboarding pitches the monthly plan, not the yearly one. The trial is
-    /// identical on both, so the smaller number is the smaller commitment to
-    /// agree to before the user has seen the app work; the yearly plan is what
-    /// `PaywallView` sells, where the savings are visible next to it.
-    var onboardingMonthlyCTALabel: String {
-        guard let monthly = monthlyPackage else { return String(localized: "Upgrade to StatScout+") }
-        return Self.directCTALabel(
-            price: monthly.priceLabel,
-            trial: isEligibleForIntroOffer(monthly) ? monthly.introOfferLabel : nil,
-            isWinback: false
-        )
-    }
-
-    /// Full Apple-3.1.2 auto-renew disclosure for the monthly plan, for the
-    /// onboarding CTA that buys it directly.
-    var onboardingMonthlyDisclosureText: String? {
-        monthlyPackage.map { disclosureText(for: $0) }
-    }
-
     /// The monthly package, when present. Used as the anchor when computing
     /// yearly savings % and rendering a strike-through monthly-equivalent price.
     var monthlyPackage: Package? {

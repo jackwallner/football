@@ -50,6 +50,9 @@ final class ReleaseJourneysUITests: XCTestCase {
 
         let getStarted = QA.button(app, "Get Started", "Los geht's")
         XCTAssertTrue(getStarted.waitForExistence(timeout: 20), "The last onboarding page should offer Get Started")
+        // The offer bills the yearly plan (the Aug 11 monthly button lost money).
+        let yearlyPrice = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@ OR label CONTAINS %@", "/ year", "/ Jahr")).firstMatch
+        XCTAssertTrue(yearlyPrice.waitForExistence(timeout: 20), "The onboarding offer should bill the yearly plan")
         QA.checkpoint(app, "onboarding-offer")
         getStarted.tap()
 
