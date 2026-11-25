@@ -168,10 +168,12 @@ struct GridironSectionBar: View {
                 .font(GridironType.sectionTitle)
                 .foregroundStyle(GridironPalette.ink)
                 .padding(.leading, GridironGeo.padCard)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.vertical, 4)
             Spacer()
             if let trailing { trailing.padding(.trailing, 12) }
         }
-        .frame(height: GridironGeo.rowHeightHeader)
+        .frame(minHeight: GridironGeo.rowHeightHeader)
         .background(GridironPalette.surfaceSunk)
     }
 }

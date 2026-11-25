@@ -317,7 +317,8 @@ private struct TabBarButton: View {
                     .minimumScaleFactor(0.8)
             }
             .foregroundStyle(isSelected ? GridironPalette.turf : GridironPalette.inkSecondary)
-            .frame(width: 68, height: 52)
+            .frame(minWidth: 0, maxWidth: 68)
+            .frame(height: 52)
             .background(
                 isSelected ? GridironPalette.turf.opacity(0.12) : .clear,
                 in: Capsule()
