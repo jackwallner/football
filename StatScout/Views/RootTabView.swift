@@ -212,7 +212,7 @@ struct RootTabView: View {
                 }
             }
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 6)
         .padding(.vertical, 7)
         // Near-opaque: the old 0.8 ultra-thin material let the two rows
         // under it read through and collide with the tab labels on every
@@ -314,10 +314,10 @@ private struct TabBarButton: View {
                 Text(label)
                     .font(GridironType.smallBold)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.7)
             }
             .foregroundStyle(isSelected ? GridironPalette.turf : GridironPalette.inkSecondary)
-            .frame(minWidth: 0, maxWidth: 68)
+            .frame(minWidth: 0, maxWidth: .infinity)
             .frame(height: 52)
             .background(
                 isSelected ? GridironPalette.turf.opacity(0.12) : .clear,

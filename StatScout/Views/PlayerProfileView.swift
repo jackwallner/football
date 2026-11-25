@@ -770,8 +770,8 @@ struct PlayerProfileView: View {
                         Text(seasonLabel)
                             .font(GridironType.micro)
                             .foregroundStyle(GridironPalette.inkSecondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.75)
+                            .multilineTextAlignment(.trailing)
+                            .fixedSize(horizontal: false, vertical: true)
                         Image(systemName: "chevron.down")
                             .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(GridironPalette.inkSecondary)
@@ -782,8 +782,8 @@ struct PlayerProfileView: View {
                 Text(seasonLabel)
                     .font(GridironType.micro)
                     .foregroundStyle(GridironPalette.inkSecondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .multilineTextAlignment(.trailing)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

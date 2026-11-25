@@ -687,12 +687,20 @@ struct LeaderboardTableRow: View {
             .joined(separator: " · ")
     }
 
+    /// From xLarge up the name needs the room the percentile bar takes.
+    private var isLargeText: Bool { dynamicTypeSize >= .xLarge }
+
+    private var valueColumnWidth: CGFloat {
+        if trendDelta != nil { return 56 }
+        return isLargeText ? 52 : 92
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             Text("\(rank)")
                 .font(GridironType.statSmall)
                 .foregroundStyle(GridironPalette.inkSecondary)
-                .frame(width: 42, alignment: .leading)
+                .frame(width: isLargeText ? 30 : 42, alignment: .leading)
                 .monospacedDigit()
 
             HStack(spacing: 10) {
@@ -701,13 +709,13 @@ struct LeaderboardTableRow: View {
                     Text(player.name)
                         .font(GridironType.bodyBold)
                         .foregroundStyle(GridironPalette.ink)
-                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+                        .lineLimit(isLargeText ? 2 : 1)
                         .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
                     Text(String(localized: String.LocalizationValue(subtitle)))
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
-                        .lineLimit(1)
+                        .lineLimit(isLargeText ? 2 : 1)
                         .minimumScaleFactor(0.85)
                 }
             }
@@ -732,7 +740,7 @@ struct LeaderboardTableRow: View {
                     if valueOverride == nil {
                         if displayMetric?.isUnranked == true {
                             Color.clear.frame(width: 40, height: 7)
-                        } else {
+                        } else if !isLargeText {
                             PercentileBarMini(percentile: displayPercentile)
                                 .frame(width: 40)
                                 .opacity(isSmallSample ? 0.35 : 1)
@@ -753,7 +761,7 @@ struct LeaderboardTableRow: View {
                         .monospacedDigit()
                 }
             }
-            .frame(width: trendDelta == nil ? 92 : 56, alignment: .trailing)
+            .frame(width: valueColumnWidth, alignment: .trailing)
 
             if let trendDelta {
                 TrendArrow(delta: trendDelta, decimals: trendDecimals, lowerIsBetter: trendLowerIsBetter)

@@ -42,6 +42,7 @@ struct FollowingStatsView: View {
                     Spacer()
                     Button(players.isEmpty ? "Follow players" : "Manage") { showingPlayers = true }
                         .font(GridironType.smallBold)
+                        .foregroundStyle(GridironPalette.turf)
                         .frame(minHeight: 44)
                 }
 
