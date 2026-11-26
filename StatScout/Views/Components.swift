@@ -533,6 +533,7 @@ struct PercentileBarMini: View {
 // MARK: - Leaderboard Table
 
 struct LeaderboardTableHeader: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let sortDescending: Bool
     var sortLabel: String = String(localized: "Overall").localizedUppercase
     var metrics: [String] = []
@@ -551,10 +552,12 @@ struct LeaderboardTableHeader: View {
                 .foregroundStyle(GridironPalette.inkTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("TEAM column")
-                .font(GridironType.micro)
-                .foregroundStyle(GridironPalette.inkTertiary)
-                .frame(width: 40, alignment: .leading)
+            if dynamicTypeSize < .xLarge {
+                Text("TEAM column")
+                    .font(GridironType.micro)
+                    .foregroundStyle(GridironPalette.inkTertiary)
+                    .frame(width: 40, alignment: .leading)
+            }
 
             HStack(spacing: 2) {
                 Menu {
@@ -682,7 +685,7 @@ struct LeaderboardTableRow: View {
     }
 
     private var subtitle: String {
-        [player.displayPosition, volume, isSmallSample ? "small sample" : nil]
+        [player.displayPosition, isLargeText ? displayTeamAbbr(player.team) : nil, volume, isSmallSample ? "small sample" : nil]
             .compactMap { $0 }
             .joined(separator: " · ")
     }
@@ -704,7 +707,11 @@ struct LeaderboardTableRow: View {
                 .monospacedDigit()
 
             HStack(spacing: 10) {
-                PlayerHeadshot(team: player.team, initials: player.initials, size: 36)
+                // From xLarge the headshot and team column give their room to
+                // the name; the team moves into the subtitle.
+                if !isLargeText {
+                    PlayerHeadshot(team: player.team, initials: player.initials, size: 36)
+                }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(player.name)
                         .font(GridironType.bodyBold)
@@ -721,13 +728,15 @@ struct LeaderboardTableRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(spacing: 4) {
-                TeamColorDot(abbr: player.team, size: 6)
-                Text(displayTeamAbbr(player.team))
-                    .font(GridironType.small)
-                    .foregroundStyle(GridironPalette.inkSecondary)
+            if !isLargeText {
+                HStack(spacing: 4) {
+                    TeamColorDot(abbr: player.team, size: 6)
+                    Text(displayTeamAbbr(player.team))
+                        .font(GridironType.small)
+                        .foregroundStyle(GridironPalette.inkSecondary)
+                }
+                .frame(width: 40, alignment: .leading)
             }
-            .frame(width: 40, alignment: .leading)
 
             HStack(spacing: 8) {
                 // A player without the sorted metric gets no bar - drawing one

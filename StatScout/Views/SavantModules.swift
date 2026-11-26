@@ -171,7 +171,7 @@ struct GridironSectionBar: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.vertical, 4)
             Spacer()
-            if let trailing { trailing.padding(.trailing, 12) }
+            if let trailing { trailing.padding(.trailing, 12).layoutPriority(1) }
         }
         .frame(minHeight: GridironGeo.rowHeightHeader)
         .background(GridironPalette.surfaceSunk)
