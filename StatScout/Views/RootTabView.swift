@@ -226,7 +226,7 @@ struct RootTabView: View {
         .padding(.bottom, 12)
         // Five labels share a phone's width, so like the system tab bar they
         // stop growing early; a long press shows the large content viewer.
-        .dynamicTypeSize(...DynamicTypeSize.xLarge)
+        .dynamicTypeSize(...DynamicTypeSize.large)
     }
 
     private var gamesTab: some View {

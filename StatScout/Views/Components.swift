@@ -544,7 +544,7 @@ struct LeaderboardTableHeader: View {
             Text("RANK")
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
-                .frame(width: 42, alignment: .leading)
+                .frame(width: 32, alignment: .leading)
 
             Text("PLAYER")
                 .font(GridironType.micro)
@@ -554,7 +554,7 @@ struct LeaderboardTableHeader: View {
             Text("TEAM column")
                 .font(GridironType.micro)
                 .foregroundStyle(GridironPalette.inkTertiary)
-                .frame(width: 44, alignment: .leading)
+                .frame(width: 40, alignment: .leading)
 
             HStack(spacing: 2) {
                 Menu {
@@ -594,7 +594,7 @@ struct LeaderboardTableHeader: View {
                 .accessibilityLabel(sortDescending ? "Highest first" : "Lowest first")
                 .accessibilityHint("Double tap to reverse ranking order")
             }
-            .frame(width: 104, alignment: .trailing)
+            .frame(width: 92, alignment: .trailing)
         }
         .frame(height: GridironGeo.rowHeightHeader)
         .padding(.horizontal, GridironGeo.padInline)
@@ -692,7 +692,7 @@ struct LeaderboardTableRow: View {
 
     private var valueColumnWidth: CGFloat {
         if trendDelta != nil { return 56 }
-        return isLargeText ? 52 : 92
+        return isLargeText ? 52 : 80
     }
 
     var body: some View {
@@ -700,7 +700,7 @@ struct LeaderboardTableRow: View {
             Text("\(rank)")
                 .font(GridironType.statSmall)
                 .foregroundStyle(GridironPalette.inkSecondary)
-                .frame(width: isLargeText ? 30 : 42, alignment: .leading)
+                .frame(width: isLargeText ? 30 : 32, alignment: .leading)
                 .monospacedDigit()
 
             HStack(spacing: 10) {
@@ -709,13 +709,13 @@ struct LeaderboardTableRow: View {
                     Text(player.name)
                         .font(GridironType.bodyBold)
                         .foregroundStyle(GridironPalette.ink)
-                        .lineLimit(isLargeText ? 2 : 1)
+                        .lineLimit(2)
                         .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
                     Text(String(localized: String.LocalizationValue(subtitle)))
                         .font(GridironType.micro)
                         .foregroundStyle(GridironPalette.inkTertiary)
-                        .lineLimit(isLargeText ? 2 : 1)
+                        .lineLimit(2)
                         .minimumScaleFactor(0.85)
                 }
             }
@@ -727,7 +727,7 @@ struct LeaderboardTableRow: View {
                     .font(GridironType.small)
                     .foregroundStyle(GridironPalette.inkSecondary)
             }
-            .frame(width: 44, alignment: .leading)
+            .frame(width: 40, alignment: .leading)
 
             HStack(spacing: 8) {
                 // A player without the sorted metric gets no bar - drawing one
@@ -742,7 +742,7 @@ struct LeaderboardTableRow: View {
                             Color.clear.frame(width: 40, height: 7)
                         } else if !isLargeText {
                             PercentileBarMini(percentile: displayPercentile)
-                                .frame(width: 40)
+                                .frame(width: 28)
                                 .opacity(isSmallSample ? 0.35 : 1)
                         }
                     }
